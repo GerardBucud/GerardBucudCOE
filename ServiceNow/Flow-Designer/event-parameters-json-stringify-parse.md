@@ -38,9 +38,53 @@ gs.print(data.json1); // 1
 gs.print(data.json2); // 2
 ```
 
+## Displaying the parsed fields inside a Notification body
+
+`${event.parm1}` / `${event.parm2}` in a Notification (`sysevent_email_action`)
+body only print the **raw string** — they don't parse JSON for you. Placeholders
+like `{total_hearings_retrieved}` in the body are just literal text unless
+something actually substitutes them.
+
+![Notification preview showing the raw, unparsed event.parm1/parm2 values](assets/notification-preview-raw-event-parm.png)
+
+![Notification body editor referencing ${event.parm1} and ${event.parm2}](assets/notification-body-html-editor.png)
+
+To surface individual fields from the stringified `parm2` payload, use a
+**Mail Script** (`sys_script_email`, System Notification > Email > Notification
+Email Scripts) instead of referencing `${event.parm2}` directly:
+
+```js
+// Mail Script: aas_flow_status_summary
+(function runMailScript(current, template, email, email_action, event) {
+	var data = {};
+	try {
+		data = JSON.parse(event.parm2);
+	} catch (e) {
+		gs.error('aas_flow_status_summary: failed to parse event.parm2 - ' + e);
+	}
+
+	template.print('Total Hearings Retrieved: ' + (data.total_hearings_retrieved || 0) + '\n');
+	template.print('Total Allowance Items Created: ' + (data.total_ai_created || 0) + '\n');
+	template.print('Total Submissions Created: ' + (data.total_ar_created || 0) + '\n');
+	template.print('Total Skipped Records (duplicate with existing submission): ' + (data.total_skipped_records || 0) + '\n');
+	template.print('Total Records Failed: ' + (data.total_records_failed || 0) + '\n');
+})(current, template, email, email_action, event);
+```
+
+Then reference it in the notification body in place of the raw
+`${event.parm1}` / `${event.parm2}` lines:
+
+```
+${mail_script:aas_flow_status_summary}
+```
+
 ## Takeaway
 
 - Always `JSON.stringify()` before setting an event parm with structured
   data.
 - Always `JSON.parse()` on the consuming side before accessing the
   object's properties — the raw `parm2` value is just a string.
+- `${event.parm1}` / `${event.parm2}` in a notification body print the raw
+  string as-is; to show individual parsed fields, use a Mail Script
+  (`${mail_script:<name>}`) that does the `JSON.parse()` and prints the
+  values you need.
