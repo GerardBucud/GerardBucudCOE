@@ -1,6 +1,7 @@
 // The first post on the board ("Steal my DJI Osmo Nano settings") as stored in its db, for reference when
 // building a new post: copy the shapes, not the asset ids (those photos already live in the shared library).
 // `guide` is the post's PDF guide (posts/<pid>/guide/main); `photos` is the shared library at the time of writing.
+// Slide smvjrud8b1ru has `alt: true`: it is version 2 of slide 05 (same number, not counted).
 module.exports = {
   "pid": "osmo-nano-settings",
   "meta": {
@@ -11,6 +12,7 @@ module.exports = {
       "s03",
       "s04",
       "s05",
+      "smvjrud8b1ru",
       "s06"
     ],
     "overall": "",
@@ -22,6 +24,9 @@ module.exports = {
     "s01": {
       "comment": "",
       "img": {
+        "adj": {
+          "grain": 11
+        },
         "asset": "db2f6a4bef5d57e38f6c4f4cafa7a965",
         "fx": 0.49,
         "fy": 0.5,
@@ -42,6 +47,9 @@ module.exports = {
     "s02": {
       "comment": "",
       "img": {
+        "adj": {
+          "grain": 11
+        },
         "asset": "bc6f3da763b134e56c7d878713e12785",
         "fx": 0.49,
         "fy": 0.5,
@@ -77,6 +85,9 @@ module.exports = {
     "s03": {
       "comment": "",
       "img": {
+        "adj": {
+          "grain": 11
+        },
         "asset": "4c13e7ba10d8789c01d805206af1e9d6",
         "fx": 0.5,
         "fy": 0.5,
@@ -108,6 +119,9 @@ module.exports = {
     "s04": {
       "comment": "",
       "img": {
+        "adj": {
+          "grain": 11
+        },
         "asset": "175f51f39d256ef7045f71a4892ead94",
         "fx": 0.5,
         "fy": 0.76,
@@ -171,6 +185,9 @@ module.exports = {
     "s06": {
       "comment": "",
       "img": {
+        "adj": {
+          "grain": 11
+        },
         "asset": "677ab14f12c48e4e2c23d861971f4d57",
         "fx": 0.5,
         "fy": 0.5,
@@ -184,9 +201,9 @@ module.exports = {
           "kind": "bookmark",
           "rot": 0,
           "size": 190,
-          "solid": true,
-          "x": 0.5,
-          "y": 0.79
+          "solid": false,
+          "x": 0.8385689620572233,
+          "y": 0.30520043178378653
         }
       ],
       "text": {
@@ -198,6 +215,42 @@ module.exports = {
         "sub": "FOLLOW **{handle}**"
       },
       "type": "save"
+    },
+    "smvjrud8b1ru": {
+      "alt": true,
+      "comment": "",
+      "img": {
+        "adj": {
+          "grain": 17
+        },
+        "asset": "17cb875bd2367c42f43b2c50fa2ff74b",
+        "fx": 0.5,
+        "fy": 0.5,
+        "zoom": 1
+      },
+      "img2": {
+        "adj": {
+          "grain": 25
+        },
+        "asset": "a9bdb495a31e2fc9c0a77a27fc983916",
+        "fx": 0.5,
+        "fy": 0.5,
+        "zoom": 1
+      },
+      "layout": {},
+      "overlay": false,
+      "status": "review",
+      "text": {
+        "aLabel": "D-LOG M",
+        "aNote": "STRAIGHT OUT OF CAMERA. FLAT ON PURPOSE",
+        "aValue": "BEFORE",
+        "bLabel": "GRADED",
+        "bNote": "THE SAME CLIP AFTER THE COLOR GRADE",
+        "bValue": "AFTER",
+        "foot": "SAVE FOR LATER",
+        "section": "BEFORE / AFTER"
+      },
+      "type": "beforeafter"
     }
   },
   "guide": {
@@ -247,171 +300,426 @@ module.exports = {
     "175f51f39d256ef7045f71a4892ead94": {
       "addedAt": 1792683635368,
       "asset": "175f51f39d256ef7045f71a4892ead94",
+      "desc": "Osmo Nano on a cutting mat in window light",
       "folder": "",
       "h": 4128,
       "name": "GAB07890",
+      "tags": [
+        "osmo nano",
+        "camera",
+        "flat lay",
+        "top down",
+        "cutting mat",
+        "window light",
+        "shadows",
+        "blue"
+      ],
       "updatedAt": 1792683635593,
       "w": 6192
+    },
+    "17cb875bd2367c42f43b2c50fa2ff74b": {
+      "addedAt": 1792687609526,
+      "asset": "17cb875bd2367c42f43b2c50fa2ff74b",
+      "desc": "Airplane wing above the clouds, flat log look",
+      "folder": "",
+      "h": 2880,
+      "name": "dji_export_20261023_photo_0003",
+      "tags": [
+        "airplane",
+        "wing",
+        "clouds",
+        "sky",
+        "window view",
+        "travel",
+        "d-log",
+        "before"
+      ],
+      "updatedAt": 1792687610268,
+      "w": 3840
     },
     "20f28d42d4369841922e86264087bdd7": {
       "addedAt": 1792674435101,
       "asset": "20f28d42d4369841922e86264087bdd7",
+      "desc": "Hand holding Osmo Nano in a soft orange spotlight",
       "folder": "Osmo Nano/Spotlight",
       "h": 2576,
       "name": "Muted spot, hand",
+      "tags": [
+        "osmo nano",
+        "camera",
+        "hand",
+        "spotlight",
+        "orange",
+        "dark",
+        "moody"
+      ],
       "updatedAt": 1792674524101,
       "w": 1717
     },
     "283845a91bf899d4fe1c15c1003b1e78": {
       "addedAt": 1792674434101,
       "asset": "283845a91bf899d4fe1c15c1003b1e78",
+      "desc": "Red-lit hand holding Osmo Nano in an orange spotlight",
       "folder": "Osmo Nano/Spotlight",
       "h": 2576,
       "name": "Orange spot, red-lit hand",
+      "tags": [
+        "osmo nano",
+        "camera",
+        "hand",
+        "spotlight",
+        "orange",
+        "red light",
+        "close-up",
+        "moody"
+      ],
       "updatedAt": 1792674524101,
       "w": 1717
     },
     "33f82795061a3db7f6e3845070c903df": {
       "addedAt": 1792674425101,
       "asset": "33f82795061a3db7f6e3845070c903df",
+      "desc": "Finished cover: Steal my DJI Osmo Nano settings",
       "folder": "Osmo Nano/Finished covers",
       "h": 2700,
       "name": "Your finished cover",
+      "tags": [
+        "cover",
+        "finished",
+        "title",
+        "red",
+        "hand",
+        "osmo nano",
+        "text"
+      ],
       "updatedAt": 1792674524101,
       "w": 1800
     },
     "4c13e7ba10d8789c01d805206af1e9d6": {
       "addedAt": 1792674427101,
       "asset": "4c13e7ba10d8789c01d805206af1e9d6",
+      "desc": "Desk flat lay with Osmo Nano, drone and light bar",
       "folder": "Osmo Nano/Flat lays and details",
       "h": 1717,
       "name": "Desk flat lay, light bar (wide)",
+      "tags": [
+        "flat lay",
+        "desk",
+        "osmo nano",
+        "drone",
+        "keyboard",
+        "light bar",
+        "top down",
+        "wide"
+      ],
       "updatedAt": 1792674524101,
       "w": 2576
     },
     "4cda8eb4c0538f2016c3dacf6711b908": {
       "addedAt": 1792674428101,
       "asset": "4cda8eb4c0538f2016c3dacf6711b908",
+      "desc": "Desk flat lay with Osmo Nano, drone and keyboard",
       "folder": "Osmo Nano/Flat lays and details",
       "h": 1717,
       "name": "Desk flat lay, drone (wide)",
+      "tags": [
+        "flat lay",
+        "desk",
+        "osmo nano",
+        "drone",
+        "keyboard",
+        "yellow lamp",
+        "top down",
+        "wide"
+      ],
       "updatedAt": 1792674524101,
       "w": 2576
     },
     "66a77b430b1b8ac5992667eff07da6c1": {
       "addedAt": 1792674426101,
       "asset": "66a77b430b1b8ac5992667eff07da6c1",
+      "desc": "Osmo Nano with its screen on, on a cutting mat",
       "folder": "Osmo Nano/Flat lays and details",
       "h": 1717,
       "name": "Flat lay, screen on (wide)",
+      "tags": [
+        "flat lay",
+        "osmo nano",
+        "screen",
+        "cutting mat",
+        "yellow lamp",
+        "top down",
+        "detail",
+        "wide"
+      ],
       "updatedAt": 1792674524101,
       "w": 2576
     },
     "677ab14f12c48e4e2c23d861971f4d57": {
       "addedAt": 1792674424101,
       "asset": "677ab14f12c48e4e2c23d861971f4d57",
+      "desc": "Hand holding Osmo Nano from above on red",
       "folder": "Osmo Nano/Red backdrop",
       "h": 2576,
       "name": "Red, hand from top (your cover grade)",
+      "tags": [
+        "osmo nano",
+        "camera",
+        "hand",
+        "red",
+        "red backdrop",
+        "top down",
+        "cover grade"
+      ],
       "updatedAt": 1792674524101,
       "w": 1717
     },
     "804a33a78e6aa6c302895d8c595e01c7": {
       "addedAt": 1792674430101,
       "asset": "804a33a78e6aa6c302895d8c595e01c7",
+      "desc": "Black-and-white hand holding Osmo Nano in orange light",
       "folder": "Osmo Nano/Spotlight",
       "h": 2576,
       "name": "Orange spot, black-and-white hand",
+      "tags": [
+        "osmo nano",
+        "camera",
+        "hand",
+        "spotlight",
+        "orange",
+        "black and white",
+        "moody"
+      ],
       "updatedAt": 1792674524101,
       "w": 1717
     },
     "8658071a8ef496f4dc1332b2d66a67da": {
       "addedAt": 1792674429101,
       "asset": "8658071a8ef496f4dc1332b2d66a67da",
+      "desc": "Osmo Nano close-up with OSMO on the screen",
       "folder": "Osmo Nano/Flat lays and details",
       "h": 2576,
       "name": "Detail, OSMO on screen",
+      "tags": [
+        "osmo nano",
+        "detail",
+        "close-up",
+        "screen",
+        "lens",
+        "cutting mat",
+        "yellow lamp"
+      ],
       "updatedAt": 1792674524101,
       "w": 1717
     },
     "97e0cbb6d431ca2f129c3d6d1c0f46e3": {
       "addedAt": 1792674431101,
       "asset": "97e0cbb6d431ca2f129c3d6d1c0f46e3",
+      "desc": "Hand holding Osmo Nano in a blue spotlight",
       "folder": "Osmo Nano/Spotlight",
       "h": 2576,
       "name": "Blue spot",
+      "tags": [
+        "osmo nano",
+        "camera",
+        "hand",
+        "spotlight",
+        "blue",
+        "dark",
+        "moody"
+      ],
       "updatedAt": 1792674524101,
       "w": 1717
+    },
+    "9ab2ec737ad4651aacaa50b52ca031b1": {
+      "addedAt": 1792687613181,
+      "asset": "9ab2ec737ad4651aacaa50b52ca031b1",
+      "desc": "Airplane wing above the clouds, flat log look",
+      "folder": "",
+      "h": 2880,
+      "name": "dji_export_20261023_photo_0003",
+      "tags": [
+        "airplane",
+        "wing",
+        "clouds",
+        "sky",
+        "window view",
+        "travel",
+        "d-log",
+        "duplicate"
+      ],
+      "updatedAt": 1792687613911,
+      "w": 3840
     },
     "9d2ffe12cf300d96923beac4598f8eb7": {
       "addedAt": 1792674438101,
       "asset": "9d2ffe12cf300d96923beac4598f8eb7",
+      "desc": "Hand holding Osmo Nano sideways in a red spotlight",
       "folder": "Osmo Nano/Red backdrop",
       "h": 1717,
       "name": "Red spot, side view (wide)",
+      "tags": [
+        "osmo nano",
+        "camera",
+        "hand",
+        "spotlight",
+        "red",
+        "side view",
+        "wide"
+      ],
       "updatedAt": 1792674524101,
       "w": 2576
+    },
+    "a9bdb495a31e2fc9c0a77a27fc983916": {
+      "addedAt": 1792687496207,
+      "asset": "a9bdb495a31e2fc9c0a77a27fc983916",
+      "desc": "Airplane wing above the clouds, graded",
+      "folder": "",
+      "h": 2880,
+      "name": "dji_export_20261023_photo_0004",
+      "tags": [
+        "airplane",
+        "wing",
+        "clouds",
+        "sky",
+        "blue",
+        "window view",
+        "travel",
+        "after"
+      ],
+      "updatedAt": 1792687496409,
+      "w": 3840
     },
     "b2cacba14bdb8c9085c6f1ae2115e62a": {
       "addedAt": 1792674432101,
       "asset": "b2cacba14bdb8c9085c6f1ae2115e62a",
+      "desc": "Hand from the left holding Osmo Nano in orange light",
       "folder": "Osmo Nano/Spotlight",
       "h": 2576,
       "name": "Orange spot, hand from left",
+      "tags": [
+        "osmo nano",
+        "camera",
+        "hand",
+        "spotlight",
+        "orange",
+        "dark",
+        "moody"
+      ],
       "updatedAt": 1792674524101,
       "w": 1717
     },
     "bc6f3da763b134e56c7d878713e12785": {
       "addedAt": 1792674437101,
       "asset": "bc6f3da763b134e56c7d878713e12785",
+      "desc": "Hand holding Osmo Nano on a red backdrop",
       "folder": "Osmo Nano/Red backdrop",
       "h": 1717,
       "name": "Red, hand from left 2 (wide)",
+      "tags": [
+        "osmo nano",
+        "camera",
+        "hand",
+        "red",
+        "red backdrop",
+        "lens",
+        "wide"
+      ],
       "updatedAt": 1792674524101,
       "w": 2576
     },
     "d7e173f05177b25531d1d94654abe168": {
       "addedAt": 1792674433101,
       "asset": "d7e173f05177b25531d1d94654abe168",
+      "desc": "Hand from below holding Osmo Nano in a red spotlight",
       "folder": "Osmo Nano/Spotlight",
       "h": 2576,
       "name": "Red spot, hand from below",
+      "tags": [
+        "osmo nano",
+        "camera",
+        "hand",
+        "spotlight",
+        "red",
+        "dark",
+        "moody"
+      ],
       "updatedAt": 1792674524101,
       "w": 1717
     },
     "db2f6a4bef5d57e38f6c4f4cafa7a965": {
       "addedAt": 1792674440101,
       "asset": "db2f6a4bef5d57e38f6c4f4cafa7a965",
+      "desc": "Cover with big title: Steal my DJI Osmo Nano settings",
       "folder": "Osmo Nano/Finished covers",
       "h": 2700,
       "name": "Your cover, big title version",
+      "tags": [
+        "cover",
+        "finished",
+        "title",
+        "red",
+        "hand",
+        "osmo nano",
+        "text"
+      ],
       "updatedAt": 1792674524101,
       "w": 1800
     },
     "e664a74c69eb06d8a5a91f4fb514e4fc": {
       "addedAt": 1792685312629,
       "asset": "e664a74c69eb06d8a5a91f4fb514e4fc",
+      "desc": "Home studio setup with a softbox and red light",
       "folder": "",
       "h": 4032,
       "name": "IMG_1868",
+      "tags": [
+        "behind the scenes",
+        "studio",
+        "softbox",
+        "red light",
+        "tripod",
+        "bedroom",
+        "lighting setup"
+      ],
       "updatedAt": 1792685312629,
       "w": 3024
     },
     "fedc95eb05f354dbfd1204dda79da461": {
       "addedAt": 1792674439101,
       "asset": "fedc95eb05f354dbfd1204dda79da461",
+      "desc": "Hand holding Osmo Nano from above on red, ungraded",
       "folder": "Osmo Nano/Red backdrop",
       "h": 2576,
       "name": "Red, hand from top (raw)",
+      "tags": [
+        "osmo nano",
+        "camera",
+        "hand",
+        "red",
+        "red backdrop",
+        "top down",
+        "raw"
+      ],
       "updatedAt": 1792674524101,
       "w": 1717
     },
     "ffe72b5d4602c259c7f92c29310bb8ec": {
       "addedAt": 1792674436101,
       "asset": "ffe72b5d4602c259c7f92c29310bb8ec",
+      "desc": "Hand holding Osmo Nano on a red backdrop",
       "folder": "Osmo Nano/Red backdrop",
       "h": 1684,
       "name": "Red, hand from left (wide)",
+      "tags": [
+        "osmo nano",
+        "camera",
+        "hand",
+        "red",
+        "red backdrop",
+        "screen",
+        "wide"
+      ],
       "updatedAt": 1792674524101,
       "w": 2527
     }

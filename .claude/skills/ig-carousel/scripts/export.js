@@ -76,8 +76,7 @@ const srv = http.createServer((q, r) => {
     const names = await p.$$eval(".card", cards => cards.map(c => c.dataset.sid));
     for (let i = 0; i < names.length; i++) {
       const url = await p.evaluate(i => window.__exportPNG(i), i);
-      const s = slides[names[i]], label = String((s.text && s.text.section) || s.type).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-      const file = path.join(args.out, `${String(i + 1).padStart(2, "0")}-${label || "slide"}${s.overlay ? "-overlay" : ""}.png`);
+      const file = path.join(args.out, await p.evaluate(i => window.__exportName(i), i)); /* the board's own file name: 05-v2-before-after.png */
       fs.writeFileSync(file, Buffer.from(url.split(",")[1], "base64"));
       console.log(file);
     }
