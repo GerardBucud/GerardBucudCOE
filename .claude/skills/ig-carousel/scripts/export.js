@@ -53,7 +53,7 @@ const srv = http.createServer((q, r) => {
   for (let i = 0; i < names.length; i++) {
     const url = await p.evaluate(i => window.__exportPNG(i), i);
     const s = slides[names[i]], label = String((s.text && s.text.section) || s.type).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-    const file = path.join(args.out, `${String(i + 1).padStart(2, "0")}-${label || "slide"}.png`);
+    const file = path.join(args.out, `${String(i + 1).padStart(2, "0")}-${label || "slide"}${s.overlay ? "-overlay" : ""}.png`);
     fs.writeFileSync(file, Buffer.from(url.split(",")[1], "base64"));
     console.log(file);
   }

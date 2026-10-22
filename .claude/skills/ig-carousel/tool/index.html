@@ -107,10 +107,6 @@ summary{cursor:pointer;font-weight:700;font-size:14px;min-height:32px;display:fl
 .section h2{font-size:22px;letter-spacing:-.05em;text-transform:uppercase;margin:0 0 6px}
 .section p.hint{color:var(--muted);margin:0 0 14px;max-width:70ch}
 .overall{display:grid;gap:12px;max-width:820px}
-.lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
-.thumb{display:grid;gap:5px;min-width:0;font-size:12px;color:var(--muted)}
-.thumb img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;background:var(--sunken);display:block}
-.thumb span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .empty{padding:60px 0;text-align:center;color:var(--muted)}
 .empty h2{color:var(--ink);font-size:26px;letter-spacing:-.05em;text-transform:uppercase;margin:0 0 8px}
 
@@ -132,8 +128,51 @@ dialog::backdrop{background:rgba(10,8,8,.6)}
 .focus-b canvas{display:block;max-width:calc(100vw - 48px);max-height:calc(100vh - 150px);height:auto;width:auto}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;z-index:20;max-width:calc(100vw - 32px)}
 .saveimg{max-width:100%;height:auto;display:block;margin:0 auto}
+
+.btn.accent{border-color:var(--accent);color:var(--accent);font-weight:700;background:var(--surface)}
+.btn.danger{color:var(--accent)}
+.top .wrap{position:relative}
+.applybar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.applied{font-size:13.5px;line-height:1.4;background:var(--sunken);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.applied p{margin:0}
+.busy{font-size:13.5px;color:var(--muted);display:flex;align-items:center;gap:10px}
+.busy i{flex:0 0 auto;width:10px;height:10px;border-radius:50%;background:var(--accent);animation:pulse .9s infinite alternate}
+@keyframes pulse{from{opacity:.25}to{opacity:1}}
+.notes{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:12px 14px;margin-top:18px;display:flex;gap:12px;align-items:flex-start}
+.notes p{margin:0;flex:1;min-width:0}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:14px;cursor:pointer}
+.check input{width:18px;height:18px;margin-top:2px;accent-color:var(--accent);flex:0 0 auto}
+.check small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+.sec-h{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:6px}
+.sec-h h2{margin:0}
+.libwrap{display:grid;grid-template-columns:230px minmax(0,1fr);gap:20px;align-items:start}
+.folders{display:grid;gap:2px;align-content:start}
+.folders button{display:flex;justify-content:space-between;gap:8px;text-align:left;border:0;background:none;border-radius:6px;padding:8px 10px;cursor:pointer;font-size:14px;color:var(--ink);min-height:36px;align-items:center}
+.folders button span{color:var(--muted);font-variant-numeric:tabular-nums}
+.folders button[aria-current="true"]{background:var(--surface);font-weight:700;box-shadow:inset 0 0 0 1px var(--line)}
+.libmain{min-width:0;display:grid;gap:12px}
+.seltools,.foldertools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seltools{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.seltools .count{font-weight:700;font-size:14px;margin-right:4px}
+.seltools select.ctl,.seltools input.ctl,.foldertools input.ctl{width:auto;min-width:170px;flex:0 1 240px}
+.foldertools .path{font-weight:700;font-size:15px;letter-spacing:-.02em;margin-right:6px}
+.inline-form{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0 14px}
+.inline-form input.ctl{width:auto;min-width:200px;flex:1 1 200px;max-width:360px}
+.inline-form .hint{margin:0;color:var(--muted);font-size:13px}
+.lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
+.tile{position:relative;display:grid;gap:4px;min-width:0;border:0;background:none;padding:0;text-align:left;cursor:pointer;font-size:12px;color:var(--muted)}
+.tile img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;background:var(--sunken);display:block;outline:3px solid transparent;outline-offset:-3px}
+.tile[aria-pressed="true"] img{outline-color:var(--accent)}
+.tile .tick{position:absolute;top:6px;left:6px;width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.35);display:grid;place-items:center;color:#fff;font-size:13px;font-weight:700}
+.tile[aria-pressed="true"] .tick{background:var(--accent);border-color:var(--accent)}
+.tile .nm{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile .use{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px}
+.chips button{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:13px;white-space:nowrap;min-height:34px}
+.chips button[aria-current="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+@media (max-width:760px){.libwrap{grid-template-columns:1fr}.folders{display:flex;overflow-x:auto;gap:6px;padding-bottom:4px}.folders button{flex:0 0 auto;border:1px solid var(--line);border-radius:999px;background:var(--surface);white-space:nowrap}}
 @media (max-width:560px){.top .wrap{gap:8px 10px}.top select.ctl{max-width:150px}.board{gap:30px}}
-@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}.busy i{animation:none}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
@@ -141,9 +180,10 @@ dialog::backdrop{background:rgba(10,8,8,.6)}
   <span class="brand">Carousel <b>Artboard</b></span>
   <label class="sr" for="postSel">Post</label>
   <select id="postSel" class="ctl" hidden></select>
-  <button id="newPost" class="btn ghost sm" hidden>New post</button>
+  <div class="more"><button id="newPost" class="btn ghost sm" hidden aria-expanded="false">New post</button></div>
   <span class="grow"></span>
   <span id="pill" class="pill" data-s="local"><i></i><span>Loading</span></span>
+  <button id="applyAll" class="btn accent" hidden disabled>Apply comments</button>
   <button id="dlAll" class="btn primary" disabled>Download all</button>
 </div></div>
 
@@ -155,7 +195,8 @@ dialog::backdrop{background:rgba(10,8,8,.6)}
   <div class="dlg-h"><h3 id="pickTitle">Replace image</h3><span class="grow"></span>
     <label class="btn primary sm" id="pickUploadLbl">Upload new photo<input type="file" id="pickUpload" accept="image/*" class="sr"></label>
     <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-  <div class="dlg-b"><p class="hint" id="pickHint" style="margin:0 0 12px;color:var(--muted)">Pick one of this post's photos. The text design re-fits to the new photo.</p><div class="pick" id="pickGrid"></div></div>
+  <div class="dlg-b"><p id="pickHint" style="margin:0 0 12px;color:var(--muted)">Pick a photo from your library. The text design re-fits to the photo you choose.</p>
+    <div class="chips" id="pickFolders" aria-label="Folders"></div><div class="pick" id="pickGrid"></div></div>
 </dialog>
 
 <dialog id="focusDlg" aria-labelledby="focusTitle">
@@ -181,6 +222,7 @@ const FONT = '"Nimbus Sans","Helvetica Neue",Helvetica,Arial,sans-serif';
 let CAPR = 0.729;
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+/* every piece of stored text goes through esc() before it is placed in HTML */
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const clone = o => o == null ? o : JSON.parse(JSON.stringify(o));
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -210,7 +252,11 @@ const FIELDS = {
   save: [["left", "Small word, left"], ["right", "Small word, right"], ["big", "Big text (**bold**, Enter = new line)", "area"], ["sub", "Under the big text ({handle} = your handle)"], ["section", "Footer, middle"], ["foot", "Footer, right"]],
   photo: [["label", "Caption heading"], ["note", "Caption text", "area"], ["section", "Footer, middle"], ["foot", "Footer, right"]]
 };
-const SLOT_NAME = { img: "image", img2: "after image" };
+const TEXT_KEYS = {
+  cover: ["left", "right", "title", "sub", "section", "foot"], specs: ["section", "foot", "tipK", "tip"],
+  beforeafter: ["aValue", "aLabel", "aNote", "bValue", "bLabel", "bNote", "section", "foot"],
+  save: ["left", "right", "big", "sub", "section", "foot"], photo: ["label", "note", "section", "foot"]
+};
 
 /* ---------- text engine (canvas, tracked, kerned) ---------- */
 const font = (size, weight) => `${weight} ${size}px ${FONT}`;
@@ -331,7 +377,9 @@ function coverRect(img, rw, rh, slot) {
   const fx = clamp(slot && slot.fx != null ? +slot.fx : 0.5, 0, 1), fy = clamp(slot && slot.fy != null ? +slot.fy : 0.5, 0, 1);
   return { dx: (rw - dw) * fx, dy: (rh - dh) * fy, dw, dh, s };
 }
+let OVERLAY = false; /* true while rendering a text-only (transparent) slide */
 function drawPhoto(ctx, slot, rx, ry, rw, rh, emptyText) {
+  if (OVERLAY) return;
   const img = getImg(slot);
   ctx.save();
   ctx.beginPath(); ctx.rect(rx, ry, rw, rh); ctx.clip();
@@ -487,7 +535,7 @@ function designSpecs(ctx, post, s) {
   const hasTip = !!(t.tipK || t.tip);
   const tipIn = hasTip ? tipGeo(ctx, t, 1000) : null;
   const inlineH = hasTip ? 64 + tipIn.h : 0;
-  const A = analyze(s.img, W, H);
+  const A = s.overlay ? null : analyze(s.img, W, H), ov = s.overlay ? 0.3 : null;
   const stTop = A ? A.stats(M - 30, 110, W - M + 30, 232 + tableH + 40) : DARK;
   const botEnd = 2430, botTop = botEnd - tableH - inlineH;
   const stBot = A ? A.stats(M - 30, botTop - 40, W - M + 30, botEnd + 20) : DARK;
@@ -515,14 +563,14 @@ function designSpecs(ctx, post, s) {
         if (okZone(st) || !A) { if (!best || w > best.w) best = { side, w, g, top, st }; break; }
       }
       if (!best && L.tip && L.tip !== "auto") { const w = 600, g = tipGeo(ctx, t, w); best = { side: L.tip, w, g, top: 2420 - g.h, st: A ? A.stats(L.tip === "right" ? W - M - w : M, 2420 - g.h - 80, L.tip === "right" ? W - M : M + w, 2450) : DARK, forced: true }; }
-      if (best) d.tip = { mode: "corner", ...best, scrim: us ?? (best.forced ? Math.max(0.45, scrimFor(best.st)) : scrimFor(best.st)) };
+      if (best) d.tip = { mode: "corner", ...best, scrim: us ?? ov ?? (best.forced ? Math.max(0.45, scrimFor(best.st)) : scrimFor(best.st)) };
     }
     d.blockEnd = d.tableTop + tableH + (d.tip.mode === "inline" ? inlineH : 0);
-    d.scrimTop = us ?? scrimFor(A ? A.stats(M - 30, 110, W - M + 30, d.blockEnd + 40) : DARK);
-    d.scrimFoot = us ?? footScrim(A);
+    d.scrimTop = us ?? ov ?? scrimFor(A ? A.stats(M - 30, 110, W - M + 30, d.blockEnd + 40) : DARK);
+    d.scrimFoot = us ?? ov ?? footScrim(A);
   } else if (mode === "overlay") {
     d.tableTop = botTop; d.tip = { mode: hasTip ? "inline" : "none" };
-    d.scrimBot = us ?? scrimFor(stBot); d.scrimHead = us ?? headScrim(A);
+    d.scrimBot = us ?? ov ?? scrimFor(stBot); d.scrimHead = us ?? ov ?? headScrim(A);
   } else {
     d.panel = L.panel === "black" ? "#0e0b0a" : L.panel === "red" ? "#e02d12" : (A ? A.darkTone() : "#0e0b0a");
     d.tip = { mode: hasTip ? "inline" : "none" };
@@ -575,9 +623,9 @@ function renderSpecs(ctx, post, s, idx, total, d) {
 function titleBlock(ctx, post, s) {
   const t = s.text || {};
   if (s.type === "cover") {
-    const big = [up(fill(t.title, post))];
+    const big = t.title ? [up(fill(t.title, post))] : [];
     let bs = 156;
-    const w0 = richW(ctx, big[0], bs, 700, -0.10);
+    const w0 = big.length ? richW(ctx, big[0], bs, 700, -0.10) : 0;
     if (w0 > W - 2 * M) bs = Math.floor(bs * (W - 2 * M) / w0);
     return { lines: big, bs, baseW: 700, small: 40, sub: 42, subW: 700, gap1: 30, gap2: 35, lead: 0 };
   }
@@ -598,7 +646,8 @@ function blockMetrics(ctx, post, s, b) {
 function designTitle(ctx, post, s) {
   const L = s.layout || {};
   const b = titleBlock(ctx, post, s), m = blockMetrics(ctx, post, s, b);
-  const A = analyze(s.img, W, H);
+  const A = s.overlay ? null : analyze(s.img, W, H);
+  const hasText = m.hasSmall || m.hasSub || b.lines.length > 0;
   const yFor = p => p === "top" ? 499 : p === "middle" ? Math.round(H / 2 - m.h / 2) : Math.round(2330 - m.h);
   const order = L.pos && L.pos !== "auto" ? [L.pos] : (s.type === "save" ? ["middle", "top", "bottom"] : ["top", "middle", "bottom"]);
   let pick = null, best = null;
@@ -611,8 +660,9 @@ function designTitle(ctx, post, s) {
   }
   pick = pick || best;
   const us = userScrim(L);
-  return { kind: "title", b, m, A, pos: pick.p, y: pick.y, scrim: us ?? scrimFor(pick.st), scrimFoot: us ?? footScrim(A),
-    note: `Title <b>${pick.p === "top" ? "at the top" : pick.p === "middle" ? "in the middle" : "at the bottom"}</b>${(us ?? scrimFor(pick.st)) > 0 ? " · photo darkened behind it" : ""}` };
+  const scrim = !hasText ? 0 : us ?? (s.overlay ? 0.3 : scrimFor(pick.st));
+  return { kind: "title", b, m, A, pos: pick.p, y: pick.y, scrim, scrimFoot: us ?? (s.overlay ? 0.3 : footScrim(A)),
+    note: !hasText ? "Photo only, plus the footer" : `Title <b>${pick.p === "top" ? "at the top" : pick.p === "middle" ? "in the middle" : "at the bottom"}</b>${scrim > 0 ? " · darkened behind it" : ""}` };
 }
 function renderTitle(ctx, post, s, idx, total, d) {
   const t = s.text || {}, b = d.b, m = d.m;
@@ -634,15 +684,16 @@ function renderTitle(ctx, post, s, idx, total, d) {
 function designBA(ctx, post, s) {
   const t = s.text || {}, L = s.layout || {}, half = H / 2;
   const ga = rowGeo(ctx, { label: t.aLabel, value: t.aValue, note: t.aNote }), gb = rowGeo(ctx, { label: t.bLabel, value: t.bValue, note: t.bNote });
-  const A1 = analyze(s.img, W, half), A2 = analyze(s.img2, W, half);
+  const ovr = !!s.overlay;
+  const A1 = ovr ? null : analyze(s.img, W, half), A2 = ovr ? null : analyze(s.img2, W, half);
   const aTop = half - 70 - ga.h + 46, bTop = half + 24;
   const us = userScrim(L);
   return { kind: "ba", ga, gb, aTop, bTop, A1, A2,
-    sa: us ?? (A1 ? Math.max(0.25, scrimFor(A1.stats(M, aTop, W - M, half))) : 0),
-    sb: us ?? (A2 ? Math.max(0.25, scrimFor(A2.stats(M, 0, W - M, gb.h + 40))) : 0),
-    sh: us ?? (A1 ? scrimFor(A1.stats(M, 120, W - M, 200)) : 0),
-    sf: us ?? (A2 ? footFor(A2.stats(M, half - 230, W - M, half - 90)) : 0),
-    note: "Labels sit on the seam between the two frames" };
+    sa: us ?? (ovr ? 0.35 : A1 ? Math.max(0.25, scrimFor(A1.stats(M, aTop, W - M, half))) : 0),
+    sb: us ?? (ovr ? 0.35 : A2 ? Math.max(0.25, scrimFor(A2.stats(M, 0, W - M, gb.h + 40))) : 0),
+    sh: us ?? (ovr ? 0.3 : A1 ? scrimFor(A1.stats(M, 120, W - M, 200)) : 0),
+    sf: us ?? (ovr ? 0.3 : A2 ? footFor(A2.stats(M, half - 230, W - M, half - 90)) : 0),
+    note: ovr ? "<b>Text-only overlay</b>: labels on the seam, see-through background" : "Labels sit on the seam between the two frames" };
 }
 function renderBA(ctx, post, s, idx, total, d) {
   const t = s.text || {}, half = H / 2;
@@ -664,7 +715,7 @@ function designPhoto(ctx, post, s) {
   const lines = wrap(ctx, up(t.note || ""), 900, 37, 400, -0.035);
   const hasCap = !!(t.label || lines.length);
   const h = (t.label ? capH(41) : 0) + (lines.length ? (t.label ? 30 : 0) + capH(37) + (lines.length - 1) * LH : 0);
-  const A = analyze(s.img, W, H);
+  const A = s.overlay ? null : analyze(s.img, W, H);
   const yFor = p => p === "top" ? 232 : p === "middle" ? Math.round(H / 2 - h / 2) : Math.round(2420 - h);
   const order = L.pos && L.pos !== "auto" ? [L.pos] : ["bottom", "top", "middle"];
   let pick = null, best = null;
@@ -672,7 +723,8 @@ function designPhoto(ctx, post, s) {
     if (!best || sc < best.sc) best = { p, y, st, sc }; if (!pick && (okZone(st) || !A)) pick = { p, y, st }; }
   pick = pick || best;
   const us = userScrim(L);
-  return { kind: "photo", lines, h, hasCap, A, y: pick.y, pos: pick.p, scrim: hasCap ? (us ?? scrimFor(pick.st)) : 0, scrimFoot: us ?? footScrim(A), scrimHead: us ?? headScrim(A),
+  const ov = s.overlay ? 0.3 : null;
+  return { kind: "photo", lines, h, hasCap, A, y: pick.y, pos: pick.p, scrim: hasCap ? (us ?? ov ?? scrimFor(pick.st)) : 0, scrimFoot: us ?? ov ?? footScrim(A), scrimHead: us ?? ov ?? headScrim(A),
     note: hasCap ? `Caption <b>${pick.p}</b>` : "Photo only" };
 }
 function renderPhotoSlide(ctx, post, s, idx, total, d) {
@@ -694,23 +746,40 @@ function design(ctx, post, s) {
   if (s.type === "beforeafter") return designBA(ctx, post, s);
   return designPhoto(ctx, post, s);
 }
-function renderSlide(cv, post, s, idx, total, scale) {
+function checker(ctx) {
+  ctx.save(); ctx.fillStyle = "#2b2626"; ctx.fillRect(0, 0, W, H); ctx.fillStyle = "#1e1a1a";
+  for (let y = 0, r = 0; y < H; y += 90, r++) for (let x = (r % 2) * 90; x < W; x += 180) ctx.fillRect(x, y, 90, 90);
+  ctx.restore();
+}
+function renderSlide(cv, post, s, idx, total, scale, forExport) {
   const ctx = cv.getContext("2d");
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
-  ctx.fillStyle = "#100c0b"; ctx.fillRect(0, 0, W, H);
+  OVERLAY = !!s.overlay;
+  if (OVERLAY) { if (!forExport) checker(ctx); } else { ctx.fillStyle = "#100c0b"; ctx.fillRect(0, 0, W, H); }
   const d = design(ctx, post, s);
+  if (OVERLAY) d.note = (d.note || "") + " · <b>transparent PNG</b>";
   if (s.type === "specs") renderSpecs(ctx, post, s, idx, total, d);
   else if (s.type === "cover" || s.type === "save") renderTitle(ctx, post, s, idx, total, d);
   else if (s.type === "beforeafter") renderBA(ctx, post, s, idx, total, d);
   else renderPhotoSlide(ctx, post, s, idx, total, d);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
+  OVERLAY = false;
   return d;
 }
 
 /* ---------- state & storage ---------- */
-const S = { db: null, assets: null, downloads: null, local: false, posts: [], pid: null, post: null, slides: {}, dirty: new Set(), writing: new Set(), again: new Set(), timers: new Map(), unsubSlides: null, readOnly: false, errors: 0 };
+const S = {
+  db: null, assets: null, downloads: null, sample: null, local: false,
+  posts: [], pid: null, post: null, slides: {},
+  photos: new Map(), folders: [], libFolder: "*", pickFolder: "*", selected: new Set(), lastTile: null, folderForm: null,
+  dirty: new Set(), writing: new Set(), again: new Set(), timers: new Map(), unsubSlides: null, readOnly: false, errors: 0,
+  busy: new Set(), applyCtl: null, notes: ""
+};
 const metaPath = () => `posts/${S.pid}`;
 const slidePath = sid => `posts/${S.pid}/slides/${sid}`;
+const photoPath = id => `photos/${id}`;
+const LIB_PATH = "settings/library";
 function order() {
   const o = [...new Set((S.post && Array.isArray(S.post.order) ? S.post.order : []).filter(id => S.slides[id]))];
   Object.keys(S.slides).sort().forEach(id => { if (!o.includes(id)) o.push(id); });
@@ -740,6 +809,8 @@ async function flush(path, getter) {
 }
 const saveMeta = () => queueSave(metaPath(), () => S.post);
 const saveSlide = sid => { const p = S.pid; queueSave(slidePath(sid), () => S.pid === p ? S.slides[sid] : null); };
+const savePhoto = (id, delay = 300) => queueSave(photoPath(id), () => S.photos.get(id), delay);
+const saveFolders = () => queueSave(LIB_PATH, () => ({ folders: S.folders }), 300);
 async function removeDoc(path) { if (S.local || S.readOnly) return; try { await S.db.doc(path).delete(); } catch (e) { S.errors++; setStatus(); } }
 
 /* ---------- rendering scheduler ---------- */
@@ -753,12 +824,11 @@ function drawNow() {
     const card = document.getElementById("card-" + sid), s = S.slides[sid];
     if (!card || !s) continue;
     const cv = card.querySelector("canvas");
-    const i = o.indexOf(sid);
-    const d = renderSlide(cv, S.post, s, i + 1, o.length, cv.width / W);
+    const d = renderSlide(cv, S.post, s, o.indexOf(sid) + 1, o.length, cv.width / W);
     const n = card.querySelector(".autonote");
     if (n) n.innerHTML = d.note ? "Auto layout: " + d.note : "";
     const warn = card.querySelector(".warn");
-    if (warn) warn.textContent = upscaleWarning(s, d);
+    if (warn) warn.textContent = s.overlay ? "" : upscaleWarning(s, d);
   }
   pendingDraw.clear();
   if (focusSid) drawFocus();
@@ -778,7 +848,7 @@ onImageReady = src => {
   if (focusSid) drawFocus();
 };
 
-/* ---------- UI: board ---------- */
+/* ---------- UI: slide cards ---------- */
 function slideName(s) { return up(fill((s.text || {}).section, S.post)) || TEMPLATES[s.type].label; }
 function fieldHTML(sid, s) {
   const t = s.text || {}, id = k => `${sid}-${k}`;
@@ -801,7 +871,8 @@ function fieldHTML(sid, s) {
   return parts.join("");
 }
 function sel(sid, key, label, opts, val) {
-  return `<div><label class="lbl" for="${sid}-${key.replace(/\./g, "-")}">${label}</label><select class="ctl" id="${sid}-${key.replace(/\./g, "-")}" data-f="${key}">${opts.map(([v, l]) => `<option value="${v}"${(val ?? "auto") === v ? " selected" : ""}>${l}</option>`).join("")}</select></div>`;
+  const idv = `${sid}-${key.replace(/\./g, "-")}`;
+  return `<div><label class="lbl" for="${idv}">${label}</label><select class="ctl" id="${idv}" data-f="${key}">${opts.map(([v, l]) => `<option value="${v}"${(val ?? "auto") === v ? " selected" : ""}>${l}</option>`).join("")}</select></div>`;
 }
 function rng(sid, key, label, min, max, step, val, fmt) {
   const idv = `${sid}-${key.replace(/\./g, "-")}`;
@@ -810,6 +881,7 @@ function rng(sid, key, label, min, max, step, val, fmt) {
 function layoutHTML(sid, s) {
   const L = s.layout || {}, parts = [];
   const pct = v => Math.round(v * 100) + "%";
+  parts.push(`<label class="check"><input type="checkbox" id="${sid}-overlay" data-f="overlay" data-bool${s.overlay ? " checked" : ""}><span>Text-only overlay (transparent PNG)<small>Leaves the photo out so you can lay the text over a video in Edits or CapCut.</small></span></label>`);
   if (s.type === "specs") {
     parts.push(`<div class="two">${sel(sid, "layout.style", "Text style", [["auto", "Auto"], ["overlay", "Over the photo"], ["panel", "Solid panel"]], L.style)}${sel(sid, "layout.pos", "Text position", [["auto", "Auto"], ["top", "Top"], ["bottom", "Bottom"]], L.pos)}</div>`);
     parts.push(`<div class="two">${sel(sid, "layout.tip", "Tip placement", [["auto", "Auto"], ["right", "Bottom right"], ["left", "Bottom left"], ["inline", "Under the table"]], L.tip)}${sel(sid, "layout.panel", "Panel color", [["auto", "From the photo"], ["black", "Black"], ["red", "Cover red"]], L.panel)}</div>`);
@@ -817,7 +889,7 @@ function layoutHTML(sid, s) {
     parts.push(sel(sid, "layout.pos", "Text position", [["auto", "Auto"], ["top", "Top"], ["middle", "Middle"], ["bottom", "Bottom"]], L.pos));
   }
   const sc = userScrim(L);
-  parts.push(`<div><label class="lbl" for="${sid}-scrimauto">Darken photo behind text</label><div class="two"><select class="ctl" id="${sid}-scrimauto" data-act="scrimmode"><option value="auto"${sc == null ? " selected" : ""}>Auto</option><option value="manual"${sc != null ? " selected" : ""}>Manual</option></select>
+  parts.push(`<div><label class="lbl" for="${sid}-scrimauto">Darken behind text</label><div class="two"><select class="ctl" id="${sid}-scrimauto" data-act="scrimmode"><option value="auto"${sc == null ? " selected" : ""}>Auto</option><option value="manual"${sc != null ? " selected" : ""}>Manual</option></select>
     <div class="range"><input type="range" id="${sid}-scrim" data-f="layout.scrim" data-num min="0" max="0.9" step="0.05" value="${sc ?? 0.3}"${sc == null ? " disabled" : ""} aria-label="Darken amount"><output for="${sid}-scrim">${pct(sc ?? 0.3)}</output></div></div></div>`);
   for (const slot of TEMPLATES[s.type].slots) {
     const v = s[slot] || {}, nm = s.type === "beforeafter" ? (slot === "img" ? "Before photo: " : "After photo: ") : "Photo: ";
@@ -826,9 +898,16 @@ function layoutHTML(sid, s) {
   }
   return parts.join("");
 }
+function applyHTML(sid, s) {
+  if (S.busy.has(sid)) return `<div class="busy" role="status"><i></i><span>Claude is applying your comment…</span><button class="btn ghost sm" data-act="stopapply">Stop</button></div>`;
+  const out = [];
+  if (s.applied) out.push(`<div class="applied" role="status"><p><b>Claude changed this slide:</b> ${esc(s.applied.summary)}</p><div class="actions">${s.undo || s.applied.isNew ? `<button class="btn sm" data-act="undo">Undo</button>` : ""}<button class="btn ghost sm" data-act="keep">Keep it</button></div></div>`);
+  if (S.sample) out.push(`<div class="applybar"><button class="btn accent sm" data-act="apply"${(s.comment || "").trim() ? "" : " disabled"}>Apply comment</button></div>`);
+  return out.join("");
+}
 function cardHTML(sid) {
   const s = S.slides[sid], st = s.status || "review";
-  const replace = TEMPLATES[s.type].slots.map(slot => `<button class="btn sm" data-act="replace" data-slot="${slot}"${S.assets || S.local ? "" : ""}>${s.type === "beforeafter" ? (slot === "img" ? "Replace before" : "Replace after") : "Replace image"}</button>`).join("");
+  const replace = TEMPLATES[s.type].slots.map(slot => `<button class="btn sm" data-act="replace" data-slot="${slot}">${s.type === "beforeafter" ? (slot === "img" ? "Replace before" : "Replace after") : "Replace image"}</button>`).join("");
   return `<article class="card" id="card-${sid}" data-sid="${sid}" data-st="${st}">
     <header class="card-h"><span class="num"></span><span class="kind">${esc(TEMPLATES[s.type].label)}</span>
       <div class="card-tools"><button class="icon" data-act="left" aria-label="Move earlier">${ICON.left}</button><button class="icon" data-act="right" aria-label="Move later">${ICON.right}</button>
@@ -838,6 +917,7 @@ function cardHTML(sid) {
     <div class="actions">${replace}<button class="btn sm" data-act="autofit">Auto-fit text</button><button class="btn sm" data-act="png">PNG</button></div>
     <div class="status" role="group" aria-label="Review status">${[["review", "To review"], ["change", "Needs changes"], ["ok", "Approved"]].map(([v, l]) => `<button data-act="status" data-v="${v}" aria-pressed="${st === v}">${l}</button>`).join("")}</div>
     <div><label class="lbl" for="${sid}-comment">Comment for Claude</label><textarea class="ctl" id="${sid}-comment" data-f="comment" placeholder="What should change on this slide?">${esc(s.comment)}</textarea></div>
+    <div class="applyslot">${applyHTML(sid, s)}</div>
     <details><summary>Edit text</summary><div class="fields">${fieldHTML(sid, s)}</div></details>
     <details><summary>Layout and photo</summary><div class="fields">${layoutHTML(sid, s)}</div></details>
   </article>`;
@@ -865,53 +945,65 @@ function renderBoard(rebuild) {
   renumber();
   scheduleDraw();
   $("#dlAll").disabled = !o.length;
+  updateApplyAll();
+}
+function refreshApplySlot(sid) {
+  const c = document.getElementById("card-" + sid), s = S.slides[sid];
+  if (c && s) c.querySelector(".applyslot").innerHTML = applyHTML(sid, s);
 }
 function renderMain() {
   const main = $("#main");
   if (!S.post) return;
   main.innerHTML = `
     <h1 class="title" id="postTitle"></h1>
-    <p class="sub">Check each slide, leave a comment for Claude, swap photos, then download the PNGs. Everything saves as you go.</p>
+    <p class="sub">Leave a comment on any slide, then tap <b>Apply comment</b> on that slide, or <b>Apply comments</b> at the top to do them all. Swap photos, then download the PNGs. Everything saves as you go.</p>
+    <div id="notes"></div>
     <details id="postSettings"><summary>Post settings</summary>
       <div class="meta">
         <div><label class="lbl" for="m-title">Post name</label><input class="ctl" id="m-title" data-m="title"></div>
         <div><label class="lbl" for="m-series">Header, left</label><input class="ctl" id="m-series" data-m="series"></div>
         <div><label class="lbl" for="m-subject">Header, right</label><input class="ctl" id="m-subject" data-m="subject"></div>
         <div><label class="lbl" for="m-handle">Your handle</label><input class="ctl" id="m-handle" data-m="handle"></div>
-      </div></details>
+      </div>
+      <div class="actions" style="padding-bottom:10px"><button class="btn ghost sm danger" id="delPost">Delete this post</button></div></details>
     <section class="board" id="board" aria-label="Slides"></section>
     <div class="actions" style="padding-bottom:26px"><label class="lbl sr" for="addType">Slide type</label>
       <select class="ctl" id="addType" style="width:auto">${Object.entries(TEMPLATES).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join("")}</select>
       <button class="btn" id="addSlide">Add slide</button></div>
     <section class="section" id="overallSec"><h2>Overall comments</h2>
-      <p class="hint">Notes about the whole post: the story, photo choices, anything Claude should change across slides.</p>
+      <p class="hint">Notes about the whole post: the story, photo choices, anything that should change across slides. <b>Apply comments</b> at the top includes these.</p>
       <div class="overall"><label class="sr" for="m-overall">Overall comments</label><textarea class="ctl" id="m-overall" data-m="overall" rows="5" placeholder="e.g. use more flat lays, the orange slides feel too similar"></textarea>
+      <div id="overallDone"></div>
       <div class="actions"><button class="btn sm" id="copyAll">Copy all comments</button></div></div></section>
-    <section class="section"><h2>Photos in this post</h2><p class="hint">Upload once, then pick from here with Replace image on any slide.</p>
-      <div class="actions" style="margin-bottom:14px"><label class="btn sm" id="libUploadLbl">Upload photos<input type="file" id="libUpload" accept="image/*" multiple class="sr"></label></div>
-      <div class="lib" id="lib"></div></section>`;
+    <section class="section" id="libSec">
+      <div class="sec-h"><h2>Photo library</h2><span class="grow"></span><button class="btn sm" id="newFolderBtn">New folder</button>
+        <label class="btn sm primary" id="libUploadLbl">Upload photos<input type="file" id="libUpload" accept="image/*" multiple class="sr"></label></div>
+      <p class="hint">Shared by all your posts. Tap photos to select several, then move them into a folder. Use Replace image on any slide to pick one.</p>
+      <form class="inline-form" id="folderForm" hidden><label class="sr" for="folderName">Folder name</label><input class="ctl" id="folderName" placeholder="Folder name" maxlength="60"><span class="hint" id="folderWhere"></span>
+        <button class="btn sm primary" type="submit" id="folderOk">Create folder</button><button class="btn sm ghost" type="button" id="folderCancel">Cancel</button></form>
+      <div class="libwrap"><nav class="folders" id="folders" aria-label="Folders"></nav>
+        <div class="libmain"><div class="foldertools" id="folderTools"></div><div class="seltools" id="selTools" hidden></div><div class="lib" id="lib"></div></div></div>
+    </section>`;
   renderMeta();
   renderBoard(new Set(Object.keys(S.slides)));
   renderLibrary();
+  renderNotes();
 }
 function renderMeta() {
   if (!S.post) return;
   $("#postTitle") && ($("#postTitle").textContent = S.post.title || "Untitled post");
   $$("[data-m]").forEach(el => { if (document.activeElement !== el) el.value = S.post[el.dataset.m] ?? ""; });
   const ps = $("#postSel");
-  ps.hidden = S.posts.length < 2 && !S.local;
+  ps.hidden = S.posts.length < 2;
   ps.innerHTML = S.posts.map(p => `<option value="${esc(p.id)}"${p.id === S.pid ? " selected" : ""}>${esc(p.data.title || p.id)}</option>`).join("");
-  $("#newPost").hidden = S.local || !S.db;
+  $("#newPost").hidden = !(S.db || S.local);
+  const od = $("#overallDone"), oa = S.post.overallApplied;
+  if (od) od.innerHTML = oa ? `<div class="applied"><p><b>Claude applied your overall comment</b> (${esc(new Date(oa.at).toLocaleString())}): “${esc(String(oa.text).slice(0, 240))}${String(oa.text).length > 240 ? "…" : ""}”</p><div class="actions"><button class="btn ghost sm" id="overallOk">Dismiss</button></div></div>` : "";
+  updateApplyAll();
 }
-function libEntries() { return (S.post && S.post.library) || []; }
-function renderLibrary() {
-  const lib = $("#lib");
-  if (!lib) return;
-  const used = new Map();
-  order().forEach((sid, i) => { const s = S.slides[sid]; ["img", "img2"].forEach(k => { const src = srcOf(s[k]); if (src) used.set(src, [...(used.get(src) || []), pad2(i + 1)]); }); });
-  lib.innerHTML = libEntries().map(e => { const src = srcOf(e); return `<div class="thumb"><img loading="lazy" src="${esc(src)}" alt=""><span title="${esc(e.name)}">${esc(e.name)}</span><span>${used.has(src) ? "On slide " + used.get(src).join(", ") : "Not used yet"}</span></div>`; }).join("")
-    || `<p class="hint">No photos yet.</p>`;
-  $("#libUploadLbl").hidden = !(S.assets || S.local);
+function renderNotes() {
+  const el = $("#notes"); if (!el) return;
+  el.innerHTML = S.notes ? `<div class="notes" role="status"><p><b>Claude’s note:</b> ${esc(S.notes)}</p><button class="btn ghost sm" id="notesClose">Dismiss</button></div>` : "";
 }
 
 /* ---------- edits ---------- */
@@ -924,12 +1016,14 @@ function onField(el) {
   const card = el.closest(".card"); if (!card) return;
   const sid = card.dataset.sid, s = S.slides[sid];
   let v = el.value;
+  if (el.hasAttribute("data-bool")) v = el.checked;
   if (el.hasAttribute("data-num")) { v = +v; const out = el.parentElement.querySelector("output"); if (out) out.textContent = el.dataset.f.endsWith("zoom") ? v.toFixed(2) + "×" : Math.round(v * 100) + "%"; }
   const f = el.dataset.f;
   if (/^img2?\./.test(f) && !s[f.split(".")[0]]) return;
   setPath(s, f, v);
-  if (f === "comment") { saveSlide(sid); return; }
-  saveSlide(sid); scheduleDraw(sid);
+  saveSlide(sid);
+  if (f === "comment") { const b = card.querySelector('[data-act="apply"]'); if (b) b.disabled = !String(v).trim(); updateApplyAll(); return; }
+  scheduleDraw(sid);
   if (f === "text.section") renderLibrary();
 }
 document.addEventListener("input", e => {
@@ -938,7 +1032,11 @@ document.addEventListener("input", e => {
   else if (el.dataset && el.dataset.m && S.post) {
     S.post[el.dataset.m] = el.value; saveMeta();
     if (el.dataset.m === "title") $("#postTitle").textContent = el.value || "Untitled post";
-    if (el.dataset.m !== "overall" && el.dataset.m !== "title") scheduleDraw();
+    if (el.dataset.m === "overall") updateApplyAll();
+    else if (el.dataset.m !== "title") scheduleDraw();
+  } else if (el.id === "photoName") {
+    const id = [...S.selected][0], p = S.photos.get(id);
+    if (p) { p.name = el.value.slice(0, 80); savePhoto(id, 700); const t = $(`.tile[data-id="${CSS.escape(id)}"] .nm`); if (t) t.textContent = p.name; }
   }
 });
 document.addEventListener("change", e => {
@@ -948,21 +1046,43 @@ document.addEventListener("change", e => {
     s.layout = s.layout || {};
     if (el.value === "auto") { s.layout.scrim = "auto"; r.disabled = true; } else { s.layout.scrim = +r.value; r.disabled = false; }
     saveSlide(sid); scheduleDraw(sid);
-  } else if (el.tagName === "SELECT" && el.dataset.f) { onField(el); }
+  } else if (el.tagName === "SELECT" && el.dataset.f) onField(el);
   else if (el.id === "postSel") selectPost(el.value);
-  else if (el.id === "libUpload") { uploadFiles([...el.files]); el.value = ""; }
-  else if (el.id === "pickUpload") { const f = el.files[0]; el.value = ""; if (f) uploadFiles([f]).then(entries => { if (entries[0]) usePhoto(entries[0]); }); }
+  else if (el.id === "libUpload") { uploadFiles([...el.files], realFolder(S.libFolder)); el.value = ""; }
+  else if (el.id === "pickUpload") { const f = el.files[0]; el.value = ""; if (f) uploadFiles([f], realFolder(S.pickFolder)).then(ids => { if (ids[0]) usePhoto(ids[0]); }); }
+  else if (el.id === "moveTo") {
+    const v = el.value; el.value = "";
+    if (v === "__new") openFolderForm("move", realFolder(S.libFolder));
+    else if (v) moveSelected(v === "__unsorted" ? "" : v);
+  }
 });
+document.addEventListener("submit", e => { if (e.target.id === "folderForm") { e.preventDefault(); submitFolderForm(); } });
 document.addEventListener("click", e => {
-  const b = e.target.closest("[data-act],[data-close],#dlAll,#addSlide,#copyAll,#newPost,#fPrev,#fNext");
+  const t = e.target;
+  const tile = t.closest(".tile");
+  if (tile) return toggleTile(tile.dataset.id, e.shiftKey);
+  const fb = t.closest("[data-folder]");
+  if (fb) { S.libFolder = fb.dataset.folder; S.lastTile = null; closeFolderForm(); renderLibrary(); return; }
+  const pf = t.closest("[data-pf]");
+  if (pf) { S.pickFolder = pf.dataset.pf; renderPicker(); return; }
+  const lb = t.closest("[data-lib]");
+  if (lb) return libAction(lb.dataset.lib, lb);
+  const b = t.closest("[data-act],[data-close],[data-newpost],#dlAll,#applyAll,#addSlide,#copyAll,#newPost,#fPrev,#fNext,#delPost,#notesClose,#overallOk,#newFolderBtn,#folderCancel");
   if (!b) { closeMenus(); return; }
   if (b.hasAttribute("data-close")) { b.closest("dialog").close(); return; }
+  if (b.dataset.newpost) { closeMenus(); return newPost(b.dataset.newpost); }
   if (b.id === "dlAll") return exportAll();
+  if (b.id === "applyAll") return applyAll();
   if (b.id === "addSlide") return addSlide($("#addType").value);
   if (b.id === "copyAll") return copyAll(b);
-  if (b.id === "newPost") return newPost();
+  if (b.id === "newPost") return toggleNewMenu(b);
   if (b.id === "fPrev") return stepFocus(-1);
   if (b.id === "fNext") return stepFocus(1);
+  if (b.id === "delPost") return deletePost(b);
+  if (b.id === "notesClose") { S.notes = ""; renderNotes(); return; }
+  if (b.id === "overallOk") { delete S.post.overallApplied; saveMeta(); renderMeta(); return; }
+  if (b.id === "newFolderBtn") return openFolderForm("new", realFolder(S.libFolder));
+  if (b.id === "folderCancel") return closeFolderForm();
   const card = b.closest(".card"); if (!card) return;
   const sid = card.dataset.sid, s = S.slides[sid], act = b.dataset.act;
   if (act !== "menu" && act !== "dup" && act !== "del" && act !== "delok") closeMenus();
@@ -972,20 +1092,32 @@ document.addEventListener("click", e => {
   else if (act === "png") exportOne(sid);
   else if (act === "status") { s.status = b.dataset.v; card.dataset.st = s.status; $$(".status button", card).forEach(x => x.setAttribute("aria-pressed", x === b)); saveSlide(sid); }
   else if (act === "left" || act === "right") move(sid, act === "left" ? -1 : 1);
-  else if (act === "addrow") { s.text.rows = s.text.rows || []; s.text.rows.push({ label: "SETTING", value: "VALUE", note: "" }); saveSlide(sid); renderBoard(new Set([sid])); scheduleDraw(sid); }
+  else if (act === "addrow") { s.text.rows = s.text.rows || []; s.text.rows.push({ label: "SETTING", value: "VALUE", note: "" }); saveSlide(sid); renderBoard(new Set([sid])); }
   else if (act === "delrow") { s.text.rows.splice(+b.dataset.i, 1); saveSlide(sid); renderBoard(new Set([sid])); }
-  else if (act === "menu") toggleMenu(b, sid);
+  else if (act === "menu") toggleMenu(b);
   else if (act === "dup") duplicate(sid);
   else if (act === "del") { b.textContent = "Tap again to delete"; b.dataset.act = "delok"; }
   else if (act === "delok") del(sid);
+  else if (act === "apply") applyWithClaude([sid], "");
+  else if (act === "stopapply") { if (S.applyCtl) S.applyCtl.abort(); }
+  else if (act === "undo") undoApply(sid);
+  else if (act === "keep") { delete s.undo; delete s.applied; saveSlide(sid); refreshApplySlot(sid); }
 });
 function closeMenus() { $$(".menu").forEach(m => { m.previousElementSibling && m.previousElementSibling.setAttribute("aria-expanded", "false"); m.remove(); }); }
-function toggleMenu(btn, sid) {
+function toggleMenu(btn) {
   const open = btn.nextElementSibling;
   closeMenus();
   if (open) return;
   const m = document.createElement("div"); m.className = "menu";
   m.innerHTML = `<button data-act="dup">Duplicate slide</button><button data-act="del" class="danger">Delete slide</button>`;
+  btn.after(m); btn.setAttribute("aria-expanded", "true");
+}
+function toggleNewMenu(btn) {
+  const open = btn.nextElementSibling;
+  closeMenus();
+  if (open) return;
+  const m = document.createElement("div"); m.className = "menu"; m.style.right = "auto"; m.style.left = "0";
+  m.innerHTML = `<button data-newpost="blank">Blank post</button>${S.post ? `<button data-newpost="copy">Copy of this post</button>` : ""}`;
   btn.after(m); btn.setAttribute("aria-expanded", "true");
 }
 function move(sid, dir) {
@@ -995,17 +1127,19 @@ function move(sid, dir) {
   S.post.order = o; saveMeta(); renderBoard(); renderLibrary();
 }
 function newId() { return "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
-function addSlide(type) {
+function addSlide(type, quiet) {
   const sid = newId(), T = TEMPLATES[type];
   S.slides[sid] = { type, text: clone(T.text), layout: {}, status: "review", comment: "" };
   T.slots.forEach(k => { S.slides[sid][k] = null; });
   const o = order().filter(id => id !== sid); const save = o.findIndex(id => S.slides[id].type === "save");
   if (save >= 0 && type !== "save") o.splice(save, 0, sid); else o.push(sid);
   S.post.order = o; saveSlide(sid); saveMeta(); renderBoard();
-  document.getElementById("card-" + sid).scrollIntoView({ behavior: "smooth", block: "center" });
+  if (!quiet) document.getElementById("card-" + sid).scrollIntoView({ behavior: "smooth", block: "center" });
+  return sid;
 }
 function duplicate(sid) {
   const nid = newId(); S.slides[nid] = clone(S.slides[sid]); S.slides[nid].status = "review"; S.slides[nid].comment = "";
+  delete S.slides[nid].undo; delete S.slides[nid].applied;
   const o = order().filter(id => id !== nid); o.splice(o.indexOf(sid) + 1, 0, nid); S.post.order = o; saveSlide(nid); saveMeta(); renderBoard();
 }
 function del(sid) {
@@ -1021,24 +1155,143 @@ function copyAll(btn) {
 }
 function fallbackCopy(text, done) { const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); done(); } catch (e) {} ta.remove(); }
 let toastT;
-function toast(msg) { let t = $(".toast"); if (!t) { t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); } t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2400); }
+function toast(msg) { let t = $(".toast"); if (!t) { t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); } t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2800); }
 
-/* ---------- photos ---------- */
+/* ---------- photo library: one shared library, folders and subfolders ---------- */
+const realFolder = f => (f === "*" || f === "" || f == null) ? "" : f;
+const folderLabel = f => f === "*" ? "All photos" : f === "" ? "Unsorted" : f.split("/").pop();
+const depth = f => (f && f !== "*") ? f.split("/").length - 1 : 0;
+const parentOf = f => f.includes("/") ? f.slice(0, f.lastIndexOf("/")) : "";
+function folderTree() {
+  const set = new Set(S.folders.filter(Boolean));
+  for (const p of S.photos.values()) if (p.folder) set.add(p.folder);
+  for (const f of [...set]) { const parts = f.split("/"); for (let i = 1; i < parts.length; i++) set.add(parts.slice(0, i).join("/")); }
+  return [...set].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+}
+const inFolder = (p, f) => f === "*" ? true : f === "" ? !p.folder : (p.folder === f || String(p.folder || "").startsWith(f + "/"));
+function photosIn(f) {
+  return [...S.photos.entries()].filter(([, p]) => inFolder(p, f))
+    .sort((a, b) => String(a[1].folder || "").localeCompare(String(b[1].folder || "")) || (a[1].addedAt || 0) - (b[1].addedAt || 0) || String(a[1].name).localeCompare(String(b[1].name)));
+}
+function usedMap() {
+  const used = new Map();
+  order().forEach((sid, i) => { const s = S.slides[sid]; ["img", "img2"].forEach(k => { const a = s[k] && s[k].asset; if (a) used.set(a, [...(used.get(a) || []), pad2(i + 1)]); }); });
+  return used;
+}
+function renderLibrary() {
+  const lib = $("#lib"); if (!lib) return;
+  const tree = folderTree();
+  if (S.libFolder !== "*" && S.libFolder !== "" && !tree.includes(S.libFolder)) S.libFolder = "*";
+  $("#folders").innerHTML = ["*", "", ...tree].map(f => `<button type="button" data-folder="${esc(f)}" aria-current="${S.libFolder === f}" style="padding-left:${10 + depth(f) * 16}px">${esc(folderLabel(f))}<span>${photosIn(f).length}</span></button>`).join("");
+  const ft = $("#folderTools");
+  if (S.libFolder === "*" || S.libFolder === "") ft.innerHTML = `<span class="path">${esc(folderLabel(S.libFolder))}</span>`;
+  else if (S.folderForm && S.folderForm.mode === "rename") ft.innerHTML = `<span class="path">Rename folder</span>`;
+  else ft.innerHTML = `<span class="path">${esc(S.libFolder.split("/").join(" / "))}</span><button type="button" class="btn ghost sm" data-lib="newsub">New subfolder</button><button type="button" class="btn ghost sm" data-lib="renamefolder">Rename</button><button type="button" class="btn ghost sm danger" data-lib="delfolder">Delete folder</button>`;
+  const used = usedMap(), items = photosIn(S.libFolder);
+  lib.innerHTML = items.map(([id, p]) => `<button type="button" class="tile" data-id="${esc(id)}" aria-pressed="${S.selected.has(id)}" aria-label="${esc(p.name)}${S.selected.has(id) ? ", selected" : ""}"><img loading="lazy" src="${esc(srcOf(p))}" alt=""><span class="tick" aria-hidden="true">${S.selected.has(id) ? "✓" : ""}</span><span class="nm">${esc(p.name)}</span><span class="use">${used.has(id) ? "On slide " + used.get(id).join(", ") : (S.libFolder === "*" ? esc(p.folder ? p.folder.split("/").join(" / ") : "Unsorted") : "Not on this post")}</span></button>`).join("")
+    || `<p class="hint">${S.photos.size ? "No photos in this folder yet. Select photos in All photos and move them here." : "No photos yet. Upload some to start."}</p>`;
+  renderSelTools();
+  const up1 = $("#libUploadLbl"); if (up1) up1.hidden = !(S.assets || S.local);
+}
+function renderSelTools() {
+  const el = $("#selTools"); if (!el) return;
+  for (const id of [...S.selected]) if (!S.photos.has(id)) S.selected.delete(id);
+  const n = S.selected.size;
+  el.hidden = !n;
+  if (!n) { el.innerHTML = ""; return; }
+  const one = n === 1 ? S.photos.get([...S.selected][0]) : null;
+  el.innerHTML = `<span class="count">${n} selected</span>
+    <label class="sr" for="moveTo">Move to folder</label><select class="ctl" id="moveTo"><option value="">Move to…</option><option value="__unsorted">Unsorted</option>${folderTree().map(f => `<option value="${esc(f)}">${" ".repeat(depth(f))}${esc(f.split("/").pop())}</option>`).join("")}<option value="__new">New folder…</option></select>
+    ${one ? `<label class="sr" for="photoName">Photo name</label><input class="ctl" id="photoName" value="${esc(one.name)}" maxlength="80" aria-label="Photo name">` : ""}
+    <button type="button" class="btn ghost sm" data-lib="selall">Select all here</button><button type="button" class="btn ghost sm" data-lib="selnone">Clear</button>`;
+}
+function toggleTile(id, range) {
+  const ids = photosIn(S.libFolder).map(([i]) => i);
+  if (range && S.lastTile && ids.includes(S.lastTile)) {
+    const [a, b] = [ids.indexOf(S.lastTile), ids.indexOf(id)].sort((x, y) => x - y);
+    ids.slice(a, b + 1).forEach(i => S.selected.add(i));
+  } else if (S.selected.has(id)) S.selected.delete(id); else S.selected.add(id);
+  S.lastTile = id;
+  const el = $(`.tile[data-id="${CSS.escape(id)}"]`);
+  $$(".tile").forEach(tl => { const on = S.selected.has(tl.dataset.id); tl.setAttribute("aria-pressed", on); tl.querySelector(".tick").textContent = on ? "✓" : ""; });
+  renderSelTools();
+  if (el) el.focus();
+}
+function moveSelected(folder) {
+  let n = 0;
+  [...S.selected].forEach((id, i) => { const p = S.photos.get(id); if (!p) return; p.folder = folder; savePhoto(id, 250 + i * 120); n++; });
+  if (folder && !S.folders.includes(folder)) { S.folders.push(folder); saveFolders(); }
+  S.selected.clear(); S.lastTile = null; renderLibrary();
+  toast(`${n} photo${n === 1 ? "" : "s"} moved to ${folder ? folder.split("/").join(" / ") : "Unsorted"}`);
+}
+function openFolderForm(mode, parent) {
+  S.folderForm = { mode, parent };
+  const f = $("#folderForm"); f.hidden = false;
+  const name = $("#folderName");
+  name.value = mode === "rename" ? S.libFolder.split("/").pop() : "";
+  $("#folderOk").textContent = mode === "rename" ? "Rename folder" : mode === "move" ? "Create and move" : "Create folder";
+  $("#folderWhere").textContent = mode === "rename" ? `Renaming “${S.libFolder.split("/").join(" / ")}”` : parent ? `Inside ${parent.split("/").join(" / ")}` : "At the top level";
+  renderLibrary(); name.focus();
+}
+function closeFolderForm() { S.folderForm = null; const f = $("#folderForm"); if (f) f.hidden = true; renderLibrary(); }
+function submitFolderForm() {
+  const ff = S.folderForm; if (!ff) return;
+  const name = $("#folderName").value.trim().replace(/\//g, "-").slice(0, 60);
+  if (!name) { $("#folderName").focus(); return; }
+  if (ff.mode === "rename") {
+    const old = S.libFolder, nu = (parentOf(old) ? parentOf(old) + "/" : "") + name;
+    if (nu !== old) {
+      let i = 0;
+      for (const [id, p] of S.photos) if (p.folder === old || String(p.folder || "").startsWith(old + "/")) { p.folder = nu + p.folder.slice(old.length); savePhoto(id, 250 + i++ * 120); }
+      S.folders = [...new Set(S.folders.map(f => f === old || f.startsWith(old + "/") ? nu + f.slice(old.length) : f))]; saveFolders();
+      S.libFolder = nu; toast("Folder renamed");
+    }
+  } else {
+    const path = (ff.parent ? ff.parent + "/" : "") + name;
+    if (!S.folders.includes(path)) { S.folders.push(path); saveFolders(); }
+    if (ff.mode === "move") moveSelected(path); else { S.libFolder = path; toast(`Folder “${name}” created`); }
+  }
+  S.folderForm = null; $("#folderForm").hidden = true; renderLibrary(); if ($("#pickDlg").open) renderPicker();
+}
+function libAction(a, btn) {
+  if (a === "selall") { photosIn(S.libFolder).forEach(([id]) => S.selected.add(id)); renderLibrary(); }
+  else if (a === "selnone") { S.selected.clear(); S.lastTile = null; renderLibrary(); }
+  else if (a === "newsub") openFolderForm("new", realFolder(S.libFolder));
+  else if (a === "renamefolder") openFolderForm("rename", parentOf(S.libFolder));
+  else if (a === "delfolder") {
+    if (btn.dataset.armed !== "1") { btn.dataset.armed = "1"; btn.textContent = `Tap again: photos move to ${parentOf(S.libFolder) ? parentOf(S.libFolder).split("/").join(" / ") : "Unsorted"}`; return; }
+    const old = S.libFolder, to = parentOf(old);
+    let i = 0;
+    for (const [id, p] of S.photos) if (p.folder === old || String(p.folder || "").startsWith(old + "/")) { p.folder = to; savePhoto(id, 250 + i++ * 120); }
+    S.folders = S.folders.filter(f => !(f === old || f.startsWith(old + "/"))); saveFolders();
+    S.libFolder = to || "*"; toast("Folder deleted. Its photos are safe"); renderLibrary();
+  }
+}
+
+/* ---------- replace image ---------- */
 let pickFor = null;
 function openPicker(sid, slot) {
   pickFor = { sid, slot };
   const s = S.slides[sid];
   $("#pickTitle").textContent = s.type === "beforeafter" ? (slot === "img" ? "Replace before photo" : "Replace after photo") : "Replace image";
   $("#pickUploadLbl").hidden = !(S.assets || S.local);
-  $("#pickHint").textContent = (S.assets || S.local) ? "Pick one of this post's photos or upload a new one. The text design re-fits to the photo you choose." : "Pick one of this post's photos. Only editors of this board can upload new ones.";
-  $("#pickGrid").innerHTML = libEntries().map((e, i) => `<button data-pick="${i}"><img loading="lazy" src="${esc(srcOf(e))}" alt=""><span>${esc(e.name)}</span></button>`).join("") || `<p>No photos yet. Upload one.</p>`;
+  $("#pickHint").textContent = (S.assets || S.local) ? "Pick a photo from your library or upload a new one. The text design re-fits to the photo you choose." : "Pick a photo from your library. Only editors of this board can upload new ones.";
+  renderPicker();
   $("#pickDlg").showModal();
 }
-$("#pickGrid").addEventListener("click", e => { const b = e.target.closest("[data-pick]"); if (b) usePhoto(libEntries()[+b.dataset.pick]); });
-function usePhoto(entry) {
-  if (!pickFor || !entry) return;
+function renderPicker() {
+  const tree = folderTree();
+  if (S.pickFolder !== "*" && S.pickFolder !== "" && !tree.includes(S.pickFolder)) S.pickFolder = "*";
+  $("#pickFolders").innerHTML = ["*", "", ...tree].map(f => `<button type="button" data-pf="${esc(f)}" aria-current="${S.pickFolder === f}">${esc(f === "*" || f === "" ? folderLabel(f) : f.split("/").join(" / "))}</button>`).join("");
+  const items = photosIn(S.pickFolder);
+  $("#pickGrid").innerHTML = items.map(([id, p]) => `<button type="button" data-pick="${esc(id)}"><img loading="lazy" src="${esc(srcOf(p))}" alt=""><span>${esc(p.name)}</span></button>`).join("") || `<p>No photos here yet.</p>`;
+}
+$("#pickGrid").addEventListener("click", e => { const b = e.target.closest("[data-pick]"); if (b) usePhoto(b.dataset.pick); });
+function usePhoto(id) {
+  if (!pickFor || !S.photos.has(id)) return;
   const { sid, slot } = pickFor, s = S.slides[sid];
-  s[slot] = { ...(entry.asset ? { asset: entry.asset } : { file: entry.file }), fx: 0.5, fy: 0.5, zoom: 1 };
+  const p = S.photos.get(id);
+  s[slot] = { ...(p.asset ? { asset: p.asset } : { file: p.file }), fx: 0.5, fy: 0.5, zoom: 1 };
   s.layout = {};
   saveSlide(sid);
   $("#pickDlg").close();
@@ -1046,23 +1299,167 @@ function usePhoto(entry) {
   toast("Photo replaced. Text re-fitted to it");
 }
 function imageSize(src) { return new Promise(res => { const im = new Image(); im.onload = () => res([im.naturalWidth, im.naturalHeight]); im.onerror = () => res([0, 0]); im.src = src; }); }
-async function uploadFiles(files) {
+async function uploadFiles(files, folder) {
   const added = [];
   for (const f of files) {
     if (!/^image\/(png|jpeg|webp|gif)$/.test(f.type)) { toast(`${f.name}: use a JPG, PNG or WebP photo`); continue; }
     toast(`Uploading ${f.name}…`);
     try {
-      let entry;
-      if (S.assets) { const r = await S.assets.upload(f); const [w, h] = await imageSize(r.url); entry = { asset: r.id, name: f.name, w, h }; }
-      else { const url = URL.createObjectURL(f); const [w, h] = await imageSize(url); entry = { file: url, name: f.name, w, h }; }
-      S.post.library = [...libEntries(), entry]; added.push(entry);
+      const name = f.name.replace(/\.[^.]+$/, "").slice(0, 80);
+      if (S.assets) {
+        const r = await S.assets.upload(f); const [w, h] = await imageSize(r.url);
+        S.photos.set(r.id, { asset: r.id, name, w, h, folder, addedAt: Date.now() }); savePhoto(r.id, 200 + added.length * 120); added.push(r.id);
+      } else {
+        const url = URL.createObjectURL(f), [w, h] = await imageSize(url), id = "local-" + Date.now().toString(36) + added.length;
+        S.photos.set(id, { file: url, name, w, h, folder, addedAt: Date.now() }); added.push(id);
+      }
     } catch (e) {
       const why = { too_large: "it's over 20 MB", unsupported_type: "that file type isn't supported", quota_or_state: "the board's storage is full", rate_limited: "too many uploads at once, try again in a moment" }[e && e.code] || "the upload failed";
       toast(`${f.name} wasn't added: ${why}`);
     }
   }
-  if (added.length) { saveMeta(); renderLibrary(); toast(`${added.length} photo${added.length > 1 ? "s" : ""} added`); if ($("#pickDlg").open) openPicker(pickFor.sid, pickFor.slot); }
+  if (folder && !S.folders.includes(folder)) { S.folders.push(folder); saveFolders(); }
+  if (added.length) { renderLibrary(); if ($("#pickDlg").open) renderPicker(); toast(`${added.length} photo${added.length > 1 ? "s" : ""} added`); }
   return added;
+}
+
+/* ---------- apply comments with Claude ---------- */
+const RULES = `You are editing slides of an Instagram carousel for a creator. Apply the creator's review comments and reply with JSON only.
+
+How to edit:
+- Do what each comment asks and nothing more. Copy every field you don't change exactly as it is.
+- All copy is UPPERCASE, short and plain. A settings row has a label (what it is), a value (the setting itself, short, like "1/50", "24FPS", "D-LOG M") and a note (one line on why, 4 to 12 words).
+- Use the creator's own numbers, names and spellings. Never invent a camera setting or a fact.
+- A "specs" slide holds at most 4 rows. When a comment needs more than fits, add a new slide in "newSlides" instead of squeezing.
+- tipK is a short tip heading (like "PRO TIP" or "SHOOTING AT NIGHT?"); tip is one or two short sentences.
+- **WORD** makes a word bold. {handle} prints the creator's handle. In a "save" slide's big text, a line break starts a new line.
+- Write ranges with an en dash (100–1600) and negative numbers with a minus sign (−0.3).
+- Change a slide's photo only when a comment asks for a different photo, choosing from the photo library by id. A new photo resets the layout to auto-fit.
+- Set "overlay" to true when the creator wants a text-only transparent PNG to lay over a video; the photo is then left out of that slide.
+
+Text fields for each slide type:
+cover: left, right, title, sub, section, foot
+specs: section, foot, rows [{label, value, note}], tipK, tip
+beforeafter: aValue, aLabel, aNote, bValue, bLabel, bNote, section, foot
+save: left, right, big, sub, section, foot
+photo: label, note, section, foot
+(section is the footer's middle text, foot is the footer's right text.)
+
+Layout (change only when a comment asks about placement): pos top|middle|bottom, style overlay|panel (specs only), tip left|right|inline (specs only), panel black|red (specs only), scrim 0 to 0.9 (how much to darken behind text). "auto" puts everything back to auto-fit.`;
+const FORMAT = `Reply with only this JSON object:
+{"slides":[{"id":"<slide id>","text":{<the complete text object>},"layout":"keep","photo":"keep","photo2":"keep","overlay":"keep","summary":"<what you changed, one short sentence>"}],
+"newSlides":[{"after":"<slide id>","type":"specs","text":{<the complete text object>},"photo":null,"summary":"<one short sentence>"}],
+"notes":""}
+Include only slides you changed. "layout" is "keep", "auto" or an object of layout values. "photo" and "photo2" are "keep", null or a photo id from the library. "overlay" is "keep", true or false. "newSlides" may be empty. "notes" says anything you couldn't do, or is empty.`;
+function pendingSlides() { return order().filter(sid => String(S.slides[sid].comment || "").trim()); }
+function updateApplyAll() {
+  const b = $("#applyAll"); if (!b) return;
+  b.hidden = !S.sample || !S.post;
+  const n = pendingSlides().length + (String((S.post && S.post.overall) || "").trim() ? 1 : 0);
+  b.disabled = !n || S.busy.size > 0;
+  b.textContent = S.busy.size ? "Applying…" : n ? `Apply comments (${n})` : "Apply comments";
+}
+function buildPrompt(targets, overall) {
+  const o = order();
+  const outline = o.map((sid, i) => `${pad2(i + 1)} id=${sid} type=${S.slides[sid].type} "${slideName(S.slides[sid])}"`).join("\n");
+  const photos = [...S.photos.entries()].slice(-200).map(([id, p]) => ({ id, name: p.name, folder: p.folder || "", shape: p.w > p.h ? "landscape" : p.w < p.h ? "portrait" : "square" }));
+  const items = targets.map(sid => { const s = S.slides[sid]; return { id: sid, type: s.type, text: s.text, layout: s.layout || {}, photo: (s.img && s.img.asset) || null, photo2: (s.img2 && s.img2.asset) || null, overlay: !!s.overlay, comment: s.comment || "" }; });
+  return [RULES,
+    `POST: ${S.post.title || ""}\nHANDLE: ${S.post.handle || ""}\nHEADER: ${S.post.series || ""} / ${S.post.subject || ""}\nSLIDES IN ORDER:\n${outline}`,
+    overall ? `OVERALL COMMENT FROM THE CREATOR (applies to the whole post; you may change any slide below):\n${overall}` : "",
+    `SLIDES TO EDIT (current content and the creator's comment for each):\n${JSON.stringify(items)}`,
+    `PHOTO LIBRARY:\n${JSON.stringify(photos)}`,
+    FORMAT].filter(Boolean).join("\n\n");
+}
+function cleanText(type, raw, prev) {
+  const out = clone(prev || TEMPLATES[type].text);
+  if (raw && typeof raw === "object") {
+    for (const k of TEXT_KEYS[type]) if (raw[k] != null && typeof raw[k] !== "object") out[k] = String(raw[k]).slice(0, 400);
+    if (type === "specs" && Array.isArray(raw.rows)) out.rows = raw.rows.slice(0, 4).filter(r => r && typeof r === "object").map(r => ({ label: String(r.label ?? "").slice(0, 80), value: String(r.value ?? "").slice(0, 40), note: String(r.note ?? "").slice(0, 240) }));
+  }
+  return out;
+}
+function cleanLayout(raw, prev) {
+  if (raw === undefined || raw === "keep") return prev || {};
+  if (raw === "auto" || raw === null || typeof raw !== "object") return raw === "auto" || raw === null ? {} : (prev || {});
+  const ok = { pos: ["auto", "top", "middle", "bottom"], style: ["auto", "overlay", "panel"], tip: ["auto", "left", "right", "inline"], panel: ["auto", "black", "red"] }, out = {};
+  for (const [k, vals] of Object.entries(ok)) if (vals.includes(raw[k])) out[k] = raw[k];
+  if (raw.scrim === "auto" || (typeof raw.scrim === "number" && raw.scrim >= 0 && raw.scrim <= 0.9)) out.scrim = raw.scrim;
+  return out;
+}
+function cleanPhoto(raw, prev) {
+  if (raw === undefined || raw === "keep") return { v: prev, changed: false };
+  if (raw === null) return { v: null, changed: !!prev };
+  const id = String(raw), p = S.photos.get(id);
+  if (!p) return { v: prev, changed: false };
+  return { v: { ...(p.asset ? { asset: p.asset } : { file: p.file }), fx: 0.5, fy: 0.5, zoom: 1 }, changed: !prev || prev.asset !== p.asset };
+}
+function applyResult(res, targets, commented, overall) {
+  const now = Date.now(), done = [];
+  for (const it of (res && Array.isArray(res.slides) ? res.slides : [])) {
+    const sid = String((it && it.id) || ""), s = S.slides[sid];
+    if (!s || !targets.includes(sid)) continue;
+    const prev = clone(s); delete prev.undo; delete prev.applied;
+    s.text = cleanText(s.type, it.text, s.text);
+    let layout = cleanLayout(it.layout, s.layout), photoChanged = false;
+    [["img", "photo"], ["img2", "photo2"]].forEach(([slot, key]) => { if (!TEMPLATES[s.type].slots.includes(slot)) return; const r = cleanPhoto(it[key], s[slot]); if (r.changed) { s[slot] = r.v; photoChanged = true; } });
+    if (photoChanged && (it.layout === undefined || it.layout === "keep")) layout = {};
+    s.layout = layout;
+    if (it.overlay === true || it.overlay === false) s.overlay = it.overlay;
+    s.undo = prev; s.applied = { summary: String(it.summary || "Updated this slide").slice(0, 300), at: now };
+    if (commented.includes(sid) || overall) { s.comment = ""; s.status = "review"; }
+    saveSlide(sid); done.push(sid);
+  }
+  for (const n of (res && Array.isArray(res.newSlides) ? res.newSlides.slice(0, 4) : [])) {
+    if (!n || !TEMPLATES[n.type]) continue;
+    const sid = newId(), s = { type: n.type, text: cleanText(n.type, n.text, null), layout: {}, status: "review", comment: "", applied: { summary: String(n.summary || "Added this slide").slice(0, 300), at: now, isNew: true } };
+    TEMPLATES[n.type].slots.forEach(k => { s[k] = null; });
+    const r = cleanPhoto(n.photo, null); if (r.v) s.img = r.v;
+    S.slides[sid] = s;
+    const o = order().filter(x => x !== sid);
+    let at = o.indexOf(String(n.after || ""));
+    if (at < 0) { const sv = o.findIndex(x => S.slides[x].type === "save"); at = sv >= 0 ? sv - 1 : o.length - 1; }
+    o.splice(at + 1, 0, sid); S.post.order = o; saveSlide(sid); done.push(sid);
+  }
+  if (overall) { S.post.overallApplied = { text: overall, at: now }; S.post.overall = ""; }
+  if (done.length || overall) saveMeta();
+  const missed = commented.filter(sid => !done.includes(sid));
+  S.notes = [String((res && res.notes) || "").trim(), missed.length ? `No change was made on slide ${missed.map(sid => pad2(order().indexOf(sid) + 1)).join(", ")}; its comment is still there.` : ""].filter(Boolean).join(" ");
+  return done;
+}
+const SAMPLE_ERR = {
+  not_granted: "Claude isn’t allowed on this board right now. Reload the page to be asked again, or ask Claude in the chat.",
+  sampling_disabled: "Claude isn’t available for your account here. Ask Claude in the chat instead.",
+  rate_limited: "Claude is busy or you’ve reached a usage limit. Try again in a little while.",
+  session_expired: "You’ve been signed out. Sign in again, then retry.",
+  prompt_too_large: "That’s too much to send at once. Apply the comments one slide at a time.",
+  invalid_json: "Claude’s answer couldn’t be used. Try again, or make the comment more specific.",
+  empty_completion: "Claude didn’t answer. Try again, or make the comment more specific.",
+  refused: "Claude couldn’t make that change. Try rewording the comment."
+};
+async function applyWithClaude(commented, overall) {
+  if (!S.sample || S.busy.size) return;
+  const targets = overall ? order() : commented;
+  if (!targets.length) return;
+  const ctl = new AbortController(); S.applyCtl = ctl;
+  commented.forEach(sid => S.busy.add(sid)); if (overall) targets.forEach(sid => S.busy.add(sid));
+  S.busy.forEach(refreshApplySlot); updateApplyAll();
+  try {
+    const res = await S.sample.json(buildPrompt(targets, overall), { signal: ctl.signal, modelTier: "default", cache: false });
+    S.busy.clear();
+    const done = applyResult(res, targets, commented, overall);
+    renderBoard(new Set([...done, ...targets])); renderMeta(); renderNotes(); renderLibrary();
+    toast(done.length ? `Claude updated ${done.length} slide${done.length === 1 ? "" : "s"}. Check them, then Keep it or Undo` : "Claude didn’t change anything. See the note at the top");
+  } catch (e) {
+    S.busy.clear(); targets.forEach(refreshApplySlot);
+    if (!e || e.code !== "cancelled") toast(SAMPLE_ERR[e && e.code] || "Couldn’t reach Claude. Try again.");
+  } finally { S.applyCtl = null; S.busy.clear(); updateApplyAll(); }
+}
+function applyAll() { applyWithClaude(pendingSlides(), String(S.post.overall || "").trim()); }
+function undoApply(sid) {
+  const s = S.slides[sid]; if (!s) return;
+  if (s.undo) { S.slides[sid] = clone(s.undo); saveSlide(sid); renderBoard(new Set([sid])); toast("Change undone. Your comment is back"); }
+  else if (s.applied && s.applied.isNew) del(sid);
 }
 
 /* ---------- focus view ---------- */
@@ -1084,7 +1481,7 @@ document.addEventListener("keydown", e => { if (!$("#focusDlg").open) return; if
 /* ---------- export ---------- */
 function waitImages(s) {
   return Promise.all(["img", "img2"].map(k => new Promise(res => {
-    const src = srcOf(s[k]); if (!src) return res();
+    const src = srcOf(s[k]); if (!src || s.overlay) return res();
     getImg(s[k]); const e = imgCache.get(src);
     if (e.ok || e.err) return res();
     e.img.addEventListener("load", res, { once: true }); e.img.addEventListener("error", res, { once: true });
@@ -1094,12 +1491,12 @@ async function slideBlob(sid) {
   const s = S.slides[sid], o = order();
   await waitImages(s);
   const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
-  renderSlide(cv, S.post, s, o.indexOf(sid) + 1, o.length, 1);
+  renderSlide(cv, S.post, s, o.indexOf(sid) + 1, o.length, 1, true);
   const blob = await new Promise(res => cv.toBlob(res, "image/png"));
   cv.width = cv.height = 1;
   return blob;
 }
-const fileName = sid => `${pad2(order().indexOf(sid) + 1)}-${slug(slideName(S.slides[sid]))}.png`;
+const fileName = sid => `${pad2(order().indexOf(sid) + 1)}-${slug(slideName(S.slides[sid]))}${S.slides[sid].overlay ? "-overlay" : ""}.png`;
 async function offer(filename, blob) {
   if (S.downloads) {
     try { await S.downloads.save({ filename, data: blob }); return true; }
@@ -1123,13 +1520,13 @@ async function exportAll() {
   } finally { btn.textContent = "Download all"; btn.disabled = false; }
 }
 window.__exportPNG = async i => { const sid = order()[i]; const blob = await slideBlob(sid); return await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(blob); }); };
-window.__debugDesign = i => { const sid = order()[i]; const cv = document.createElement("canvas"); cv.width = 60; cv.height = 90; const d = renderSlide(cv, S.post, S.slides[sid], i + 1, order().length, 60 / W); return { note: d.note, mode: d.mode, pos: d.pos, stTop: d.stTop, stBot: d.stBot, tip: d.tip && { mode: d.tip.mode, side: d.tip.side, w: d.tip.w, st: d.tip.st } }; };
-window.__stats = (i, slot, x0, y0, x1, y1, rh) => { const s = S.slides[order()[i]]; const A = analyze(s[slot || "img"], W, rh || H); return A && A.stats(x0, y0, x1, y1); };
+window.__debugDesign = i => { const sid = order()[i]; const cv = document.createElement("canvas"); cv.width = 60; cv.height = 90; const d = renderSlide(cv, S.post, S.slides[sid], i + 1, order().length, 60 / W); return { note: d.note, mode: d.mode, pos: d.pos, tip: d.tip && { mode: d.tip.mode, side: d.tip.side, w: d.tip.w } }; };
+window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.entries()], folders: S.folders, notes: S.notes });
 
 /* ---------- posts ---------- */
 function selectPost(pid) {
   if (S.unsubSlides) { S.unsubSlides(); S.unsubSlides = null; }
-  S.pid = pid; S.slides = {};
+  S.pid = pid; S.slides = {}; S.notes = "";
   const p = S.posts.find(x => x.id === pid); S.post = clone(p ? p.data : {}) || {};
   renderMain();
   if (S.local) { Object.assign(S.slides, clone((window.__LOCAL_STATE__.slides || {})[pid] || {})); renderBoard(new Set(Object.keys(S.slides))); renderLibrary(); return; }
@@ -1137,7 +1534,7 @@ function selectPost(pid) {
     const seen = new Set(), changed = new Set();
     for (const d of snap.docs) {
       seen.add(d.id);
-      if (S.dirty.has(slidePath(d.id)) || S.writing.has(slidePath(d.id))) continue;
+      if (S.dirty.has(slidePath(d.id)) || S.writing.has(slidePath(d.id)) || S.busy.has(d.id)) continue;
       const data = d.data();
       if (!data || !TEMPLATES[data.type]) continue;
       if (!S.slides[d.id] || JSON.stringify(stripTs(S.slides[d.id])) !== JSON.stringify(stripTs(data))) { S.slides[d.id] = clone(data); changed.add(d.id); }
@@ -1147,40 +1544,72 @@ function selectPost(pid) {
   }, err => { console.warn(err); S.errors++; setStatus(); });
 }
 const stripTs = o => { const c = { ...o }; delete c.updatedAt; return c; };
-function newPost() {
-  const pid = "post-" + Date.now().toString(36);
-  const meta = { title: "New carousel", series: S.post ? S.post.series : "STEAL MY SETTINGS", subject: S.post ? S.post.subject : "", handle: S.post ? S.post.handle : "", library: [], order: [], overall: "", updatedAt: Date.now() };
+function newPost(mode) {
+  const pid = "post-" + Date.now().toString(36), base = S.post || {};
+  const meta = { title: mode === "copy" ? `${base.title || "Post"} (copy)` : "New carousel", series: base.series || "STEAL MY SETTINGS", subject: base.subject || "", handle: base.handle || "", order: [], overall: "", updatedAt: Date.now() };
+  const copies = mode === "copy" ? order().map(sid => { const c = clone(S.slides[sid]); delete c.undo; delete c.applied; c.comment = ""; c.status = "review"; return c; }) : null;
   S.posts.push({ id: pid, data: meta });
   selectPost(pid);
-  ["cover", "specs", "save"].forEach(t => addSlide(t));
-  saveMeta();
-  renderMeta();
-  toast("New post started. Add photos and edit the text");
+  if (copies) { copies.forEach(c => { const sid = newId(); S.slides[sid] = c; S.post.order.push(sid); saveSlide(sid); }); renderBoard(new Set(Object.keys(S.slides))); }
+  else ["cover", "specs", "save"].forEach(t => addSlide(t, true));
+  saveMeta(); renderMeta(); renderLibrary();
+  window.scrollTo({ top: 0 });
+  toast(mode === "copy" ? "Copy made. Swap photos and edit the text" : "New post started. Pick photos from your library");
+}
+async function deletePost(btn) {
+  if (btn.dataset.armed !== "1") {
+    btn.dataset.armed = "1"; btn.textContent = "Tap again to delete this post and its slides";
+    setTimeout(() => { if (btn.isConnected) { btn.dataset.armed = ""; btn.textContent = "Delete this post"; } }, 5000);
+    return;
+  }
+  const pid = S.pid, sids = Object.keys(S.slides);
+  if (S.unsubSlides) { S.unsubSlides(); S.unsubSlides = null; }
+  for (const sid of sids) await removeDoc(`posts/${pid}/slides/${sid}`);
+  await removeDoc(`posts/${pid}`);
+  S.posts = S.posts.filter(p => p.id !== pid); S.pid = null; S.post = null; S.slides = {};
+  if (S.posts[0]) selectPost(S.posts[0].id); else renderEmpty();
+  toast("Post deleted. Its photos stay in your library");
+}
+function renderEmpty() {
+  $("#main").innerHTML = `<div class="empty"><h2>No posts yet</h2><p>Start one here, or ask Claude to set up your next carousel.</p><p><button class="btn primary" data-newpost="blank">Start a post</button></p></div>`;
+  renderMeta(); updateApplyAll();
 }
 async function boot() {
   try { await Promise.all([document.fonts.load(`700 40px "Nimbus Sans"`), document.fonts.load(`400 40px "Nimbus Sans"`)]); } catch (e) {}
   try { const c = document.createElement("canvas").getContext("2d"); c.font = font(1000, 700); const m = c.measureText("H"); if (m.actualBoundingBoxAscent > 500) CAPR = m.actualBoundingBoxAscent / 1000; } catch (e) {}
   if (window.__LOCAL_STATE__) {
-    S.local = true; S.posts = clone(window.__LOCAL_STATE__.posts || []);
+    const L = window.__LOCAL_STATE__;
+    S.local = true; S.posts = clone(L.posts || []); S.sample = window.__FAKE_SAMPLE__ || null;
+    (L.photos || []).forEach(([id, p]) => S.photos.set(id, clone(p))); S.folders = clone(L.folders || []);
     setStatus();
     if (S.posts[0]) selectPost(S.posts[0].id);
     return;
   }
   const claude = window.claude;
   if (!claude || typeof claude.use !== "function") { $("#boot").innerHTML = `<h2>Open this board in Claude</h2><p>Your slides and comments load when this page is opened from claude.ai.</p>`; $("#pill").hidden = true; return; }
-  const [db, assets, downloads] = await Promise.all(["db", "assets", "downloads"].map(n => claude.use(n).catch(() => null)));
-  S.db = db; S.assets = assets; S.downloads = downloads;
+  const [db, assets, downloads, sample] = await Promise.all(["db", "assets", "downloads", "sample"].map(n => claude.use(n).catch(() => null)));
+  S.db = db; S.assets = assets; S.downloads = downloads; S.sample = sample;
   if (!db) { $("#boot").innerHTML = `<h2>Sign in to see this board</h2><p>Slides and comments are stored with this board. Sign in to claude.ai with an account that has access.</p>`; $("#pill").hidden = true; return; }
   setStatus();
+  db.collection("photos").onSnapshot(snap => {
+    const seen = new Set();
+    for (const d of snap.docs) { seen.add(d.id); if (S.dirty.has(photoPath(d.id)) || S.writing.has(photoPath(d.id))) continue; const v = d.data(); if (v) S.photos.set(d.id, clone(v)); }
+    for (const id of [...S.photos.keys()]) if (!seen.has(id) && !S.dirty.has(photoPath(id)) && !S.writing.has(photoPath(id))) S.photos.delete(id);
+    renderLibrary(); if ($("#pickDlg").open) renderPicker();
+  }, err => console.warn(err));
+  db.doc(LIB_PATH).onSnapshot(snap => {
+    if (S.dirty.has(LIB_PATH) || S.writing.has(LIB_PATH)) return;
+    const v = snap.exists ? snap.data() : null; S.folders = v && Array.isArray(v.folders) ? clone(v.folders) : [];
+    renderLibrary();
+  }, err => console.warn(err));
   db.collection("posts").onSnapshot(snap => {
     S.posts = snap.docs.map(d => ({ id: d.id, data: d.data() })).filter(p => p.data);
-    if (!S.posts.length && !S.pid) {
-      $("#main").innerHTML = `<div class="empty"><h2>No posts yet</h2><p>Start one here, or ask Claude to set up your next carousel.</p><p><button class="btn primary" id="newPost2">Start a post</button></p></div>`;
-      $("#newPost2").onclick = newPost; renderMeta(); return;
-    }
     const cur = S.posts.find(p => p.id === S.pid);
-    if (!cur) { const pick = [...S.posts].sort((a, b) => (b.data.updatedAt || 0) - (a.data.updatedAt || 0))[0]; if (pick) selectPost(pick.id); }
-    else if (!S.dirty.has(metaPath()) && !S.writing.has(metaPath()) && JSON.stringify(stripTs(cur.data)) !== JSON.stringify(stripTs(S.post))) {
+    if (!S.posts.length && !S.pid) { renderEmpty(); return; }
+    if (!cur) {
+      if (S.pid && (S.dirty.has(metaPath()) || S.writing.has(metaPath()))) { renderMeta(); return; }
+      const pick = [...S.posts].sort((a, b) => (b.data.updatedAt || 0) - (a.data.updatedAt || 0))[0]; if (pick) selectPost(pick.id);
+    } else if (!S.dirty.has(metaPath()) && !S.writing.has(metaPath()) && JSON.stringify(stripTs(cur.data)) !== JSON.stringify(stripTs(S.post))) {
       S.post = clone(cur.data); renderMeta(); renderBoard(); renderLibrary(); scheduleDraw();
     }
     renderMeta();
