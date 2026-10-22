@@ -171,6 +171,15 @@ dialog::backdrop{background:rgba(10,8,8,.6)}
 .chips button{flex:0 0 auto;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:13px;white-space:nowrap;min-height:34px}
 .chips button[aria-current="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 @media (max-width:760px){.libwrap{grid-template-columns:1fr}.folders{display:flex;overflow-x:auto;gap:6px;padding-bottom:4px}.folders button{flex:0 0 auto;border:1px solid var(--line);border-radius:999px;background:var(--surface);white-space:nowrap}}
+.adjgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px}
+.stickgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.stickgrid button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px;display:grid;gap:6px;cursor:pointer;font-size:13px;color:var(--ink);text-align:center}
+.stickgrid button:hover{border-color:var(--accent)}
+.stickgrid canvas{width:100%;height:auto;border-radius:6px;display:block}
+#focusCv{touch-action:none}
+.guide{display:grid;gap:14px;max-width:860px}
+.gbox{border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:10px;background:var(--surface)}
+.gbox .rowhead{gap:8px}
 @media (max-width:560px){.top .wrap{gap:8px 10px}.top select.ctl{max-width:150px}.board{gap:30px}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}.busy i{animation:none}}
 </style>
@@ -199,6 +208,12 @@ dialog::backdrop{background:rgba(10,8,8,.6)}
     <div class="chips" id="pickFolders" aria-label="Folders"></div><div class="pick" id="pickGrid"></div></div>
 </dialog>
 
+<dialog id="stickDlg" aria-labelledby="stickTitle">
+  <div class="dlg-h"><h3 id="stickTitle">Add a sticker</h3><span class="grow"></span>
+    <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="dlg-b"><div class="stickgrid" id="stickGrid"></div></div>
+</dialog>
+
 <dialog id="focusDlg" aria-labelledby="focusTitle">
   <div class="dlg-h"><h3 id="focusTitle">Slide</h3><span class="grow"></span>
     <button class="icon" id="fPrev" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
@@ -222,7 +237,6 @@ const FONT = '"Nimbus Sans","Helvetica Neue",Helvetica,Arial,sans-serif';
 let CAPR = 0.729;
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
-/* every piece of stored text goes through esc() before it is placed in HTML */
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const clone = o => o == null ? o : JSON.parse(JSON.stringify(o));
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -372,18 +386,21 @@ function getImg(slot) {
 function imgState(slot) { const s = srcOf(slot); const e = s && imgCache.get(s); return !s ? "none" : !e ? "loading" : e.ok ? "ok" : e.err ? "error" : "loading"; }
 function coverRect(img, rw, rh, slot) {
   const z = clamp(+(slot && slot.zoom) || 1, 1, 3);
-  const s = Math.max(rw / img.naturalWidth, rh / img.naturalHeight) * z;
-  const dw = img.naturalWidth * s, dh = img.naturalHeight * s;
+  const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+  const s = Math.max(rw / iw, rh / ih) * z;
+  const dw = iw * s, dh = ih * s;
   const fx = clamp(slot && slot.fx != null ? +slot.fx : 0.5, 0, 1), fy = clamp(slot && slot.fy != null ? +slot.fy : 0.5, 0, 1);
   return { dx: (rw - dw) * fx, dy: (rh - dh) * fy, dw, dh, s };
 }
 let OVERLAY = false; /* true while rendering a text-only (transparent) slide */
 function drawPhoto(ctx, slot, rx, ry, rw, rh, emptyText) {
   if (OVERLAY) return;
-  const img = getImg(slot);
+  const img0 = getImg(slot);
   ctx.save();
   ctx.beginPath(); ctx.rect(rx, ry, rw, rh); ctx.clip();
-  if (img) {
+  if (img0) {
+    const r0 = coverRect(img0, rw, rh, slot);
+    const img = photoFor(slot, img0, Math.max(r0.dw, r0.dh) * RENDER_SCALE);
     const r = coverRect(img, rw, rh, slot);
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(img, rx + r.dx, ry + r.dy, r.dw, r.dh);
@@ -396,13 +413,112 @@ function drawPhoto(ctx, slot, rx, ry, rw, rh, emptyText) {
   ctx.restore();
 }
 
+/* ---------- photo edits: exposure, contrast, whites, blacks, saturation, vibrance, grain, sharpening ---------- */
+const ADJ = [["exposure", "Exposure", -100, 100], ["contrast", "Contrast", -100, 100], ["whites", "Whites", -100, 100], ["blacks", "Blacks", -100, 100],
+  ["saturation", "Saturation", -100, 100], ["vibrance", "Vibrance", -100, 100], ["grain", "Grain", 0, 100], ["sharpen", "Sharpening", 0, 100]];
+const adjKey = a => a ? ADJ.map(([k]) => +a[k] || 0).join(",") : "";
+const hasAdj = a => !!a && ADJ.some(([k]) => +a[k]);
+let RENDER_SCALE = 1; /* device pixels per slide pixel for the render in progress */
+const adjCache = new Map();
+function toneLUT(a) {
+  const lut = new Uint8ClampedArray(256);
+  const ev = Math.pow(2, 1.5 * (+a.exposure || 0) / 100), c = 1 + (+a.contrast || 0) / 100, wh = (+a.whites || 0) / 100, bl = (+a.blacks || 0) / 100;
+  const ss = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); };
+  for (let i = 0; i < 256; i++) {
+    let v = Math.pow(Math.min(1, Math.pow(i / 255, 2.2) * ev), 1 / 2.2);
+    v += bl * 0.22 * (1 - ss(0, 0.6, v));
+    v += wh * 0.22 * ss(0.4, 1, v);
+    v = 0.5 + (v - 0.5) * c;
+    lut[i] = Math.round(clamp(v, 0, 1) * 255);
+  }
+  return lut;
+}
+function sharpenData(d, w, h, amount, r) {
+  const n = w * h, src = new Uint8ClampedArray(d), tmp = new Float32Array(n), blur = new Float32Array(n), win = 2 * r + 1;
+  for (let ch = 0; ch < 3; ch++) {
+    for (let y = 0; y < h; y++) {
+      const row = y * w; let acc = 0;
+      for (let x = -r; x <= r; x++) acc += src[(row + (x < 0 ? 0 : x >= w ? w - 1 : x)) * 4 + ch];
+      for (let x = 0; x < w; x++) {
+        tmp[row + x] = acc / win;
+        const xa = x + r + 1, xr = x - r;
+        acc += src[(row + (xa >= w ? w - 1 : xa)) * 4 + ch] - src[(row + (xr < 0 ? 0 : xr)) * 4 + ch];
+      }
+    }
+    for (let x = 0; x < w; x++) {
+      let acc = 0;
+      for (let y = -r; y <= r; y++) acc += tmp[(y < 0 ? 0 : y >= h ? h - 1 : y) * w + x];
+      for (let y = 0; y < h; y++) {
+        blur[y * w + x] = acc / win;
+        const ya = y + r + 1, yr = y - r;
+        acc += tmp[(ya >= h ? h - 1 : ya) * w + x] - tmp[(yr < 0 ? 0 : yr) * w + x];
+      }
+    }
+    for (let i = 0; i < n; i++) { const v = src[i * 4 + ch]; d[i * 4 + ch] = v + (v - blur[i]) * amount; }
+  }
+}
+function grainData(d, w, h, amt, p) {
+  const A = amt * 40, cw = Math.ceil(w / p), chh = Math.ceil(h / p), noise = new Float32Array(cw * chh);
+  let seed = 1234567;
+  for (let i = 0; i < noise.length; i++) {
+    seed = (seed * 1664525 + 1013904223) >>> 0; const u1 = seed / 4294967296;
+    seed = (seed * 1664525 + 1013904223) >>> 0; const u2 = seed / 4294967296;
+    noise[i] = (u1 + u2 - 1) * A;
+  }
+  for (let y = 0; y < h; y++) {
+    const ny = ((y / p) | 0) * cw;
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4, l = (d[i] + d[i + 1] + d[i + 2]) / 765, v = noise[ny + ((x / p) | 0)] * (0.25 + 3 * l * (1 - l));
+      d[i] += v; d[i + 1] += v; d[i + 2] += v;
+    }
+  }
+}
+function editedCopy(img, a, edge) {
+  const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height, k = Math.min(1, edge / Math.max(iw, ih));
+  const w = Math.max(1, Math.round(iw * k)), h = Math.max(1, Math.round(ih * k));
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d", { willReadFrequently: true });
+  x.imageSmoothingQuality = "high"; x.drawImage(img, 0, 0, w, h);
+  const im = x.getImageData(0, 0, w, h), d = im.data, lut = toneLUT(a);
+  const sat = 1 + (+a.saturation || 0) / 100, vib = (+a.vibrance || 0) / 100, color = sat !== 1 || vib !== 0;
+  for (let i = 0; i < d.length; i += 4) {
+    let r = lut[d[i]], g = lut[d[i + 1]], b = lut[d[i + 2]];
+    if (color) {
+      const l = 0.2126 * r + 0.7152 * g + 0.0722 * b, s0 = (Math.max(r, g, b) - Math.min(r, g, b)) / 255;
+      const f = Math.max(0, sat * (1 + vib * (1 - s0)));
+      r = l + (r - l) * f; g = l + (g - l) * f; b = l + (b - l) * f;
+    }
+    d[i] = r; d[i + 1] = g; d[i + 2] = b;
+  }
+  const big = Math.max(w, h);
+  if (+a.sharpen > 0) sharpenData(d, w, h, (+a.sharpen / 100) * 1.4, Math.max(1, Math.round(big / 1800)));
+  if (+a.grain > 0) grainData(d, w, h, +a.grain / 100, Math.max(1, Math.round(big / 1500)));
+  x.putImageData(im, 0, 0);
+  return c;
+}
+/* the element to draw for a photo: the original, or an edited copy just big enough for this render */
+function photoFor(slot, img, need) {
+  if (!slot || !hasAdj(slot.adj)) return img;
+  const full = Math.max(img.naturalWidth || img.width, img.naturalHeight || img.height);
+  const edge = Math.min(full, Math.ceil((need * 1.08) / 160) * 160);
+  const key = img.src + "|" + adjKey(slot.adj) + "|" + edge;
+  let c = adjCache.get(key);
+  if (!c) {
+    c = editedCopy(img, slot.adj, edge);
+    if (adjCache.size >= 14) adjCache.delete(adjCache.keys().next().value);
+    adjCache.set(key, c);
+  }
+  return c;
+}
+
 /* ---------- photo analysis: where can white type sit? ---------- */
 const anaCache = new Map();
 const DARK = { mean: 18, p90: 26, std: 4, edge: 2 };
 function analyze(slot, rw, rh) {
-  const img = getImg(slot);
-  if (!img) return null;
-  const key = img.src + "|" + rw + "x" + rh + "|" + (slot.fx ?? 0.5) + "|" + (slot.fy ?? 0.5) + "|" + (slot.zoom ?? 1);
+  const img0 = getImg(slot);
+  if (!img0) return null;
+  const img = photoFor(slot, img0, 640);
+  const key = img0.src + "|" + adjKey(slot.adj) + "|" + rw + "x" + rh + "|" + (slot.fx ?? 0.5) + "|" + (slot.fy ?? 0.5) + "|" + (slot.zoom ?? 1);
   let a = anaCache.get(key);
   if (a) return a;
   const gw = 120, gh = Math.max(1, Math.round(gw * rh / rw));
@@ -497,6 +613,95 @@ function drawFooter(ctx, post, t, idx, total) {
 const footFor = s => s.p90 <= 105 ? 0 : clamp(1 - 78 / s.p90, 0.15, 0.8);
 function footScrim(A, y0 = 2470, y1 = 2610) { return A ? footFor(A.stats(M, y0, W - M, y1)) : 0; }
 function headScrim(A) { return A ? scrimFor(A.stats(M, 120, W - M, 200)) : 0; }
+
+/* ---------- stickers: social icons and buttons drawn on top of a slide ---------- */
+const ICONS = {
+  bookmark: { d: "M6 3h12v18l-6-4.6L6 21z", closed: true },
+  heart: { d: "M12 20.5C9 18 3 14 3 8.8 3 6 5.1 4 7.6 4c1.8 0 3.4 1 4.4 2.6C13 5 14.6 4 16.4 4 18.9 4 21 6 21 8.8 21 14 15 18 12 20.5z", closed: true },
+  comment: { d: "M7.2 18.6A8.4 8.4 0 1 0 4.5 15.4L3.2 20.4z", closed: true },
+  share: { d: "M21.5 3 2.5 10.2l7.7 3.1 3.3 7.7zM21.5 3 10.2 13.3", closed: false },
+  bell: { d: "M6 16.5V11a6 6 0 0 1 12 0v5.5l1.8 2.2H4.2zM9.8 20.6a2.3 2.3 0 0 0 4.4 0", closed: true },
+  thumb: { d: "M7.5 20.5H4v-10h3.5zM7.5 10.5l3.8-7c1.6 0 2.7 1.3 2.3 2.9l-.8 3.4h5.5c1.3 0 2.3 1.2 2 2.5l-1.4 6.6c-.2 1-1.1 1.6-2 1.6H7.5", closed: true },
+  arrow: { d: "M4 12h15M13 6l6 6-6 6", closed: false },
+  plus: { d: "M12 5v14M5 12h14", closed: false }
+};
+const STICKERS = {
+  bookmark: { label: "Bookmark", type: "icon", icon: "bookmark", size: 170 },
+  heart: { label: "Heart", type: "icon", icon: "heart", size: 170 },
+  comment: { label: "Comment", type: "icon", icon: "comment", size: 170 },
+  share: { label: "Share", type: "icon", icon: "share", size: 170 },
+  bell: { label: "Bell", type: "icon", icon: "bell", size: 170 },
+  like: { label: "Thumbs up", type: "icon", icon: "thumb", size: 170 },
+  arrow: { label: "Swipe arrow", type: "icon", icon: "arrow", size: 170 },
+  follow: { label: "Follow button", type: "pill", icon: "plus", text: "FOLLOW", bg: "#ffffff", size: 96 },
+  subscribe: { label: "Subscribe button", type: "pill", icon: "bell", text: "SUBSCRIBE", bg: "#e02d12", size: 96 },
+  save: { label: "Save button", type: "pill", icon: "bookmark", text: "SAVE THIS", bg: "#ffffff", size: 96 },
+  keyword: { label: "Comment keyword", type: "pill", icon: "comment", text: "COMMENT “SETTINGS”", bg: "#ffffff", size: 96 },
+  handle: { label: "Handle tag", type: "pill", icon: "", text: "{handle}", bg: "#111111", size: 84 },
+  actions: { label: "Post action row", type: "row", size: 120 }
+};
+const STICKER_COLORS = [["#ffffff", "White"], ["#111111", "Black"], ["#e02d12", "Cover red"], ["#ffd23f", "Yellow"]];
+const iconPaths = {};
+const iconPath = n => iconPaths[n] || (iconPaths[n] = new Path2D(ICONS[n].d));
+const inkOn = hex => { const v = parseInt(String(hex).slice(1), 16); if (isNaN(v)) return "#111111"; const r = v >> 16, g = (v >> 8) & 255, b = v & 255; return 0.2126 * r + 0.7152 * g + 0.0722 * b > 150 ? "#111111" : "#ffffff"; };
+function drawIcon(ctx, name, cx, cy, size, color, solid) {
+  if (!ICONS[name]) return;
+  const k = size / 24;
+  ctx.save();
+  ctx.translate(cx - 12 * k, cy - 12 * k); ctx.scale(k, k);
+  ctx.lineWidth = 1.9; ctx.lineJoin = "round"; ctx.lineCap = "round";
+  ctx.strokeStyle = color; ctx.fillStyle = color;
+  const p = iconPath(name);
+  if (solid && ICONS[name].closed) ctx.fill(p);
+  ctx.stroke(p);
+  ctx.restore();
+}
+function pillPath(ctx, x, y, w, h) {
+  const r = h / 2;
+  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.arc(x + w - r, y + r, r, -Math.PI / 2, Math.PI / 2);
+  ctx.lineTo(x + r, y + h); ctx.arc(x + r, y + r, r, Math.PI / 2, 1.5 * Math.PI); ctx.closePath();
+}
+/* draws a slide's stickers; returns their boxes (slide pixels) for dragging */
+function drawStickers(ctx, post, s, hiliteId) {
+  const boxes = [];
+  (s.stickers || []).forEach(st => {
+    const P = STICKERS[st && st.kind]; if (!P) return;
+    const cx = clamp(st.x ?? 0.5, 0, 1) * W, cy = clamp(st.y ?? 0.5, 0, 1) * H;
+    const size = clamp(+st.size || P.size, 30, 700), rot = clamp(+st.rot || 0, -180, 180) * Math.PI / 180;
+    let bw = size, bh = size;
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot);
+    if (P.type === "pill") {
+      const bg = st.bg || P.bg, fg = st.color || inkOn(bg), label = up(fill(st.label ?? P.text, post));
+      const fs = size * 0.4, padX = size * 0.5, icon = P.icon, is = icon ? size * 0.46 : 0, gap = icon ? size * 0.2 : 0;
+      const tw = measureW(ctx, label, fs, 700, -0.05);
+      bw = padX * 2 + is + gap + tw;
+      ctx.save(); ctx.shadowColor = "rgba(0,0,0,.28)"; ctx.shadowBlur = size * 0.25; ctx.shadowOffsetY = size * 0.06;
+      ctx.fillStyle = bg; pillPath(ctx, -bw / 2, -bh / 2, bw, bh); ctx.fill(); ctx.restore();
+      let x = -bw / 2 + padX;
+      if (icon) { drawIcon(ctx, icon, x + is / 2, 0, is, fg, false); x += is + gap; }
+      txt(ctx, label, x, -capH(fs) / 2, { size: fs, weight: 700, track: -0.05, color: fg });
+    } else {
+      const color = st.color || "#ffffff";
+      if (st.shadow !== false) { ctx.shadowColor = "rgba(0,0,0,.38)"; ctx.shadowBlur = size * 0.14; ctx.shadowOffsetY = size * 0.03; }
+      if (P.type === "row") {
+        const g = size; bw = 6.2 * g;
+        drawIcon(ctx, "heart", -2.6 * g, 0, g, color, false);
+        drawIcon(ctx, "comment", -1.0 * g, 0, g, color, false);
+        drawIcon(ctx, "share", 0.6 * g, 0, g, color, false);
+        drawIcon(ctx, "bookmark", 2.6 * g, 0, g, color, st.solid !== false);
+      } else drawIcon(ctx, P.icon, 0, 0, size, color, !!st.solid);
+    }
+    ctx.restore();
+    const pad = 16, ext = Math.abs(Math.sin(rot)) * (bw - bh) / 2;
+    const box = { id: st.id, x0: cx - bw / 2 - pad, y0: cy - bh / 2 - pad - ext, x1: cx + bw / 2 + pad, y1: cy + bh / 2 + pad + ext };
+    boxes.push(box);
+    if (hiliteId && hiliteId === st.id) {
+      ctx.save(); ctx.setLineDash([18, 12]); ctx.lineWidth = 4; ctx.strokeStyle = "rgba(255,255,255,.9)";
+      ctx.strokeRect(box.x0, box.y0, box.x1 - box.x0, box.y1 - box.y0); ctx.restore();
+    }
+  });
+  return boxes;
+}
 
 /* ---------- spec rows ---------- */
 function rowGeo(ctx, row, maxNote = 660) {
@@ -751,11 +956,11 @@ function checker(ctx) {
   for (let y = 0, r = 0; y < H; y += 90, r++) for (let x = (r % 2) * 90; x < W; x += 180) ctx.fillRect(x, y, 90, 90);
   ctx.restore();
 }
-function renderSlide(cv, post, s, idx, total, scale, forExport) {
+function renderSlide(cv, post, s, idx, total, scale, forExport, hiliteId) {
   const ctx = cv.getContext("2d");
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
-  OVERLAY = !!s.overlay;
+  OVERLAY = !!s.overlay; RENDER_SCALE = forExport ? 1 : scale;
   if (OVERLAY) { if (!forExport) checker(ctx); } else { ctx.fillStyle = "#100c0b"; ctx.fillRect(0, 0, W, H); }
   const d = design(ctx, post, s);
   if (OVERLAY) d.note = (d.note || "") + " · <b>transparent PNG</b>";
@@ -763,6 +968,7 @@ function renderSlide(cv, post, s, idx, total, scale, forExport) {
   else if (s.type === "cover" || s.type === "save") renderTitle(ctx, post, s, idx, total, d);
   else if (s.type === "beforeafter") renderBA(ctx, post, s, idx, total, d);
   else renderPhotoSlide(ctx, post, s, idx, total, d);
+  d.boxes = drawStickers(ctx, post, s, forExport ? null : hiliteId);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   OVERLAY = false;
   return d;
@@ -774,7 +980,8 @@ const S = {
   posts: [], pid: null, post: null, slides: {},
   photos: new Map(), folders: [], libFolder: "*", pickFolder: "*", selected: new Set(), lastTile: null, folderForm: null,
   dirty: new Set(), writing: new Set(), again: new Set(), timers: new Map(), unsubSlides: null, readOnly: false, errors: 0,
-  busy: new Set(), applyCtl: null, notes: ""
+  busy: new Set(), applyCtl: null, notes: "",
+  boxes: {}, focusBoxes: [], hilite: null, suppressClick: 0
 };
 const metaPath = () => `posts/${S.pid}`;
 const slidePath = sid => `posts/${S.pid}/slides/${sid}`;
@@ -824,7 +1031,8 @@ function drawNow() {
     const card = document.getElementById("card-" + sid), s = S.slides[sid];
     if (!card || !s) continue;
     const cv = card.querySelector("canvas");
-    const d = renderSlide(cv, S.post, s, o.indexOf(sid) + 1, o.length, cv.width / W);
+    const d = renderSlide(cv, S.post, s, o.indexOf(sid) + 1, o.length, cv.width / W, false, S.hilite);
+    S.boxes[sid] = d.boxes || [];
     const n = card.querySelector(".autonote");
     if (n) n.innerHTML = d.note ? "Auto layout: " + d.note : "";
     const warn = card.querySelector(".warn");
@@ -874,9 +1082,10 @@ function sel(sid, key, label, opts, val) {
   const idv = `${sid}-${key.replace(/\./g, "-")}`;
   return `<div><label class="lbl" for="${idv}">${label}</label><select class="ctl" id="${idv}" data-f="${key}">${opts.map(([v, l]) => `<option value="${v}"${(val ?? "auto") === v ? " selected" : ""}>${l}</option>`).join("")}</select></div>`;
 }
+const FMT = { pct: v => Math.round(v * 100) + "%", x: v => (+v).toFixed(2) + "×", signed: v => (v > 0 ? "+" : "") + Math.round(v), px: v => Math.round(v) + " px", deg: v => Math.round(v) + "°" };
 function rng(sid, key, label, min, max, step, val, fmt) {
   const idv = `${sid}-${key.replace(/\./g, "-")}`;
-  return `<div><label class="lbl" for="${idv}">${label}</label><div class="range"><input type="range" id="${idv}" data-f="${key}" data-num min="${min}" max="${max}" step="${step}" value="${val}"><output for="${idv}">${fmt(val)}</output></div></div>`;
+  return `<div><label class="lbl" for="${idv}">${label}</label><div class="range"><input type="range" id="${idv}" data-f="${key}" data-num data-fmt="${fmt}" min="${min}" max="${max}" step="${step}" value="${val}"><output for="${idv}">${FMT[fmt](val)}</output></div></div>`;
 }
 function layoutHTML(sid, s) {
   const L = s.layout || {}, parts = [];
@@ -890,11 +1099,11 @@ function layoutHTML(sid, s) {
   }
   const sc = userScrim(L);
   parts.push(`<div><label class="lbl" for="${sid}-scrimauto">Darken behind text</label><div class="two"><select class="ctl" id="${sid}-scrimauto" data-act="scrimmode"><option value="auto"${sc == null ? " selected" : ""}>Auto</option><option value="manual"${sc != null ? " selected" : ""}>Manual</option></select>
-    <div class="range"><input type="range" id="${sid}-scrim" data-f="layout.scrim" data-num min="0" max="0.9" step="0.05" value="${sc ?? 0.3}"${sc == null ? " disabled" : ""} aria-label="Darken amount"><output for="${sid}-scrim">${pct(sc ?? 0.3)}</output></div></div></div>`);
+    <div class="range"><input type="range" id="${sid}-scrim" data-f="layout.scrim" data-num data-fmt="pct" min="0" max="0.9" step="0.05" value="${sc ?? 0.3}"${sc == null ? " disabled" : ""} aria-label="Darken amount"><output for="${sid}-scrim">${pct(sc ?? 0.3)}</output></div></div></div>`);
   for (const slot of TEMPLATES[s.type].slots) {
     const v = s[slot] || {}, nm = s.type === "beforeafter" ? (slot === "img" ? "Before photo: " : "After photo: ") : "Photo: ";
-    parts.push(`<div class="two">${rng(sid, slot + ".fx", nm + "left / right", 0, 1, 0.01, v.fx ?? 0.5, pct)}${rng(sid, slot + ".fy", nm + "up / down", 0, 1, 0.01, v.fy ?? 0.5, pct)}</div>`);
-    parts.push(rng(sid, slot + ".zoom", nm + "zoom", 1, 2.5, 0.01, v.zoom ?? 1, x => (+x).toFixed(2) + "×"));
+    parts.push(`<div class="two">${rng(sid, slot + ".fx", nm + "left / right", 0, 1, 0.01, v.fx ?? 0.5, "pct")}${rng(sid, slot + ".fy", nm + "up / down", 0, 1, 0.01, v.fy ?? 0.5, "pct")}</div>`);
+    parts.push(rng(sid, slot + ".zoom", nm + "zoom", 1, 2.5, 0.01, v.zoom ?? 1, "x"));
   }
   return parts.join("");
 }
@@ -919,7 +1128,9 @@ function cardHTML(sid) {
     <div><label class="lbl" for="${sid}-comment">Comment for Claude</label><textarea class="ctl" id="${sid}-comment" data-f="comment" placeholder="What should change on this slide?">${esc(s.comment)}</textarea></div>
     <div class="applyslot">${applyHTML(sid, s)}</div>
     <details><summary>Edit text</summary><div class="fields">${fieldHTML(sid, s)}</div></details>
-    <details><summary>Layout and photo</summary><div class="fields">${layoutHTML(sid, s)}</div></details>
+    <details><summary>Edit photo</summary><div class="fields">${editHTML(sid, s)}</div></details>
+    <details><summary>Stickers${(s.stickers || []).length ? ` (${s.stickers.length})` : ""}</summary><div class="fields">${stickerHTML(sid, s)}</div></details>
+    <details><summary>Layout and framing</summary><div class="fields">${layoutHTML(sid, s)}</div></details>
   </article>`;
 }
 function renumber() {
@@ -946,6 +1157,7 @@ function renderBoard(rebuild) {
   scheduleDraw();
   $("#dlAll").disabled = !o.length;
   updateApplyAll();
+  refreshGuideSlideSelects();
 }
 function refreshApplySlot(sid) {
   const c = document.getElementById("card-" + sid), s = S.slides[sid];
@@ -970,6 +1182,7 @@ function renderMain() {
     <div class="actions" style="padding-bottom:26px"><label class="lbl sr" for="addType">Slide type</label>
       <select class="ctl" id="addType" style="width:auto">${Object.entries(TEMPLATES).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join("")}</select>
       <button class="btn" id="addSlide">Add slide</button></div>
+    <section class="section" id="guideSec" aria-label="PDF guide"></section>
     <section class="section" id="overallSec"><h2>Overall comments</h2>
       <p class="hint">Notes about the whole post: the story, photo choices, anything that should change across slides. <b>Apply comments</b> at the top includes these.</p>
       <div class="overall"><label class="sr" for="m-overall">Overall comments</label><textarea class="ctl" id="m-overall" data-m="overall" rows="5" placeholder="e.g. use more flat lays, the orange slides feel too similar"></textarea>
@@ -1017,7 +1230,7 @@ function onField(el) {
   const sid = card.dataset.sid, s = S.slides[sid];
   let v = el.value;
   if (el.hasAttribute("data-bool")) v = el.checked;
-  if (el.hasAttribute("data-num")) { v = +v; const out = el.parentElement.querySelector("output"); if (out) out.textContent = el.dataset.f.endsWith("zoom") ? v.toFixed(2) + "×" : Math.round(v * 100) + "%"; }
+  if (el.hasAttribute("data-num")) { v = +v; const out = el.parentElement.querySelector("output"); if (out) out.textContent = (FMT[el.dataset.fmt] || FMT.pct)(v); }
   const f = el.dataset.f;
   if (/^img2?\./.test(f) && !s[f.split(".")[0]]) return;
   setPath(s, f, v);
@@ -1086,7 +1299,7 @@ document.addEventListener("click", e => {
   const card = b.closest(".card"); if (!card) return;
   const sid = card.dataset.sid, s = S.slides[sid], act = b.dataset.act;
   if (act !== "menu" && act !== "dup" && act !== "del" && act !== "delok") closeMenus();
-  if (act === "focus") openFocus(sid);
+  if (act === "focus") { if (Date.now() - S.suppressClick > 450) openFocus(sid); }
   else if (act === "replace") openPicker(sid, b.dataset.slot);
   else if (act === "autofit") { s.layout = {}; saveSlide(sid); renderBoard(new Set([sid])); toast("Text re-fitted to the photo"); }
   else if (act === "png") exportOne(sid);
@@ -1102,6 +1315,10 @@ document.addEventListener("click", e => {
   else if (act === "stopapply") { if (S.applyCtl) S.applyCtl.abort(); }
   else if (act === "undo") undoApply(sid);
   else if (act === "keep") { delete s.undo; delete s.applied; saveSlide(sid); refreshApplySlot(sid); }
+  else if (act === "addsticker") openStickers(sid);
+  else if (act === "delsticker") { s.stickers.splice(+b.dataset.i, 1); saveSlide(sid); renderBoard(new Set([sid])); }
+  else if (act === "resetadj") { if (s[b.dataset.slot]) { delete s[b.dataset.slot].adj; saveSlide(sid); renderBoard(new Set([sid])); } }
+  else if (act === "adjall") copyEditsToAll(sid, b.dataset.slot);
 });
 function closeMenus() { $$(".menu").forEach(m => { m.previousElementSibling && m.previousElementSibling.setAttribute("aria-expanded", "false"); m.remove(); }); }
 function toggleMenu(btn) {
@@ -1156,6 +1373,119 @@ function copyAll(btn) {
 function fallbackCopy(text, done) { const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); done(); } catch (e) {} ta.remove(); }
 let toastT;
 function toast(msg) { let t = $(".toast"); if (!t) { t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); } t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2800); }
+
+/* ---------- photo edits + stickers: card sections, picker, dragging ---------- */
+function editHTML(sid, s) {
+  if (s.overlay) return `<p class="hint" style="margin:0">This slide is a text-only overlay, so there's no photo to edit.</p>`;
+  const slots = TEMPLATES[s.type].slots.filter(k => s[k]);
+  if (!slots.length) return `<p class="hint" style="margin:0">Add a photo first.</p>`;
+  return slots.map(slot => {
+    const a = s[slot].adj || {};
+    return `${s.type === "beforeafter" ? `<div class="rowhead"><span>${slot === "img" ? "Before photo" : "After photo"}</span></div>` : ""}
+      <div class="adjgrid">${ADJ.map(([k, label, min, max]) => rng(sid, `${slot}.adj.${k}`, label, min, max, 1, +a[k] || 0, "signed")).join("")}</div>
+      <div class="actions"><button class="btn ghost sm" data-act="resetadj" data-slot="${slot}">Reset edits</button><button class="btn ghost sm" data-act="adjall" data-slot="${slot}">Use these edits on every photo</button></div>`;
+  }).join("") + `<p class="hint" style="margin:0">Double-click a slider to set it back to 0. Grain and sharpening show best in the large view.</p>`;
+}
+function stickerHTML(sid, s) {
+  const list = (s.stickers || []).map((st, i) => {
+    const P = STICKERS[st.kind] || { label: st.kind, type: "icon" }, pill = P.type === "pill";
+    const cur = String(pill ? (st.bg || P.bg) : (st.color || "#ffffff")).toLowerCase();
+    const opts = STICKER_COLORS.map(([v, l]) => `<option value="${v}"${cur === v ? " selected" : ""}>${l}</option>`).join("") + (STICKER_COLORS.some(([v]) => v === cur) ? "" : `<option value="${esc(cur)}" selected>Custom</option>`);
+    const color = `<div><label class="lbl" for="${sid}-st${i}-c">${pill ? "Button color" : "Color"}</label><select class="ctl" id="${sid}-st${i}-c" data-f="stickers.${i}.${pill ? "bg" : "color"}">${opts}</select></div>`;
+    const extra = pill ? `<div><label class="lbl" for="${sid}-st${i}-l">Text</label><input class="ctl" id="${sid}-st${i}-l" data-f="stickers.${i}.label" value="${esc(st.label ?? P.text)}"></div>`
+      : `<label class="check" style="align-self:end;min-height:40px;align-items:center"><input type="checkbox" id="${sid}-st${i}-s" data-f="stickers.${i}.solid" data-bool${(P.type === "row" ? st.solid !== false : st.solid) ? " checked" : ""}><span>${P.type === "row" ? "Filled bookmark" : "Filled"}</span></label>`;
+    return `<div class="rowbox"><div class="rowhead"><span>${esc(P.label)}</span><button class="btn ghost sm" data-act="delsticker" data-i="${i}">Remove</button></div>
+      <div class="two">${rng(sid, `stickers.${i}.x`, "Left / right", 0, 1, 0.005, st.x ?? 0.5, "pct")}${rng(sid, `stickers.${i}.y`, "Up / down", 0, 1, 0.005, st.y ?? 0.8, "pct")}</div>
+      <div class="two">${rng(sid, `stickers.${i}.size`, "Size", 40, 600, 2, st.size || P.size, "px")}${rng(sid, `stickers.${i}.rot`, "Rotate", -45, 45, 1, st.rot || 0, "deg")}</div>
+      <div class="two">${color}${extra}</div></div>`;
+  }).join("");
+  return `${list}<button class="btn sm" data-act="addsticker">Add sticker</button><p class="hint" style="margin:0">Drag a sticker on the slide to move it. On a phone, open the slide large first.</p>`;
+}
+let stickFor = null;
+function openStickers(sid) {
+  stickFor = sid;
+  const grid = $("#stickGrid");
+  grid.innerHTML = Object.entries(STICKERS).map(([k, P]) => `<button type="button" data-stick="${k}"><canvas width="300" height="180" aria-hidden="true"></canvas><span>${esc(P.label)}</span></button>`).join("");
+  $$("[data-stick]", grid).forEach(b => previewSticker(b.querySelector("canvas"), b.dataset.stick));
+  $("#stickDlg").showModal();
+}
+function previewSticker(cv, kind) {
+  const ctx = cv.getContext("2d"), P = STICKERS[kind];
+  ctx.fillStyle = "#2b2626"; ctx.fillRect(0, 0, cv.width, cv.height);
+  let bw = P.size * (P.type === "row" ? 6.2 : 1);
+  if (P.type === "pill") { const fs = P.size * 0.4; bw = P.size + (P.icon ? P.size * 0.66 : 0) + measureW(ctx, up(fill(P.text, S.post)), fs, 700, -0.05); }
+  const k = Math.min(cv.height * 0.55 / P.size, cv.width * 0.86 / bw);
+  ctx.setTransform(k, 0, 0, k, cv.width / 2 - k * W / 2, cv.height / 2 - k * H / 2);
+  drawStickers(ctx, S.post || {}, { stickers: [{ id: "p", kind, x: 0.5, y: 0.5, solid: kind === "bookmark" ? true : undefined }] });
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+}
+$("#stickGrid").addEventListener("click", e => {
+  const b = e.target.closest("[data-stick]"); if (!b || !stickFor) return;
+  const s = S.slides[stickFor]; if (!s) return;
+  const kind = b.dataset.stick, P = STICKERS[kind];
+  s.stickers = s.stickers || [];
+  const y = clamp(0.8 - 0.07 * s.stickers.length, 0.2, 0.8);
+  s.stickers.push({ id: "k" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), kind, x: 0.5, y, size: P.size, rot: 0, ...(kind === "bookmark" ? { solid: true } : {}) });
+  saveSlide(stickFor); $("#stickDlg").close();
+  const card = document.getElementById("card-" + stickFor);
+  const open = card ? $$("details", card).map(d => d.open) : null;
+  renderBoard(new Set([stickFor]));
+  const c2 = document.getElementById("card-" + stickFor);
+  if (c2) { const ds = $$("details", c2); ds.forEach((d, i) => { d.open = open ? !!open[i] : false; }); if (ds[2]) ds[2].open = true; }
+  toast(`${P.label} added. Drag it where you want it`);
+});
+function copyEditsToAll(sid, slot) {
+  const a = clone((S.slides[sid][slot] || {}).adj || {});
+  let n = 0;
+  for (const [id, s] of Object.entries(S.slides)) {
+    let touched = false;
+    for (const k of TEMPLATES[s.type].slots) if (s[k] && !(id === sid && k === slot)) { s[k].adj = clone(a); n++; touched = true; }
+    if (touched) saveSlide(id);
+  }
+  renderBoard(new Set(Object.keys(S.slides)));
+  toast(n ? `Edits copied to ${n} more photo${n === 1 ? "" : "s"}` : "No other photos to copy to");
+}
+document.addEventListener("dblclick", e => {
+  const el = e.target;
+  if (el.type === "range" && el.dataset.fmt === "signed") { el.value = 0; el.dispatchEvent(new Event("input", { bubbles: true })); }
+});
+let drag = null;
+function frameXY(cv, e) { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * W, (e.clientY - r.top) / r.height * H]; }
+document.addEventListener("pointerdown", e => {
+  const cv = e.target.closest && e.target.closest("canvas"); if (!cv) return;
+  let sid, boxes;
+  if (cv.id === "focusCv") { sid = focusSid; boxes = S.focusBoxes || []; }
+  else { const card = cv.closest(".card"); if (!card || e.pointerType === "touch") return; sid = card.dataset.sid; boxes = S.boxes[sid] || []; }
+  const s = S.slides[sid]; if (!s || !boxes.length) return;
+  const [x, y] = frameXY(cv, e);
+  const hit = [...boxes].reverse().find(b => x >= b.x0 && x <= b.x1 && y >= b.y0 && y <= b.y1);
+  const st = hit && (s.stickers || []).find(t => t.id === hit.id);
+  if (!st) return;
+  e.preventDefault();
+  drag = { sid, cv, st, ox: x - (st.x ?? 0.5) * W, oy: y - (st.y ?? 0.5) * H, moved: false, pid: e.pointerId };
+  try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+  S.hilite = st.id; scheduleDraw(sid);
+});
+document.addEventListener("pointermove", e => {
+  if (!drag || e.pointerId !== drag.pid) return;
+  const [x, y] = frameXY(drag.cv, e);
+  let nx = (x - drag.ox) / W;
+  if (Math.abs(nx * W - W / 2) < 18) nx = 0.5;
+  drag.st.x = clamp(nx, 0, 1); drag.st.y = clamp((y - drag.oy) / H, 0, 1); drag.moved = true;
+  scheduleDraw(drag.sid);
+});
+function endDrag(e) {
+  if (!drag || (e && e.pointerId !== drag.pid)) return;
+  const { sid, st, moved } = drag; drag = null; S.hilite = null;
+  if (moved) {
+    S.suppressClick = Date.now(); saveSlide(sid);
+    const i = (S.slides[sid].stickers || []).indexOf(st);
+    for (const k of ["x", "y"]) { const el = document.getElementById(`${sid}-stickers-${i}-${k}`); if (el) { el.value = st[k]; el.parentElement.querySelector("output").textContent = FMT.pct(st[k]); } }
+  }
+  scheduleDraw(sid);
+}
+document.addEventListener("pointerup", endDrag);
+document.addEventListener("pointercancel", endDrag);
 
 /* ---------- photo library: one shared library, folders and subfolders ---------- */
 const realFolder = f => (f === "*" || f === "" || f == null) ? "" : f;
@@ -1345,12 +1675,21 @@ save: left, right, big, sub, section, foot
 photo: label, note, section, foot
 (section is the footer's middle text, foot is the footer's right text.)
 
-Layout (change only when a comment asks about placement): pos top|middle|bottom, style overlay|panel (specs only), tip left|right|inline (specs only), panel black|red (specs only), scrim 0 to 0.9 (how much to darken behind text). "auto" puts everything back to auto-fit.`;
+Layout (change only when a comment asks about placement): pos top|middle|bottom, style overlay|panel (specs only), tip left|right|inline (specs only), panel black|red (specs only), scrim 0 to 0.9 (how much to darken behind text). "auto" puts everything back to auto-fit.
+
+Stickers are icons and buttons drawn on top of a slide. "stickers" is the slide's list of {kind, x, y, size, rot, color, solid, label, bg}:
+- kind: bookmark, heart, comment, share, bell, like, arrow (icons); follow, subscribe, save, keyword, handle (pill buttons showing a label); actions (an Instagram-style row of heart, comment and share with a bookmark on the right).
+- x and y: the sticker's centre as a fraction of the slide's width and height (0 to 1). The header sits near y 0.06 and the footer near y 0.95; keep stickers clear of text and of the main subject.
+- size: pixels on the 1800x2700 slide (icons 120 to 240, buttons 80 to 110 tall). rot: degrees (-45 to 45). color: hex (icons default #FFFFFF; for buttons it is the text color). solid: true fills an icon. label: button text in UPPERCASE. bg: the button's hex color.
+Return "stickers": "keep" unless a comment asks to add, move or remove a sticker; then return the slide's complete new list.
+
+Photo edits are the slider settings on a slide's photo. "edits" is {exposure, contrast, whites, blacks, saturation, vibrance, grain, sharpen} for the photo ("edits2" for the after photo of a beforeafter slide): whole numbers from -100 to 100 (grain and sharpen 0 to 100); 0 or missing means unchanged. A light touch is 10 to 25, a clear change 30 to 50. There is no white balance, temperature or tint control; if a comment asks for one, say so in notes.
+Return "edits": "keep" unless a comment asks to change how the photo looks; then return the complete new object.`;
 const FORMAT = `Reply with only this JSON object:
-{"slides":[{"id":"<slide id>","text":{<the complete text object>},"layout":"keep","photo":"keep","photo2":"keep","overlay":"keep","summary":"<what you changed, one short sentence>"}],
+{"slides":[{"id":"<slide id>","text":{<the complete text object>},"layout":"keep","photo":"keep","photo2":"keep","edits":"keep","edits2":"keep","overlay":"keep","stickers":"keep","summary":"<what you changed, one short sentence>"}],
 "newSlides":[{"after":"<slide id>","type":"specs","text":{<the complete text object>},"photo":null,"summary":"<one short sentence>"}],
 "notes":""}
-Include only slides you changed. "layout" is "keep", "auto" or an object of layout values. "photo" and "photo2" are "keep", null or a photo id from the library. "overlay" is "keep", true or false. "newSlides" may be empty. "notes" says anything you couldn't do, or is empty.`;
+Include only slides you changed. "layout" is "keep", "auto" or an object of layout values. "photo" and "photo2" are "keep", null or a photo id from the library. "edits" and "edits2" are "keep" or the complete object of photo edit values ({} removes all edits). "overlay" is "keep", true or false. "newSlides" may be empty. "notes" says anything you couldn't do, or is empty.`;
 function pendingSlides() { return order().filter(sid => String(S.slides[sid].comment || "").trim()); }
 function updateApplyAll() {
   const b = $("#applyAll"); if (!b) return;
@@ -1363,7 +1702,7 @@ function buildPrompt(targets, overall) {
   const o = order();
   const outline = o.map((sid, i) => `${pad2(i + 1)} id=${sid} type=${S.slides[sid].type} "${slideName(S.slides[sid])}"`).join("\n");
   const photos = [...S.photos.entries()].slice(-200).map(([id, p]) => ({ id, name: p.name, folder: p.folder || "", shape: p.w > p.h ? "landscape" : p.w < p.h ? "portrait" : "square" }));
-  const items = targets.map(sid => { const s = S.slides[sid]; return { id: sid, type: s.type, text: s.text, layout: s.layout || {}, photo: (s.img && s.img.asset) || null, photo2: (s.img2 && s.img2.asset) || null, overlay: !!s.overlay, comment: s.comment || "" }; });
+  const items = targets.map(sid => { const s = S.slides[sid]; return { id: sid, type: s.type, text: s.text, layout: s.layout || {}, photo: (s.img && s.img.asset) || null, photo2: (s.img2 && s.img2.asset) || null, edits: (s.img && s.img.adj) || {}, edits2: (s.img2 && s.img2.adj) || {}, overlay: !!s.overlay, stickers: (s.stickers || []).map(({ id, ...rest }) => rest), comment: s.comment || "" }; });
   return [RULES,
     `POST: ${S.post.title || ""}\nHANDLE: ${S.post.handle || ""}\nHEADER: ${S.post.series || ""} / ${S.post.subject || ""}\nSLIDES IN ORDER:\n${outline}`,
     overall ? `OVERALL COMMENT FROM THE CREATOR (applies to the whole post; you may change any slide below):\n${overall}` : "",
@@ -1387,12 +1726,33 @@ function cleanLayout(raw, prev) {
   if (raw.scrim === "auto" || (typeof raw.scrim === "number" && raw.scrim >= 0 && raw.scrim <= 0.9)) out.scrim = raw.scrim;
   return out;
 }
+const HEX = /^#[0-9a-f]{6}$/i;
+const num = (v, d) => v !== "" && v !== null && v !== undefined && Number.isFinite(+v) ? +v : d;
+function cleanStickers(raw, prev) {
+  if (raw === null) return [];
+  if (!Array.isArray(raw)) return prev || [];
+  return raw.slice(0, 12).filter(x => x && STICKERS[x.kind]).map(x => {
+    const P = STICKERS[x.kind];
+    const out = { id: "k" + Math.random().toString(36).slice(2, 9), kind: x.kind, x: clamp(num(x.x, 0.5), 0, 1), y: clamp(num(x.y, 0.8), 0, 1), size: clamp(num(x.size, P.size), 40, 600), rot: clamp(num(x.rot, 0), -45, 45) };
+    if (HEX.test(x.color)) out.color = x.color;
+    if (x.solid === true || x.solid === false) out.solid = x.solid;
+    if (P.type === "pill") { if (x.label != null) out.label = String(x.label).slice(0, 40); if (HEX.test(x.bg)) out.bg = x.bg; }
+    return out;
+  });
+}
 function cleanPhoto(raw, prev) {
   if (raw === undefined || raw === "keep") return { v: prev, changed: false };
   if (raw === null) return { v: null, changed: !!prev };
   const id = String(raw), p = S.photos.get(id);
   if (!p) return { v: prev, changed: false };
   return { v: { ...(p.asset ? { asset: p.asset } : { file: p.file }), fx: 0.5, fy: 0.5, zoom: 1 }, changed: !prev || prev.asset !== p.asset };
+}
+function cleanAdj(raw, prev) {
+  if (raw === null) return undefined;
+  if (typeof raw !== "object") return prev;
+  const out = {};
+  for (const [k, , min, max] of ADJ) { const v = Math.round(clamp(num(raw[k], 0), min, max)); if (v) out[k] = v; }
+  return Object.keys(out).length ? out : undefined;
 }
 function applyResult(res, targets, commented, overall) {
   const now = Date.now(), done = [];
@@ -1405,7 +1765,9 @@ function applyResult(res, targets, commented, overall) {
     [["img", "photo"], ["img2", "photo2"]].forEach(([slot, key]) => { if (!TEMPLATES[s.type].slots.includes(slot)) return; const r = cleanPhoto(it[key], s[slot]); if (r.changed) { s[slot] = r.v; photoChanged = true; } });
     if (photoChanged && (it.layout === undefined || it.layout === "keep")) layout = {};
     s.layout = layout;
+    [["img", "edits"], ["img2", "edits2"]].forEach(([slot, key]) => { if (!s[slot] || it[key] === undefined) return; const a = cleanAdj(it[key], s[slot].adj); if (a) s[slot].adj = a; else delete s[slot].adj; });
     if (it.overlay === true || it.overlay === false) s.overlay = it.overlay;
+    if (it.stickers !== undefined && it.stickers !== "keep") s.stickers = cleanStickers(it.stickers, s.stickers);
     s.undo = prev; s.applied = { summary: String(it.summary || "Updated this slide").slice(0, 300), at: now };
     if (commented.includes(sid) || overall) { s.comment = ""; s.status = "review"; }
     saveSlide(sid); done.push(sid);
@@ -1472,7 +1834,7 @@ function drawFocus() {
   const sc = clamp(Math.min((innerWidth - 48) * dpr / W, (innerHeight - 150) * dpr / H), 0.2, 1);
   const cv = $("#focusCv"); cv.width = Math.round(W * sc); cv.height = Math.round(H * sc);
   cv.style.width = Math.round(W * sc / dpr) + "px"; cv.style.height = Math.round(H * sc / dpr) + "px";
-  renderSlide(cv, S.post, s, i + 1, o.length, sc);
+  S.focusBoxes = renderSlide(cv, S.post, s, i + 1, o.length, sc, false, S.hilite).boxes || [];
   $("#focusTitle").textContent = `${pad2(i + 1)}/${pad2(o.length)} ${slideName(s)}`;
 }
 function stepFocus(d) { const o = order(), i = o.indexOf(focusSid); const j = clamp(i + d, 0, o.length - 1); if (j !== i) { focusSid = o[j]; drawFocus(); } }
@@ -1523,12 +1885,338 @@ window.__exportPNG = async i => { const sid = order()[i]; const blob = await sli
 window.__debugDesign = i => { const sid = order()[i]; const cv = document.createElement("canvas"); cv.width = 60; cv.height = 90; const d = renderSlide(cv, S.post, S.slides[sid], i + 1, order().length, 60 / W); return { note: d.note, mode: d.mode, pos: d.pos, tip: d.tip && { mode: d.tip.mode, side: d.tip.side, w: d.tip.w } }; };
 window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.entries()], folders: S.folders, notes: S.notes });
 
+/* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
+const guidePath = () => `posts/${S.pid}/guide/main`;
+S.guide = null; S.unsubGuide = null; S.gbusy = false; S.gctl = null;
+const saveGuide = () => queueSave(guidePath(), () => S.guide, 700);
+const gid = () => "g" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+const plain = s => String(s || "").replace(/\*\*/g, "");
+function subscribeGuide(pid) {
+  if (S.unsubGuide) { S.unsubGuide(); S.unsubGuide = null; }
+  S.guide = null;
+  if (S.local) { S.guide = clone(((window.__LOCAL_STATE__.guides || {})[pid]) || null); renderGuide(); return; }
+  renderGuide();
+  S.unsubGuide = S.db.doc(`posts/${pid}/guide/main`).onSnapshot(snap => {
+    if (S.dirty.has(guidePath()) || S.writing.has(guidePath()) || S.gbusy) return;
+    const v = snap.exists ? snap.data() : null;
+    if (JSON.stringify(v && stripTs(v)) !== JSON.stringify(S.guide && stripTs(S.guide))) { S.guide = clone(v); renderGuide(); }
+  }, err => console.warn(err));
+}
+function gPending() { const g = S.guide; if (!g) return 0; return (g.sections || []).filter(x => String(x.comment || "").trim()).length + (String(g.comment || "").trim() ? 1 : 0); }
+function slideOpts(cur) {
+  return `<option value="">No slide</option>` + order().map((sid, i) => `<option value="${sid}"${cur === sid ? " selected" : ""}>${pad2(i + 1)} ${esc(slideName(S.slides[sid]))}</option>`).join("");
+}
+function refreshGuideSlideSelects() {
+  if (!S.guide) return;
+  $$('#guideSec select[data-g$=".slide"]').forEach(sel => {
+    const i = +sel.dataset.g.split(".")[1], sec = (S.guide.sections || [])[i];
+    if (sec) sel.innerHTML = slideOpts(sec.slide);
+  });
+}
+function renderGuide() {
+  const el = $("#guideSec"); if (!el) return;
+  const g = S.guide, ai = !!S.sample, n = gPending();
+  let html = `<div class="sec-h"><h2>PDF guide</h2><span class="grow"></span>
+      ${ai ? `<button class="btn sm" data-gact="write"${S.gbusy ? " disabled" : ""}>${g ? "Rewrite with Claude" : "Write with Claude"}</button>` : ""}
+      ${ai && g ? `<button class="btn accent sm" data-gact="applyall"${n && !S.gbusy ? "" : " disabled"}>Apply guide comments${n ? ` (${n})` : ""}</button>` : ""}
+      <button class="btn primary sm" data-gact="pdf"${g ? "" : " disabled"}>Download PDF</button></div>
+    <p class="hint">The long version of this carousel, to send when someone comments your keyword (for example through ManyChat). The PDF has real text, so you can highlight and comment on it in any PDF app. Fix wording here, or leave comments and let Claude apply them.</p>`;
+  if (S.gbusy) html += `<div class="busy" role="status" style="margin-bottom:12px"><i></i><span>Claude is working on the guide…</span><button class="btn ghost sm" data-gact="stop">Stop</button></div>`;
+  if (!g) { el.innerHTML = html + `<p class="hint">No guide for this post yet.${ai ? " Tap <b>Write with Claude</b> to draft one from your slides." : " Ask Claude in the chat to write one."}</p>`; return; }
+  if (g.applied) html += `<div class="applied" role="status" style="margin-bottom:12px"><p><b>Claude changed the guide:</b> ${esc(g.applied.summary)}</p><div class="actions">${g.undo ? `<button class="btn sm" data-gact="undo">Undo</button>` : ""}<button class="btn ghost sm" data-gact="keep">Keep it</button></div></div>`;
+  html += `<div class="guide">
+    <div class="gbox"><div class="two"><div><label class="lbl" for="g-title">Title</label><input class="ctl" id="g-title" data-g="title" value="${esc(g.title)}"></div>
+      <div><label class="lbl" for="g-sub">Subtitle</label><input class="ctl" id="g-sub" data-g="subtitle" value="${esc(g.subtitle)}"></div></div>
+      <div><label class="lbl" for="g-intro">Intro</label><textarea class="ctl" id="g-intro" data-g="intro" rows="4">${esc(g.intro)}</textarea></div></div>
+    ${(g.sections || []).map((sec, i) => `<div class="gbox">
+      <div class="rowhead"><span>Section ${i + 1}</span><span class="grow"></span>
+        <button class="btn ghost sm" data-gact="up" data-i="${i}"${i ? "" : " disabled"}>Move up</button>
+        <button class="btn ghost sm" data-gact="delsec" data-i="${i}">Remove</button></div>
+      <div class="two"><div><label class="lbl" for="g${i}-h">Heading</label><input class="ctl" id="g${i}-h" data-g="sections.${i}.heading" value="${esc(sec.heading)}"></div>
+        <div><label class="lbl" for="g${i}-s">Slide shown before it</label><select class="ctl" id="g${i}-s" data-g="sections.${i}.slide">${slideOpts(sec.slide)}</select></div></div>
+      <div><label class="lbl" for="g${i}-b">Text</label><textarea class="ctl" id="g${i}-b" data-g="sections.${i}.body" rows="3">${esc(sec.body)}</textarea></div>
+      <div><label class="lbl" for="g${i}-p">Points (one per line, **bold** lead-in)</label><textarea class="ctl" id="g${i}-p" data-g="sections.${i}.points" rows="7">${esc(sec.points)}</textarea></div>
+      <div><label class="lbl" for="g${i}-c">Comment for Claude</label><textarea class="ctl" id="g${i}-c" data-g="sections.${i}.comment" rows="2" placeholder="What's wrong or missing in this section?">${esc(sec.comment)}</textarea></div>
+      ${ai ? `<div class="applybar"><button class="btn accent sm" data-gact="applysec" data-i="${i}"${String(sec.comment || "").trim() && !S.gbusy ? "" : " disabled"}>Apply comment</button></div>` : ""}
+    </div>`).join("")}
+    <div class="actions"><button class="btn sm" data-gact="addsec">Add section</button></div>
+    <div class="gbox"><div><label class="lbl" for="g-outro">Closing</label><textarea class="ctl" id="g-outro" data-g="outro" rows="3">${esc(g.outro)}</textarea></div>
+      <div><label class="lbl" for="g-cta">Last line, big ({handle} = your handle)</label><input class="ctl" id="g-cta" data-g="cta" value="${esc(g.cta)}"></div>
+      <label class="check"><input type="checkbox" id="g-cheat" data-g="cheatsheet" data-bool${g.cheatsheet !== false ? " checked" : ""}><span>Add a cheat sheet page<small>Every setting from your slides on one page.</small></span></label></div>
+    <div class="gbox"><label class="lbl" for="g-comment">Comment on the whole guide</label><textarea class="ctl" id="g-comment" data-g="comment" rows="3" placeholder="e.g. make the intro shorter, add a tip about audio">${esc(g.comment)}</textarea></div>
+  </div>`;
+  el.innerHTML = html;
+}
+function refreshGuideButtons() {
+  const el = $("#guideSec"); if (!el || !S.guide) return;
+  const n = gPending(), all = el.querySelector('[data-gact="applyall"]');
+  if (all) { all.disabled = !n || S.gbusy; all.textContent = `Apply guide comments${n ? ` (${n})` : ""}`; }
+  (S.guide.sections || []).forEach((sec, i) => { const b = el.querySelector(`[data-gact="applysec"][data-i="${i}"]`); if (b) b.disabled = !String(sec.comment || "").trim() || S.gbusy; });
+}
+document.addEventListener("input", e => {
+  const el = e.target;
+  if (!el.dataset || !el.dataset.g || !S.guide) return;
+  const v = el.hasAttribute("data-bool") ? el.checked : el.tagName === "SELECT" ? (el.value || null) : el.value;
+  setPath(S.guide, el.dataset.g, v); saveGuide();
+  if (/comment$/.test(el.dataset.g)) refreshGuideButtons();
+});
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-gact]"); if (!b) return;
+  const a = b.dataset.gact, i = +b.dataset.i, g = S.guide;
+  if (a === "pdf") return downloadGuidePdf(b);
+  if (a === "write") {
+    if (g && b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Tap again to replace the guide"; return; }
+    return runGuideClaude("write", null);
+  }
+  if (a === "applyall") return runGuideClaude("apply", null);
+  if (a === "applysec") return runGuideClaude("apply", i);
+  if (a === "stop") { if (S.gctl) S.gctl.abort(); return; }
+  if (!g) return;
+  if (a === "undo") { if (g.undo) { S.guide = clone(g.undo); saveGuide(); renderGuide(); toast("Guide change undone"); } return; }
+  if (a === "keep") { delete g.undo; delete g.applied; saveGuide(); renderGuide(); return; }
+  if (a === "addsec") { g.sections = g.sections || []; g.sections.push({ id: gid(), slide: null, heading: "NEW SECTION", body: "", points: "", comment: "" }); saveGuide(); renderGuide(); return; }
+  if (a === "delsec") { if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Tap again to remove"; return; } g.sections.splice(i, 1); saveGuide(); renderGuide(); return; }
+  if (a === "up" && i > 0) { const ss = g.sections; [ss[i - 1], ss[i]] = [ss[i], ss[i - 1]]; saveGuide(); renderGuide(); }
+});
+
+/* Claude writes or edits the guide */
+const GUIDE_RULES = `You write and edit a short PDF guide that expands an Instagram carousel. Followers get it after commenting a keyword, so it should feel like a bonus: the same settings with more explanation, practical tips and the reasoning behind each choice.
+Rules:
+- Use the creator's own settings, numbers and spellings exactly as they appear on the slides. Never invent a camera setting, a menu path or a product feature you aren't sure of.
+- Write in the creator's voice: friendly, direct, first person, plain words. Sentence case for text and points; headings in UPPERCASE.
+- Keep it tight: intro 2 to 3 sentences; each section a 1 to 3 sentence text and 3 to 6 points; closing 1 to 3 sentences.
+- Points: one per line, each starting with a short bold lead-in in **...** followed by a colon, then one or two sentences.
+- Link each section to the slide it explains by slide id, or null for a section without a slide. Skip the cover and the final call-to-action slide.
+- Write ranges with an en dash (100–1600) and negative numbers with a minus sign (−0.3).`;
+const GUIDE_FORMAT = `Reply with only this JSON object:
+{"title":"...","subtitle":"...","intro":"...","sections":[{"id":"<keep an existing id, or omit for a new section>","slide":"<slide id or null>","heading":"...","body":"...","points":"**Lead:** sentence.\\n**Lead:** sentence."}],"outro":"...","cta":"...","summary":"<what you changed, one sentence>","notes":"<anything you couldn't do, or empty>"}`;
+function guidePrompt(mode, idx) {
+  const slides = order().map((sid, i) => { const s = S.slides[sid]; return { id: sid, number: i + 1, type: s.type, text: s.text }; });
+  const head = `${GUIDE_RULES}\n\nPOST: ${S.post.title || ""}\nHANDLE: ${S.post.handle || ""}\nSLIDES:\n${JSON.stringify(slides)}`;
+  const g = S.guide && { title: S.guide.title, subtitle: S.guide.subtitle, intro: S.guide.intro, sections: (S.guide.sections || []).map(x => ({ id: x.id, slide: x.slide, heading: x.heading, body: x.body, points: x.points, comment: x.comment || "" })), outro: S.guide.outro, cta: S.guide.cta, comment: S.guide.comment || "" };
+  if (mode === "write") return `${head}\n\n${g ? "CURRENT GUIDE (rewrite it from the slides; keep anything still accurate):\n" + JSON.stringify(g) + "\n\n" : ""}Write the guide.\n\n${GUIDE_FORMAT}`;
+  const which = idx == null ? "Apply every comment: the ones on sections and the comment on the whole guide." : `Apply only the comment on section ${idx + 1} (id ${g.sections[idx].id}).`;
+  return `${head}\n\nCURRENT GUIDE WITH THE CREATOR'S COMMENTS:\n${JSON.stringify(g)}\n\n${which} Change only what the comments ask, keep everything else word for word, and return the complete guide.\n\n${GUIDE_FORMAT}`;
+}
+function cleanGuide(raw, prev) {
+  const str = (v, d, n) => (v == null || typeof v === "object") ? (d ?? "") : String(v).slice(0, n || 2000);
+  const ids = new Set(((prev && prev.sections) || []).map(x => x.id));
+  const out = {
+    title: str(raw.title, prev && prev.title, 200), subtitle: str(raw.subtitle, prev && prev.subtitle, 300), intro: str(raw.intro, prev && prev.intro),
+    sections: (Array.isArray(raw.sections) ? raw.sections : ((prev && prev.sections) || [])).slice(0, 14).filter(x => x && typeof x === "object").map(x => ({
+      id: ids.has(x.id) ? x.id : gid(), slide: S.slides[x.slide] ? x.slide : null,
+      heading: str(x.heading, "", 120), body: str(x.body, ""), points: str(x.points, "", 4000), comment: ""
+    })),
+    outro: str(raw.outro, prev && prev.outro), cta: str(raw.cta, (prev && prev.cta) || "FOLLOW {handle}", 120),
+    cheatsheet: prev ? prev.cheatsheet !== false : true, comment: ""
+  };
+  return out;
+}
+async function runGuideClaude(mode, idx) {
+  if (!S.sample || S.gbusy) return;
+  if (mode === "apply" && !gPending()) return;
+  const ctl = new AbortController(); S.gctl = ctl; S.gbusy = true; renderGuide();
+  try {
+    const res = await S.sample.json(guidePrompt(mode, idx), { signal: ctl.signal, modelTier: "default", cache: false });
+    if (!res || typeof res !== "object") throw { code: "invalid_json" };
+    const prev = S.guide ? clone(S.guide) : null; if (prev) { delete prev.undo; delete prev.applied; }
+    const next = cleanGuide(res, prev);
+    if (prev && mode === "apply") {
+      // comments that weren't part of this request stay where they were
+      next.sections.forEach(sec => { const old = prev.sections.find(x => x.id === sec.id); if (old && idx != null && prev.sections[idx] && prev.sections[idx].id !== sec.id) sec.comment = old.comment || ""; });
+      if (idx != null) next.comment = prev.comment || "";
+    }
+    next.undo = prev; next.applied = { summary: String(res.summary || (mode === "write" ? "Wrote the guide from your slides." : "Applied your comments.")).slice(0, 300), at: Date.now() };
+    S.guide = next; S.gbusy = false; saveGuide(); renderGuide();
+    if (res.notes) { S.notes = String(res.notes).slice(0, 400); renderNotes(); }
+    toast(mode === "write" ? "Guide written. Check it, then Keep it or Undo" : "Guide updated. Check it, then Keep it or Undo");
+  } catch (e) {
+    if (!e || e.code !== "cancelled") toast(SAMPLE_ERR[e && e.code] || "Couldn’t reach Claude. Try again.");
+  } finally { S.gbusy = false; S.gctl = null; renderGuide(); }
+}
+
+/* PDF export (pdf-lib + fontkit, loaded on first use) */
+const PDF_LIBS = [
+  ["https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js", "sha384-weMABwrltA6jWR8DDe9Jp5blk+tZQh7ugpCsF3JwSA53WZM9/14PjS5LAJNHNjAI", "PDFLib"],
+  ["https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js", "sha384-2p6U+1mmqF10USehFeRiyG2ESG9FwIqN+jxULn5w9jjQIihSn9Pt13dVCn/Hawjn", "fontkit"]
+];
+function loadScript([src, integrity, global]) {
+  if (window[global]) return Promise.resolve();
+  return new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = src; s.integrity = integrity; s.crossOrigin = "anonymous"; s.referrerPolicy = "no-referrer";
+    s.onload = () => res(); s.onerror = () => rej(new Error("load failed: " + src));
+    document.head.appendChild(s);
+  });
+}
+async function slideJpeg(sid, w) {
+  const s = S.slides[sid], o = order();
+  await waitImages(s);
+  let cv = document.createElement("canvas"); cv.width = w; cv.height = Math.round(w * H / W);
+  renderSlide(cv, S.post, s, o.indexOf(sid) + 1, o.length, w / W, true);
+  if (s.overlay) { const c2 = document.createElement("canvas"); c2.width = cv.width; c2.height = cv.height; const x = c2.getContext("2d"); x.fillStyle = "#100c0b"; x.fillRect(0, 0, c2.width, c2.height); x.drawImage(cv, 0, 0); cv = c2; }
+  const blob = await new Promise(r => cv.toBlob(r, "image/jpeg", 0.86));
+  return new Uint8Array(await blob.arrayBuffer());
+}
+async function buildGuidePdf(onStep) {
+  await loadScript(PDF_LIBS[0]); await loadScript(PDF_LIBS[1]);
+  const { PDFDocument, rgb, pushGraphicsState, popGraphicsState, setCharacterSpacing } = window.PDFLib;
+  const g = S.guide, post = S.post, o = order();
+  const doc = await PDFDocument.create();
+  doc.registerFontkit(window.fontkit);
+  const [rb, bb] = await Promise.all(["fonts/NimbusSans-Regular.ttf", "fonts/NimbusSans-Bold.ttf"].map(u => fetch(u).then(r => { if (!r.ok) throw new Error("font " + u); return r.arrayBuffer(); })));
+  const R = await doc.embedFont(rb, { subset: true }), B = await doc.embedFont(bb, { subset: true });
+  doc.setTitle(plain(g.title) || post.title || "Guide"); doc.setAuthor(post.handle || ""); doc.setSubject(plain(g.subtitle)); doc.setCreator("Carousel Artboard"); doc.setProducer("Carousel Artboard");
+  const PW = 432, PH = 648, MX = 36, TW = PW - 2 * MX, BOTTOM = 56;
+  const C = { ink: rgb(0.086, 0.071, 0.067), body: rgb(0.17, 0.15, 0.14), muted: rgb(0.42, 0.38, 0.36), accent: rgb(0.83, 0.17, 0.08), rule: rgb(0.87, 0.84, 0.82) };
+  const tw = (t, f, size, tc = 0) => f.widthOfTextAtSize(t, size) + tc * Math.max(0, Array.from(t).length - 1);
+  let page = null, y = 0;
+  const draw = (t, x, yy, f, size, color, tc = 0) => {
+    if (!t) return;
+    if (tc) page.pushOperators(pushGraphicsState(), setCharacterSpacing(tc));
+    page.drawText(t, { x, y: yy, size, font: f, color });
+    if (tc) page.pushOperators(popGraphicsState());
+  };
+  const slidePages = new Set();
+  const slidePage = async sid => {
+    if (!sid || !S.slides[sid]) return;
+    onStep && onStep(`Adding slide ${pad2(o.indexOf(sid) + 1)}`);
+    const img = await doc.embedJpg(await slideJpeg(sid, 1200));
+    const p = doc.addPage([PW, PH]); p.drawImage(img, { x: 0, y: 0, width: PW, height: PH }); slidePages.add(sid);
+  };
+  const newPage = () => {
+    page = doc.addPage([PW, PH]);
+    draw(up(post.series), MX, PH - 30, B, 7.5, C.ink, -0.37);
+    const subj = up(post.subject); draw(subj, PW - MX - tw(subj, R, 7.5, -0.37), PH - 30, R, 7.5, C.muted, -0.37);
+    page.drawLine({ start: { x: MX, y: PH - 38 }, end: { x: PW - MX, y: PH - 38 }, thickness: 0.6, color: C.rule });
+    const handle = up(post.handle || ""); draw(handle, MX, 28, B, 7.5, C.ink, -0.37);
+    const pn = pad2(doc.getPageCount()); draw(pn, PW - MX - tw(pn, B, 7.5, -0.37), 28, B, 7.5, C.ink, -0.37);
+    y = PH - 66;
+  };
+  const ensure = h => { if (y - h < BOTTOM) newPage(); };
+  const wrapWords = (words, maxW, size) => {
+    const lines = []; let cur = [], w = 0;
+    const space = tw(" ", R, size);
+    for (const wd of words) {
+      const ww = tw(wd.t, wd.f, size);
+      if (cur.length && w + space + ww > maxW) { lines.push(cur); cur = []; w = 0; }
+      w += (cur.length ? space : 0) + ww; cur.push(wd);
+    }
+    if (cur.length) lines.push(cur);
+    return lines;
+  };
+  const richWords = text => { const out = []; String(text).split("**").forEach((seg, i) => seg.split(/\s+/).filter(Boolean).forEach(t => out.push({ t, f: i % 2 ? B : R }))); return out; };
+  const drawLine = (line, x, yy, size, color) => {
+    const runs = [];
+    line.forEach(wd => { const last = runs[runs.length - 1]; if (last && last.f === wd.f) last.t += " " + wd.t; else runs.push({ t: wd.t, f: wd.f }); });
+    let cx = x;
+    runs.forEach((r, i) => { const t = i < runs.length - 1 ? r.t + " " : r.t; draw(t, cx, yy, r.f, size, color); cx += tw(t, r.f, size); });
+  };
+  const heading = (t, size) => {
+    const words = up(plain(t)).split(/\s+/).filter(Boolean).map(w => ({ t: w, f: B }));
+    const lines = []; let cur = "";
+    for (const wd of words) { const test = cur ? cur + " " + wd.t : wd.t; if (cur && tw(test, B, size, -0.05 * size) > TW) { lines.push(cur); cur = wd.t; } else cur = test; }
+    if (cur) lines.push(cur);
+    lines.forEach(ln => { ensure(size * 1.05); draw(ln, MX, y - size * 0.73, B, size, C.ink, -0.05 * size); y -= size * 0.98; });
+    y -= 10;
+  };
+  const label = t => { ensure(14); draw(up(t), MX, y - 7, B, 8, C.accent, -0.3); y -= 20; };
+  const para = (t, size = 10.5, lead = 15.5, color = C.body) => {
+    String(t || "").split(/\n+/).map(s => s.trim()).filter(Boolean).forEach(p => {
+      wrapWords(richWords(p), TW, size).forEach(ln => { ensure(lead); drawLine(ln, MX, y - size * 0.8, size, color); y -= lead; });
+      y -= 7;
+    });
+  };
+  const points = t => {
+    String(t || "").split("\n").map(s => s.trim().replace(/^[-•]\s*/, "")).filter(Boolean).forEach(pt => {
+      const lines = wrapWords(richWords(pt), TW - 14, 10.5);
+      ensure(15.5 * Math.min(lines.length, 3));
+      page.drawCircle({ x: MX + 3, y: y - 5, size: 1.8, color: C.accent });
+      lines.forEach(ln => { ensure(15.5); drawLine(ln, MX + 14, y - 8.4, 10.5, C.body); y -= 15.5; });
+      y -= 6;
+    });
+  };
+  const rule = () => { page.drawLine({ start: { x: MX, y }, end: { x: PW - MX, y }, thickness: 0.6, color: C.rule }); };
+
+  // cover, title page
+  if (o[0]) await slidePage(o[0]);
+  onStep && onStep("Writing pages");
+  newPage();
+  label("The full guide");
+  heading(g.title || post.title, 30);
+  para(g.subtitle, 13, 18, C.muted);
+  y -= 4; rule(); y -= 18;
+  para(g.intro);
+  const secs = g.sections || [];
+  if (secs.length) {
+    y -= 6; label("Inside this guide");
+    secs.forEach((sec, i) => { ensure(16); draw(`${pad2(i + 1)}`, MX, y - 8, B, 10, C.accent); draw(up(plain(sec.heading)), MX + 22, y - 8, B, 10, C.ink, -0.4); y -= 17; });
+    if (g.cheatsheet !== false) { ensure(16); draw(pad2(secs.length + 1), MX, y - 8, B, 10, C.accent); draw("CHEAT SHEET", MX + 22, y - 8, B, 10, C.ink, -0.4); y -= 17; }
+  }
+  // sections
+  for (const [i, sec] of secs.entries()) {
+    if (sec.slide) await slidePage(sec.slide);
+    newPage();
+    const n = sec.slide ? o.indexOf(sec.slide) : -1;
+    label(n >= 0 ? `Slide ${pad2(n + 1)} · ${slideName(S.slides[sec.slide])}` : `Section ${pad2(i + 1)}`);
+    heading(sec.heading, 24);
+    para(sec.body, 11.5, 16.5, C.ink);
+    y -= 2;
+    points(sec.points);
+  }
+  // cheat sheet
+  const specs = o.filter(sid => S.slides[sid].type === "specs");
+  if (g.cheatsheet !== false && specs.length) {
+    newPage(); label("Save this page"); heading("Cheat sheet", 24);
+    for (const sid of specs) {
+      const t = S.slides[sid].text || {};
+      ensure(36); draw(up(t.section || ""), MX, y - 8, B, 9, C.accent, -0.35); y -= 14;
+      for (const r of (t.rows || [])) {
+        ensure(24); rule(); y -= 2;
+        draw(up(r.label || ""), MX, y - 14, B, 8, C.ink, -0.32);
+        const v = up(r.value || ""); draw(v, PW - MX - tw(v, B, 15, -0.75), y - 16, B, 15, C.ink, -0.75);
+        y -= 22;
+      }
+      if (t.tipK || t.tip) { ensure(26); rule(); y -= 11; para(`**${plain(up(t.tipK || "Tip"))}** ${t.tip || ""}`, 8.5, 12, C.muted); }
+      y -= 6;
+    }
+  }
+  // closing
+  newPage();
+  label("That’s it");
+  heading(fill(g.cta || "FOLLOW {handle}", post), 30);
+  para(g.outro, 11.5, 16.5, C.ink);
+  const last = o[o.length - 1];
+  if (last && S.slides[last].type === "save" && !slidePages.has(last)) await slidePage(last);
+  onStep && onStep("Saving");
+  return await doc.save();
+}
+async function downloadGuidePdf(btn) {
+  if (!S.guide) return;
+  const label = btn.textContent; btn.disabled = true;
+  try {
+    const bytes = await buildGuidePdf(s => { btn.textContent = s + "…"; });
+    const blob = new Blob([bytes], { type: "application/pdf" });
+    const name = `${slug(plain(S.guide.title) || S.post.title)}-guide.pdf`;
+    if (S.downloads) {
+      try { await S.downloads.save({ filename: name, data: blob }); }
+      catch (e) {
+        if (e && e.code === "extension_not_enabled") toast("PDF downloads are turned off here. Ask Claude in the chat for the file.");
+        else if (e && e.code !== "declined") toast("Couldn’t save the PDF. Try again.");
+      }
+    } else toast("Downloads aren't available here. Ask Claude in the chat for the file.");
+  } catch (e) { console.warn(e); toast("Couldn’t build the PDF. Check your connection and try again."); }
+  finally { btn.textContent = label; btn.disabled = false; }
+}
+window.__guidePDF = async () => { const bytes = await buildGuidePdf(); let s = ""; for (let i = 0; i < bytes.length; i += 32768) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 32768)); return btoa(s); };
+
 /* ---------- posts ---------- */
 function selectPost(pid) {
   if (S.unsubSlides) { S.unsubSlides(); S.unsubSlides = null; }
   S.pid = pid; S.slides = {}; S.notes = "";
   const p = S.posts.find(x => x.id === pid); S.post = clone(p ? p.data : {}) || {};
   renderMain();
+  subscribeGuide(pid);
   if (S.local) { Object.assign(S.slides, clone((window.__LOCAL_STATE__.slides || {})[pid] || {})); renderBoard(new Set(Object.keys(S.slides))); renderLibrary(); return; }
   S.unsubSlides = S.db.collection(`posts/${pid}/slides`).onSnapshot(snap => {
     const seen = new Set(), changed = new Set();

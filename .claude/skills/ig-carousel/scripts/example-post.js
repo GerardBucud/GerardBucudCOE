@@ -1,5 +1,6 @@
 // The first post on the board ("Steal my DJI Osmo Nano settings") as stored in its db, for reference when
 // building a new post: copy the shapes, not the asset ids (those photos already live in the shared library).
+// `guide` is the post's PDF guide (posts/<pid>/guide/main); `photos` is the shared library at the time of writing.
 module.exports = {
   "pid": "osmo-nano-settings",
   "meta": {
@@ -27,7 +28,7 @@ module.exports = {
         "zoom": 1
       },
       "layout": {},
-      "status": "review",
+      "status": "ok",
       "text": {
         "foot": "SWIPE FOR MORE",
         "left": "",
@@ -82,7 +83,8 @@ module.exports = {
         "zoom": 1
       },
       "layout": {},
-      "status": "change",
+      "overlay": false,
+      "status": "ok",
       "text": {
         "foot": "SAVE FOR LATER",
         "rows": [
@@ -106,13 +108,17 @@ module.exports = {
     "s04": {
       "comment": "",
       "img": {
-        "asset": "8658071a8ef496f4dc1332b2d66a67da",
+        "asset": "175f51f39d256ef7045f71a4892ead94",
         "fx": 0.5,
-        "fy": 0.5,
-        "zoom": 1
+        "fy": 0.76,
+        "zoom": 1.1
       },
-      "layout": {},
-      "status": "review",
+      "layout": {
+        "panel": "auto",
+        "pos": "bottom",
+        "scrim": "auto"
+      },
+      "status": "ok",
       "text": {
         "foot": "SAVE FOR LATER",
         "rows": [
@@ -149,7 +155,7 @@ module.exports = {
       "img2": null,
       "layout": {},
       "overlay": true,
-      "status": "review",
+      "status": "ok",
       "text": {
         "aLabel": "D-LOG M",
         "aNote": "STRAIGHT OUT OF CAMERA. FLAT ON PURPOSE",
@@ -171,7 +177,18 @@ module.exports = {
         "zoom": 1
       },
       "layout": {},
-      "status": "ok",
+      "status": "review",
+      "stickers": [
+        {
+          "id": "kbookmark1",
+          "kind": "bookmark",
+          "rot": 0,
+          "size": 190,
+          "solid": true,
+          "x": 0.5,
+          "y": 0.79
+        }
+      ],
       "text": {
         "big": "**SAVE** FOR **LATER**",
         "foot": "SEND TO A FRIEND",
@@ -183,13 +200,66 @@ module.exports = {
       "type": "save"
     }
   },
+  "guide": {
+    "cheatsheet": true,
+    "comment": "",
+    "cta": "FOLLOW {handle}",
+    "intro": "These are the exact settings I use on my DJI Osmo Nano, plus the reasoning behind each one. Use them as your starting point, shoot a few test clips in your own light, and adjust from there.",
+    "outro": "That's my full setup. Shoot a few test clips in different light, keep what works for you, and adjust the rest. If this helped, follow me for more Osmo Nano tips and send this guide to a friend who just got one.",
+    "sections": [
+      {
+        "body": "Before anything else, decide how the camera records. Resolution, frame rate and aspect ratio set how much detail you keep, how motion feels, and where the clip can end up.",
+        "comment": "",
+        "heading": "VIDEO FORMAT",
+        "id": "g1",
+        "points": "**4K:** More resolution than you'll post, and that's the point. You can crop, reframe or stabilise in the edit and still export a sharp 1080p or 4K video.\n**24FPS:** The frame rate of film. Movement gets a soft, natural blur that reads as cinematic, instead of the hyper-smooth look of 30 or 60fps phone video.\n**Higher frame rates:** Only when you plan to slow the clip down in the edit.\n**16:9:** My default for most shoots. It fits YouTube and widescreen edits, and it crops easily to 4:5 for the feed.\n**4:3 when you need both:** The taller frame leaves room to cut a 9:16 vertical and a 16:9 horizontal from the same clip, so one take covers Reels and YouTube.",
+        "slide": "s02"
+      },
+      {
+        "body": "This is where the cinematic look comes from: shoot flat, then finish the color yourself in the edit.",
+        "comment": "",
+        "heading": "COLOR PROFILE",
+        "id": "g2",
+        "points": "**Pro mode:** Manual control over shutter, ISO and white balance, instead of the camera guessing shot by shot. Every clip matches, so the edit goes faster.\n**D-Log M:** A flat log profile that holds more detail in the highlights and shadows. Straight out of camera it looks grey and washed out. That's normal.\n**Grade it:** Start with a D-Log M to Rec.709 LUT (DJI publishes official LUTs for its D-Log M cameras), then fine-tune exposure, contrast and saturation by eye.\n**Set white balance yourself:** With auto white balance the color can drift mid-clip. A fixed setting keeps skin tones consistent.",
+        "slide": "s03"
+      },
+      {
+        "body": "Exposure is where most footage falls apart. These settings keep motion natural, noise low and highlights safe.",
+        "comment": "",
+        "heading": "EXPOSURE",
+        "id": "g3",
+        "points": "**Shutter 1/50:** The 180° rule. Set your shutter to about double your frame rate (24fps × 2 ≈ 1/50) for natural motion blur. Much faster shutter speeds make movement look choppy.\n**ISO 100–1600:** Keep ISO in this range. Higher ISO brightens the image but adds noise, and log footage shows that noise once you grade it.\n**EV −0.3 on a normal day:** A touch of underexposure keeps skies and bright skin from clipping. You can lift shadows in the edit, but blown highlights are gone for good.\n**EV −1.0 in peak sun:** Harsh midday light clips fast, so pull exposure down further.\n**Bright days:** At 1/50 in full sun the image can still be too bright, even at ISO 100. An ND filter cuts the light so you can keep the 1/50 shutter.\n**At night:** Switch to Super Night mode and use any light around you: street lamps, shop windows, neon signs. Light in the frame adds mood and keeps noise down.",
+        "slide": "s04"
+      },
+      {
+        "body": "Here's the whole workflow on one clip: D-Log M straight out of camera, then after the grade.",
+        "comment": "",
+        "heading": "BEFORE / AFTER",
+        "id": "g4",
+        "points": "**Before:** Flat and grey on purpose. All the detail is there; it just needs contrast and color.\n**After:** A LUT plus small changes to exposure, contrast and saturation brings it back to life, without clipped highlights.\n**Edit anywhere:** Most editing apps, mobile ones included, let you adjust exposure, contrast and saturation, and many accept .cube LUT files.",
+        "slide": "s05"
+      }
+    ],
+    "subtitle": "The full guide: every setting I shoot with, and why it works",
+    "title": "STEAL MY DJI OSMO NANO SETTINGS"
+  },
   "photos": {
+    "175f51f39d256ef7045f71a4892ead94": {
+      "addedAt": 1792683635368,
+      "asset": "175f51f39d256ef7045f71a4892ead94",
+      "folder": "",
+      "h": 4128,
+      "name": "GAB07890",
+      "updatedAt": 1792683635593,
+      "w": 6192
+    },
     "20f28d42d4369841922e86264087bdd7": {
       "addedAt": 1792674435101,
       "asset": "20f28d42d4369841922e86264087bdd7",
       "folder": "Osmo Nano/Spotlight",
       "h": 2576,
       "name": "Muted spot, hand",
+      "updatedAt": 1792674524101,
       "w": 1717
     },
     "283845a91bf899d4fe1c15c1003b1e78": {
@@ -198,6 +268,7 @@ module.exports = {
       "folder": "Osmo Nano/Spotlight",
       "h": 2576,
       "name": "Orange spot, red-lit hand",
+      "updatedAt": 1792674524101,
       "w": 1717
     },
     "33f82795061a3db7f6e3845070c903df": {
@@ -206,6 +277,7 @@ module.exports = {
       "folder": "Osmo Nano/Finished covers",
       "h": 2700,
       "name": "Your finished cover",
+      "updatedAt": 1792674524101,
       "w": 1800
     },
     "4c13e7ba10d8789c01d805206af1e9d6": {
@@ -214,6 +286,7 @@ module.exports = {
       "folder": "Osmo Nano/Flat lays and details",
       "h": 1717,
       "name": "Desk flat lay, light bar (wide)",
+      "updatedAt": 1792674524101,
       "w": 2576
     },
     "4cda8eb4c0538f2016c3dacf6711b908": {
@@ -222,6 +295,7 @@ module.exports = {
       "folder": "Osmo Nano/Flat lays and details",
       "h": 1717,
       "name": "Desk flat lay, drone (wide)",
+      "updatedAt": 1792674524101,
       "w": 2576
     },
     "66a77b430b1b8ac5992667eff07da6c1": {
@@ -230,6 +304,7 @@ module.exports = {
       "folder": "Osmo Nano/Flat lays and details",
       "h": 1717,
       "name": "Flat lay, screen on (wide)",
+      "updatedAt": 1792674524101,
       "w": 2576
     },
     "677ab14f12c48e4e2c23d861971f4d57": {
@@ -238,6 +313,7 @@ module.exports = {
       "folder": "Osmo Nano/Red backdrop",
       "h": 2576,
       "name": "Red, hand from top (your cover grade)",
+      "updatedAt": 1792674524101,
       "w": 1717
     },
     "804a33a78e6aa6c302895d8c595e01c7": {
@@ -246,6 +322,7 @@ module.exports = {
       "folder": "Osmo Nano/Spotlight",
       "h": 2576,
       "name": "Orange spot, black-and-white hand",
+      "updatedAt": 1792674524101,
       "w": 1717
     },
     "8658071a8ef496f4dc1332b2d66a67da": {
@@ -254,6 +331,7 @@ module.exports = {
       "folder": "Osmo Nano/Flat lays and details",
       "h": 2576,
       "name": "Detail, OSMO on screen",
+      "updatedAt": 1792674524101,
       "w": 1717
     },
     "97e0cbb6d431ca2f129c3d6d1c0f46e3": {
@@ -262,6 +340,7 @@ module.exports = {
       "folder": "Osmo Nano/Spotlight",
       "h": 2576,
       "name": "Blue spot",
+      "updatedAt": 1792674524101,
       "w": 1717
     },
     "9d2ffe12cf300d96923beac4598f8eb7": {
@@ -270,6 +349,7 @@ module.exports = {
       "folder": "Osmo Nano/Red backdrop",
       "h": 1717,
       "name": "Red spot, side view (wide)",
+      "updatedAt": 1792674524101,
       "w": 2576
     },
     "b2cacba14bdb8c9085c6f1ae2115e62a": {
@@ -278,6 +358,7 @@ module.exports = {
       "folder": "Osmo Nano/Spotlight",
       "h": 2576,
       "name": "Orange spot, hand from left",
+      "updatedAt": 1792674524101,
       "w": 1717
     },
     "bc6f3da763b134e56c7d878713e12785": {
@@ -286,6 +367,7 @@ module.exports = {
       "folder": "Osmo Nano/Red backdrop",
       "h": 1717,
       "name": "Red, hand from left 2 (wide)",
+      "updatedAt": 1792674524101,
       "w": 2576
     },
     "d7e173f05177b25531d1d94654abe168": {
@@ -294,6 +376,7 @@ module.exports = {
       "folder": "Osmo Nano/Spotlight",
       "h": 2576,
       "name": "Red spot, hand from below",
+      "updatedAt": 1792674524101,
       "w": 1717
     },
     "db2f6a4bef5d57e38f6c4f4cafa7a965": {
@@ -302,7 +385,17 @@ module.exports = {
       "folder": "Osmo Nano/Finished covers",
       "h": 2700,
       "name": "Your cover, big title version",
+      "updatedAt": 1792674524101,
       "w": 1800
+    },
+    "e664a74c69eb06d8a5a91f4fb514e4fc": {
+      "addedAt": 1792685312629,
+      "asset": "e664a74c69eb06d8a5a91f4fb514e4fc",
+      "folder": "",
+      "h": 4032,
+      "name": "IMG_1868",
+      "updatedAt": 1792685312629,
+      "w": 3024
     },
     "fedc95eb05f354dbfd1204dda79da461": {
       "addedAt": 1792674439101,
@@ -310,6 +403,7 @@ module.exports = {
       "folder": "Osmo Nano/Red backdrop",
       "h": 2576,
       "name": "Red, hand from top (raw)",
+      "updatedAt": 1792674524101,
       "w": 1717
     },
     "ffe72b5d4602c259c7f92c29310bb8ec": {
@@ -318,6 +412,7 @@ module.exports = {
       "folder": "Osmo Nano/Red backdrop",
       "h": 1684,
       "name": "Red, hand from left (wide)",
+      "updatedAt": 1792674524101,
       "w": 2527
     }
   }
