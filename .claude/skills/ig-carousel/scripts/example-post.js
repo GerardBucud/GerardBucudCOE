@@ -1,7 +1,7 @@
 // The first post on the board ("Steal my DJI Osmo Nano settings") as stored in its db, for reference when
 // building a new post: copy the shapes, not the asset ids (those photos already live in the shared library).
 // `guide` is the post's PDF guide (posts/<pid>/guide/main); `photos` is the shared library at the time of writing.
-// Slide smvjrud8b1ru has `alt: true`: it is version 2 of slide 05 (same number, not counted).
+// The post is 3:4 (`meta.ratio`); its slides follow it. Slide s05 has `alt: true`: it is version 2 of slide 04 (same number, not counted).
 module.exports = {
   "pid": "osmo-nano-settings",
   "meta": {
@@ -10,15 +10,17 @@ module.exports = {
       "s01",
       "s02",
       "s04",
-      "s03",
-      "s05",
       "smvjrud8b1ru",
+      "s05",
+      "s03",
       "s06"
     ],
     "overall": "",
+    "pdf": false,
     "series": "STEAL MY SETTINGS",
     "subject": "DJI OSMO NANO",
-    "title": "Steal my DJI Osmo Nano settings"
+    "title": "Steal my DJI Osmo Nano settings",
+    "ratio": "3:4"
   },
   "slides": {
     "s01": {
@@ -52,11 +54,12 @@ module.exports = {
         },
         "asset": "bc6f3da763b134e56c7d878713e12785",
         "fx": 0.49,
-        "fy": 0.5,
-        "zoom": 1
+        "fy": 0,
+        "zoom": 1.12
       },
       "layout": {},
       "status": "ok",
+      "stickers": [],
       "text": {
         "foot": "SAVE FOR LATER",
         "rows": [
@@ -164,6 +167,7 @@ module.exports = {
       "type": "specs"
     },
     "s05": {
+      "alt": true,
       "comment": "",
       "img": null,
       "img2": null,
@@ -203,7 +207,16 @@ module.exports = {
           "size": 158,
           "solid": false,
           "x": 0.8813265455954978,
-          "y": 0.3006369449955006
+          "y": 0.3382
+        },
+        {
+          "id": "kmvjvho4kesi",
+          "kind": "keyword",
+          "label": "COMMENT “SETTINGS” to receive a free pdf guide",
+          "rot": 0,
+          "size": 120,
+          "x": 0.5,
+          "y": 0.6963
         }
       ],
       "text": {
@@ -217,7 +230,7 @@ module.exports = {
       "type": "save"
     },
     "smvjrud8b1ru": {
-      "alt": true,
+      "alt": false,
       "comment": "",
       "img": {
         "adj": {
