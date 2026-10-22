@@ -1,0 +1,1191 @@
+<title>Carousel Artboard</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: a light table. The post's artboards sit in swipe order; each frame carries its own controls and review note underneath. */
+:root{
+  --bg:#ecebea; --surface:#ffffff; --sunken:#e3e0de; --ink:#1a1615; --muted:#625a57; --line:#d2cbc7;
+  --accent:#cf2a14; --accent-ink:#ffffff; --focus:#2257d6;
+  --st-review:#6a615d; --st-change:#9e4507; --st-ok:#15704a;
+  --frame:#0f0c0b;
+  --ui:"Nimbus Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#131111; --surface:#1c1918; --sunken:#0e0c0c; --ink:#f3eeeb; --muted:#a8a09c; --line:#342f2d;
+  --accent:#ff5b3e; --accent-ink:#1b0d0a; --focus:#8db2ff;
+  --st-review:#a8a09c; --st-change:#f2a35e; --st-ok:#5fc592; --frame:#000000; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#131111; --surface:#1c1918; --sunken:#0e0c0c; --ink:#f3eeeb; --muted:#a8a09c; --line:#342f2d;
+  --accent:#ff5b3e; --accent-ink:#1b0d0a; --focus:#8db2ff;
+  --st-review:#a8a09c; --st-change:#f2a35e; --st-ok:#5fc592; --frame:#000000; color-scheme:dark}
+
+@font-face{font-family:"Nimbus Sans";src:url("fonts/NimbusSans-Regular.otf") format("opentype");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Nimbus Sans";src:url("fonts/NimbusSans-Bold.otf") format("opentype");font-weight:700;font-style:normal;font-display:swap}
+
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--ui);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 64px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:1240px;margin:0 auto}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background:var(--bg);border-bottom:1px solid var(--line);
+  margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding-inline:max(16px,env(safe-area-inset-left,0px))}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding-block:12px}
+.brand{font-weight:700;letter-spacing:-.04em;text-transform:uppercase;font-size:17px;white-space:nowrap}
+.brand b{color:var(--accent)}
+.grow{flex:1 1 auto}
+.pill{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);white-space:nowrap}
+.pill i{width:8px;height:8px;border-radius:50%;background:var(--st-ok)}
+.pill[data-s="saving"] i{background:var(--st-change)}
+.pill[data-s="error"] i,.pill[data-s="readonly"] i{background:var(--accent)}
+.pill[data-s="local"] i{background:var(--st-review)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 14px;border-radius:8px;border:1px solid var(--line);
+  background:var(--surface);cursor:pointer;font-size:14px;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sm{min-height:34px;padding:0 10px;font-size:13px}
+select.ctl,input.ctl,textarea.ctl{width:100%;min-height:40px;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:8px 10px;font-size:14px}
+textarea.ctl{min-height:64px;resize:vertical;line-height:1.35}
+.top select.ctl{width:auto;max-width:260px}
+.lbl{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:5px}
+
+/* post settings */
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px 16px;padding-block:18px 6px}
+.meta .full{grid-column:1/-1}
+h1.title{font-size:clamp(26px,4vw,40px);line-height:1.02;letter-spacing:-.05em;text-transform:uppercase;margin:22px 0 4px;text-wrap:balance}
+.sub{color:var(--muted);margin:0;max-width:70ch}
+
+/* board */
+.board{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:34px 26px;padding-block:26px}
+.card{min-width:0;display:flex;flex-direction:column;gap:10px}
+.card-h{display:flex;align-items:center;gap:10px}
+.num{font-weight:700;font-size:22px;letter-spacing:-.06em;font-variant-numeric:tabular-nums}
+.num span{color:var(--muted);font-weight:400;letter-spacing:-.04em}
+.kind{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.card-tools{margin-left:auto;display:flex;gap:6px}
+.icon{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:grid;place-items:center;padding:0}
+.icon svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+.frame{display:block;width:100%;padding:0;border:0;background:var(--frame);border-radius:4px;overflow:hidden;cursor:zoom-in;aspect-ratio:2/3;max-width:100%}
+.frame canvas{display:block;width:100%;height:100%}
+.autonote{font-size:12.5px;color:var(--muted);min-height:1.4em}
+.autonote b{color:var(--ink);font-weight:700}
+.warn{font-size:12.5px;color:var(--st-change)}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.status{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.status button{flex:1;min-height:36px;border:0;background:transparent;cursor:pointer;font-size:13px;color:var(--muted);padding:0 6px}
+.status button+button{border-left:1px solid var(--line)}
+.status button[aria-pressed="true"][data-v="review"]{background:var(--sunken);color:var(--ink);font-weight:700}
+.status button[aria-pressed="true"][data-v="change"]{background:var(--st-change);color:#fff;font-weight:700}
+.status button[aria-pressed="true"][data-v="ok"]{background:var(--st-ok);color:#fff;font-weight:700}
+.card[data-st="change"] .frame{box-shadow:0 0 0 3px var(--st-change)}
+.card[data-st="ok"] .frame{box-shadow:0 0 0 3px var(--st-ok)}
+details{border-top:1px solid var(--line);padding-top:8px}
+summary{cursor:pointer;font-weight:700;font-size:14px;min-height:32px;display:flex;align-items:center}
+.fields{display:grid;gap:10px;padding:8px 0 4px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.rowbox{border:1px solid var(--line);border-radius:8px;padding:10px;display:grid;gap:8px;background:var(--sunken)}
+.rowbox .two{grid-template-columns:1.2fr .8fr}
+.rowhead{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.range{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center}
+.range input{width:100%}
+.range output{font-size:12px;color:var(--muted);min-width:3.2em;text-align:right;font-variant-numeric:tabular-nums}
+.more{position:relative}
+.menu{position:absolute;right:0;top:40px;z-index:4;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px;display:grid;min-width:170px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.menu button{text-align:left;background:none;border:0;padding:9px 10px;border-radius:6px;cursor:pointer;font-size:14px}
+.menu button:hover{background:var(--sunken)}
+.menu .danger{color:var(--accent)}
+
+/* sections */
+.section{border-top:1px solid var(--line);padding-block:26px}
+.section h2{font-size:22px;letter-spacing:-.05em;text-transform:uppercase;margin:0 0 6px}
+.section p.hint{color:var(--muted);margin:0 0 14px;max-width:70ch}
+.overall{display:grid;gap:12px;max-width:820px}
+.lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
+.thumb{display:grid;gap:5px;min-width:0;font-size:12px;color:var(--muted)}
+.thumb img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;background:var(--sunken);display:block}
+.thumb span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.empty{padding:60px 0;text-align:center;color:var(--muted)}
+.empty h2{color:var(--ink);font-size:26px;letter-spacing:-.05em;text-transform:uppercase;margin:0 0 8px}
+
+/* dialogs */
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);padding:0;max-width:min(960px,calc(100vw - 24px));width:100%}
+dialog::backdrop{background:rgba(10,8,8,.6)}
+.dlg-h{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.dlg-h h3{margin:0;font-size:17px;letter-spacing:-.03em;text-transform:uppercase}
+.dlg-b{padding:16px;max-height:70vh;overflow:auto}
+.pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
+.pick button{border:2px solid transparent;border-radius:8px;padding:0;background:none;cursor:pointer;text-align:left;display:grid;gap:4px;font-size:12px;color:var(--muted)}
+.pick button:hover{border-color:var(--accent)}
+.pick img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:6px;display:block;background:var(--sunken)}
+.pick span{padding:0 4px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#focusDlg{max-width:none;width:auto;background:#0b0909;border-color:#2a2524;color:#f3eeeb}
+#focusDlg .dlg-h{border-color:#2a2524}
+#focusDlg .icon,#focusDlg .btn{background:#1c1918;border-color:#3a3432;color:#f3eeeb}
+.focus-b{padding:12px;display:grid;place-items:center}
+.focus-b canvas{display:block;max-width:calc(100vw - 48px);max-height:calc(100vh - 150px);height:auto;width:auto}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;z-index:20;max-width:calc(100vw - 32px)}
+.saveimg{max-width:100%;height:auto;display:block;margin:0 auto}
+@media (max-width:560px){.top .wrap{gap:8px 10px}.top select.ctl{max-width:150px}.board{gap:30px}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<div class="top"><div class="wrap">
+  <span class="brand">Carousel <b>Artboard</b></span>
+  <label class="sr" for="postSel">Post</label>
+  <select id="postSel" class="ctl" hidden></select>
+  <button id="newPost" class="btn ghost sm" hidden>New post</button>
+  <span class="grow"></span>
+  <span id="pill" class="pill" data-s="local"><i></i><span>Loading</span></span>
+  <button id="dlAll" class="btn primary" disabled>Download all</button>
+</div></div>
+
+<main class="wrap" id="main">
+  <div class="empty" id="boot"><h2>Loading your board</h2><p>Fetching slides and photos…</p></div>
+</main>
+
+<dialog id="pickDlg" aria-labelledby="pickTitle">
+  <div class="dlg-h"><h3 id="pickTitle">Replace image</h3><span class="grow"></span>
+    <label class="btn primary sm" id="pickUploadLbl">Upload new photo<input type="file" id="pickUpload" accept="image/*" class="sr"></label>
+    <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="dlg-b"><p class="hint" id="pickHint" style="margin:0 0 12px;color:var(--muted)">Pick one of this post's photos. The text design re-fits to the new photo.</p><div class="pick" id="pickGrid"></div></div>
+</dialog>
+
+<dialog id="focusDlg" aria-labelledby="focusTitle">
+  <div class="dlg-h"><h3 id="focusTitle">Slide</h3><span class="grow"></span>
+    <button class="icon" id="fPrev" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <button class="icon" id="fNext" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+    <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="focus-b"><canvas id="focusCv" width="900" height="1350"></canvas></div>
+</dialog>
+
+<dialog id="imgDlg" aria-labelledby="imgTitle">
+  <div class="dlg-h"><h3 id="imgTitle">Your PNG</h3><span class="grow"></span>
+    <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="dlg-b"><p style="margin:0 0 12px;color:var(--muted)">Downloads aren't available here. Press and hold the image (or right-click it) to save it.</p><img id="imgOut" class="saveimg" alt="Exported slide"></div>
+</dialog>
+
+<script>
+(() => {
+"use strict";
+/* ---------- constants & helpers ---------- */
+const W = 1800, H = 2700, M = 163, LH = 44.4, FOOT_Y = 2543;
+const FONT = '"Nimbus Sans","Helvetica Neue",Helvetica,Arial,sans-serif';
+let CAPR = 0.729;
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const clone = o => o == null ? o : JSON.parse(JSON.stringify(o));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const pad2 = n => String(n).padStart(2, "0");
+const up = s => String(s ?? "").toUpperCase();
+const slug = s => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "slide";
+const fill = (s, post) => String(s ?? "").replace(/\{handle\}/gi, (post && post.handle) || "");
+const capH = size => CAPR * size;
+const ICON = {
+  left: '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>',
+  right: '<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>',
+  more: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg>'
+};
+
+/* ---------- templates ---------- */
+const TEMPLATES = {
+  cover: { label: "Cover", slots: ["img"], text: { left: "STEAL", right: "MY", title: "DJI OSMO NANO", sub: "SETTINGS", section: "CAMERA SETUP", foot: "SWIPE FOR MORE" } },
+  specs: { label: "Settings", slots: ["img"], text: { section: "SETTINGS", foot: "SAVE FOR LATER", rows: [{ label: "SETTING", value: "VALUE", note: "WHY IT MATTERS" }], tipK: "", tip: "" } },
+  beforeafter: { label: "Before / after", slots: ["img", "img2"], text: { aValue: "BEFORE", aLabel: "D-LOG M", aNote: "STRAIGHT OUT OF CAMERA. FLAT ON PURPOSE", bValue: "AFTER", bLabel: "GRADED", bNote: "THE SAME CLIP AFTER THE COLOR GRADE", section: "BEFORE / AFTER", foot: "SAVE FOR LATER" } },
+  save: { label: "Save for later", slots: ["img"], text: { left: "DON’T LOSE", right: "THESE", big: "**SAVE** FOR **LATER**", sub: "FOLLOW **{handle}**", section: "CAMERA SETUP", foot: "{handle}" } },
+  photo: { label: "Photo", slots: ["img"], text: { label: "", note: "", section: "", foot: "SAVE FOR LATER" } }
+};
+const FIELDS = {
+  cover: [["left", "Small word, left"], ["right", "Small word, right"], ["title", "Title (wrap words in **…** for bold)"], ["sub", "Under the title"], ["section", "Footer, middle"], ["foot", "Footer, right"]],
+  specs: [["section", "Footer, middle"], ["foot", "Footer, right"], "ROWS", ["tipK", "Tip heading"], ["tip", "Tip text", "area"]],
+  beforeafter: [["aValue", "Top half, big word"], ["aLabel", "Top half, label"], ["aNote", "Top half, note", "area"], ["bValue", "Bottom half, big word"], ["bLabel", "Bottom half, label"], ["bNote", "Bottom half, note", "area"], ["section", "Footer, middle"], ["foot", "Footer, right"]],
+  save: [["left", "Small word, left"], ["right", "Small word, right"], ["big", "Big text (**bold**, Enter = new line)", "area"], ["sub", "Under the big text ({handle} = your handle)"], ["section", "Footer, middle"], ["foot", "Footer, right"]],
+  photo: [["label", "Caption heading"], ["note", "Caption text", "area"], ["section", "Footer, middle"], ["foot", "Footer, right"]]
+};
+const SLOT_NAME = { img: "image", img2: "after image" };
+
+/* ---------- text engine (canvas, tracked, kerned) ---------- */
+const font = (size, weight) => `${weight} ${size}px ${FONT}`;
+const posCache = new Map();
+function measureW(ctx, s, size, weight, track) {
+  if (!s) return 0;
+  ctx.font = font(size, weight);
+  const n = Array.from(s).length;
+  let extra = 0;
+  for (const ch of s) { if (ch === "−") extra += 0.05 * size; else if (ch === "/") extra += 0.025 * size; }
+  return ctx.measureText(s).width + (n - 1) * track * size + extra;
+}
+function positions(ctx, s, size, weight, track) {
+  const key = size + "|" + weight + "|" + track + "|" + s;
+  let p = posCache.get(key);
+  if (p) return p;
+  ctx.font = font(size, weight);
+  const chars = Array.from(s), xs = [];
+  let prefix = "", extra = 0;
+  for (let i = 0; i < chars.length; i++) {
+    const ch = chars[i];
+    const pw = ctx.measureText(prefix + ch).width, cw = ctx.measureText(ch).width;
+    xs.push(pw - cw + i * track * size + extra);
+    prefix += ch;
+    if (ch === "−") extra += 0.05 * size; else if (ch === "/") extra += 0.025 * size;
+  }
+  p = { chars, xs };
+  if (posCache.size > 3000) posCache.clear();
+  posCache.set(key, p);
+  return p;
+}
+function parseRich(str, baseW) {
+  const out = [];
+  String(str).split("**").forEach((t, i) => { if (t) out.push({ t, w: i % 2 ? 700 : baseW }); });
+  return out;
+}
+function richW(ctx, str, size, baseW, track) {
+  const segs = parseRich(str, baseW);
+  let w = 0;
+  segs.forEach((sg, i) => { w += measureW(ctx, sg.t, size, sg.w, track) + (i ? track * size : 0); });
+  return w;
+}
+/* draw text with its cap top at capTop; returns drawn width */
+function txt(ctx, str, x, capTop, o) {
+  const size = o.size, track = o.track ?? -0.05, baseW = o.weight ?? 700;
+  str = String(str ?? "");
+  if (!str) return 0;
+  const segs = parseRich(str, baseW);
+  const widths = segs.map(sg => measureW(ctx, sg.t, size, sg.w, track));
+  const total = widths.reduce((a, b) => a + b, 0) + Math.max(0, segs.length - 1) * track * size;
+  let x0 = x;
+  if (o.align === "right") x0 = x - total; else if (o.align === "center") x0 = x - total / 2;
+  ctx.save();
+  ctx.fillStyle = o.color || "#ffffff";
+  ctx.globalAlpha = o.alpha ?? 1;
+  ctx.textBaseline = "alphabetic";
+  const base = capTop + capH(size);
+  let cx = x0;
+  segs.forEach((sg, i) => {
+    const p = positions(ctx, sg.t, size, sg.w, track);
+    ctx.font = font(size, sg.w);
+    p.chars.forEach((ch, j) => { if (ch !== " " && ch !== " ") ctx.fillText(ch, cx + p.xs[j], base); });
+    cx += widths[i] + track * size;
+  });
+  ctx.restore();
+  return total;
+}
+function wrap(ctx, str, maxW, size, weight, track) {
+  const words = String(str ?? "").replace(/ \+ /g, "\u00a0+ ").split(/ +/).filter(Boolean);
+  if (!words.length) return [];
+  const lines = [];
+  let cur = words[0];
+  for (let i = 1; i < words.length; i++) {
+    const test = cur + " " + words[i];
+    if (richW(ctx, test, size, weight, track) <= maxW) cur = test; else { lines.push(cur); cur = words[i]; }
+  }
+  lines.push(cur);
+  if (lines.length >= 2) {
+    const last = lines[lines.length - 1], prev = lines[lines.length - 2].split(" ");
+    if (!last.includes(" ") && prev.length >= 3) {
+      const moved = prev.pop(), cand = moved + " " + last;
+      if (richW(ctx, cand, size, weight, track) <= maxW) { lines[lines.length - 2] = prev.join(" "); lines[lines.length - 1] = cand; }
+    }
+  }
+  return lines;
+}
+function rule(ctx, y, x0 = M, x1 = W - M, a = 0.42) {
+  ctx.save(); ctx.fillStyle = `rgba(255,255,255,${a})`; ctx.fillRect(x0, Math.round(y) - 1, x1 - x0, 2); ctx.restore();
+}
+
+/* ---------- images ---------- */
+const imgCache = new Map();
+let onImageReady = () => {};
+function srcOf(slot) {
+  if (!slot) return null;
+  if (slot.asset) return window.__ASSET_URL__ ? window.__ASSET_URL__(slot.asset) : "/_blob/" + slot.asset;
+  return slot.file || null;
+}
+function getImg(slot) {
+  const src = srcOf(slot);
+  if (!src) return null;
+  let e = imgCache.get(src);
+  if (!e) {
+    e = { img: new Image(), ok: false, err: false };
+    imgCache.set(src, e);
+    e.img.decoding = "async";
+    e.img.onload = () => { e.ok = true; onImageReady(src); };
+    e.img.onerror = () => { e.err = true; onImageReady(src); };
+    e.img.src = src;
+  }
+  return e.ok ? e.img : null;
+}
+function imgState(slot) { const s = srcOf(slot); const e = s && imgCache.get(s); return !s ? "none" : !e ? "loading" : e.ok ? "ok" : e.err ? "error" : "loading"; }
+function coverRect(img, rw, rh, slot) {
+  const z = clamp(+(slot && slot.zoom) || 1, 1, 3);
+  const s = Math.max(rw / img.naturalWidth, rh / img.naturalHeight) * z;
+  const dw = img.naturalWidth * s, dh = img.naturalHeight * s;
+  const fx = clamp(slot && slot.fx != null ? +slot.fx : 0.5, 0, 1), fy = clamp(slot && slot.fy != null ? +slot.fy : 0.5, 0, 1);
+  return { dx: (rw - dw) * fx, dy: (rh - dh) * fy, dw, dh, s };
+}
+function drawPhoto(ctx, slot, rx, ry, rw, rh, emptyText) {
+  const img = getImg(slot);
+  ctx.save();
+  ctx.beginPath(); ctx.rect(rx, ry, rw, rh); ctx.clip();
+  if (img) {
+    const r = coverRect(img, rw, rh, slot);
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(img, rx + r.dx, ry + r.dy, r.dw, r.dh);
+  } else {
+    ctx.fillStyle = "#1d1817"; ctx.fillRect(rx, ry, rw, rh);
+    const st = imgState(slot);
+    const label = st === "loading" ? "LOADING PHOTO…" : st === "error" ? "PHOTO DIDN’T LOAD" : (emptyText || "ADD A PHOTO");
+    txt(ctx, label, rx + rw / 2, ry + rh / 2 - 14, { size: 37, weight: 400, track: -0.035, align: "center", alpha: 0.55 });
+  }
+  ctx.restore();
+}
+
+/* ---------- photo analysis: where can white type sit? ---------- */
+const anaCache = new Map();
+const DARK = { mean: 18, p90: 26, std: 4, edge: 2 };
+function analyze(slot, rw, rh) {
+  const img = getImg(slot);
+  if (!img) return null;
+  const key = img.src + "|" + rw + "x" + rh + "|" + (slot.fx ?? 0.5) + "|" + (slot.fy ?? 0.5) + "|" + (slot.zoom ?? 1);
+  let a = anaCache.get(key);
+  if (a) return a;
+  const gw = 120, gh = Math.max(1, Math.round(gw * rh / rw));
+  const c = document.createElement("canvas"); c.width = gw; c.height = gh;
+  const x = c.getContext("2d", { willReadFrequently: true });
+  const r = coverRect(img, gw, gh, slot);
+  x.imageSmoothingQuality = "high";
+  x.drawImage(img, r.dx, r.dy, r.dw, r.dh);
+  const d = x.getImageData(0, 0, gw, gh).data;
+  const L = new Float32Array(gw * gh), E = new Float32Array(gw * gh);
+  for (let i = 0; i < gw * gh; i++) L[i] = 0.2126 * d[i * 4] + 0.7152 * d[i * 4 + 1] + 0.0722 * d[i * 4 + 2];
+  for (let yy = 0; yy < gh; yy++) for (let xx = 0; xx < gw; xx++) {
+    const i = yy * gw + xx;
+    const dx = xx + 1 < gw ? Math.abs(L[i + 1] - L[i]) : 0, dy = yy + 1 < gh ? Math.abs(L[i + gw] - L[i]) : 0;
+    E[i] = dx + dy;
+  }
+  a = {
+    gw, gh, rw, rh, L, E, d, scale: r.s * (rw / gw),
+    stats(x0, y0, x1, y1) {
+      const gx0 = clamp(Math.floor(x0 / rw * gw), 0, gw - 1), gx1 = clamp(Math.ceil(x1 / rw * gw), gx0 + 1, gw);
+      const gy0 = clamp(Math.floor(y0 / rh * gh), 0, gh - 1), gy1 = clamp(Math.ceil(y1 / rh * gh), gy0 + 1, gh);
+      const vals = []; let sum = 0, sq = 0, es = 0;
+      for (let yy = gy0; yy < gy1; yy++) for (let xx = gx0; xx < gx1; xx++) { const v = L[yy * gw + xx]; vals.push(v); sum += v; sq += v * v; es += E[yy * gw + xx]; }
+      const n = vals.length || 1; vals.sort((p, q) => p - q);
+      const mean = sum / n;
+      return { mean, p90: vals[Math.floor(0.9 * (vals.length - 1))] || 0, std: Math.sqrt(Math.max(0, sq / n - mean * mean)), edge: es / n };
+    },
+    darkTone() {
+      const idx = Array.from({ length: gw * gh }, (_, i) => i).sort((p, q) => L[p] - L[q]).slice(0, Math.max(1, Math.floor(gw * gh * 0.2)));
+      let rr = 0, gg = 0, bb = 0; idx.forEach(i => { rr += d[i * 4]; gg += d[i * 4 + 1]; bb += d[i * 4 + 2]; });
+      return toneHex(rr / idx.length, gg / idx.length, bb / idx.length);
+    }
+  };
+  if (anaCache.size > 200) anaCache.clear();
+  anaCache.set(key, a);
+  return a;
+}
+function toneHex(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b); let h = 0, s = 0; const l = (mx + mn) / 2;
+  if (mx !== mn) { const dd = mx - mn; s = l > 0.5 ? dd / (2 - mx - mn) : dd / (mx + mn);
+    h = mx === r ? (g - b) / dd + (g < b ? 6 : 0) : mx === g ? (b - r) / dd + 2 : (r - g) / dd + 4; h /= 6; }
+  s = Math.min(s, 0.45); const L2 = 0.085;
+  const q = L2 < 0.5 ? L2 * (1 + s) : L2 + s - L2 * s, p = 2 * L2 - q;
+  const f = t => { t = (t + 1) % 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < 0.5 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; };
+  const hx = v => Math.round(v * 255).toString(16).padStart(2, "0");
+  return "#" + hx(f(h + 1 / 3)) + hx(f(h)) + hx(f(h - 1 / 3));
+}
+/* thresholds: luma p90 (0-255), local spread, edge energy */
+const TH = { p90: 150, std: 26, edge: 11 };
+const okZone = s => s.p90 <= TH.p90 && s.std <= TH.std && s.edge <= TH.edge;
+const zoneScore = s => s.p90 + 1.5 * s.std + 3 * s.edge;
+const scrimFor = s => s.p90 <= 112 ? 0 : clamp(1 - 100 / s.p90, 0.1, 0.72);
+const userScrim = L => (L && L.scrim != null && L.scrim !== "auto" && L.scrim !== "") ? clamp(+L.scrim, 0, 0.9) : null;
+
+/* ---------- scrims ---------- */
+function shade(ctx, y0, y1, a, from) { // from: 'top' | 'bottom' | 'band'
+  if (!(a > 0)) return;
+  ctx.save();
+  if (from === "band") {
+    const g = ctx.createLinearGradient(0, y0 - 260, 0, y1 + 260);
+    const t0 = 260 / (y1 - y0 + 520), t1 = 1 - t0;
+    g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(t0, `rgba(0,0,0,${a})`); g.addColorStop(t1, `rgba(0,0,0,${a})`); g.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = g; ctx.fillRect(0, y0 - 260, W, y1 - y0 + 520);
+  } else {
+    const g = from === "top" ? ctx.createLinearGradient(0, y0, 0, y1) : ctx.createLinearGradient(0, y1, 0, y0);
+    g.addColorStop(0, `rgba(0,0,0,${a})`); g.addColorStop(0.55, `rgba(0,0,0,${a * 0.75})`); g.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = g; ctx.fillRect(0, y0, W, y1 - y0);
+  }
+  ctx.restore();
+}
+function spot(ctx, cx, cy, r, a) {
+  if (!(a > 0)) return;
+  ctx.save();
+  const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+  g.addColorStop(0, `rgba(0,0,0,${a})`); g.addColorStop(0.6, `rgba(0,0,0,${a * 0.7})`); g.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = g; ctx.fillRect(cx - r, cy - r, 2 * r, 2 * r);
+  ctx.restore();
+}
+
+/* ---------- shared pieces ---------- */
+function drawHeader(ctx, post) {
+  txt(ctx, up(post.series), M, 150, { size: 41, weight: 700, track: -0.05 });
+  txt(ctx, up(post.subject), W - M, 150, { size: 41, weight: 400, track: -0.05, align: "right", alpha: 0.8 });
+}
+function drawFooter(ctx, post, t, idx, total) {
+  const o = { size: 43, weight: 700, track: -0.05 };
+  txt(ctx, `${pad2(idx)}/${pad2(total)}`, M, FOOT_Y, o);
+  txt(ctx, up(fill(t.section, post)), W / 2, FOOT_Y, { ...o, align: "center" });
+  txt(ctx, up(fill(t.foot, post)), W - M, FOOT_Y, { ...o, align: "right" });
+}
+const footFor = s => s.p90 <= 105 ? 0 : clamp(1 - 78 / s.p90, 0.15, 0.8);
+function footScrim(A, y0 = 2470, y1 = 2610) { return A ? footFor(A.stats(M, y0, W - M, y1)) : 0; }
+function headScrim(A) { return A ? scrimFor(A.stats(M, 120, W - M, 200)) : 0; }
+
+/* ---------- spec rows ---------- */
+function rowGeo(ctx, row, maxNote = 660) {
+  const v = up(row.value || ""), label = up(row.label || "");
+  let vs = 210, vw = v ? measureW(ctx, v, vs, 700, -0.08) : 0;
+  const maxV = W - 2 * M - 380 - 60;
+  if (vw > maxV) { vs = Math.max(96, Math.floor(vs * maxV / vw)); vw = measureW(ctx, v, vs, 700, -0.08); }
+  const noteMax = Math.min(maxNote, W - 2 * M - vw - 60);
+  const lines = wrap(ctx, up(row.note || ""), noteMax, 37, 400, -0.035);
+  const leftH = (label ? capH(41) : 0) + (lines.length ? (label ? 33 : 0) + capH(37) + (lines.length - 1) * LH : 0);
+  return { v, vs, vw, label, lines, h: 46 + Math.max(v ? capH(vs) : 0, leftH) + 50 };
+}
+function drawRow(ctx, g, top) {
+  const ct = top + 46;
+  if (g.label) txt(ctx, g.label, M, ct, { size: 41, weight: 700, track: -0.05 });
+  const nt = ct + (g.label ? capH(41) + 33 : 0);
+  g.lines.forEach((ln, i) => txt(ctx, ln, M, nt + i * LH, { size: 37, weight: 400, track: -0.035, alpha: 0.82 }));
+  if (g.v) txt(ctx, g.v, W - M, ct, { size: g.vs, weight: 700, track: -0.08, align: "right" });
+}
+function tipGeo(ctx, t, w) {
+  const k = up(t.tipK || ""), lines = wrap(ctx, up(t.tip || ""), w, 37, 400, -0.035);
+  return { k, lines, w, h: (k ? capH(41) : 0) + (lines.length ? (k ? 26 : 0) + capH(37) + (lines.length - 1) * LH : 0) };
+}
+function drawTip(ctx, g, x, capTop, align, withRule) {
+  if (withRule) { const xl = align === "right" ? x - g.w : x; rule(ctx, capTop - 40, xl, xl + g.w); }
+  let y = capTop;
+  if (g.k) { txt(ctx, g.k, x, y, { size: 41, weight: 700, track: -0.05, align }); y += capH(41) + 26; }
+  g.lines.forEach((ln, i) => txt(ctx, ln, x, y + i * LH, { size: 37, weight: 400, track: -0.035, align, alpha: 0.85 }));
+}
+
+/* ---------- design (auto layout) per template ---------- */
+function designSpecs(ctx, post, s) {
+  const t = s.text || {}, L = s.layout || {};
+  const rows = (t.rows || []).map(r => rowGeo(ctx, r));
+  const tableH = rows.reduce((a, r) => a + r.h, 0);
+  const hasTip = !!(t.tipK || t.tip);
+  const tipIn = hasTip ? tipGeo(ctx, t, 1000) : null;
+  const inlineH = hasTip ? 64 + tipIn.h : 0;
+  const A = analyze(s.img, W, H);
+  const stTop = A ? A.stats(M - 30, 110, W - M + 30, 232 + tableH + 40) : DARK;
+  const botEnd = 2430, botTop = botEnd - tableH - inlineH;
+  const stBot = A ? A.stats(M - 30, botTop - 40, W - M + 30, botEnd + 20) : DARK;
+  const style = L.style || "auto", pref = L.pos || "auto";
+  let mode, pos;
+  if (style === "panel") { mode = "panel"; pos = pref === "bottom" ? "bottom" : "top"; }
+  else if (style === "overlay") { mode = "overlay"; pos = pref !== "auto" ? pref : (zoneScore(stTop) <= zoneScore(stBot) ? "top" : "bottom"); }
+  else if (pref === "top") { mode = okZone(stTop) || !A ? "overlay" : "panel"; pos = "top"; }
+  else if (pref === "bottom") { mode = okZone(stBot) || !A ? "overlay" : "panel"; pos = "bottom"; }
+  else if (!A || okZone(stTop)) { mode = "overlay"; pos = "top"; }
+  else if (okZone(stBot)) { mode = "overlay"; pos = "bottom"; }
+  else { mode = "panel"; pos = "top"; }
+  const d = { kind: "specs", mode, pos, rows, tableH, tipIn, hasTip, A, stTop, stBot };
+  const us = userScrim(L);
+  if (mode === "overlay" && pos === "top") {
+    d.tableTop = 232;
+    d.tip = { mode: hasTip ? "inline" : "none" };
+    if (hasTip && L.tip !== "inline") {
+      const sides = L.tip === "left" ? ["left"] : L.tip === "right" ? ["right"] : ["right", "left"];
+      let best = null;
+      for (const side of sides) for (const w of [650, 600, 550, 500, 450, 400]) {
+        const g = tipGeo(ctx, t, w), top = 2420 - g.h;
+        const x0 = side === "right" ? W - M - w - 30 : M - 20, x1 = side === "right" ? W - M + 20 : M + w + 30;
+        const st = A ? A.stats(x0, top - 80, x1, 2450) : DARK;
+        if (okZone(st) || !A) { if (!best || w > best.w) best = { side, w, g, top, st }; break; }
+      }
+      if (!best && L.tip && L.tip !== "auto") { const w = 600, g = tipGeo(ctx, t, w); best = { side: L.tip, w, g, top: 2420 - g.h, st: A ? A.stats(L.tip === "right" ? W - M - w : M, 2420 - g.h - 80, L.tip === "right" ? W - M : M + w, 2450) : DARK, forced: true }; }
+      if (best) d.tip = { mode: "corner", ...best, scrim: us ?? (best.forced ? Math.max(0.45, scrimFor(best.st)) : scrimFor(best.st)) };
+    }
+    d.blockEnd = d.tableTop + tableH + (d.tip.mode === "inline" ? inlineH : 0);
+    d.scrimTop = us ?? scrimFor(A ? A.stats(M - 30, 110, W - M + 30, d.blockEnd + 40) : DARK);
+    d.scrimFoot = us ?? footScrim(A);
+  } else if (mode === "overlay") {
+    d.tableTop = botTop; d.tip = { mode: hasTip ? "inline" : "none" };
+    d.scrimBot = us ?? scrimFor(stBot); d.scrimHead = us ?? headScrim(A);
+  } else {
+    d.panel = L.panel === "black" ? "#0e0b0a" : L.panel === "red" ? "#e02d12" : (A ? A.darkTone() : "#0e0b0a");
+    d.tip = { mode: hasTip ? "inline" : "none" };
+    if (pos === "top") { d.tableTop = 232; d.panelEnd = Math.round(232 + tableH + inlineH + 110); }
+    else { d.tableTop = botTop; d.panelStart = Math.round(botTop - 150); }
+    const rh = pos === "top" ? H - d.panelEnd : d.panelStart;
+    d.A2 = analyze(s.img, W, rh);
+    d.scrimFoot = pos === "top" ? (us ?? (d.A2 ? footFor(d.A2.stats(M, rh - 230, W - M, rh - 90)) : 0)) : 0;
+    d.scrimHead = pos === "bottom" ? (us ?? (d.A2 ? scrimFor(d.A2.stats(M, 120, W - M, 200)) : 0)) : 0;
+  }
+  d.note = mode === "panel" ? `<b>Solid panel</b> ${pos === "top" ? "on top" : "at the bottom"}, photo ${pos === "top" ? "below" : "above"}`
+    : `<b>Over the photo</b>, text ${pos === "top" ? "at the top" : "at the bottom"}`;
+  if (d.tip.mode === "corner") d.note += ` · tip bottom-${d.tip.side}`; else if (hasTip) d.note += " · tip under the table";
+  return d;
+}
+function renderSpecs(ctx, post, s, idx, total, d) {
+  const t = s.text || {};
+  if (d.mode === "panel") {
+    if (d.pos === "top") {
+      drawPhoto(ctx, s.img, 0, d.panelEnd, W, H - d.panelEnd);
+      ctx.fillStyle = d.panel; ctx.fillRect(0, 0, W, d.panelEnd);
+      if (d.scrimFoot) shade(ctx, H - 640, H, d.scrimFoot, "bottom");
+    } else {
+      drawPhoto(ctx, s.img, 0, 0, W, d.panelStart);
+      if (d.scrimHead) shade(ctx, 0, 520, d.scrimHead, "top");
+      ctx.fillStyle = d.panel; ctx.fillRect(0, d.panelStart, W, H - d.panelStart);
+    }
+  } else {
+    drawPhoto(ctx, s.img, 0, 0, W, H);
+    if (d.pos === "top") {
+      if (d.scrimTop) shade(ctx, 0, d.blockEnd + 320, d.scrimTop, "top");
+      if (d.scrimFoot) shade(ctx, H - 640, H, d.scrimFoot, "bottom");
+      if (d.tip.mode === "corner" && d.tip.scrim) spot(ctx, d.tip.side === "right" ? W - M - d.tip.w / 2 : M + d.tip.w / 2, d.tip.top + d.tip.g.h / 2, d.tip.w * 0.95, d.tip.scrim);
+    } else {
+      if (d.scrimBot) shade(ctx, d.tableTop - 380, H, d.scrimBot, "bottom");
+      else if (footScrim(d.A)) shade(ctx, H - 640, H, footScrim(d.A), "bottom");
+      if (d.scrimHead) shade(ctx, 0, 520, d.scrimHead, "top");
+    }
+  }
+  drawHeader(ctx, post);
+  let y = d.tableTop;
+  rule(ctx, y);
+  for (const g of d.rows) { drawRow(ctx, g, y); y += g.h; rule(ctx, y); }
+  if (d.tip.mode === "inline") drawTip(ctx, d.tipIn, M, y + 64, "left", false);
+  else if (d.tip.mode === "corner") drawTip(ctx, d.tip.g, d.tip.side === "right" ? W - M : M, d.tip.top, d.tip.side, true);
+  drawFooter(ctx, post, t, idx, total);
+}
+
+/* cover + save share one centered title block */
+function titleBlock(ctx, post, s) {
+  const t = s.text || {};
+  if (s.type === "cover") {
+    const big = [up(fill(t.title, post))];
+    let bs = 156;
+    const w0 = richW(ctx, big[0], bs, 700, -0.10);
+    if (w0 > W - 2 * M) bs = Math.floor(bs * (W - 2 * M) / w0);
+    return { lines: big, bs, baseW: 700, small: 40, sub: 42, subW: 700, gap1: 30, gap2: 35, lead: 0 };
+  }
+  const lines = up(fill(t.big, post)).split(/\n+/).map(x => x.trim()).filter(Boolean);
+  let bs = 210;
+  for (const ln of lines) { const w = richW(ctx, ln, bs, 400, -0.10); if (w > W - 2 * M) bs = Math.min(bs, Math.floor(bs * (W - 2 * M) / w)); }
+  return { lines, bs, baseW: 400, small: 40, sub: 46, subW: 400, gap1: 34, gap2: 44, lead: 0.2 };
+}
+function blockMetrics(ctx, post, s, b) {
+  const t = s.text || {};
+  const widths = b.lines.map(ln => richW(ctx, ln, b.bs, b.baseW, -0.10));
+  const bw = Math.max(0, ...widths);
+  const hasSmall = !!(t.left || t.right), hasSub = !!t.sub;
+  const bigH = b.lines.length * capH(b.bs) + Math.max(0, b.lines.length - 1) * b.lead * b.bs;
+  const h = (hasSmall ? capH(b.small) + b.gap1 : 0) + bigH + (hasSub ? b.gap2 + capH(b.sub) : 0);
+  return { widths, bw, h, hasSmall, hasSub, bigH };
+}
+function designTitle(ctx, post, s) {
+  const L = s.layout || {};
+  const b = titleBlock(ctx, post, s), m = blockMetrics(ctx, post, s, b);
+  const A = analyze(s.img, W, H);
+  const yFor = p => p === "top" ? 499 : p === "middle" ? Math.round(H / 2 - m.h / 2) : Math.round(2330 - m.h);
+  const order = L.pos && L.pos !== "auto" ? [L.pos] : (s.type === "save" ? ["middle", "top", "bottom"] : ["top", "middle", "bottom"]);
+  let pick = null, best = null;
+  for (const p of order) {
+    const y = yFor(p);
+    const st = A ? A.stats(W / 2 - m.bw / 2 - 40, y - 50, W / 2 + m.bw / 2 + 40, y + m.h + 50) : DARK;
+    const sc = zoneScore(st);
+    if (!best || sc < best.sc) best = { p, y, st, sc };
+    if (!pick && (okZone(st) || !A)) pick = { p, y, st };
+  }
+  pick = pick || best;
+  const us = userScrim(L);
+  return { kind: "title", b, m, A, pos: pick.p, y: pick.y, scrim: us ?? scrimFor(pick.st), scrimFoot: us ?? footScrim(A),
+    note: `Title <b>${pick.p === "top" ? "at the top" : pick.p === "middle" ? "in the middle" : "at the bottom"}</b>${(us ?? scrimFor(pick.st)) > 0 ? " · photo darkened behind it" : ""}` };
+}
+function renderTitle(ctx, post, s, idx, total, d) {
+  const t = s.text || {}, b = d.b, m = d.m;
+  drawPhoto(ctx, s.img, 0, 0, W, H);
+  if (d.scrim) shade(ctx, d.y, d.y + m.h, d.scrim, "band");
+  if (d.scrimFoot) shade(ctx, H - 640, H, d.scrimFoot, "bottom");
+  const x0 = W / 2 - m.bw / 2, x1 = W / 2 + m.bw / 2;
+  let y = d.y;
+  if (m.hasSmall) {
+    txt(ctx, up(fill(t.left, post)), x0, y, { size: b.small, weight: 700, track: -0.05 });
+    txt(ctx, up(fill(t.right, post)), x1, y, { size: b.small, weight: 700, track: -0.05, align: "right" });
+    y += capH(b.small) + b.gap1;
+  }
+  b.lines.forEach((ln, i) => { txt(ctx, ln, W / 2, y, { size: b.bs, weight: b.baseW, track: -0.10, align: "center" }); y += capH(b.bs) + (i < b.lines.length - 1 ? b.lead * b.bs : 0); });
+  if (m.hasSub) txt(ctx, up(fill(t.sub, post)), W / 2, y + b.gap2, { size: b.sub, weight: s.type === "cover" ? 700 : 400, track: -0.05, align: "center" });
+  drawFooter(ctx, post, t, idx, total);
+}
+
+function designBA(ctx, post, s) {
+  const t = s.text || {}, L = s.layout || {}, half = H / 2;
+  const ga = rowGeo(ctx, { label: t.aLabel, value: t.aValue, note: t.aNote }), gb = rowGeo(ctx, { label: t.bLabel, value: t.bValue, note: t.bNote });
+  const A1 = analyze(s.img, W, half), A2 = analyze(s.img2, W, half);
+  const aTop = half - 70 - ga.h + 46, bTop = half + 24;
+  const us = userScrim(L);
+  return { kind: "ba", ga, gb, aTop, bTop, A1, A2,
+    sa: us ?? (A1 ? Math.max(0.25, scrimFor(A1.stats(M, aTop, W - M, half))) : 0),
+    sb: us ?? (A2 ? Math.max(0.25, scrimFor(A2.stats(M, 0, W - M, gb.h + 40))) : 0),
+    sh: us ?? (A1 ? scrimFor(A1.stats(M, 120, W - M, 200)) : 0),
+    sf: us ?? (A2 ? footFor(A2.stats(M, half - 230, W - M, half - 90)) : 0),
+    note: "Labels sit on the seam between the two frames" };
+}
+function renderBA(ctx, post, s, idx, total, d) {
+  const t = s.text || {}, half = H / 2;
+  drawPhoto(ctx, s.img, 0, 0, W, half, "ADD YOUR BEFORE FRAME");
+  drawPhoto(ctx, s.img2, 0, half, W, half, "ADD YOUR AFTER FRAME");
+  if (d.sa) { ctx.save(); const g = ctx.createLinearGradient(0, half, 0, half - 620); g.addColorStop(0, `rgba(0,0,0,${d.sa})`); g.addColorStop(1, "rgba(0,0,0,0)"); ctx.fillStyle = g; ctx.fillRect(0, half - 620, W, 620); ctx.restore(); }
+  if (d.sb) { ctx.save(); const g = ctx.createLinearGradient(0, half, 0, half + 620); g.addColorStop(0, `rgba(0,0,0,${d.sb})`); g.addColorStop(1, "rgba(0,0,0,0)"); ctx.fillStyle = g; ctx.fillRect(0, half, W, 620); ctx.restore(); }
+  if (d.sh) shade(ctx, 0, 520, d.sh, "top");
+  if (d.sf) shade(ctx, H - 640, H, d.sf, "bottom");
+  ctx.fillStyle = "#000"; ctx.fillRect(0, half - 3, W, 6);
+  drawHeader(ctx, post);
+  drawRow(ctx, d.ga, d.aTop - 46);
+  drawRow(ctx, d.gb, d.bTop);
+  drawFooter(ctx, post, t, idx, total);
+}
+
+function designPhoto(ctx, post, s) {
+  const t = s.text || {}, L = s.layout || {};
+  const lines = wrap(ctx, up(t.note || ""), 900, 37, 400, -0.035);
+  const hasCap = !!(t.label || lines.length);
+  const h = (t.label ? capH(41) : 0) + (lines.length ? (t.label ? 30 : 0) + capH(37) + (lines.length - 1) * LH : 0);
+  const A = analyze(s.img, W, H);
+  const yFor = p => p === "top" ? 232 : p === "middle" ? Math.round(H / 2 - h / 2) : Math.round(2420 - h);
+  const order = L.pos && L.pos !== "auto" ? [L.pos] : ["bottom", "top", "middle"];
+  let pick = null, best = null;
+  for (const p of order) { const y = yFor(p), st = A ? A.stats(M - 30, y - 60, M + 960, y + h + 40) : DARK, sc = zoneScore(st);
+    if (!best || sc < best.sc) best = { p, y, st, sc }; if (!pick && (okZone(st) || !A)) pick = { p, y, st }; }
+  pick = pick || best;
+  const us = userScrim(L);
+  return { kind: "photo", lines, h, hasCap, A, y: pick.y, pos: pick.p, scrim: hasCap ? (us ?? scrimFor(pick.st)) : 0, scrimFoot: us ?? footScrim(A), scrimHead: us ?? headScrim(A),
+    note: hasCap ? `Caption <b>${pick.p}</b>` : "Photo only" };
+}
+function renderPhotoSlide(ctx, post, s, idx, total, d) {
+  const t = s.text || {};
+  drawPhoto(ctx, s.img, 0, 0, W, H);
+  if (d.scrimHead) shade(ctx, 0, 520, d.scrimHead, "top");
+  if (d.scrim) shade(ctx, d.y, d.y + d.h, d.scrim, "band");
+  if (d.scrimFoot) shade(ctx, H - 640, H, d.scrimFoot, "bottom");
+  drawHeader(ctx, post);
+  let y = d.y;
+  if (t.label) { txt(ctx, up(t.label), M, y, { size: 41, weight: 700, track: -0.05 }); y += capH(41) + 30; }
+  d.lines.forEach((ln, i) => txt(ctx, ln, M, y + i * LH, { size: 37, weight: 400, track: -0.035, alpha: 0.85 }));
+  drawFooter(ctx, post, t, idx, total);
+}
+
+function design(ctx, post, s) {
+  if (s.type === "specs") return designSpecs(ctx, post, s);
+  if (s.type === "cover" || s.type === "save") return designTitle(ctx, post, s);
+  if (s.type === "beforeafter") return designBA(ctx, post, s);
+  return designPhoto(ctx, post, s);
+}
+function renderSlide(cv, post, s, idx, total, scale) {
+  const ctx = cv.getContext("2d");
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  ctx.fillStyle = "#100c0b"; ctx.fillRect(0, 0, W, H);
+  const d = design(ctx, post, s);
+  if (s.type === "specs") renderSpecs(ctx, post, s, idx, total, d);
+  else if (s.type === "cover" || s.type === "save") renderTitle(ctx, post, s, idx, total, d);
+  else if (s.type === "beforeafter") renderBA(ctx, post, s, idx, total, d);
+  else renderPhotoSlide(ctx, post, s, idx, total, d);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  return d;
+}
+
+/* ---------- state & storage ---------- */
+const S = { db: null, assets: null, downloads: null, local: false, posts: [], pid: null, post: null, slides: {}, dirty: new Set(), writing: new Set(), again: new Set(), timers: new Map(), unsubSlides: null, readOnly: false, errors: 0 };
+const metaPath = () => `posts/${S.pid}`;
+const slidePath = sid => `posts/${S.pid}/slides/${sid}`;
+function order() {
+  const o = [...new Set((S.post && Array.isArray(S.post.order) ? S.post.order : []).filter(id => S.slides[id]))];
+  Object.keys(S.slides).sort().forEach(id => { if (!o.includes(id)) o.push(id); });
+  return o;
+}
+function setStatus() {
+  const pill = $("#pill"), label = pill.querySelector("span");
+  let st = "saved", text = "Saved";
+  if (S.local) { st = "local"; text = "Preview copy, not saved"; }
+  else if (S.readOnly) { st = "readonly"; text = "View only"; }
+  else if (S.errors) { st = "error"; text = "Couldn’t save. Retrying on your next edit"; }
+  else if (S.dirty.size || S.writing.size) { st = "saving"; text = "Saving…"; }
+  pill.dataset.s = st; label.textContent = text;
+}
+function queueSave(path, getter, delay = 650) {
+  if (S.local || S.readOnly) { setStatus(); return; }
+  S.dirty.add(path); setStatus();
+  clearTimeout(S.timers.get(path));
+  S.timers.set(path, setTimeout(() => flush(path, getter), delay));
+}
+async function flush(path, getter) {
+  if (S.writing.has(path)) { S.again.add(path); return; }
+  S.writing.add(path); S.dirty.delete(path); setStatus();
+  try { const data = clone(getter()); if (data) { data.updatedAt = Date.now(); await S.db.doc(path).set(data); } S.errors = 0; }
+  catch (e) { if (e && e.code === "invalid_argument") S.readOnly = true; else S.errors++; console.warn("save failed", path, e); }
+  finally { S.writing.delete(path); if (S.again.delete(path)) flush(path, getter); setStatus(); }
+}
+const saveMeta = () => queueSave(metaPath(), () => S.post);
+const saveSlide = sid => { const p = S.pid; queueSave(slidePath(sid), () => S.pid === p ? S.slides[sid] : null); };
+async function removeDoc(path) { if (S.local || S.readOnly) return; try { await S.db.doc(path).delete(); } catch (e) { S.errors++; setStatus(); } }
+
+/* ---------- rendering scheduler ---------- */
+const pendingDraw = new Set();
+let drawQueued = false;
+function scheduleDraw(sid) { if (sid) pendingDraw.add(sid); else order().forEach(id => pendingDraw.add(id)); if (!drawQueued) { drawQueued = true; requestAnimationFrame(drawNow); } }
+function drawNow() {
+  drawQueued = false;
+  const o = order();
+  for (const sid of pendingDraw) {
+    const card = document.getElementById("card-" + sid), s = S.slides[sid];
+    if (!card || !s) continue;
+    const cv = card.querySelector("canvas");
+    const i = o.indexOf(sid);
+    const d = renderSlide(cv, S.post, s, i + 1, o.length, cv.width / W);
+    const n = card.querySelector(".autonote");
+    if (n) n.innerHTML = d.note ? "Auto layout: " + d.note : "";
+    const warn = card.querySelector(".warn");
+    if (warn) warn.textContent = upscaleWarning(s, d);
+  }
+  pendingDraw.clear();
+  if (focusSid) drawFocus();
+}
+function upscaleWarning(s, d) {
+  for (const slot of TEMPLATES[s.type].slots) {
+    const img = getImg(s[slot]);
+    if (!img) continue;
+    const rh = s.type === "beforeafter" ? H / 2 : d && d.mode === "panel" ? (d.pos === "top" ? H - d.panelEnd : d.panelStart) : H;
+    const r = coverRect(img, W, rh, s[slot]);
+    if (r.s > 1.3) return `This photo is enlarged ${r.s.toFixed(1)}× to fill the frame, so it may look soft. A larger original helps.`;
+  }
+  return "";
+}
+onImageReady = src => {
+  for (const [sid, s] of Object.entries(S.slides)) for (const slot of ["img", "img2"]) if (srcOf(s[slot]) === src) scheduleDraw(sid);
+  if (focusSid) drawFocus();
+};
+
+/* ---------- UI: board ---------- */
+function slideName(s) { return up(fill((s.text || {}).section, S.post)) || TEMPLATES[s.type].label; }
+function fieldHTML(sid, s) {
+  const t = s.text || {}, id = k => `${sid}-${k}`;
+  const parts = [];
+  for (const f of FIELDS[s.type]) {
+    if (f === "ROWS") {
+      (t.rows || []).forEach((r, i) => parts.push(`<div class="rowbox"><div class="rowhead"><span>Row ${i + 1}</span>
+        <button class="btn ghost sm" data-act="delrow" data-i="${i}" aria-label="Remove row ${i + 1}">Remove</button></div>
+        <div class="two"><div><label class="lbl" for="${id("r" + i + "l")}">Label</label><input class="ctl" id="${id("r" + i + "l")}" data-f="text.rows.${i}.label" value="${esc(r.label)}"></div>
+        <div><label class="lbl" for="${id("r" + i + "v")}">Big value</label><input class="ctl" id="${id("r" + i + "v")}" data-f="text.rows.${i}.value" value="${esc(r.value)}"></div></div>
+        <div><label class="lbl" for="${id("r" + i + "n")}">Why (small text)</label><textarea class="ctl" id="${id("r" + i + "n")}" data-f="text.rows.${i}.note">${esc(r.note)}</textarea></div></div>`));
+      if ((t.rows || []).length < 4) parts.push(`<button class="btn sm" data-act="addrow">Add a row</button>`);
+      continue;
+    }
+    const [k, label, kind] = f;
+    parts.push(kind === "area"
+      ? `<div><label class="lbl" for="${id(k)}">${esc(label)}</label><textarea class="ctl" id="${id(k)}" data-f="text.${k}">${esc(t[k])}</textarea></div>`
+      : `<div><label class="lbl" for="${id(k)}">${esc(label)}</label><input class="ctl" id="${id(k)}" data-f="text.${k}" value="${esc(t[k])}"></div>`);
+  }
+  return parts.join("");
+}
+function sel(sid, key, label, opts, val) {
+  return `<div><label class="lbl" for="${sid}-${key.replace(/\./g, "-")}">${label}</label><select class="ctl" id="${sid}-${key.replace(/\./g, "-")}" data-f="${key}">${opts.map(([v, l]) => `<option value="${v}"${(val ?? "auto") === v ? " selected" : ""}>${l}</option>`).join("")}</select></div>`;
+}
+function rng(sid, key, label, min, max, step, val, fmt) {
+  const idv = `${sid}-${key.replace(/\./g, "-")}`;
+  return `<div><label class="lbl" for="${idv}">${label}</label><div class="range"><input type="range" id="${idv}" data-f="${key}" data-num min="${min}" max="${max}" step="${step}" value="${val}"><output for="${idv}">${fmt(val)}</output></div></div>`;
+}
+function layoutHTML(sid, s) {
+  const L = s.layout || {}, parts = [];
+  const pct = v => Math.round(v * 100) + "%";
+  if (s.type === "specs") {
+    parts.push(`<div class="two">${sel(sid, "layout.style", "Text style", [["auto", "Auto"], ["overlay", "Over the photo"], ["panel", "Solid panel"]], L.style)}${sel(sid, "layout.pos", "Text position", [["auto", "Auto"], ["top", "Top"], ["bottom", "Bottom"]], L.pos)}</div>`);
+    parts.push(`<div class="two">${sel(sid, "layout.tip", "Tip placement", [["auto", "Auto"], ["right", "Bottom right"], ["left", "Bottom left"], ["inline", "Under the table"]], L.tip)}${sel(sid, "layout.panel", "Panel color", [["auto", "From the photo"], ["black", "Black"], ["red", "Cover red"]], L.panel)}</div>`);
+  } else if (s.type !== "beforeafter") {
+    parts.push(sel(sid, "layout.pos", "Text position", [["auto", "Auto"], ["top", "Top"], ["middle", "Middle"], ["bottom", "Bottom"]], L.pos));
+  }
+  const sc = userScrim(L);
+  parts.push(`<div><label class="lbl" for="${sid}-scrimauto">Darken photo behind text</label><div class="two"><select class="ctl" id="${sid}-scrimauto" data-act="scrimmode"><option value="auto"${sc == null ? " selected" : ""}>Auto</option><option value="manual"${sc != null ? " selected" : ""}>Manual</option></select>
+    <div class="range"><input type="range" id="${sid}-scrim" data-f="layout.scrim" data-num min="0" max="0.9" step="0.05" value="${sc ?? 0.3}"${sc == null ? " disabled" : ""} aria-label="Darken amount"><output for="${sid}-scrim">${pct(sc ?? 0.3)}</output></div></div></div>`);
+  for (const slot of TEMPLATES[s.type].slots) {
+    const v = s[slot] || {}, nm = s.type === "beforeafter" ? (slot === "img" ? "Before photo: " : "After photo: ") : "Photo: ";
+    parts.push(`<div class="two">${rng(sid, slot + ".fx", nm + "left / right", 0, 1, 0.01, v.fx ?? 0.5, pct)}${rng(sid, slot + ".fy", nm + "up / down", 0, 1, 0.01, v.fy ?? 0.5, pct)}</div>`);
+    parts.push(rng(sid, slot + ".zoom", nm + "zoom", 1, 2.5, 0.01, v.zoom ?? 1, x => (+x).toFixed(2) + "×"));
+  }
+  return parts.join("");
+}
+function cardHTML(sid) {
+  const s = S.slides[sid], st = s.status || "review";
+  const replace = TEMPLATES[s.type].slots.map(slot => `<button class="btn sm" data-act="replace" data-slot="${slot}"${S.assets || S.local ? "" : ""}>${s.type === "beforeafter" ? (slot === "img" ? "Replace before" : "Replace after") : "Replace image"}</button>`).join("");
+  return `<article class="card" id="card-${sid}" data-sid="${sid}" data-st="${st}">
+    <header class="card-h"><span class="num"></span><span class="kind">${esc(TEMPLATES[s.type].label)}</span>
+      <div class="card-tools"><button class="icon" data-act="left" aria-label="Move earlier">${ICON.left}</button><button class="icon" data-act="right" aria-label="Move later">${ICON.right}</button>
+      <div class="more"><button class="icon" data-act="menu" aria-label="More actions" aria-expanded="false">${ICON.more}</button></div></div></header>
+    <button class="frame" data-act="focus" aria-label="Open this slide large"><canvas width="600" height="900"></canvas></button>
+    <div class="autonote"></div><div class="warn"></div>
+    <div class="actions">${replace}<button class="btn sm" data-act="autofit">Auto-fit text</button><button class="btn sm" data-act="png">PNG</button></div>
+    <div class="status" role="group" aria-label="Review status">${[["review", "To review"], ["change", "Needs changes"], ["ok", "Approved"]].map(([v, l]) => `<button data-act="status" data-v="${v}" aria-pressed="${st === v}">${l}</button>`).join("")}</div>
+    <div><label class="lbl" for="${sid}-comment">Comment for Claude</label><textarea class="ctl" id="${sid}-comment" data-f="comment" placeholder="What should change on this slide?">${esc(s.comment)}</textarea></div>
+    <details><summary>Edit text</summary><div class="fields">${fieldHTML(sid, s)}</div></details>
+    <details><summary>Layout and photo</summary><div class="fields">${layoutHTML(sid, s)}</div></details>
+  </article>`;
+}
+function renumber() {
+  const o = order();
+  o.forEach((sid, i) => { const c = document.getElementById("card-" + sid); if (c) c.querySelector(".num").innerHTML = `${pad2(i + 1)}<span>/${pad2(o.length)}</span>`; });
+}
+function renderBoard(rebuild) {
+  const board = $("#board");
+  if (!board) return;
+  const o = order();
+  for (const sid of o) {
+    let c = document.getElementById("card-" + sid);
+    if (!c || (rebuild && rebuild.has(sid))) {
+      const open = c ? $$("details", c).map(d => d.open) : null;
+      const tmp = document.createElement("div"); tmp.innerHTML = cardHTML(sid);
+      const fresh = tmp.firstElementChild;
+      if (open) $$("details", fresh).forEach((d, i) => { d.open = open[i]; });
+      if (c) c.replaceWith(fresh); else board.appendChild(fresh);
+    }
+  }
+  $$(".card", board).forEach(c => { if (!S.slides[c.dataset.sid]) c.remove(); });
+  o.forEach(sid => board.appendChild(document.getElementById("card-" + sid)));
+  renumber();
+  scheduleDraw();
+  $("#dlAll").disabled = !o.length;
+}
+function renderMain() {
+  const main = $("#main");
+  if (!S.post) return;
+  main.innerHTML = `
+    <h1 class="title" id="postTitle"></h1>
+    <p class="sub">Check each slide, leave a comment for Claude, swap photos, then download the PNGs. Everything saves as you go.</p>
+    <details id="postSettings"><summary>Post settings</summary>
+      <div class="meta">
+        <div><label class="lbl" for="m-title">Post name</label><input class="ctl" id="m-title" data-m="title"></div>
+        <div><label class="lbl" for="m-series">Header, left</label><input class="ctl" id="m-series" data-m="series"></div>
+        <div><label class="lbl" for="m-subject">Header, right</label><input class="ctl" id="m-subject" data-m="subject"></div>
+        <div><label class="lbl" for="m-handle">Your handle</label><input class="ctl" id="m-handle" data-m="handle"></div>
+      </div></details>
+    <section class="board" id="board" aria-label="Slides"></section>
+    <div class="actions" style="padding-bottom:26px"><label class="lbl sr" for="addType">Slide type</label>
+      <select class="ctl" id="addType" style="width:auto">${Object.entries(TEMPLATES).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join("")}</select>
+      <button class="btn" id="addSlide">Add slide</button></div>
+    <section class="section" id="overallSec"><h2>Overall comments</h2>
+      <p class="hint">Notes about the whole post: the story, photo choices, anything Claude should change across slides.</p>
+      <div class="overall"><label class="sr" for="m-overall">Overall comments</label><textarea class="ctl" id="m-overall" data-m="overall" rows="5" placeholder="e.g. use more flat lays, the orange slides feel too similar"></textarea>
+      <div class="actions"><button class="btn sm" id="copyAll">Copy all comments</button></div></div></section>
+    <section class="section"><h2>Photos in this post</h2><p class="hint">Upload once, then pick from here with Replace image on any slide.</p>
+      <div class="actions" style="margin-bottom:14px"><label class="btn sm" id="libUploadLbl">Upload photos<input type="file" id="libUpload" accept="image/*" multiple class="sr"></label></div>
+      <div class="lib" id="lib"></div></section>`;
+  renderMeta();
+  renderBoard(new Set(Object.keys(S.slides)));
+  renderLibrary();
+}
+function renderMeta() {
+  if (!S.post) return;
+  $("#postTitle") && ($("#postTitle").textContent = S.post.title || "Untitled post");
+  $$("[data-m]").forEach(el => { if (document.activeElement !== el) el.value = S.post[el.dataset.m] ?? ""; });
+  const ps = $("#postSel");
+  ps.hidden = S.posts.length < 2 && !S.local;
+  ps.innerHTML = S.posts.map(p => `<option value="${esc(p.id)}"${p.id === S.pid ? " selected" : ""}>${esc(p.data.title || p.id)}</option>`).join("");
+  $("#newPost").hidden = S.local || !S.db;
+}
+function libEntries() { return (S.post && S.post.library) || []; }
+function renderLibrary() {
+  const lib = $("#lib");
+  if (!lib) return;
+  const used = new Map();
+  order().forEach((sid, i) => { const s = S.slides[sid]; ["img", "img2"].forEach(k => { const src = srcOf(s[k]); if (src) used.set(src, [...(used.get(src) || []), pad2(i + 1)]); }); });
+  lib.innerHTML = libEntries().map(e => { const src = srcOf(e); return `<div class="thumb"><img loading="lazy" src="${esc(src)}" alt=""><span title="${esc(e.name)}">${esc(e.name)}</span><span>${used.has(src) ? "On slide " + used.get(src).join(", ") : "Not used yet"}</span></div>`; }).join("")
+    || `<p class="hint">No photos yet.</p>`;
+  $("#libUploadLbl").hidden = !(S.assets || S.local);
+}
+
+/* ---------- edits ---------- */
+function setPath(obj, path, val) {
+  const ks = path.split("."); let o = obj;
+  for (let i = 0; i < ks.length - 1; i++) { const k = ks[i]; if (o[k] == null || typeof o[k] !== "object") o[k] = /^\d+$/.test(ks[i + 1]) ? [] : {}; o = o[k]; }
+  o[ks[ks.length - 1]] = val;
+}
+function onField(el) {
+  const card = el.closest(".card"); if (!card) return;
+  const sid = card.dataset.sid, s = S.slides[sid];
+  let v = el.value;
+  if (el.hasAttribute("data-num")) { v = +v; const out = el.parentElement.querySelector("output"); if (out) out.textContent = el.dataset.f.endsWith("zoom") ? v.toFixed(2) + "×" : Math.round(v * 100) + "%"; }
+  const f = el.dataset.f;
+  if (/^img2?\./.test(f) && !s[f.split(".")[0]]) return;
+  setPath(s, f, v);
+  if (f === "comment") { saveSlide(sid); return; }
+  saveSlide(sid); scheduleDraw(sid);
+  if (f === "text.section") renderLibrary();
+}
+document.addEventListener("input", e => {
+  const el = e.target;
+  if (el.dataset && el.dataset.f) onField(el);
+  else if (el.dataset && el.dataset.m && S.post) {
+    S.post[el.dataset.m] = el.value; saveMeta();
+    if (el.dataset.m === "title") $("#postTitle").textContent = el.value || "Untitled post";
+    if (el.dataset.m !== "overall" && el.dataset.m !== "title") scheduleDraw();
+  }
+});
+document.addEventListener("change", e => {
+  const el = e.target;
+  if (el.dataset.act === "scrimmode") {
+    const card = el.closest(".card"), sid = card.dataset.sid, s = S.slides[sid], r = card.querySelector(`#${sid}-scrim`);
+    s.layout = s.layout || {};
+    if (el.value === "auto") { s.layout.scrim = "auto"; r.disabled = true; } else { s.layout.scrim = +r.value; r.disabled = false; }
+    saveSlide(sid); scheduleDraw(sid);
+  } else if (el.tagName === "SELECT" && el.dataset.f) { onField(el); }
+  else if (el.id === "postSel") selectPost(el.value);
+  else if (el.id === "libUpload") { uploadFiles([...el.files]); el.value = ""; }
+  else if (el.id === "pickUpload") { const f = el.files[0]; el.value = ""; if (f) uploadFiles([f]).then(entries => { if (entries[0]) usePhoto(entries[0]); }); }
+});
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-act],[data-close],#dlAll,#addSlide,#copyAll,#newPost,#fPrev,#fNext");
+  if (!b) { closeMenus(); return; }
+  if (b.hasAttribute("data-close")) { b.closest("dialog").close(); return; }
+  if (b.id === "dlAll") return exportAll();
+  if (b.id === "addSlide") return addSlide($("#addType").value);
+  if (b.id === "copyAll") return copyAll(b);
+  if (b.id === "newPost") return newPost();
+  if (b.id === "fPrev") return stepFocus(-1);
+  if (b.id === "fNext") return stepFocus(1);
+  const card = b.closest(".card"); if (!card) return;
+  const sid = card.dataset.sid, s = S.slides[sid], act = b.dataset.act;
+  if (act !== "menu" && act !== "dup" && act !== "del" && act !== "delok") closeMenus();
+  if (act === "focus") openFocus(sid);
+  else if (act === "replace") openPicker(sid, b.dataset.slot);
+  else if (act === "autofit") { s.layout = {}; saveSlide(sid); renderBoard(new Set([sid])); toast("Text re-fitted to the photo"); }
+  else if (act === "png") exportOne(sid);
+  else if (act === "status") { s.status = b.dataset.v; card.dataset.st = s.status; $$(".status button", card).forEach(x => x.setAttribute("aria-pressed", x === b)); saveSlide(sid); }
+  else if (act === "left" || act === "right") move(sid, act === "left" ? -1 : 1);
+  else if (act === "addrow") { s.text.rows = s.text.rows || []; s.text.rows.push({ label: "SETTING", value: "VALUE", note: "" }); saveSlide(sid); renderBoard(new Set([sid])); scheduleDraw(sid); }
+  else if (act === "delrow") { s.text.rows.splice(+b.dataset.i, 1); saveSlide(sid); renderBoard(new Set([sid])); }
+  else if (act === "menu") toggleMenu(b, sid);
+  else if (act === "dup") duplicate(sid);
+  else if (act === "del") { b.textContent = "Tap again to delete"; b.dataset.act = "delok"; }
+  else if (act === "delok") del(sid);
+});
+function closeMenus() { $$(".menu").forEach(m => { m.previousElementSibling && m.previousElementSibling.setAttribute("aria-expanded", "false"); m.remove(); }); }
+function toggleMenu(btn, sid) {
+  const open = btn.nextElementSibling;
+  closeMenus();
+  if (open) return;
+  const m = document.createElement("div"); m.className = "menu";
+  m.innerHTML = `<button data-act="dup">Duplicate slide</button><button data-act="del" class="danger">Delete slide</button>`;
+  btn.after(m); btn.setAttribute("aria-expanded", "true");
+}
+function move(sid, dir) {
+  const o = order(), i = o.indexOf(sid), j = i + dir;
+  if (j < 0 || j >= o.length) return;
+  [o[i], o[j]] = [o[j], o[i]];
+  S.post.order = o; saveMeta(); renderBoard(); renderLibrary();
+}
+function newId() { return "s" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
+function addSlide(type) {
+  const sid = newId(), T = TEMPLATES[type];
+  S.slides[sid] = { type, text: clone(T.text), layout: {}, status: "review", comment: "" };
+  T.slots.forEach(k => { S.slides[sid][k] = null; });
+  const o = order().filter(id => id !== sid); const save = o.findIndex(id => S.slides[id].type === "save");
+  if (save >= 0 && type !== "save") o.splice(save, 0, sid); else o.push(sid);
+  S.post.order = o; saveSlide(sid); saveMeta(); renderBoard();
+  document.getElementById("card-" + sid).scrollIntoView({ behavior: "smooth", block: "center" });
+}
+function duplicate(sid) {
+  const nid = newId(); S.slides[nid] = clone(S.slides[sid]); S.slides[nid].status = "review"; S.slides[nid].comment = "";
+  const o = order().filter(id => id !== nid); o.splice(o.indexOf(sid) + 1, 0, nid); S.post.order = o; saveSlide(nid); saveMeta(); renderBoard();
+}
+function del(sid) {
+  delete S.slides[sid]; S.post.order = order(); saveMeta(); removeDoc(slidePath(sid)); renderBoard(); renderLibrary();
+  toast("Slide deleted");
+}
+function copyAll(btn) {
+  const lines = [`${S.post.title || "Post"}`, "", "Overall: " + (S.post.overall || "(none)"), ""];
+  order().forEach((sid, i) => { const s = S.slides[sid]; lines.push(`${pad2(i + 1)} ${slideName(s)} [${{ review: "to review", change: "needs changes", ok: "approved" }[s.status || "review"]}]: ${s.comment || "(no comment)"}`); });
+  const text = lines.join("\n");
+  const done = () => { btn.textContent = "Copied"; setTimeout(() => (btn.textContent = "Copy all comments"), 1600); };
+  try { navigator.clipboard.writeText(text).then(done, () => fallbackCopy(text, done)); } catch (e) { fallbackCopy(text, done); }
+}
+function fallbackCopy(text, done) { const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); done(); } catch (e) {} ta.remove(); }
+let toastT;
+function toast(msg) { let t = $(".toast"); if (!t) { t = document.createElement("div"); t.className = "toast"; t.setAttribute("role", "status"); document.body.appendChild(t); } t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 2400); }
+
+/* ---------- photos ---------- */
+let pickFor = null;
+function openPicker(sid, slot) {
+  pickFor = { sid, slot };
+  const s = S.slides[sid];
+  $("#pickTitle").textContent = s.type === "beforeafter" ? (slot === "img" ? "Replace before photo" : "Replace after photo") : "Replace image";
+  $("#pickUploadLbl").hidden = !(S.assets || S.local);
+  $("#pickHint").textContent = (S.assets || S.local) ? "Pick one of this post's photos or upload a new one. The text design re-fits to the photo you choose." : "Pick one of this post's photos. Only editors of this board can upload new ones.";
+  $("#pickGrid").innerHTML = libEntries().map((e, i) => `<button data-pick="${i}"><img loading="lazy" src="${esc(srcOf(e))}" alt=""><span>${esc(e.name)}</span></button>`).join("") || `<p>No photos yet. Upload one.</p>`;
+  $("#pickDlg").showModal();
+}
+$("#pickGrid").addEventListener("click", e => { const b = e.target.closest("[data-pick]"); if (b) usePhoto(libEntries()[+b.dataset.pick]); });
+function usePhoto(entry) {
+  if (!pickFor || !entry) return;
+  const { sid, slot } = pickFor, s = S.slides[sid];
+  s[slot] = { ...(entry.asset ? { asset: entry.asset } : { file: entry.file }), fx: 0.5, fy: 0.5, zoom: 1 };
+  s.layout = {};
+  saveSlide(sid);
+  $("#pickDlg").close();
+  renderBoard(new Set([sid])); renderLibrary();
+  toast("Photo replaced. Text re-fitted to it");
+}
+function imageSize(src) { return new Promise(res => { const im = new Image(); im.onload = () => res([im.naturalWidth, im.naturalHeight]); im.onerror = () => res([0, 0]); im.src = src; }); }
+async function uploadFiles(files) {
+  const added = [];
+  for (const f of files) {
+    if (!/^image\/(png|jpeg|webp|gif)$/.test(f.type)) { toast(`${f.name}: use a JPG, PNG or WebP photo`); continue; }
+    toast(`Uploading ${f.name}…`);
+    try {
+      let entry;
+      if (S.assets) { const r = await S.assets.upload(f); const [w, h] = await imageSize(r.url); entry = { asset: r.id, name: f.name, w, h }; }
+      else { const url = URL.createObjectURL(f); const [w, h] = await imageSize(url); entry = { file: url, name: f.name, w, h }; }
+      S.post.library = [...libEntries(), entry]; added.push(entry);
+    } catch (e) {
+      const why = { too_large: "it's over 20 MB", unsupported_type: "that file type isn't supported", quota_or_state: "the board's storage is full", rate_limited: "too many uploads at once, try again in a moment" }[e && e.code] || "the upload failed";
+      toast(`${f.name} wasn't added: ${why}`);
+    }
+  }
+  if (added.length) { saveMeta(); renderLibrary(); toast(`${added.length} photo${added.length > 1 ? "s" : ""} added`); if ($("#pickDlg").open) openPicker(pickFor.sid, pickFor.slot); }
+  return added;
+}
+
+/* ---------- focus view ---------- */
+let focusSid = null;
+function openFocus(sid) { focusSid = sid; const dlg = $("#focusDlg"); if (!dlg.open) dlg.showModal(); drawFocus(); }
+$("#focusDlg").addEventListener("close", () => { focusSid = null; });
+function drawFocus() {
+  const s = S.slides[focusSid]; if (!s) return;
+  const o = order(), i = o.indexOf(focusSid), dpr = window.devicePixelRatio || 1;
+  const sc = clamp(Math.min((innerWidth - 48) * dpr / W, (innerHeight - 150) * dpr / H), 0.2, 1);
+  const cv = $("#focusCv"); cv.width = Math.round(W * sc); cv.height = Math.round(H * sc);
+  cv.style.width = Math.round(W * sc / dpr) + "px"; cv.style.height = Math.round(H * sc / dpr) + "px";
+  renderSlide(cv, S.post, s, i + 1, o.length, sc);
+  $("#focusTitle").textContent = `${pad2(i + 1)}/${pad2(o.length)} ${slideName(s)}`;
+}
+function stepFocus(d) { const o = order(), i = o.indexOf(focusSid); const j = clamp(i + d, 0, o.length - 1); if (j !== i) { focusSid = o[j]; drawFocus(); } }
+document.addEventListener("keydown", e => { if (!$("#focusDlg").open) return; if (e.key === "ArrowLeft") stepFocus(-1); if (e.key === "ArrowRight") stepFocus(1); });
+
+/* ---------- export ---------- */
+function waitImages(s) {
+  return Promise.all(["img", "img2"].map(k => new Promise(res => {
+    const src = srcOf(s[k]); if (!src) return res();
+    getImg(s[k]); const e = imgCache.get(src);
+    if (e.ok || e.err) return res();
+    e.img.addEventListener("load", res, { once: true }); e.img.addEventListener("error", res, { once: true });
+  })));
+}
+async function slideBlob(sid) {
+  const s = S.slides[sid], o = order();
+  await waitImages(s);
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  renderSlide(cv, S.post, s, o.indexOf(sid) + 1, o.length, 1);
+  const blob = await new Promise(res => cv.toBlob(res, "image/png"));
+  cv.width = cv.height = 1;
+  return blob;
+}
+const fileName = sid => `${pad2(order().indexOf(sid) + 1)}-${slug(slideName(S.slides[sid]))}.png`;
+async function offer(filename, blob) {
+  if (S.downloads) {
+    try { await S.downloads.save({ filename, data: blob }); return true; }
+    catch (e) { if (e && e.code === "declined") return false; if (e && e.code === "rate_limited") { toast("Another download is waiting for you to confirm"); return false; } }
+  }
+  if (/\.png$/.test(filename)) { $("#imgOut").src = URL.createObjectURL(blob); $("#imgTitle").textContent = filename; $("#imgDlg").showModal(); return true; }
+  toast("Downloads aren't available here. Use PNG on each slide instead");
+  return false;
+}
+async function exportOne(sid) { toast("Rendering PNG…"); const blob = await slideBlob(sid); if (blob) offer(fileName(sid), blob); }
+async function exportAll() {
+  const o = order(), btn = $("#dlAll");
+  btn.disabled = true;
+  try {
+    if (!window.JSZip) { toast("ZIP isn't available. Use PNG on each slide"); return; }
+    const zip = new window.JSZip();
+    for (let i = 0; i < o.length; i++) { btn.textContent = `Rendering ${i + 1}/${o.length}`; zip.file(fileName(o[i]), await slideBlob(o[i])); }
+    btn.textContent = "Zipping…";
+    const blob = await zip.generateAsync({ type: "blob" });
+    await offer(`${slug(S.post.title)}.zip`, blob);
+  } finally { btn.textContent = "Download all"; btn.disabled = false; }
+}
+window.__exportPNG = async i => { const sid = order()[i]; const blob = await slideBlob(sid); return await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(blob); }); };
+window.__debugDesign = i => { const sid = order()[i]; const cv = document.createElement("canvas"); cv.width = 60; cv.height = 90; const d = renderSlide(cv, S.post, S.slides[sid], i + 1, order().length, 60 / W); return { note: d.note, mode: d.mode, pos: d.pos, stTop: d.stTop, stBot: d.stBot, tip: d.tip && { mode: d.tip.mode, side: d.tip.side, w: d.tip.w, st: d.tip.st } }; };
+window.__stats = (i, slot, x0, y0, x1, y1, rh) => { const s = S.slides[order()[i]]; const A = analyze(s[slot || "img"], W, rh || H); return A && A.stats(x0, y0, x1, y1); };
+
+/* ---------- posts ---------- */
+function selectPost(pid) {
+  if (S.unsubSlides) { S.unsubSlides(); S.unsubSlides = null; }
+  S.pid = pid; S.slides = {};
+  const p = S.posts.find(x => x.id === pid); S.post = clone(p ? p.data : {}) || {};
+  renderMain();
+  if (S.local) { Object.assign(S.slides, clone((window.__LOCAL_STATE__.slides || {})[pid] || {})); renderBoard(new Set(Object.keys(S.slides))); renderLibrary(); return; }
+  S.unsubSlides = S.db.collection(`posts/${pid}/slides`).onSnapshot(snap => {
+    const seen = new Set(), changed = new Set();
+    for (const d of snap.docs) {
+      seen.add(d.id);
+      if (S.dirty.has(slidePath(d.id)) || S.writing.has(slidePath(d.id))) continue;
+      const data = d.data();
+      if (!data || !TEMPLATES[data.type]) continue;
+      if (!S.slides[d.id] || JSON.stringify(stripTs(S.slides[d.id])) !== JSON.stringify(stripTs(data))) { S.slides[d.id] = clone(data); changed.add(d.id); }
+    }
+    for (const id of Object.keys(S.slides)) if (!seen.has(id) && !S.dirty.has(slidePath(id)) && !S.writing.has(slidePath(id))) { delete S.slides[id]; changed.add(id); }
+    if (changed.size) { renderBoard(changed); renderLibrary(); }
+  }, err => { console.warn(err); S.errors++; setStatus(); });
+}
+const stripTs = o => { const c = { ...o }; delete c.updatedAt; return c; };
+function newPost() {
+  const pid = "post-" + Date.now().toString(36);
+  const meta = { title: "New carousel", series: S.post ? S.post.series : "STEAL MY SETTINGS", subject: S.post ? S.post.subject : "", handle: S.post ? S.post.handle : "", library: [], order: [], overall: "", updatedAt: Date.now() };
+  S.posts.push({ id: pid, data: meta });
+  selectPost(pid);
+  ["cover", "specs", "save"].forEach(t => addSlide(t));
+  saveMeta();
+  renderMeta();
+  toast("New post started. Add photos and edit the text");
+}
+async function boot() {
+  try { await Promise.all([document.fonts.load(`700 40px "Nimbus Sans"`), document.fonts.load(`400 40px "Nimbus Sans"`)]); } catch (e) {}
+  try { const c = document.createElement("canvas").getContext("2d"); c.font = font(1000, 700); const m = c.measureText("H"); if (m.actualBoundingBoxAscent > 500) CAPR = m.actualBoundingBoxAscent / 1000; } catch (e) {}
+  if (window.__LOCAL_STATE__) {
+    S.local = true; S.posts = clone(window.__LOCAL_STATE__.posts || []);
+    setStatus();
+    if (S.posts[0]) selectPost(S.posts[0].id);
+    return;
+  }
+  const claude = window.claude;
+  if (!claude || typeof claude.use !== "function") { $("#boot").innerHTML = `<h2>Open this board in Claude</h2><p>Your slides and comments load when this page is opened from claude.ai.</p>`; $("#pill").hidden = true; return; }
+  const [db, assets, downloads] = await Promise.all(["db", "assets", "downloads"].map(n => claude.use(n).catch(() => null)));
+  S.db = db; S.assets = assets; S.downloads = downloads;
+  if (!db) { $("#boot").innerHTML = `<h2>Sign in to see this board</h2><p>Slides and comments are stored with this board. Sign in to claude.ai with an account that has access.</p>`; $("#pill").hidden = true; return; }
+  setStatus();
+  db.collection("posts").onSnapshot(snap => {
+    S.posts = snap.docs.map(d => ({ id: d.id, data: d.data() })).filter(p => p.data);
+    if (!S.posts.length && !S.pid) {
+      $("#main").innerHTML = `<div class="empty"><h2>No posts yet</h2><p>Start one here, or ask Claude to set up your next carousel.</p><p><button class="btn primary" id="newPost2">Start a post</button></p></div>`;
+      $("#newPost2").onclick = newPost; renderMeta(); return;
+    }
+    const cur = S.posts.find(p => p.id === S.pid);
+    if (!cur) { const pick = [...S.posts].sort((a, b) => (b.data.updatedAt || 0) - (a.data.updatedAt || 0))[0]; if (pick) selectPost(pick.id); }
+    else if (!S.dirty.has(metaPath()) && !S.writing.has(metaPath()) && JSON.stringify(stripTs(cur.data)) !== JSON.stringify(stripTs(S.post))) {
+      S.post = clone(cur.data); renderMeta(); renderBoard(); renderLibrary(); scheduleDraw();
+    }
+    renderMeta();
+  }, err => { console.warn(err); $("#boot") && ($("#boot").innerHTML = `<h2>Couldn’t load your posts</h2><p>Reload the page to try again.</p>`); });
+}
+boot();
+})();
+</script>
