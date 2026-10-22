@@ -93,6 +93,7 @@ h1.title{font-size:clamp(26px,4vw,40px);line-height:1.02;letter-spacing:-.05em;t
 .status button[aria-pressed="true"][data-v="ok"]{background:var(--st-ok);color:#fff;font-weight:700}
 .card[data-st="change"] .frame{box-shadow:0 0 0 3px var(--st-change)}
 .card[data-st="ok"] .frame{box-shadow:0 0 0 3px var(--st-ok)}
+.card.flash .frame{box-shadow:0 0 0 4px #1f6feb}
 details{border-top:1px solid var(--line);padding-top:8px}
 summary{cursor:pointer;font-weight:700;font-size:14px;min-height:32px;display:flex;align-items:center;gap:8px}
 summary .chip{margin-left:auto;font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border-radius:999px;padding:3px 9px;background:var(--sunken);color:var(--st-review)}
@@ -124,6 +125,9 @@ summary .dot[hidden]{display:none}
 #focusDlg .bubble{background:#f3eeeb;color:#131111}
 #focusDlg .bubble::after{border-top-color:#f3eeeb}
 #focusDlg .bubble.right::after{border-top-color:transparent;border-right-color:#f3eeeb}
+.bubble.below{transform:translate(-50%,12px)}
+.bubble.below::after{top:auto;bottom:100%;border-top-color:transparent;border-bottom-color:var(--ink)}
+#focusDlg .bubble.below::after{border-top-color:transparent;border-bottom-color:#f3eeeb}
 .more{position:relative}
 .menu{position:absolute;right:0;top:40px;z-index:4;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px;display:grid;min-width:170px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
 .menu button{text-align:left;background:none;border:0;padding:9px 10px;border-radius:6px;cursor:pointer;font-size:14px}
@@ -149,20 +153,57 @@ dialog::backdrop{background:rgba(10,8,8,.6)}
 .pick button:hover{border-color:var(--accent)}
 .pick img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:6px;display:block;background:var(--sunken)}
 .pick span{padding:0 4px 4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#focusDlg{max-width:none;width:auto;background:#0b0909;border-color:#2a2524;color:#f3eeeb}
+#focusDlg{background:#0b0909;border-color:#2a2524;color:#f3eeeb}
+/* large view: a fixed editor (the whole screen on phones). The slide sits in the middle and its controls float on it, so nothing scrolls */
+#focusDlg[open]{display:flex;flex-direction:column;width:min(780px,calc(100vw - 24px));height:min(1000px,calc(100vh - 24px));max-width:none;max-height:none;overflow:hidden;overscroll-behavior:contain}
+html.modal-open,html.modal-open body{overflow:hidden}
 #focusDlg .dlg-h{border-color:#2a2524}
 #focusDlg .icon,#focusDlg .btn{background:#1c1918;border-color:#3a3432;color:#f3eeeb}
 #focusTitle{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.focus-b{padding:12px;display:grid;place-items:center;gap:8px}
+#focusTitle:focus{outline:none}
+.focus-b{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px;padding:10px 12px 12px}
+.fwrap{flex:1 1 0;min-height:0;display:grid;place-items:center;overflow:hidden}
 .fstage{position:relative;line-height:0;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
-.focus-b canvas{display:block;max-width:calc(100vw - 48px);max-height:calc(100vh - 190px);height:auto;width:auto;touch-action:none}
-.fhint{margin:0;font-size:12.5px;line-height:1.4;color:#a8a09c;text-align:center;max-width:46ch}
+.focus-b canvas{display:block;touch-action:none}
+.fhint{margin:0;font-size:12.5px;line-height:1.4;color:#a8a09c;text-align:center}
+.ftools{display:flex;gap:8px;justify-content:center}
+.tbtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px;padding:0 10px;border-radius:9px;border:1px solid #3a3432;background:#1c1918;color:#f3eeeb;font-size:13.5px;cursor:pointer;flex:1 1 0;max-width:160px;white-space:nowrap;min-width:0}
+.tbtn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+.tbtn[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+/* undo / redo: red while there's something to undo or redo, grey when not */
+.tbtn.hist{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.tbtn.hist:disabled{background:#2a2524;border-color:#3a3432;color:#7d7471;font-weight:400;cursor:not-allowed}
+.fpanel{display:grid;gap:8px;background:#141111;border:1px solid #2a2524;border-radius:12px;padding:10px}
+.fpanel[hidden]{display:none}
+.fpanel .hint{margin:0;font-size:13px;color:#a8a09c}
+.fchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.fchips::-webkit-scrollbar{display:none}
+.fchips button{flex:0 0 auto;border:1px solid #3a3432;background:#1c1918;color:#d9d2ce;border-radius:999px;padding:7px 11px;font-size:12.5px;cursor:pointer;white-space:nowrap}
+.fchips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.fchips button i{font-style:normal;opacity:.8;margin-left:5px;font-variant-numeric:tabular-nums}
+.frow{display:flex;align-items:center;gap:10px}
+.frow input[type=range]{flex:1 1 auto;min-width:0;accent-color:var(--accent);min-height:34px;margin:0}
+#focusDlg .numbox{background:#1c1918;border-color:#3a3432;color:#f3eeeb}
+#focusDlg .numbox i{color:#a8a09c}
+@media (max-width:760px){
+  #focusDlg[open]{width:100vw;height:100vh;height:100dvh;margin:0;border:0;border-radius:0;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
+  #focusDlg .dlg-h{padding:10px 12px}
+  .fhint .long{display:none}
+  .ftools{gap:6px}
+  .tbtn{flex-direction:column;gap:3px;min-height:52px;padding:5px 2px;font-size:11.5px}
+}
+@media (min-width:761px){.fhint .short{display:none}}
 /* Instagram-style size rail on the left edge, for the selected sticker */
 .rail{position:absolute;left:6px;top:14%;bottom:20%;width:40px;cursor:ns-resize;touch-action:none;outline:none}
 .rail[hidden]{display:none}
 .rail i{position:absolute;left:50%;top:0;bottom:0;width:12px;margin-left:-6px;background:rgba(255,255,255,.42);clip-path:polygon(0 0,100% 0,62% 100%,38% 100%);border-radius:3px}
 .rail b{position:absolute;left:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.45)}
-.rail:focus-visible b{outline:2px solid var(--focus);outline-offset:2px}
+.rail:focus-visible b,.hrail:focus-visible b{outline:2px solid var(--focus);outline-offset:2px}
+.hrail{position:absolute;top:8px;left:16%;right:16%;height:40px;cursor:ew-resize;touch-action:none;outline:none}
+.hrail[hidden]{display:none}
+.hrail i{position:absolute;left:0;right:0;top:50%;height:4px;margin-top:-2px;border-radius:2px;background:rgba(255,255,255,.45)}
+.hrail em{position:absolute;left:50%;top:50%;width:2px;height:16px;margin:-8px 0 0 -1px;border-radius:1px;background:rgba(255,255,255,.85)}
+.hrail b{position:absolute;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.45)}
 .fdel{position:absolute;width:36px;height:36px;border-radius:50%;border:2px solid #fff;background:#e02d12;color:#fff;display:grid;place-items:center;padding:0;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .fdel svg{width:18px;height:18px}
 .fdel[hidden]{display:none}
@@ -229,12 +270,38 @@ dialog::backdrop{background:rgba(10,8,8,.6)}
 .gbox{border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:10px;background:var(--surface)}
 .gbox .rowhead{gap:8px}
 .tile .ds{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px}
+/* look-alikes: same shot, angle or file name (a different filter still counts) */
+.tile .sim{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;background:#1f6feb;color:#fff;display:grid;place-items:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.tile .sim svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.folders button.simf span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#1f6feb;margin-right:6px;vertical-align:1px}
+.dellist{display:grid;gap:12px;margin:4px 0 16px}
+.delrow{display:grid;grid-template-columns:64px minmax(0,1fr);gap:12px;align-items:start}
+.delrow img{width:64px;height:64px;object-fit:cover;border-radius:6px;background:var(--sunken);display:block}
+.delrow .nm{font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.delrow ul{margin:4px 0 0;padding:0;list-style:none;display:grid;gap:6px;font-size:13.5px;color:var(--muted)}
+.delrow li{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.delrow .free{color:var(--st-ok)}
+.delrow .used{color:var(--st-change);font-weight:700}
+#delDlg,#prevDlg{max-width:min(620px,calc(100vw - 24px))}
+#prevDlg .dlg-b{max-height:78vh;display:grid;gap:16px;justify-items:center;background:var(--sunken)}
+.prevpage{display:grid;gap:6px;justify-items:center;font-size:12px;color:var(--muted);width:100%}
+.prevpage canvas{width:min(100%,440px);height:auto;box-shadow:0 2px 12px rgba(0,0,0,.18);background:#fff;display:block}
+.switch{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:700;cursor:pointer;min-height:40px}
+.switch input{-webkit-appearance:none;appearance:none;width:46px;height:28px;border-radius:14px;background:var(--line);position:relative;cursor:pointer;transition:background .15s;margin:0;flex:0 0 auto}
+.switch input::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.switch input:checked{background:var(--accent)}
+.switch input:checked::after{transform:translateX(18px)}
+details.gsec{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:0 14px}
+details.gsec>summary{min-height:50px}
+details.gsec[open]{padding-bottom:14px}
+.gsec .gsum{font-weight:400;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1 1 auto}
+.gsec .fields{padding-top:4px}
 .searchrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px}
 .searchrow input.ctl{flex:1 1 220px;max-width:420px}
 .searchrow .hint{margin:0;font-size:13px;color:var(--muted)}
 .seltools .wide{flex:1 1 260px;min-width:0}
-/* phones: while a card's sections are open, its slide stays pinned at the top, smaller, so you see each change.
-   The top bar slides away while you scroll down and comes back when you scroll up. */
+/* phones: while a card's sections are open, its slide stays pinned at the top, smaller, so you see each change,
+   and the top bar steps aside until the sections are closed again. */
 @media (max-width:760px){
   .top{transition:transform .2s ease}
   html.hidebar .top{transform:translateY(calc(-100% - env(safe-area-inset-top,0px)))}
@@ -282,18 +349,38 @@ dialog::backdrop{background:rgba(10,8,8,.6)}
 </dialog>
 
 <dialog id="focusDlg" aria-labelledby="focusTitle">
-  <div class="dlg-h"><h3 id="focusTitle">Slide</h3><span class="grow"></span>
-    <button class="icon" id="fAdd" type="button" aria-label="Add a sticker" title="Add a sticker"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="M12 8v8M8 12h8"/></svg></button>
+  <div class="dlg-h"><h3 id="focusTitle" tabindex="-1" autofocus>Slide</h3><span class="grow"></span>
     <button class="icon" id="fPrev" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
     <button class="icon" id="fNext" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
     <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="focus-b">
-    <div class="fstage" id="fStage"><canvas id="focusCv" width="900" height="1350"></canvas>
+    <div class="fwrap" id="fWrap"><div class="fstage" id="fStage"><canvas id="focusCv" width="900" height="1350"></canvas>
+      <div class="hrail" id="fRot" role="slider" tabindex="0" aria-label="Rotate sticker" aria-valuemin="-180" aria-valuemax="180" hidden><i></i><em></em><b></b></div>
       <div class="rail" id="fRail" role="slider" tabindex="0" aria-label="Sticker size" aria-orientation="vertical" aria-valuemin="40" aria-valuemax="600" hidden><i></i><b></b></div>
       <button type="button" class="fdel" id="fDel" aria-label="Delete this sticker" hidden><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
-      <div class="ftrash" id="fTrash" aria-hidden="true" hidden><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></div></div>
-    <p class="fhint" id="fHint">Tap a sticker to select it. Drag to move it, pinch to resize, twist to rotate, or use the slider on the left for size. Drag it onto the bin to delete it.</p>
+      <div class="ftrash" id="fTrash" aria-hidden="true" hidden><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></div></div></div>
+    <div class="fpanel" id="fPanel" hidden></div>
+    <div class="ftools">
+      <button type="button" class="tbtn" id="fAdd"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="M12 8v8M8 12h8"/></svg>Sticker</button>
+      <button type="button" class="tbtn hist" id="fUndo" disabled><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>Undo</button>
+      <button type="button" class="tbtn hist" id="fRedo" disabled><svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>Redo</button>
+      <button type="button" class="tbtn" id="fEdit" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Edit photo</button>
+    </div>
+    <p class="fhint" id="fHint"></p>
   </div>
+</dialog>
+
+<dialog id="delDlg" aria-labelledby="delTitle">
+  <div class="dlg-h"><h3 id="delTitle">Delete photos</h3><span class="grow"></span>
+    <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="dlg-b"><p id="delNote" style="margin:0 0 12px"></p><div class="dellist" id="delList"></div><div class="actions" id="delActs"></div></div>
+</dialog>
+
+<dialog id="prevDlg" aria-labelledby="prevTitle">
+  <div class="dlg-h"><h3 id="prevTitle">PDF preview</h3><span class="grow"></span>
+    <button class="btn primary sm" id="prevDl" disabled>Download PDF</button>
+    <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="dlg-b" id="prevPages"></div>
 </dialog>
 
 <dialog id="dupDlg" aria-labelledby="dupTitle">
@@ -1071,16 +1158,17 @@ const metaPath = () => `posts/${S.pid}`;
 const slidePath = sid => `posts/${S.pid}/slides/${sid}`;
 const photoPath = id => `photos/${id}`;
 const LIB_PATH = "settings/library";
-function order() {
-  const o = [...new Set((S.post && Array.isArray(S.post.order) ? S.post.order : []).filter(id => S.slides[id]))];
-  Object.keys(S.slides).sort().forEach(id => { if (!o.includes(id)) o.push(id); });
+function orderOf(post, slides) {
+  const o = [...new Set((post && Array.isArray(post.order) ? post.order : []).filter(id => slides[id]))];
+  Object.keys(slides).sort().forEach(id => { if (!o.includes(id)) o.push(id); });
   return o;
 }
+const order = () => orderOf(S.post, S.slides);
 /* Slide numbers. A slide marked `alt` is another version of the slide before it: it shares that number and isn't counted. */
-function numbering() {
+function numbering(o = order(), slides = S.slides) {
   const m = new Map(), of = new Map(); let n = 0, v = 1;
-  for (const sid of order()) {
-    const alt = !!S.slides[sid].alt && n > 0;
+  for (const sid of o) {
+    const alt = !!slides[sid].alt && n > 0;
     if (alt) v++; else { n++; v = 1; }
     m.set(sid, { n, v, alt }); of.set(n, v);
   }
@@ -1093,6 +1181,25 @@ function groups() {
   const out = [];
   order().forEach(sid => { if (S.slides[sid].alt && out.length) out[out.length - 1].push(sid); else out.push([sid]); });
   return out;
+}
+/* Edit history per slide, for Undo / Redo in the large view: a copy of the slide before each change.
+   A burst of moves on one control counts as one step. Changes from Claude or another device clear it. */
+const HIST = {};
+function remember(sid, key) {
+  const s = S.slides[sid]; if (!s) return;
+  const h = HIST[sid] || (HIST[sid] = { u: [], r: [], key: "", t: 0 }), now = Date.now();
+  if (key && h.key === key && now - h.t < 1500) { h.t = now; return; }
+  h.u.push(clone(s)); if (h.u.length > 60) h.u.shift();
+  h.r = []; h.key = key || ""; h.t = now;
+  updateHistUI();
+}
+function forget(sid) { if (HIST[sid]) { delete HIST[sid]; updateHistUI(); } }
+function stepHistory(sid, back) {
+  const h = HIST[sid], from = h && (back ? h.u : h.r), to = h && (back ? h.r : h.u);
+  if (!from || !from.length || !S.slides[sid]) return;
+  to.push(clone(S.slides[sid])); S.slides[sid] = from.pop(); h.key = "";
+  saveSlide(sid); renderBoard(new Set([sid])); renderLibrary(); updateHistUI();
+  if (focusSid === sid) renderFPanel();
 }
 function setStatus() {
   const pill = $("#pill"), label = pill.querySelector("span");
@@ -1251,7 +1358,7 @@ function renumber() {
 }
 /* phones: a card with an open section keeps its slide pinned at the top (see .card.editing in the styles) */
 const syncEditing = card => card.classList.toggle("editing", $$("details", card).some(d => d.open));
-document.addEventListener("toggle", e => { const c = e.target.closest && e.target.closest(".card"); if (c) syncEditing(c); }, true);
+document.addEventListener("toggle", e => { const c = e.target.closest && e.target.closest(".card"); if (c) { syncEditing(c); queueBar(); } }, true);
 function renderBoard(rebuild) {
   const board = $("#board");
   if (!board) return;
@@ -1270,7 +1377,7 @@ function renderBoard(rebuild) {
   $$(".card", board).forEach(c => { if (!S.slides[c.dataset.sid]) c.remove(); });
   o.forEach(sid => board.appendChild(document.getElementById("card-" + sid)));
   renumber();
-  scheduleDraw();
+  scheduleDraw(); queueBar();
   $("#dlAll").disabled = !o.length;
   updateApplyAll();
   refreshGuideSlideSelects();
@@ -1353,6 +1460,7 @@ function onField(el) {
   if (el.hasAttribute("data-num")) { v = +v; syncBox(el); }
   const f = el.dataset.f;
   if (/^img2?\./.test(f) && !s[f.split(".")[0]]) return;
+  if (f !== "comment") remember(sid, f);
   setPath(s, f, v);
   saveSlide(sid);
   if (f === "comment") {
@@ -1397,7 +1505,7 @@ document.addEventListener("change", e => {
     hideBubble();
   } else if (el.dataset.act === "scrimmode") {
     const card = el.closest(".card"), sid = card.dataset.sid, s = S.slides[sid], r = card.querySelector(`#${sid}-layout-scrim`), box = card.querySelector(`.num[data-for="${sid}-layout-scrim"]`);
-    s.layout = s.layout || {};
+    remember(sid); s.layout = s.layout || {};
     if (el.value === "auto") { s.layout.scrim = "auto"; r.disabled = true; } else { s.layout.scrim = +r.value; r.disabled = false; }
     if (box) box.disabled = r.disabled;
     saveSlide(sid); scheduleDraw(sid);
@@ -1444,15 +1552,15 @@ document.addEventListener("click", e => {
   if (act !== "menu" && act !== "del" && act !== "delok") closeMenus();
   if (act === "focus") { if (Date.now() - S.suppressClick > 450) openFocus(sid); }
   else if (act === "replace") openPicker(sid, b.dataset.slot);
-  else if (act === "autofit") { s.layout = {}; saveSlide(sid); renderBoard(new Set([sid])); toast("Text re-fitted to the photo"); }
+  else if (act === "autofit") { remember(sid); s.layout = {}; saveSlide(sid); renderBoard(new Set([sid])); toast("Text re-fitted to the photo"); }
   else if (act === "png") exportOne(sid);
   else if (act === "status") {
     s.status = b.dataset.v; card.dataset.st = s.status; $$(".status button", card).forEach(x => x.setAttribute("aria-pressed", x === b)); saveSlide(sid);
     const chip = card.querySelector(".rev .chip"); if (chip) { chip.dataset.v = s.status; chip.textContent = statusLabel(s.status); }
   }
   else if (act === "left" || act === "right") move(sid, act === "left" ? -1 : 1);
-  else if (act === "addrow") { s.text.rows = s.text.rows || []; s.text.rows.push({ label: "SETTING", value: "VALUE", note: "" }); saveSlide(sid); renderBoard(new Set([sid])); }
-  else if (act === "delrow") { s.text.rows.splice(+b.dataset.i, 1); saveSlide(sid); renderBoard(new Set([sid])); }
+  else if (act === "addrow") { remember(sid); s.text.rows = s.text.rows || []; s.text.rows.push({ label: "SETTING", value: "VALUE", note: "" }); saveSlide(sid); renderBoard(new Set([sid])); }
+  else if (act === "delrow") { remember(sid); s.text.rows.splice(+b.dataset.i, 1); saveSlide(sid); renderBoard(new Set([sid])); }
   else if (act === "menu") toggleMenu(b, sid);
   else if (act === "dup") openDup(sid);
   else if (act === "mkver") setVersion(sid, true);
@@ -1465,7 +1573,7 @@ document.addEventListener("click", e => {
   else if (act === "keep") { delete s.undo; delete s.applied; saveSlide(sid); refreshApplySlot(sid); }
   else if (act === "addsticker") openStickers(sid);
   else if (act === "delsticker") { const st = (s.stickers || [])[+b.dataset.i]; if (st) removeSticker(sid, st.id); }
-  else if (act === "resetadj") { if (s[b.dataset.slot]) { delete s[b.dataset.slot].adj; saveSlide(sid); renderBoard(new Set([sid])); } }
+  else if (act === "resetadj") { if (s[b.dataset.slot]) { remember(sid); delete s[b.dataset.slot].adj; saveSlide(sid); renderBoard(new Set([sid])); } }
   else if (act === "adjall") copyEditsToAll(sid, b.dataset.slot);
 });
 function closeMenus() { $$(".menu").forEach(m => { m.previousElementSibling && m.previousElementSibling.setAttribute("aria-expanded", "false"); m.remove(); }); }
@@ -1619,12 +1727,15 @@ function syncStickerControls(sid, st) {
   const i = (S.slides[sid].stickers || []).indexOf(st); if (i < 0) return;
   for (const k of ["x", "y", "size", "rot"]) setRange(`${sid}-stickers-${i}-${k}`, k === "rot" ? Math.round(st.rot || 0) : k === "size" ? Math.round(st.size || STICKERS[st.kind].size) : st[k]);
 }
+/* dropped on the bin: put the slide back as it was before the drag, then delete, so one Undo brings the sticker back where it was */
+function binSticker(sid, id) { const h = HIST[sid]; if (h && h.u.length) S.slides[sid] = h.u.pop(); removeSticker(sid, id); }
 function removeSticker(sid, id) {
   const s = S.slides[sid], i = (s && s.stickers || []).findIndex(t => t.id === id); if (i < 0) return;
+  remember(sid);
   const [gone] = s.stickers.splice(i, 1);
   if (S.fsel === id) S.fsel = null;
   saveSlide(sid); renderBoard(new Set([sid])); updateFocusUI();
-  toast(`${(STICKERS[gone.kind] || { label: "Sticker" }).label} deleted`, () => { const t = S.slides[sid]; if (!t) return; t.stickers = t.stickers || []; t.stickers.splice(Math.min(i, t.stickers.length), 0, gone); saveSlide(sid); renderBoard(new Set([sid])); });
+  toast(`${(STICKERS[gone.kind] || { label: "Sticker" }).label} deleted`, () => stepHistory(sid, true));
 }
 let stickFor = null;
 function openStickers(sid) {
@@ -1648,7 +1759,7 @@ $("#stickGrid").addEventListener("click", e => {
   const b = e.target.closest("[data-stick]"); if (!b || !stickFor) return;
   const s = S.slides[stickFor]; if (!s) return;
   const kind = b.dataset.stick, P = STICKERS[kind];
-  s.stickers = s.stickers || [];
+  remember(stickFor); s.stickers = s.stickers || [];
   const y = clamp(0.8 - 0.07 * s.stickers.length, 0.2, 0.8);
   s.stickers.push({ id: "k" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), kind, x: 0.5, y, size: P.size, rot: 0, ...(kind === "bookmark" ? { solid: true } : {}) });
   saveSlide(stickFor); $("#stickDlg").close();
@@ -1663,7 +1774,7 @@ function copyEditsToAll(sid, slot) {
   let n = 0;
   for (const [id, s] of Object.entries(S.slides)) {
     let touched = false;
-    for (const k of TEMPLATES[s.type].slots) if (s[k] && !(id === sid && k === slot)) { s[k].adj = clone(a); n++; touched = true; }
+    for (const k of TEMPLATES[s.type].slots) if (s[k] && !(id === sid && k === slot)) { if (!touched) remember(id); s[k].adj = clone(a); n++; touched = true; }
     if (touched) saveSlide(id);
   }
   renderBoard(new Set(Object.keys(S.slides)));
@@ -1698,6 +1809,7 @@ document.addEventListener("pointerdown", e => {
 document.addEventListener("pointermove", e => {
   if (!drag || e.pointerId !== drag.pid) return;
   if (!drag.moved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 4) return;
+  if (!drag.moved) remember(drag.sid);
   const [x, y] = frameXY(drag.cv, e);
   drag.st.x = clamp(snapX((x - drag.ox) / W), 0, 1); drag.st.y = clamp((y - drag.oy) / H, 0, 1); drag.moved = true;
   drag.trash.hidden = false; drag.trash.classList.toggle("hot", overEl(drag.trash, e));
@@ -1709,7 +1821,7 @@ function endDrag(e) {
   const bin = moved && e.type === "pointerup" && trash.classList.contains("hot");
   trash.hidden = true; trash.classList.remove("hot");
   if (moved) S.suppressClick = Date.now();
-  if (bin) return removeSticker(sid, st.id);
+  if (bin) return binSticker(sid, st.id);
   if (moved) { saveSlide(sid); syncStickerControls(sid, st); }
   scheduleDraw(sid);
 }
@@ -1718,8 +1830,9 @@ document.addEventListener("pointercancel", endDrag);
 
 /* large view: one finger drags the sticker it lands on (drop it on the bin to delete it); two fingers pinch to resize and twist to
    rotate the selected sticker, both at once, and move it with their midpoint */
-const fcv = $("#focusCv"), rail = $("#fRail"), fpts = new Map();
-let fg = null, railDrag = false, fWheelT = 0, railKeyT = 0;
+const fcv = $("#focusCv"), rail = $("#fRail"), rot = $("#fRot"), fpts = new Map();
+let fg = null, fgRem = false, railDrag = false, rotDrag = false, fWheelT = 0, railKeyT = 0, rotKeyT = 0;
+const fRemember = () => { if (!fgRem) { remember(focusSid); fgRem = true; } };   /* one history step per gesture */
 const selSticker = () => { const s = S.slides[focusSid]; return s && S.fsel ? (s.stickers || []).find(t => t.id === S.fsel) || null : null; };
 function fPinchFrom(st) {
   const [a, b] = [...fpts.values()];
@@ -1734,7 +1847,7 @@ fcv.addEventListener("pointerdown", e => {
   const p = frameXY(fcv, e); fpts.set(e.pointerId, p);
   if (fpts.size === 1) {
     const st = stickerAt(s, S.focusBoxes, p[0], p[1]);
-    S.fsel = st ? st.id : null; fg = null;
+    S.fsel = st ? st.id : null; fg = null; fgRem = false;
     if (st) fDragFrom(st, p, [e.clientX, e.clientY]);
     drawFocus();
   } else if (fpts.size === 2) {
@@ -1753,12 +1866,13 @@ fcv.addEventListener("pointermove", e => {
   const st = fg.st;
   if (fg.mode === "drag" && fpts.size === 1) {
     if (!fg.dragged && Math.hypot(e.clientX - fg.c0[0], e.clientY - fg.c0[1]) < 6) return;
-    fg.dragged = fg.moved = true;
+    fRemember(); fg.dragged = fg.moved = true;
     st.x = clamp(snapX((p[0] - fg.ox) / W), 0, 1); st.y = clamp((p[1] - fg.oy) / H, 0, 1);
     const tr = $("#fTrash"); tr.hidden = false; tr.classList.toggle("hot", overEl(tr, e, 18));
   } else if (fg.mode === "pinch" && fpts.size >= 2) {
     const [a, b] = [...fpts.values()];
     const d = Math.max(1, Math.hypot(b[0] - a[0], b[1] - a[1])), ang = Math.atan2(b[1] - a[1], b[0] - a[0]);
+    fRemember();
     let r = fg.r0 + (ang - fg.a0) * 180 / Math.PI;
     r = ((r % 360) + 540) % 360 - 180; if (Math.abs(r) < 4) r = 0;
     st.size = Math.round(clamp(fg.s0 * d / fg.d0, 40, 600)); st.rot = Math.round(r);
@@ -1776,8 +1890,8 @@ function fUp(e) {
   if (fpts.size) return;
   const bin = fg.mode === "drag" && fg.dragged && e.type === "pointerup" && tr.classList.contains("hot");
   tr.hidden = true; tr.classList.remove("hot");
-  const moved = fg.moved; fg = null;
-  if (bin) return removeSticker(sid, st.id);
+  const moved = fg.moved; fg = null; fgRem = false;
+  if (bin) return binSticker(sid, st.id);
   if (moved) { saveSlide(sid); syncStickerControls(sid, st); }
   drawFocus();
 }
@@ -1786,7 +1900,7 @@ fcv.addEventListener("pointercancel", fUp);
 /* trackpad pinch (and ctrl + wheel) resizes the selected sticker */
 fcv.addEventListener("wheel", e => {
   const st = selSticker(); if (!st || !(e.ctrlKey || e.metaKey)) return;
-  e.preventDefault();
+  e.preventDefault(); remember(focusSid, "wheel");
   st.size = Math.round(clamp(sizeOf(st) * Math.exp(-e.deltaY * 0.01), 40, 600));
   scheduleDraw(focusSid);
   clearTimeout(fWheelT); fWheelT = setTimeout(() => { saveSlide(focusSid); syncStickerControls(focusSid, st); }, 350);
@@ -1807,34 +1921,99 @@ function railFrom(e) {
   st.size = railSize(clamp(1 - (e.clientY - r.top) / r.height, 0, 1));
   scheduleDraw(focusSid); placeRail(st, true);
 }
-rail.addEventListener("pointerdown", e => { e.preventDefault(); try { rail.setPointerCapture(e.pointerId); } catch (err) {} railDrag = true; bubbleHeld = true; railFrom(e); });
+rail.addEventListener("pointerdown", e => { if (!selSticker()) return; e.preventDefault(); try { rail.setPointerCapture(e.pointerId); } catch (err) {} remember(focusSid); railDrag = true; bubbleHeld = true; railFrom(e); });
 rail.addEventListener("pointermove", e => { if (railDrag) railFrom(e); });
 function railEnd() { if (!railDrag) return; railDrag = false; const st = selSticker(); if (st) { saveSlide(focusSid); syncStickerControls(focusSid, st); } releaseBubble(); }
 rail.addEventListener("pointerup", railEnd);
 rail.addEventListener("pointercancel", railEnd);
 rail.addEventListener("keydown", e => {
   const st = selSticker(), d = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1 }[e.key]; if (!st || !d) return;
-  e.preventDefault(); e.stopPropagation();
+  e.preventDefault(); e.stopPropagation(); remember(focusSid, "rail-key");
   st.size = clamp(Math.round(sizeOf(st) + d * 8), RMIN, RMAX);
   scheduleDraw(focusSid); placeRail(st, true);
   clearTimeout(railKeyT); railKeyT = setTimeout(() => { saveSlide(focusSid); syncStickerControls(focusSid, st); }, 400);
 });
 $("#fDel").addEventListener("click", () => { if (S.fsel && focusSid) removeSticker(focusSid, S.fsel); });
 $("#fAdd").addEventListener("click", () => { if (focusSid) openStickers(focusSid); });
+$("#fUndo").addEventListener("click", () => { if (focusSid) stepHistory(focusSid, true); });
+$("#fRedo").addEventListener("click", () => { if (focusSid) stepHistory(focusSid, false); });
+function updateHistUI() { const h = focusSid && HIST[focusSid]; $("#fUndo").disabled = !(h && h.u.length); $("#fRedo").disabled = !(h && h.r.length); }
+/* the rotate slider across the top of the slide (Instagram style): −180° to 180°, snaps to 0, double-tap resets */
+const rotT = r => (clamp(+r || 0, -180, 180) + 180) / 360;
+function placeRot(st, withBubble) {
+  const t = rotT(st.rot), r = rot.getBoundingClientRect(), v = Math.round(+st.rot || 0);
+  rot.querySelector("b").style.left = (t * 100) + "%";
+  rot.setAttribute("aria-valuenow", v); rot.setAttribute("aria-valuetext", v + "°");
+  if (withBubble) bubbleAt($("#focusDlg"), r.left + t * r.width, r.top + r.height / 2 + 10, v + "°", "below");
+}
+function rotFrom(e) {
+  const st = selSticker(); if (!st) return;
+  const r = rot.getBoundingClientRect();
+  let v = -180 + 360 * clamp((e.clientX - r.left) / r.width, 0, 1);
+  if (Math.abs(v) < 4) v = 0;
+  st.rot = Math.round(v); scheduleDraw(focusSid); placeRot(st, true);
+}
+rot.addEventListener("pointerdown", e => { if (!selSticker()) return; e.preventDefault(); try { rot.setPointerCapture(e.pointerId); } catch (err) {} remember(focusSid); rotDrag = true; bubbleHeld = true; rotFrom(e); });
+rot.addEventListener("pointermove", e => { if (rotDrag) rotFrom(e); });
+function rotEnd() { if (!rotDrag) return; rotDrag = false; const st = selSticker(); if (st) { saveSlide(focusSid); syncStickerControls(focusSid, st); } releaseBubble(); }
+rot.addEventListener("pointerup", rotEnd);
+rot.addEventListener("pointercancel", rotEnd);
+rot.addEventListener("dblclick", () => { const st = selSticker(); if (!st) return; remember(focusSid); st.rot = 0; saveSlide(focusSid); syncStickerControls(focusSid, st); scheduleDraw(focusSid); });
+rot.addEventListener("keydown", e => {
+  const st = selSticker(), d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 }[e.key]; if (!st || !d) return;
+  e.preventDefault(); e.stopPropagation(); remember(focusSid, "rot-key");
+  st.rot = clamp(Math.round((+st.rot || 0) + d * 5), -180, 180);
+  scheduleDraw(focusSid); placeRot(st, true);
+  clearTimeout(rotKeyT); rotKeyT = setTimeout(() => { saveSlide(focusSid); syncStickerControls(focusSid, st); }, 400);
+});
 function updateFocusUI() {
-  const st = focusSid && selSticker(), del = $("#fDel");
-  rail.hidden = !st; del.hidden = !st || !!(fg && fg.moved);
+  const st = focusSid && selSticker(), del = $("#fDel"), busy = !!(fg && fg.moved);
+  rail.hidden = rot.hidden = !st; del.hidden = !st || busy;
+  updateHistUI();
   if (!st) return;
-  placeRail(st, false);
+  placeRail(st, false); placeRot(st, false);
   const box = (S.focusBoxes || []).find(b => b.id === st.id), k = fcv.clientWidth / W;
   if (!box || !k) { del.hidden = true; return; }
   del.style.left = clamp(box.x1 * k - 18, 0, fcv.clientWidth - 36) + "px";
   del.style.top = clamp(box.y0 * k - 18, 0, fcv.clientHeight - 36) + "px";
 }
+/* Edit photo in the large view: pick an adjustment, move its slider (or type the value), see it on the big slide */
+S.fpanel = false; S.fslot = "img"; S.fadj = "exposure";
+function renderFPanel() {
+  const el = $("#fPanel"), s = S.slides[focusSid];
+  $("#fEdit").setAttribute("aria-pressed", String(S.fpanel));
+  el.hidden = !S.fpanel; if (!S.fpanel || !s) return;
+  const slots = TEMPLATES[s.type].slots.filter(k => s[k]);
+  if (s.overlay || !slots.length) { el.innerHTML = `<p class="hint">${s.overlay ? "This slide is a text-only overlay, so there's no photo to edit." : "Add a photo to this slide first."}</p>`; return; }
+  if (!slots.includes(S.fslot)) S.fslot = slots[0];
+  const a = s[S.fslot].adj || {}, cur = ADJ.find(x => x[0] === S.fadj) || ADJ[0], v = +a[cur[0]] || 0;
+  el.innerHTML = `${slots.length > 1 ? `<div class="fchips" role="group" aria-label="Photo">${slots.map(k => `<button type="button" data-fslot="${k}" aria-pressed="${k === S.fslot}">${k === "img" ? "Before photo" : "After photo"}</button>`).join("")}</div>` : ""}
+    <div class="fchips" role="group" aria-label="Adjustment">${ADJ.map(([k, l]) => `<button type="button" data-fadj="${k}" aria-pressed="${k === cur[0]}">${l}<i>${FMT.signed(+a[k] || 0)}</i></button>`).join("")}</div>
+    <div class="frow"><input type="range" id="fAdj" aria-label="${cur[1]}" min="${cur[2]}" max="${cur[3]}" step="1" value="${v}" data-fmt="signed">
+      <span class="numbox"><input type="number" class="num" data-for="fAdj" value="${v}" step="any" aria-label="${cur[1]}, exact value"></span>
+      <button type="button" class="btn ghost sm" id="fAdjReset">Reset</button></div>`;
+  const chip = el.querySelector('[data-fadj][aria-pressed="true"]'); if (chip) chip.scrollIntoView({ block: "nearest", inline: "nearest" });
+}
+$("#fEdit").addEventListener("click", () => { S.fpanel = !S.fpanel; renderFPanel(); drawFocus(); });
+$("#fPanel").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.fslot) { S.fslot = b.dataset.fslot; renderFPanel(); }
+  else if (b.dataset.fadj) { S.fadj = b.dataset.fadj; renderFPanel(); }
+  else if (b.id === "fAdjReset") { const r = $("#fAdj"); r.value = 0; r.dispatchEvent(new Event("input", { bubbles: true })); }
+});
+$("#fPanel").addEventListener("input", e => {
+  if (e.target.id !== "fAdj") return;
+  const s = S.slides[focusSid], slot = S.fslot, k = S.fadj; if (!s || !s[slot]) return;
+  remember(focusSid, `${slot}.adj.${k}`);
+  const v = +e.target.value; s[slot].adj = s[slot].adj || {}; s[slot].adj[k] = v;
+  syncBox(e.target); saveSlide(focusSid); scheduleDraw(focusSid);
+  setRange(`${focusSid}-${slot}-adj-${k}`, v);
+  const i = $(`#fPanel [data-fadj="${k}"] i`); if (i) i.textContent = FMT.signed(v);
+});
 
 /* ---------- photo library: one shared library, folders and subfolders ---------- */
-const realFolder = f => (f === "*" || f === "" || f == null) ? "" : f;
-const folderLabel = f => f === "*" ? "All photos" : f === "" ? "Unsorted" : f.split("/").pop();
+const realFolder = f => (f === "*" || f === "" || f === "~sim" || f == null) ? "" : f;
+const folderLabel = f => f === "*" ? "All photos" : f === "" ? "Unsorted" : f === "~sim" ? "Look-alikes" : f.split("/").pop();
 const depth = f => (f && f !== "*") ? f.split("/").length - 1 : 0;
 const parentOf = f => f.includes("/") ? f.slice(0, f.lastIndexOf("/")) : "";
 function folderTree() {
@@ -1856,19 +2035,68 @@ function usedMap() {
 /* search: every word has to appear in the photo's name, folder, description or tags */
 const hay = p => [p.name, p.folder || "unsorted", p.desc, (p.tags || []).join(" ")].join(" ").toLowerCase();
 const matches = (p, q) => String(q || "").toLowerCase().split(/[\s,]+/).filter(Boolean).every(w => hay(p).includes(w));
-const visiblePhotos = () => S.libQuery.trim() ? photosIn("*").filter(([, p]) => matches(p, S.libQuery)) : photosIn(S.libFolder);
+const visiblePhotos = () => S.libQuery.trim() ? photosIn("*").filter(([, p]) => matches(p, S.libQuery)) : S.libFolder === "~sim" ? simPhotos() : photosIn(S.libFolder);
+/* Look-alikes: each photo gets a 64-bit difference hash of its grayscale picture (`ph`), so the same shot still matches
+   after a different filter, grade or text on top. Photos whose hashes differ in ≤ SIM_BITS bits, or with the same file name, are grouped. */
+const SIM_BITS = 6;
+function dhash(img) {
+  if (!(img.naturalWidth || img.width)) return null;
+  const cv = document.createElement("canvas"); cv.width = 144; cv.height = 128;
+  const ctx = cv.getContext("2d", { willReadFrequently: true }); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(img, 0, 0, 144, 128);
+  const d = ctx.getImageData(0, 0, 144, 128).data, g = new Float32Array(72);
+  for (let y = 0; y < 128; y++) for (let x = 0; x < 144; x++) { const i = (y * 144 + x) * 4; g[(y >> 4) * 9 + (x >> 4)] += 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]; }
+  let hex = "";
+  for (let y = 0; y < 8; y++) { let byte = 0; for (let x = 0; x < 8; x++) byte = (byte << 1) | (g[y * 9 + x] < g[y * 9 + x + 1] ? 1 : 0); hex += byte.toString(16).padStart(2, "0"); }
+  return hex;
+}
+const BITS = [0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4];
+const hamming = (a, b) => { let n = 0; for (let i = 0; i < 16; i++) n += BITS[parseInt(a[i], 16) ^ parseInt(b[i], 16)]; return n; };
+const baseName = n => String(n || "").toLowerCase().replace(/\.[a-z0-9]{2,4}$/, "").replace(/[\s_-]*(\(\d+\)|copy(\s*\d+)?)$/, "").trim();
+let simCache = { key: null, map: new Map() };
+function lookAlikes() {   /* photo id -> the other photos in its group */
+  const ps = [...S.photos.entries()], key = ps.map(([id, p]) => id + (p.ph || "") + baseName(p.name)).join("|");
+  if (simCache.key === key) return simCache.map;
+  const up = new Map(ps.map(([id]) => [id, id]));
+  const root = x => { while (up.get(x) !== x) { up.set(x, up.get(up.get(x))); x = up.get(x); } return x; };
+  for (let i = 0; i < ps.length; i++) for (let j = i + 1; j < ps.length; j++) {
+    const [a, pa] = ps[i], [b, pb] = ps[j], na = baseName(pa.name);
+    if ((na && na === baseName(pb.name)) || (/^[0-9a-f]{16}$/.test(pa.ph) && /^[0-9a-f]{16}$/.test(pb.ph) && hamming(pa.ph, pb.ph) <= SIM_BITS)) up.set(root(a), root(b));
+  }
+  const groups = new Map(); for (const [id] of ps) { const r = root(id); groups.set(r, [...(groups.get(r) || []), id]); }
+  const map = new Map(); for (const g of groups.values()) if (g.length > 1) g.forEach(id => map.set(id, g.filter(x => x !== id)));
+  simCache = { key, map }; return map;
+}
+function simPhotos() {   /* every photo that has a look-alike, each group together */
+  const m = lookAlikes(), seen = new Set(), out = [];
+  for (const [id] of photosIn("*")) if (m.has(id) && !seen.has(id)) [id, ...m.get(id)].forEach(x => { if (!seen.has(x) && S.photos.has(x)) { seen.add(x); out.push([x, S.photos.get(x)]); } });
+  return out;
+}
+/* photos without a hash get one from their tile image once it has loaded (the board uploads hash on the way in) */
+let hashT = 0;
+function hashFromTile(id, img) {
+  const p = S.photos.get(id); if (!p || p.ph || !img.naturalWidth) return;
+  try { const h = dhash(img); if (!h) return; p.ph = h; if (!S.readOnly) savePhoto(id, 1500 + Math.random() * 1500); } catch (e) { return; }
+  clearTimeout(hashT); hashT = setTimeout(renderLibrary, 400);
+}
+const SIMICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="11" height="11" rx="2"/><rect x="10" y="3" width="11" height="11" rx="2"/></svg>`;
 function renderLibrary() {
   const lib = $("#lib"); if (!lib) return;
-  const tree = folderTree(), q = S.libQuery.trim();
-  if (S.libFolder !== "*" && S.libFolder !== "" && !tree.includes(S.libFolder)) S.libFolder = "*";
-  $("#folders").innerHTML = ["*", "", ...tree].map(f => `<button type="button" data-folder="${esc(f)}" aria-current="${!q && S.libFolder === f}" style="padding-left:${10 + depth(f) * 16}px">${esc(folderLabel(f))}<span>${photosIn(f).length}</span></button>`).join("");
+  const tree = folderTree(), q = S.libQuery.trim(), sim = lookAlikes();
+  if (S.libFolder === "~sim" ? !sim.size : (S.libFolder !== "*" && S.libFolder !== "" && !tree.includes(S.libFolder))) S.libFolder = "*";
+  const nSim = sim.size;
+  $("#folders").innerHTML = ["*", "", ...tree].map(f => `<button type="button" data-folder="${esc(f)}" aria-current="${!q && S.libFolder === f}" style="padding-left:${10 + depth(f) * 16}px">${esc(folderLabel(f))}<span>${photosIn(f).length}</span></button>`).join("")
+    + (nSim ? `<button type="button" class="simf" data-folder="~sim" aria-current="${!q && S.libFolder === "~sim"}" style="padding-left:10px">Look-alikes<span>${nSim}</span></button>` : "");
   const ft = $("#folderTools"), used = usedMap(), items = visiblePhotos();
   if (q) ft.innerHTML = `<span class="path">${items.length} result${items.length === 1 ? "" : "s"} for “${esc(q)}”</span><button type="button" class="btn ghost sm" data-lib="clearsearch">Clear search</button>`;
+  else if (S.libFolder === "~sim") ft.innerHTML = `<span class="path">Look-alikes</span><span class="hint" style="margin:0">Photos that look like another one: the same shot or file name, even with a different filter or text on top. Most likely duplicates: keep the one you use and delete the rest.</span>`;
   else if (S.libFolder === "*" || S.libFolder === "") ft.innerHTML = `<span class="path">${esc(folderLabel(S.libFolder))}</span>`;
   else if (S.folderForm && S.folderForm.mode === "rename") ft.innerHTML = `<span class="path">Rename folder</span>`;
   else ft.innerHTML = `<span class="path">${esc(S.libFolder.split("/").join(" / "))}</span><button type="button" class="btn ghost sm" data-lib="newsub">New subfolder</button><button type="button" class="btn ghost sm" data-lib="renamefolder">Rename</button><button type="button" class="btn ghost sm danger" data-lib="delfolder">Delete folder</button>`;
-  lib.innerHTML = items.map(([id, p]) => `<button type="button" class="tile" data-id="${esc(id)}" aria-pressed="${S.selected.has(id)}" aria-label="${esc(p.name)}${p.desc ? ": " + esc(p.desc) : ""}${S.selected.has(id) ? ", selected" : ""}" title="${esc([p.desc, (p.tags || []).join(", ")].filter(Boolean).join(" · "))}"><img loading="lazy" src="${esc(srcOf(p))}" alt=""><span class="tick" aria-hidden="true">${S.selected.has(id) ? "✓" : ""}</span><span class="nm">${esc(p.name)}</span><span class="ds">${esc(p.desc || "")}</span><span class="use">${used.has(id) ? "On slide " + used.get(id).join(", ") : (S.libFolder === "*" || q ? esc(p.folder ? p.folder.split("/").join(" / ") : "Unsorted") : "Not on this post")}</span></button>`).join("")
+  const others = id => (sim.get(id) || []).map(x => (S.photos.get(x) || {}).name).filter(Boolean);
+  lib.innerHTML = items.map(([id, p]) => `<button type="button" class="tile" data-id="${esc(id)}" aria-pressed="${S.selected.has(id)}" aria-label="${esc(p.name)}${p.desc ? ": " + esc(p.desc) : ""}${sim.has(id) ? `, looks like ${others(id).length} other photo${others(id).length === 1 ? "" : "s"}` : ""}${S.selected.has(id) ? ", selected" : ""}" title="${esc([sim.has(id) ? "Looks like: " + others(id).join(", ") : "", p.desc, (p.tags || []).join(", ")].filter(Boolean).join(" · "))}"><img loading="lazy" src="${esc(srcOf(p))}" alt=""><span class="tick" aria-hidden="true">${S.selected.has(id) ? "✓" : ""}</span>${sim.has(id) ? `<span class="sim">${SIMICON}</span>` : ""}<span class="nm">${esc(p.name)}</span><span class="ds">${esc(p.desc || "")}</span><span class="use">${used.has(id) ? "On slide " + used.get(id).join(", ") : (S.libFolder === "*" || S.libFolder === "~sim" || q ? esc(p.folder ? p.folder.split("/").join(" / ") : "Unsorted") : "Not on this post")}</span></button>`).join("")
     || `<p class="hint">${q ? `No photos match “${esc(q)}”. Try another word, or clear the search.` : S.photos.size ? "No photos in this folder yet. Select photos in All photos and move them here." : "No photos yet. Upload some to start."}</p>`;
+  $$(".tile", lib).forEach(t => { const id = t.dataset.id, p = S.photos.get(id), img = t.querySelector("img"); if (p && !p.ph && img) { if (img.complete) hashFromTile(id, img); else img.addEventListener("load", () => hashFromTile(id, img), { once: true }); } });
   renderSelTools();
   renderTagUI();
   const up1 = $("#libUploadLbl"); if (up1) up1.hidden = !(S.assets || S.local);
@@ -1881,14 +2109,16 @@ function renderSelTools() {
   if (!n) { el.innerHTML = ""; el.dataset.key = ""; return; }
   if (el.dataset.key === key && el.contains(document.activeElement) && document.activeElement.tagName === "INPUT") return; /* don't swap out a box you're typing in */
   el.dataset.key = key;
-  const one = n === 1 ? S.photos.get([...S.selected][0]) : null, canDel = !!(S.assets || S.local) && !S.readOnly;
+  const oneId = n === 1 ? [...S.selected][0] : null, one = oneId ? S.photos.get(oneId) : null, canDel = !!(S.assets || S.local) && !S.readOnly;
+  const look = oneId ? (lookAlikes().get(oneId) || []) : [];
   el.innerHTML = `<span class="count">${n} selected</span>
     <label class="sr" for="moveTo">Move to folder</label><select class="ctl" id="moveTo"><option value="">Move to…</option><option value="__unsorted">Unsorted</option>${folderTree().map(f => `<option value="${esc(f)}">${" ".repeat(depth(f))}${esc(f.split("/").pop())}</option>`).join("")}<option value="__new">New folder…</option></select>
     ${one ? `<label class="sr" for="photoName">Photo name</label><input class="ctl" id="photoName" value="${esc(one.name)}" maxlength="80" aria-label="Photo name">
       <label class="sr" for="photoDesc">Description</label><input class="ctl wide" id="photoDesc" value="${esc(one.desc || "")}" maxlength="120" placeholder="Description" aria-label="Description">
       <label class="sr" for="photoTags">Tags</label><input class="ctl wide" id="photoTags" value="${esc((one.tags || []).join(", "))}" placeholder="Tags, separated by commas" aria-label="Tags, separated by commas">` : ""}
+    ${look.length ? `<button type="button" class="btn ghost sm" data-lib="selsim">Select its ${look.length} look-alike${look.length === 1 ? "" : "s"}</button>` : ""}
     <button type="button" class="btn ghost sm" data-lib="selall">Select all here</button><button type="button" class="btn ghost sm" data-lib="selnone">Clear</button>
-    ${canDel ? `<button type="button" class="btn ghost sm danger" data-lib="delphotos">${n > 1 ? `Delete ${n} photos` : "Delete photo"}</button>` : ""}`;
+    ${canDel ? `<button type="button" class="btn ghost sm danger" data-lib="delphotos">${n > 1 ? `Delete ${n} photos…` : "Delete photo…"}</button>` : ""}`;
 }
 function toggleTile(id, range) {
   const ids = visiblePhotos().map(([i]) => i);
@@ -1902,47 +2132,84 @@ function toggleTile(id, range) {
   renderSelTools();
   if (el) el.focus();
 }
-/* Delete photos for good. Photos still on a slide (this post or any other) are kept: replace them on the slide first. */
-async function photoUsage(ids) {
+/* Deleting photos: a popup first shows where each one is used (this post and every other post), with a button to go and look.
+   You can delete only the ones not on a slide, or all of them (their photo spots on those slides become empty). */
+async function photoUsageDetail(ids) {   /* asset -> [{pid, title, sid, label, slot}] */
   const want = new Set(ids.map(id => (S.photos.get(id) || {}).asset).filter(Boolean)), used = new Map();
-  const add = (a, label) => { if (want.has(a)) used.set(a, [...new Set([...(used.get(a) || []), label])]); };
-  const nm = numbering();
-  order().forEach(sid => { const s = S.slides[sid]; ["img", "img2"].forEach(k => { if (s[k] && s[k].asset) add(s[k].asset, `slide ${numLabel(numOf(sid, nm))}`); }); });
+  const scan = (pid, title, post, slides) => {
+    const o = orderOf(post, slides), nm = numbering(o, slides);
+    for (const sid of o) for (const slot of ["img", "img2"]) { const a = slides[sid][slot] && slides[sid][slot].asset; if (a && want.has(a)) used.set(a, [...(used.get(a) || []), { pid, title, sid, slot, label: numLabel(numOf(sid, nm)) }]); }
+  };
+  scan(S.pid, (S.post && S.post.title) || "", S.post, S.slides);
   if (S.db && !S.local) for (const p of S.posts) {
     if (p.id === S.pid) continue;
-    const snap = await S.db.collection(`posts/${p.id}/slides`).get();
-    snap.docs.forEach(d => { const v = d.data() || {}; ["img", "img2"].forEach(k => { if (v[k] && v[k].asset) add(v[k].asset, `“${(p.data && p.data.title) || "another post"}”`); }); });
+    const snap = await S.db.collection(`posts/${p.id}/slides`).get(), slides = {};
+    snap.docs.forEach(d => { const v = d.data(); if (v) slides[d.id] = v; });
+    scan(p.id, (p.data && p.data.title) || "another post", p.data, slides);
   }
   return used;
 }
-async function deletePhotos(btn) {
-  const ids = [...S.selected].filter(id => S.photos.has(id)), label = ids.length > 1 ? `Delete ${ids.length} photos` : "Delete photo";
-  if (!ids.length) return;
-  if (btn.dataset.armed !== "1") {
-    btn.disabled = true; btn.textContent = "Checking…";
-    let used;
-    try { used = await photoUsage(ids); } catch (e) { btn.disabled = false; btn.textContent = label; toast("Couldn’t check where these photos are used. Try again"); return; }
-    btn.disabled = false;
-    const free = ids.filter(id => !used.has((S.photos.get(id) || {}).asset));
-    if (!free.length) { btn.textContent = label; toast(`${ids.length > 1 ? "These photos are" : "This photo is"} on ${[...new Set([...used.values()].flat())].join(", ")}. Replace ${ids.length > 1 ? "them" : "it"} there first`); return; }
-    S.delPlan = free; btn.dataset.armed = "1";
-    btn.textContent = `Tap again to delete ${free.length === 1 ? "it" : free.length + " photos"} for good${free.length < ids.length ? ` (${ids.length - free.length} on slides stay)` : ""}`;
-    setTimeout(() => { if (btn.isConnected && btn.dataset.armed === "1") { btn.dataset.armed = ""; btn.textContent = label; } }, 6000);
-    return;
-  }
-  const plan = S.delPlan || []; S.delPlan = null; btn.disabled = true; btn.textContent = "Deleting…";
-  let gone = 0, failed = 0;
-  for (const id of plan) {
+let delPlan = null;
+async function openDelete() {
+  const ids = [...S.selected].filter(id => S.photos.has(id)); if (!ids.length) return;
+  const dlg = $("#delDlg");
+  $("#delTitle").textContent = ids.length === 1 ? "Delete this photo?" : `Delete ${ids.length} photos?`;
+  $("#delNote").textContent = "Checking where they’re used…"; $("#delList").innerHTML = ""; $("#delActs").innerHTML = "";
+  delPlan = null; dlg.showModal();
+  let used;
+  try { used = await photoUsageDetail(ids); } catch (e) { $("#delNote").textContent = "Couldn’t check where these photos are used. Close this and try again."; return; }
+  if (!dlg.open) return;
+  const isUsed = id => used.has((S.photos.get(id) || {}).asset), usedIds = ids.filter(isUsed), free = ids.filter(id => !isUsed(id));
+  delPlan = { ids, used, free };
+  $("#delNote").innerHTML = usedIds.length
+    ? `<b>${usedIds.length === 1 ? "1 of them is" : usedIds.length + " of them are"} on a slide.</b> Tap Show to check. Deleting a photo that’s on a slide leaves an empty photo spot there. Deleting can’t be undone.`
+    : `${ids.length === 1 ? "It isn’t" : "None of them are"} on a slide. Deleting can’t be undone.`;
+  $("#delList").innerHTML = ids.map(id => {
+    const p = S.photos.get(id), us = used.get(p.asset) || [];
+    return `<div class="delrow"><img src="${esc(srcOf(p))}" alt=""><div><div class="nm">${esc(p.name)}</div><ul>${us.length
+      ? us.map(u => `<li><span class="used">${u.pid === S.pid ? "This post" : "“" + esc(u.title) + "”"}, slide ${esc(u.label)}</span><button type="button" class="btn ghost sm" data-goto="${esc(u.pid)}|${esc(u.sid)}">Show</button></li>`).join("")
+      : `<li class="free">Not on any slide</li>`}</ul></div></div>`;
+  }).join("");
+  $("#delActs").innerHTML = usedIds.length
+    ? `${free.length ? `<button type="button" class="btn primary sm" data-delgo="free">Delete the ${free.length === 1 ? "one" : free.length} not on a slide</button>` : ""}<button type="button" class="btn sm danger" data-delgo="all">${ids.length === 1 ? "Delete anyway" : `Delete all ${ids.length}`}</button><button type="button" class="btn ghost sm" data-close>Cancel</button>`
+    : `<button type="button" class="btn primary sm" data-delgo="all">${ids.length === 1 ? "Delete photo" : `Delete ${ids.length} photos`}</button><button type="button" class="btn ghost sm" data-close>Cancel</button>`;
+}
+$("#delDlg").addEventListener("click", e => {
+  const g = e.target.closest("[data-goto]"), d = e.target.closest("[data-delgo]");
+  if (g) { const [pid, sid] = g.dataset.goto.split("|"); $("#delDlg").close(); goToSlide(pid, sid); }
+  else if (d && delPlan) doDelete(d.dataset.delgo === "all" ? delPlan.ids : delPlan.free);
+});
+function goToSlide(pid, sid) {
+  if (pid !== S.pid) { selectPost(pid); toast("Opened that post"); }
+  let tries = 0;
+  const go = () => {
+    const c = document.getElementById("card-" + sid);
+    if (!c) { if (++tries < 20) setTimeout(go, 250); return; }
+    c.scrollIntoView({ behavior: "smooth", block: "start" }); c.classList.add("flash"); setTimeout(() => c.classList.remove("flash"), 2200);
+  };
+  go();
+}
+async function doDelete(ids) {
+  const plan = delPlan; if (!plan || !ids.length) return;
+  $("#delActs").innerHTML = `<div class="busy" role="status"><i></i><span>Deleting…</span></div>`;
+  let gone = 0, failed = 0, emptied = 0;
+  for (const id of ids) {
     const p = S.photos.get(id); if (!p) continue;
     try {
       if (p.asset && S.assets && !S.local) await S.assets.delete(p.asset);
+      for (const u of plan.used.get(p.asset) || []) {   /* empty the photo spots that showed it */
+        if (u.pid === S.pid) { const s = S.slides[u.sid]; if (s && s[u.slot] && s[u.slot].asset === p.asset) { s[u.slot] = null; s.layout = {}; forget(u.sid); saveSlide(u.sid); emptied++; } }
+        else if (S.db && !S.local) { try { await S.db.doc(`posts/${u.pid}/slides/${u.sid}`).update({ [u.slot]: null, layout: {}, updatedAt: Date.now() }); emptied++; } catch (e) {} }
+      }
       const path = photoPath(id); clearTimeout(S.timers.get(path)); S.dirty.delete(path);
       await removeDoc(path);
       S.photos.delete(id); S.selected.delete(id); gone++;
     } catch (e) { failed++; }
   }
-  S.lastTile = null; renderLibrary(); if ($("#pickDlg").open) renderPicker();
-  toast(`${gone} photo${gone === 1 ? "" : "s"} deleted${failed ? `. ${failed} couldn’t be deleted: only the person who uploaded a photo can delete it` : ""}`);
+  delPlan = null; $("#delDlg").close();
+  S.lastTile = null; if (emptied) renderBoard(new Set(Object.keys(S.slides)));
+  renderLibrary(); if ($("#pickDlg").open) renderPicker();
+  toast(`${gone} photo${gone === 1 ? "" : "s"} deleted${emptied ? `. ${emptied} photo spot${emptied === 1 ? " is" : "s are"} empty now` : ""}${failed ? `. ${failed} couldn’t be deleted: only the person who uploaded a photo can delete it` : ""}`);
 }
 /* Claude looks at photos and writes a short description and search tags (the sample capability, with images) */
 const cleanTags = a => [...new Set((Array.isArray(a) ? a : []).map(t => String(t ?? "").toLowerCase().replace(/[^\p{L}\p{N} &'+-]+/gu, " ").replace(/\s+/g, " ").trim().slice(0, 28)).filter(Boolean))].slice(0, 10);
@@ -2034,7 +2301,8 @@ function submitFolderForm() {
 function libAction(a, btn) {
   if (a === "selall") { visiblePhotos().forEach(([id]) => S.selected.add(id)); renderLibrary(); }
   else if (a === "clearsearch") { S.libQuery = ""; const i = $("#libSearch"); if (i) i.value = ""; renderLibrary(); }
-  else if (a === "delphotos") deletePhotos(btn);
+  else if (a === "delphotos") openDelete();
+  else if (a === "selsim") { const id = [...S.selected][0]; (lookAlikes().get(id) || []).forEach(x => S.selected.add(x)); renderLibrary(); }
   else if (a === "selnone") { S.selected.clear(); S.lastTile = null; renderLibrary(); }
   else if (a === "newsub") openFolderForm("new", realFolder(S.libFolder));
   else if (a === "renamefolder") openFolderForm("rename", parentOf(S.libFolder));
@@ -2073,6 +2341,7 @@ function usePhoto(id) {
   if (!pickFor || !S.photos.has(id)) return;
   const { sid, slot } = pickFor, s = S.slides[sid];
   const p = S.photos.get(id);
+  remember(sid);
   s[slot] = { ...(p.asset ? { asset: p.asset } : { file: p.file }), fx: 0.5, fy: 0.5, zoom: 1 };
   s.layout = {};
   saveSlide(sid);
@@ -2080,6 +2349,7 @@ function usePhoto(id) {
   renderBoard(new Set([sid])); renderLibrary();
   toast("Photo replaced. Text re-fitted to it");
 }
+async function fileHash(f) { try { const bm = await createImageBitmap(f); const h = dhash(bm); if (bm.close) bm.close(); return h; } catch (e) { return null; } }
 function imageSize(src) { return new Promise(res => { const im = new Image(); im.onload = () => res([im.naturalWidth, im.naturalHeight]); im.onerror = () => res([0, 0]); im.src = src; }); }
 async function uploadFiles(files, folder) {
   const added = [];
@@ -2089,11 +2359,11 @@ async function uploadFiles(files, folder) {
     try {
       const name = f.name.replace(/\.[^.]+$/, "").slice(0, 80);
       if (S.assets) {
-        const r = await S.assets.upload(f); const [w, h] = await imageSize(r.url);
-        S.photos.set(r.id, { asset: r.id, name, w, h, folder, addedAt: Date.now() }); savePhoto(r.id, 200 + added.length * 120); added.push(r.id);
+        const r = await S.assets.upload(f); const [w, h] = await imageSize(r.url), ph = await fileHash(f);
+        S.photos.set(r.id, { asset: r.id, name, w, h, folder, addedAt: Date.now(), ...(ph ? { ph } : {}) }); savePhoto(r.id, 200 + added.length * 120); added.push(r.id);
       } else {
-        const url = URL.createObjectURL(f), [w, h] = await imageSize(url), id = "local-" + Date.now().toString(36) + added.length;
-        S.photos.set(id, { file: url, name, w, h, folder, addedAt: Date.now() }); added.push(id);
+        const url = URL.createObjectURL(f), [w, h] = await imageSize(url), id = "local-" + Date.now().toString(36) + added.length, ph = await fileHash(f);
+        S.photos.set(id, { file: url, name, w, h, folder, addedAt: Date.now(), ...(ph ? { ph } : {}) }); added.push(id);
       }
     } catch (e) {
       const why = { too_large: "it's over 20 MB", unsupported_type: "that file type isn't supported", quota_or_state: "the board's storage is full", rate_limited: "too many uploads at once, try again in a moment" }[e && e.code] || "the upload failed";
@@ -2221,7 +2491,7 @@ function applyResult(res, targets, commented, overall) {
     [["img", "edits"], ["img2", "edits2"]].forEach(([slot, key]) => { if (!s[slot] || it[key] === undefined) return; const a = cleanAdj(it[key], s[slot].adj); if (a) s[slot].adj = a; else delete s[slot].adj; });
     if (it.overlay === true || it.overlay === false) s.overlay = it.overlay;
     if (it.stickers !== undefined && it.stickers !== "keep") s.stickers = cleanStickers(it.stickers, s.stickers);
-    s.undo = prev; s.applied = { summary: String(it.summary || "Updated this slide").slice(0, 300), at: now };
+    s.undo = prev; s.applied = { summary: String(it.summary || "Updated this slide").slice(0, 300), at: now }; forget(sid);
     if (commented.includes(sid) || overall) { s.comment = ""; s.status = "review"; }
     saveSlide(sid); done.push(sid);
   }
@@ -2275,30 +2545,41 @@ async function applyWithClaude(commented, overall) {
 function applyAll() { applyWithClaude(pendingSlides(), String(S.post.overall || "").trim()); }
 function undoApply(sid) {
   const s = S.slides[sid]; if (!s) return;
-  if (s.undo) { S.slides[sid] = clone(s.undo); saveSlide(sid); renderBoard(new Set([sid])); toast("Change undone. Your comment is back"); }
+  if (s.undo) { S.slides[sid] = clone(s.undo); forget(sid); saveSlide(sid); renderBoard(new Set([sid])); toast("Change undone. Your comment is back"); }
   else if (s.applied && s.applied.isNew) del(sid);
 }
 
 /* ---------- focus view ---------- */
 let focusSid = null;
-function openFocus(sid) { focusSid = sid; S.fsel = null; const dlg = $("#focusDlg"); if (!dlg.open) dlg.showModal(); drawFocus(); }
-$("#focusDlg").addEventListener("close", () => { focusSid = null; S.fsel = null; fpts.clear(); fg = null; $("#fTrash").hidden = true; hideBubble(); });
+function openFocus(sid) {
+  focusSid = sid; S.fsel = null;
+  const dlg = $("#focusDlg"); if (!dlg.open) dlg.showModal();
+  document.documentElement.classList.add("modal-open");
+  renderFPanel(); drawFocus();
+}
+$("#focusDlg").addEventListener("close", () => { focusSid = null; S.fsel = null; fpts.clear(); fg = null; $("#fTrash").hidden = true; hideBubble(); document.documentElement.classList.remove("modal-open"); });
 function drawFocus() {
-  const s = S.slides[focusSid]; if (!s) return;
-  const x = numOf(focusSid), dpr = window.devicePixelRatio || 1;
-  const sc = clamp(Math.min((innerWidth - 48) * dpr / W, (innerHeight - 190) * dpr / H), 0.2, 1);
-  const cv = $("#focusCv"); cv.width = Math.round(W * sc); cv.height = Math.round(H * sc);
-  cv.style.width = Math.round(W * sc / dpr) + "px"; cv.style.height = Math.round(H * sc / dpr) + "px";
+  const dlg = $("#focusDlg"), s = S.slides[focusSid]; if (!s || !dlg.open) return;
+  const x = numOf(focusSid), dpr = window.devicePixelRatio || 1, box = $("#fWrap").getBoundingClientRect();
+  const css = Math.max(0.05, Math.min(box.width / W, box.height / H)), sc = clamp(css * dpr, 0.1, 1);   /* fit the slide to the space left */
+  const cv = $("#focusCv"), cw = Math.round(W * sc), ch = Math.round(H * sc);
+  if (cv.width !== cw || cv.height !== ch) { cv.width = cw; cv.height = ch; }
+  cv.style.width = Math.floor(W * css) + "px"; cv.style.height = Math.floor(H * css) + "px";
   if (S.fsel && !(s.stickers || []).some(t => t.id === S.fsel)) S.fsel = null;
   S.focusBoxes = renderSlide(cv, S.post, s, x.n, x.total, sc, false, S.fsel || S.hilite).boxes || [];
   $("#focusTitle").textContent = `${pad2(x.n)}/${pad2(x.total)}${x.of > 1 ? ` · V${x.v}` : ""} ${slideName(s)}`;
-  $("#fHint").textContent = (s.stickers || []).length ? "Tap a sticker to select it. Drag to move it, pinch to resize, twist to rotate, or use the slider on the left for size. Drag it onto the bin to delete it."
-    : "Tap the + button at the top to add a sticker to this slide.";
+  $("#fHint").innerHTML = (s.stickers || []).length
+    ? `<span class="long">Tap a sticker to select it. Drag to move it, pinch to resize, twist to rotate, or use the sliders on the slide. Drag it onto the bin to delete it.</span><span class="short">Tap a sticker, then drag, pinch or twist it. Bin to delete.</span>`
+    : `<span class="long">Tap Sticker to add one. Edit photo adjusts the photo right here.</span><span class="short">Tap Sticker to add one.</span>`;
   updateFocusUI();
 }
-function stepFocus(d) { const o = order(), i = o.indexOf(focusSid); const j = clamp(i + d, 0, o.length - 1); if (j !== i) { focusSid = o[j]; S.fsel = null; drawFocus(); } }
+function stepFocus(d) { const o = order(), i = o.indexOf(focusSid); const j = clamp(i + d, 0, o.length - 1); if (j !== i) { focusSid = o[j]; S.fsel = null; renderFPanel(); drawFocus(); } }
+addEventListener("resize", () => { if ($("#focusDlg").open) drawFocus(); });
 document.addEventListener("keydown", e => {
   if (!$("#focusDlg").open || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  const mod = e.metaKey || e.ctrlKey, k = e.key.toLowerCase();
+  if (mod && k === "z") { e.preventDefault(); stepHistory(focusSid, !e.shiftKey); return; }
+  if (mod && k === "y") { e.preventDefault(); stepHistory(focusSid, false); return; }
   if (e.key === "ArrowLeft") stepFocus(-1);
   if (e.key === "ArrowRight") stepFocus(1);
   if ((e.key === "Delete" || e.key === "Backspace") && S.fsel) { e.preventDefault(); removeSticker(focusSid, S.fsel); }
@@ -2358,7 +2639,7 @@ const gid = () => "g" + Date.now().toString(36) + Math.random().toString(36).sli
 const plain = s => String(s || "").replace(/\*\*/g, "");
 function subscribeGuide(pid) {
   if (S.unsubGuide) { S.unsubGuide(); S.unsubGuide = null; }
-  S.guide = null;
+  S.guide = null; S.gOpen.clear();
   if (S.local) { S.guide = clone(((window.__LOCAL_STATE__.guides || {})[pid]) || null); renderGuide(); return; }
   renderGuide();
   S.unsubGuide = S.db.doc(`posts/${pid}/guide/main`).onSnapshot(snap => {
@@ -2374,6 +2655,7 @@ function slideOpts(cur) {
 }
 function refreshGuideSlideSelects() {
   if (!S.guide) return;
+  $$("#guideSec details.gsec").forEach(refreshGsec);
   $$('#guideSec select[data-g$=".slide"]').forEach(sel => {
     const i = +sel.dataset.g.split(".")[1], sec = (S.guide.sections || [])[i];
     if (sec) sel.innerHTML = slideOpts(sec.slide);
@@ -2381,38 +2663,67 @@ function refreshGuideSlideSelects() {
 }
 function renderGuide() {
   const el = $("#guideSec"); if (!el) return;
-  const g = S.guide, ai = !!S.sample, n = gPending();
+  const g = S.guide, ai = !!S.sample, n = gPending(), on = pdfOn();
   let html = `<div class="sec-h"><h2>PDF guide</h2><span class="grow"></span>
+      <label class="switch"><input type="checkbox" id="pdfOn"${on ? " checked" : ""}><span>${on ? "On" : "Off"}</span></label></div>`;
+  if (!on) { el.innerHTML = html + `<p class="hint">Off for this post. Turn it on to make a PDF guide: the long version of this carousel, to send when someone comments your keyword (for example through ManyChat).</p>`; return; }
+  html += `<p class="hint">The long version of this carousel, to send when someone comments your keyword (for example through ManyChat). The PDF has real text, so you can highlight and comment on it in any PDF app. Open a part to fix the wording, or leave comments and let Claude apply them.</p>
+    <div class="actions" style="margin-bottom:14px">
       ${ai ? `<button class="btn sm" data-gact="write"${S.gbusy ? " disabled" : ""}>${g ? "Rewrite with Claude" : "Write with Claude"}</button>` : ""}
       ${ai && g ? `<button class="btn accent sm" data-gact="applyall"${n && !S.gbusy ? "" : " disabled"}>Apply guide comments${n ? ` (${n})` : ""}</button>` : ""}
-      <button class="btn primary sm" data-gact="pdf"${g ? "" : " disabled"}>Download PDF</button></div>
-    <p class="hint">The long version of this carousel, to send when someone comments your keyword (for example through ManyChat). The PDF has real text, so you can highlight and comment on it in any PDF app. Fix wording here, or leave comments and let Claude apply them.</p>`;
+      <button class="btn sm" data-gact="preview"${g ? "" : " disabled"}>Preview</button>
+      <button class="btn primary sm" data-gact="pdf"${g ? "" : " disabled"}>Download PDF</button>
+      ${g ? `<button class="btn ghost sm" data-gact="openall">${gAllOpen() ? "Collapse all" : "Expand all"}</button>` : ""}</div>`;
   if (S.gbusy) html += `<div class="busy" role="status" style="margin-bottom:12px"><i></i><span>Claude is working on the guide…</span><button class="btn ghost sm" data-gact="stop">Stop</button></div>`;
   if (!g) { el.innerHTML = html + `<p class="hint">No guide for this post yet.${ai ? " Tap <b>Write with Claude</b> to draft one from your slides." : " Ask Claude in the chat to write one."}</p>`; return; }
   if (g.applied) html += `<div class="applied" role="status" style="margin-bottom:12px"><p><b>Claude changed the guide:</b> ${esc(g.applied.summary)}</p><div class="actions">${g.undo ? `<button class="btn sm" data-gact="undo">Undo</button>` : ""}<button class="btn ghost sm" data-gact="keep">Keep it</button></div></div>`;
+  /* every page of the guide is a part that starts closed: open one to edit it */
+  const part = (key, body) => { const m = gsecMeta(key); return `<details class="gsec" data-k="${esc(key)}"${S.gOpen.has(key) ? " open" : ""}><summary><span class="gt">${m.title}</span><span class="gsum">${m.sum}</span><span class="dot" title="Has a comment for Claude"${m.dot ? "" : " hidden"}></span></summary><div class="fields">${body}</div></details>`; };
   html += `<div class="guide">
-    <div class="gbox"><div class="two"><div><label class="lbl" for="g-title">Title</label><input class="ctl" id="g-title" data-g="title" value="${esc(g.title)}"></div>
+    ${part("title", `<div class="two"><div><label class="lbl" for="g-title">Title</label><input class="ctl" id="g-title" data-g="title" value="${esc(g.title)}"></div>
       <div><label class="lbl" for="g-sub">Subtitle</label><input class="ctl" id="g-sub" data-g="subtitle" value="${esc(g.subtitle)}"></div></div>
-      <div><label class="lbl" for="g-intro">Intro</label><textarea class="ctl" id="g-intro" data-g="intro" rows="4">${esc(g.intro)}</textarea></div></div>
-    ${(g.sections || []).map((sec, i) => `<div class="gbox">
-      <div class="rowhead"><span>Section ${i + 1}</span><span class="grow"></span>
-        <button class="btn ghost sm" data-gact="up" data-i="${i}"${i ? "" : " disabled"}>Move up</button>
-        <button class="btn ghost sm" data-gact="delsec" data-i="${i}">Remove</button></div>
+      <div><label class="lbl" for="g-intro">Intro</label><textarea class="ctl" id="g-intro" data-g="intro" rows="4">${esc(g.intro)}</textarea></div>`)}
+    ${(g.sections || []).map((sec, i) => part(sec.id, `<div class="actions"><button class="btn ghost sm" data-gact="up" data-i="${i}"${i ? "" : " disabled"}>Move up</button><button class="btn ghost sm" data-gact="delsec" data-i="${i}">Remove section</button></div>
       <div class="two"><div><label class="lbl" for="g${i}-h">Heading</label><input class="ctl" id="g${i}-h" data-g="sections.${i}.heading" value="${esc(sec.heading)}"></div>
         <div><label class="lbl" for="g${i}-s">Slide shown before it</label><select class="ctl" id="g${i}-s" data-g="sections.${i}.slide">${slideOpts(sec.slide)}</select></div></div>
       <div><label class="lbl" for="g${i}-b">Text</label><textarea class="ctl" id="g${i}-b" data-g="sections.${i}.body" rows="3">${esc(sec.body)}</textarea></div>
       <div><label class="lbl" for="g${i}-p">Points (one per line, **bold** lead-in)</label><textarea class="ctl" id="g${i}-p" data-g="sections.${i}.points" rows="7">${esc(sec.points)}</textarea></div>
       <div><label class="lbl" for="g${i}-c">Comment for Claude</label><textarea class="ctl" id="g${i}-c" data-g="sections.${i}.comment" rows="2" placeholder="What's wrong or missing in this section?">${esc(sec.comment)}</textarea></div>
-      ${ai ? `<div class="applybar"><button class="btn accent sm" data-gact="applysec" data-i="${i}"${String(sec.comment || "").trim() && !S.gbusy ? "" : " disabled"}>Apply comment</button></div>` : ""}
-    </div>`).join("")}
+      ${ai ? `<div class="applybar"><button class="btn accent sm" data-gact="applysec" data-i="${i}"${String(sec.comment || "").trim() && !S.gbusy ? "" : " disabled"}>Apply comment</button></div>` : ""}`)).join("")}
     <div class="actions"><button class="btn sm" data-gact="addsec">Add section</button></div>
-    <div class="gbox"><div><label class="lbl" for="g-outro">Closing</label><textarea class="ctl" id="g-outro" data-g="outro" rows="3">${esc(g.outro)}</textarea></div>
+    ${part("closing", `<div><label class="lbl" for="g-outro">Closing</label><textarea class="ctl" id="g-outro" data-g="outro" rows="3">${esc(g.outro)}</textarea></div>
       <div><label class="lbl" for="g-cta">Last line, big ({handle} = your handle)</label><input class="ctl" id="g-cta" data-g="cta" value="${esc(g.cta)}"></div>
-      <label class="check"><input type="checkbox" id="g-cheat" data-g="cheatsheet" data-bool${g.cheatsheet !== false ? " checked" : ""}><span>Add a cheat sheet page<small>Every setting from your slides on one page.</small></span></label></div>
-    <div class="gbox"><label class="lbl" for="g-comment">Comment on the whole guide</label><textarea class="ctl" id="g-comment" data-g="comment" rows="3" placeholder="e.g. make the intro shorter, add a tip about audio">${esc(g.comment)}</textarea></div>
+      <label class="check"><input type="checkbox" id="g-cheat" data-g="cheatsheet" data-bool${g.cheatsheet !== false ? " checked" : ""}><span>Add a cheat sheet page<small>Every setting from your slides on one page.</small></span></label>`)}
+    ${part("comment", `<label class="lbl" for="g-comment">Comment on the whole guide</label><textarea class="ctl" id="g-comment" data-g="comment" rows="3" placeholder="e.g. make the intro shorter, add a tip about audio">${esc(g.comment)}</textarea>`)}
   </div>`;
   el.innerHTML = html;
 }
+/* the title line of each part, so you can see what's inside while it's closed */
+function gsecMeta(key) {
+  const g = S.guide || {}, secs = g.sections || [], i = secs.findIndex(x => x.id === key);
+  if (key === "title") return { title: "Title page", sum: esc(plain(g.title)) };
+  if (key === "closing") return { title: "Closing page", sum: esc(fill(g.cta || "", S.post)) + (g.cheatsheet !== false ? " · with cheat sheet" : "") };
+  if (key === "comment") return { title: "Comment on the whole guide", sum: esc(String(g.comment || "").slice(0, 60)), dot: !!String(g.comment || "").trim() };
+  const sec = secs[i] || {}, nm = sec.slide && S.slides[sec.slide] ? numOf(sec.slide) : null;
+  return { title: `${pad2(i + 1)} ${esc(up(plain(sec.heading)) || "SECTION")}`, sum: nm ? `with slide ${pad2(nm.n)}` : "", dot: !!String(sec.comment || "").trim() };
+}
+const pdfOn = () => !!S.post && (S.post.pdf ?? !!S.guide);
+S.gOpen = new Set();
+const gAllOpen = () => { const ds = $$("#guideSec details.gsec"); return !!ds.length && ds.every(d => d.open); };
+function refreshGsec(d) {
+  const m = gsecMeta(d.dataset.k);
+  d.querySelector(".gt").innerHTML = m.title; d.querySelector(".gsum").innerHTML = m.sum; d.querySelector(".dot").hidden = !m.dot;
+}
+document.addEventListener("toggle", e => {
+  const d = e.target; if (!d.classList || !d.classList.contains("gsec")) return;
+  if (d.open) S.gOpen.add(d.dataset.k); else S.gOpen.delete(d.dataset.k);
+  const b = $('#guideSec [data-gact="openall"]'); if (b) b.textContent = gAllOpen() ? "Collapse all" : "Expand all";
+}, true);
+document.addEventListener("change", e => {
+  if (e.target.id !== "pdfOn" || !S.post) return;
+  S.post.pdf = e.target.checked; saveMeta(); S.gOpen.clear(); renderGuide();
+  toast(S.post.pdf ? "PDF guide on. Open a part to edit it" : "PDF guide off for this post. Nothing is deleted");
+});
 function refreshGuideButtons() {
   const el = $("#guideSec"); if (!el || !S.guide) return;
   const n = gPending(), all = el.querySelector('[data-gact="applyall"]');
@@ -2425,11 +2736,14 @@ document.addEventListener("input", e => {
   const v = el.hasAttribute("data-bool") ? el.checked : el.tagName === "SELECT" ? (el.value || null) : el.value;
   setPath(S.guide, el.dataset.g, v); saveGuide();
   if (/comment$/.test(el.dataset.g)) refreshGuideButtons();
+  const d = el.closest("details.gsec"); if (d) refreshGsec(d);
 });
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-gact]"); if (!b) return;
   const a = b.dataset.gact, i = +b.dataset.i, g = S.guide;
   if (a === "pdf") return downloadGuidePdf(b);
+  if (a === "preview") return previewGuide();
+  if (a === "openall") { const open = !gAllOpen(); $$("#guideSec details.gsec").forEach(d => { d.open = open; }); b.textContent = open ? "Collapse all" : "Expand all"; return; }
   if (a === "write") {
     if (g && b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Tap again to replace the guide"; return; }
     return runGuideClaude("write", null);
@@ -2440,7 +2754,7 @@ document.addEventListener("click", e => {
   if (!g) return;
   if (a === "undo") { if (g.undo) { S.guide = clone(g.undo); saveGuide(); renderGuide(); toast("Guide change undone"); } return; }
   if (a === "keep") { delete g.undo; delete g.applied; saveGuide(); renderGuide(); return; }
-  if (a === "addsec") { g.sections = g.sections || []; g.sections.push({ id: gid(), slide: null, heading: "NEW SECTION", body: "", points: "", comment: "" }); saveGuide(); renderGuide(); return; }
+  if (a === "addsec") { g.sections = g.sections || []; const id = gid(); g.sections.push({ id, slide: null, heading: "NEW SECTION", body: "", points: "", comment: "" }); S.gOpen.add(id); saveGuide(); renderGuide(); return; }
   if (a === "delsec") { if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Tap again to remove"; return; } g.sections.splice(i, 1); saveGuide(); renderGuide(); return; }
   if (a === "up" && i > 0) { const ss = g.sections; [ss[i - 1], ss[i]] = [ss[i], ss[i - 1]]; saveGuide(); renderGuide(); }
 });
@@ -2525,7 +2839,7 @@ async function slideJpeg(sid, w) {
   const blob = await new Promise(r => cv.toBlob(r, "image/jpeg", 0.86));
   return new Uint8Array(await blob.arrayBuffer());
 }
-async function buildGuidePdf(onStep) {
+async function buildGuidePdf(onStep, rec) {   /* rec: optional array that gets each page's drawing, for Preview */
   await loadScript(PDF_LIBS[0]); await loadScript(PDF_LIBS[1]);
   const { PDFDocument, rgb, pushGraphicsState, popGraphicsState, setCharacterSpacing } = window.PDFLib;
   const g = S.guide, post = S.post, o = order();
@@ -2540,6 +2854,7 @@ async function buildGuidePdf(onStep) {
   let page = null, y = 0;
   const draw = (t, x, yy, f, size, color, tc = 0) => {
     if (!t) return;
+    if (rec) rec[rec.length - 1].push({ k: "t", t, x, y: yy, w: f === B ? 700 : 400, size, c: color, tc });
     if (tc) page.pushOperators(pushGraphicsState(), setCharacterSpacing(tc));
     page.drawText(t, { x, y: yy, size, font: f, color });
     if (tc) page.pushOperators(popGraphicsState());
@@ -2548,14 +2863,16 @@ async function buildGuidePdf(onStep) {
   const slidePage = async sid => {
     if (!sid || !S.slides[sid]) return;
     onStep && onStep(`Adding slide ${numLabel(numOf(sid))}`);
-    const img = await doc.embedJpg(await slideJpeg(sid, 1200));
+    const jpg = await slideJpeg(sid, 1200), img = await doc.embedJpg(jpg);
     const p = doc.addPage([PW, PH]); p.drawImage(img, { x: 0, y: 0, width: PW, height: PH }); slidePages.add(sid);
+    if (rec) rec.push([{ k: "i", jpg }]);
   };
+  const line = (x0, y0, x1, y1) => { page.drawLine({ start: { x: x0, y: y0 }, end: { x: x1, y: y1 }, thickness: 0.6, color: C.rule }); if (rec) rec[rec.length - 1].push({ k: "l", x0, y0, x1, y1, w: 0.6, c: C.rule }); };
   const newPage = () => {
-    page = doc.addPage([PW, PH]);
+    page = doc.addPage([PW, PH]); if (rec) rec.push([]);
     draw(up(post.series), MX, PH - 30, B, 7.5, C.ink, -0.37);
     const subj = up(post.subject); draw(subj, PW - MX - tw(subj, R, 7.5, -0.37), PH - 30, R, 7.5, C.muted, -0.37);
-    page.drawLine({ start: { x: MX, y: PH - 38 }, end: { x: PW - MX, y: PH - 38 }, thickness: 0.6, color: C.rule });
+    line(MX, PH - 38, PW - MX, PH - 38);
     const handle = up(post.handle || ""); draw(handle, MX, 28, B, 7.5, C.ink, -0.37);
     const pn = pad2(doc.getPageCount()); draw(pn, PW - MX - tw(pn, B, 7.5, -0.37), 28, B, 7.5, C.ink, -0.37);
     y = PH - 66;
@@ -2598,12 +2915,12 @@ async function buildGuidePdf(onStep) {
     String(t || "").split("\n").map(s => s.trim().replace(/^[-•]\s*/, "")).filter(Boolean).forEach(pt => {
       const lines = wrapWords(richWords(pt), TW - 14, 10.5);
       ensure(15.5 * Math.min(lines.length, 3));
-      page.drawCircle({ x: MX + 3, y: y - 5, size: 1.8, color: C.accent });
+      page.drawCircle({ x: MX + 3, y: y - 5, size: 1.8, color: C.accent }); if (rec) rec[rec.length - 1].push({ k: "c", x: MX + 3, y: y - 5, r: 1.8, c: C.accent });
       lines.forEach(ln => { ensure(15.5); drawLine(ln, MX + 14, y - 8.4, 10.5, C.body); y -= 15.5; });
       y -= 6;
     });
   };
-  const rule = () => { page.drawLine({ start: { x: MX, y }, end: { x: PW - MX, y }, thickness: 0.6, color: C.rule }); };
+  const rule = () => line(MX, y, PW - MX, y);
 
   // cover, title page
   if (o[0]) await slidePage(o[0]);
@@ -2657,22 +2974,53 @@ async function buildGuidePdf(onStep) {
   onStep && onStep("Saving");
   return await doc.save();
 }
+async function saveGuidePdf(bytes) {
+  const blob = new Blob([bytes], { type: "application/pdf" }), name = `${slug(plain(S.guide.title) || S.post.title)}-guide.pdf`;
+  if (!S.downloads) { toast("Downloads aren't available here. Ask Claude in the chat for the file."); return; }
+  try { await S.downloads.save({ filename: name, data: blob }); }
+  catch (e) {
+    if (e && e.code === "extension_not_enabled") toast("PDF downloads are turned off here. Ask Claude in the chat for the file.");
+    else if (e && e.code !== "declined") toast("Couldn’t save the PDF. Try again.");
+  }
+}
 async function downloadGuidePdf(btn) {
   if (!S.guide) return;
   const label = btn.textContent; btn.disabled = true;
-  try {
-    const bytes = await buildGuidePdf(s => { btn.textContent = s + "…"; });
-    const blob = new Blob([bytes], { type: "application/pdf" });
-    const name = `${slug(plain(S.guide.title) || S.post.title)}-guide.pdf`;
-    if (S.downloads) {
-      try { await S.downloads.save({ filename: name, data: blob }); }
-      catch (e) {
-        if (e && e.code === "extension_not_enabled") toast("PDF downloads are turned off here. Ask Claude in the chat for the file.");
-        else if (e && e.code !== "declined") toast("Couldn’t save the PDF. Try again.");
-      }
-    } else toast("Downloads aren't available here. Ask Claude in the chat for the file.");
-  } catch (e) { console.warn(e); toast("Couldn’t build the PDF. Check your connection and try again."); }
+  try { await saveGuidePdf(await buildGuidePdf(s => { btn.textContent = s + "…"; })); }
+  catch (e) { console.warn(e); toast("Couldn’t build the PDF. Check your connection and try again."); }
   finally { btn.textContent = label; btn.disabled = false; }
+}
+/* Preview: build the real PDF, then draw each page from what the builder recorded */
+let prevBytes = null;
+async function previewGuide() {
+  if (!S.guide) return;
+  const dlg = $("#prevDlg"), box = $("#prevPages"), dl = $("#prevDl");
+  box.innerHTML = `<div class="busy" role="status"><i></i><span id="prevStep">Building the preview…</span></div>`; dl.disabled = true; prevBytes = null; dlg.showModal();
+  try {
+    const pages = [], bytes = await buildGuidePdf(st => { const e = $("#prevStep"); if (e) e.textContent = st + "…"; }, pages);
+    if (!dlg.open) return;
+    prevBytes = bytes; dl.disabled = false;
+    box.innerHTML = pages.map((_, i) => `<div class="prevpage"><canvas width="1" height="1" role="img" aria-label="Page ${i + 1}"></canvas><span>Page ${i + 1} of ${pages.length}</span></div>`).join("");
+    const cvs = $$("canvas", box);
+    for (let i = 0; i < pages.length; i++) await drawPdfPage(cvs[i], pages[i]);
+  } catch (e) { console.warn(e); box.innerHTML = `<p class="hint" style="margin:0">Couldn’t build the preview. Check your connection and try again.</p>`; }
+}
+$("#prevDl").addEventListener("click", () => { if (prevBytes) saveGuidePdf(prevBytes); });
+async function drawPdfPage(cv, ops) {
+  const PW = 432, PH = 648, k = 2, col = c => `rgb(${Math.round(c.red * 255)},${Math.round(c.green * 255)},${Math.round(c.blue * 255)})`;
+  cv.width = PW * k; cv.height = PH * k;
+  const ctx = cv.getContext("2d"); ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, cv.width, cv.height);
+  if ("fontKerning" in ctx) ctx.fontKerning = "none";   /* the PDF has no kerning either */
+  for (const op of ops) {
+    if (op.k === "i") { const bm = await createImageBitmap(new Blob([op.jpg], { type: "image/jpeg" })); ctx.drawImage(bm, 0, 0, cv.width, cv.height); if (bm.close) bm.close(); }
+    else if (op.k === "l") { ctx.strokeStyle = col(op.c); ctx.lineWidth = op.w * k; ctx.beginPath(); ctx.moveTo(op.x0 * k, (PH - op.y0) * k); ctx.lineTo(op.x1 * k, (PH - op.y1) * k); ctx.stroke(); }
+    else if (op.k === "c") { ctx.fillStyle = col(op.c); ctx.beginPath(); ctx.arc(op.x * k, (PH - op.y) * k, op.r * k, 0, 2 * Math.PI); ctx.fill(); }
+    else if (op.k === "t") {
+      ctx.fillStyle = col(op.c); ctx.font = `${op.w} ${op.size * k}px ${FONT}`;
+      let x = op.x * k; const y = (PH - op.y) * k;
+      for (const ch of Array.from(op.t)) { ctx.fillText(ch, x, y); x += ctx.measureText(ch).width + (op.tc || 0) * k; }
+    }
+  }
 }
 window.__guidePDF = async () => { const bytes = await buildGuidePdf(); let s = ""; for (let i = 0; i < bytes.length; i += 32768) s += String.fromCharCode.apply(null, bytes.subarray(i, i + 32768)); return btoa(s); };
 
@@ -2691,7 +3039,7 @@ function selectPost(pid) {
       if (S.dirty.has(slidePath(d.id)) || S.writing.has(slidePath(d.id)) || S.busy.has(d.id)) continue;
       const data = d.data();
       if (!data || !TEMPLATES[data.type]) continue;
-      if (!S.slides[d.id] || JSON.stringify(stripTs(S.slides[d.id])) !== JSON.stringify(stripTs(data))) { S.slides[d.id] = clone(data); changed.add(d.id); }
+      if (!S.slides[d.id] || JSON.stringify(stripTs(S.slides[d.id])) !== JSON.stringify(stripTs(data))) { S.slides[d.id] = clone(data); changed.add(d.id); forget(d.id); }
     }
     for (const id of Object.keys(S.slides)) if (!seen.has(id) && !S.dirty.has(slidePath(id)) && !S.writing.has(slidePath(id))) { delete S.slides[id]; changed.add(id); }
     if (changed.size) { renderBoard(changed); renderLibrary(); }
@@ -2732,13 +3080,16 @@ function renderEmpty() {
 const topBar = $(".top"), setTopH = () => document.documentElement.style.setProperty("--topH", topBar.offsetHeight + "px");
 if (window.ResizeObserver) new ResizeObserver(setTopH).observe(topBar);
 setTopH();
-let lastY = scrollY;
-addEventListener("scroll", () => {
-  const y = scrollY, root = document.documentElement, hidden = root.classList.contains("hidebar");
-  if (!hidden && !WIDE() && y > 140 && y > lastY + 6) root.classList.add("hidebar");
-  else if (hidden && (WIDE() || y < 140 || y < lastY - 10)) root.classList.remove("hidebar");
-  if (Math.abs(y - lastY) > 6 || y < 140) lastY = y;
-}, { passive: true });
+/* phones: while a card with an open section is on screen, the top bar steps aside; it's back once the sections are closed */
+let barQueued = false;
+function syncBar() {
+  barQueued = false;
+  const hide = !WIDE() && $$(".card.editing").some(c => { const r = c.getBoundingClientRect(); return r.bottom > 140 && r.top < innerHeight - 80; });
+  document.documentElement.classList.toggle("hidebar", hide);
+}
+function queueBar() { if (!barQueued) { barQueued = true; requestAnimationFrame(syncBar); } }
+addEventListener("scroll", queueBar, { passive: true });
+addEventListener("resize", queueBar);
 async function boot() {
   try { await Promise.all([document.fonts.load(`700 40px "Nimbus Sans"`), document.fonts.load(`400 40px "Nimbus Sans"`)]); } catch (e) {}
   try { const c = document.createElement("canvas").getContext("2d"); c.font = font(1000, 700); const m = c.measureText("H"); if (m.actualBoundingBoxAscent > 500) CAPR = m.actualBoundingBoxAscent / 1000; } catch (e) {}

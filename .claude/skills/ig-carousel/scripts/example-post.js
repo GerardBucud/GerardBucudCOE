@@ -9,8 +9,8 @@ module.exports = {
     "order": [
       "s01",
       "s02",
-      "s03",
       "s04",
+      "s03",
       "s05",
       "smvjrud8b1ru",
       "s06"
@@ -200,10 +200,10 @@ module.exports = {
           "id": "kbookmark1",
           "kind": "bookmark",
           "rot": 0,
-          "size": 190,
+          "size": 158,
           "solid": false,
-          "x": 0.8385689620572233,
-          "y": 0.30520043178378653
+          "x": 0.8813265455954978,
+          "y": 0.3006369449955006
         }
       ],
       "text": {
@@ -221,6 +221,7 @@ module.exports = {
       "comment": "",
       "img": {
         "adj": {
+          "exposure": 0,
           "grain": 17
         },
         "asset": "17cb875bd2367c42f43b2c50fa2ff74b",
@@ -230,7 +231,7 @@ module.exports = {
       },
       "img2": {
         "adj": {
-          "grain": 25
+          "grain": 19
         },
         "asset": "a9bdb495a31e2fc9c0a77a27fc983916",
         "fx": 0.5,
@@ -239,7 +240,7 @@ module.exports = {
       },
       "layout": {},
       "overlay": false,
-      "status": "review",
+      "status": "ok",
       "text": {
         "aLabel": "D-LOG M",
         "aNote": "STRAIGHT OUT OF CAMERA. FLAT ON PURPOSE",
@@ -304,6 +305,7 @@ module.exports = {
       "folder": "",
       "h": 4128,
       "name": "GAB07890",
+      "ph": "d5cdcdcc4cf0f0f8",
       "tags": [
         "osmo nano",
         "camera",
@@ -324,6 +326,7 @@ module.exports = {
       "folder": "",
       "h": 2880,
       "name": "dji_export_20261023_photo_0003",
+      "ph": "e76767f7d71f1fa7",
       "tags": [
         "airplane",
         "wing",
@@ -344,6 +347,7 @@ module.exports = {
       "folder": "Osmo Nano/Spotlight",
       "h": 2576,
       "name": "Muted spot, hand",
+      "ph": "0333f8ecc8cce90f",
       "tags": [
         "osmo nano",
         "camera",
@@ -363,6 +367,7 @@ module.exports = {
       "folder": "Osmo Nano/Spotlight",
       "h": 2576,
       "name": "Orange spot, red-lit hand",
+      "ph": "c0f0f0ccccccfcf0",
       "tags": [
         "osmo nano",
         "camera",
@@ -383,6 +388,7 @@ module.exports = {
       "folder": "Osmo Nano/Finished covers",
       "h": 2700,
       "name": "Your finished cover",
+      "ph": "c074389c88f0f0b2",
       "tags": [
         "cover",
         "finished",
@@ -402,6 +408,7 @@ module.exports = {
       "folder": "Osmo Nano/Flat lays and details",
       "h": 1717,
       "name": "Desk flat lay, light bar (wide)",
+      "ph": "e6c2caeaeafefcf8",
       "tags": [
         "flat lay",
         "desk",
@@ -422,6 +429,7 @@ module.exports = {
       "folder": "Osmo Nano/Flat lays and details",
       "h": 1717,
       "name": "Desk flat lay, drone (wide)",
+      "ph": "f2facaeae8fafefd",
       "tags": [
         "flat lay",
         "desk",
@@ -442,6 +450,7 @@ module.exports = {
       "folder": "Osmo Nano/Flat lays and details",
       "h": 1717,
       "name": "Flat lay, screen on (wide)",
+      "ph": "188f8ed4dcd474b5",
       "tags": [
         "flat lay",
         "osmo nano",
@@ -462,6 +471,7 @@ module.exports = {
       "folder": "Osmo Nano/Red backdrop",
       "h": 2576,
       "name": "Red, hand from top (your cover grade)",
+      "ph": "c070389c88f0f0e0",
       "tags": [
         "osmo nano",
         "camera",
@@ -481,6 +491,7 @@ module.exports = {
       "folder": "Osmo Nano/Spotlight",
       "h": 2576,
       "name": "Orange spot, black-and-white hand",
+      "ph": "f0f0f0cccccce8e0",
       "tags": [
         "osmo nano",
         "camera",
@@ -500,6 +511,7 @@ module.exports = {
       "folder": "Osmo Nano/Flat lays and details",
       "h": 2576,
       "name": "Detail, OSMO on screen",
+      "ph": "f080104f0d0f7937",
       "tags": [
         "osmo nano",
         "detail",
@@ -519,6 +531,7 @@ module.exports = {
       "folder": "Osmo Nano/Spotlight",
       "h": 2576,
       "name": "Blue spot",
+      "ph": "e0c0f0f8ccccd4e0",
       "tags": [
         "osmo nano",
         "camera",
@@ -538,6 +551,7 @@ module.exports = {
       "folder": "",
       "h": 2880,
       "name": "dji_export_20261023_photo_0003",
+      "ph": "e76767f7d71f1fa7",
       "tags": [
         "airplane",
         "wing",
@@ -558,6 +572,7 @@ module.exports = {
       "folder": "Osmo Nano/Red backdrop",
       "h": 1717,
       "name": "Red spot, side view (wide)",
+      "ph": "e0f0f0943c3874fe",
       "tags": [
         "osmo nano",
         "camera",
@@ -577,6 +592,7 @@ module.exports = {
       "folder": "",
       "h": 2880,
       "name": "dji_export_20261023_photo_0004",
+      "ph": "efe7e7ffde9f9f27",
       "tags": [
         "airplane",
         "wing",
@@ -597,6 +613,7 @@ module.exports = {
       "folder": "Osmo Nano/Spotlight",
       "h": 2576,
       "name": "Orange spot, hand from left",
+      "ph": "e3f0f0ecccec10f3",
       "tags": [
         "osmo nano",
         "camera",
@@ -616,6 +633,7 @@ module.exports = {
       "folder": "Osmo Nano/Red backdrop",
       "h": 1717,
       "name": "Red, hand from left 2 (wide)",
+      "ph": "d0f0f0c89c1c78fc",
       "tags": [
         "osmo nano",
         "camera",
@@ -635,6 +653,7 @@ module.exports = {
       "folder": "Osmo Nano/Spotlight",
       "h": 2576,
       "name": "Red spot, hand from below",
+      "ph": "e0f0f0ccccf8e0c0",
       "tags": [
         "osmo nano",
         "camera",
@@ -654,6 +673,7 @@ module.exports = {
       "folder": "Osmo Nano/Finished covers",
       "h": 2700,
       "name": "Your cover, big title version",
+      "ph": "c063389c88f0f0e0",
       "tags": [
         "cover",
         "finished",
@@ -673,6 +693,7 @@ module.exports = {
       "folder": "",
       "h": 4032,
       "name": "IMG_1868",
+      "ph": "90e0b0ec6c141424",
       "tags": [
         "behind the scenes",
         "studio",
@@ -692,6 +713,7 @@ module.exports = {
       "folder": "Osmo Nano/Red backdrop",
       "h": 2576,
       "name": "Red, hand from top (raw)",
+      "ph": "c070389c88f0f0e0",
       "tags": [
         "osmo nano",
         "camera",
@@ -711,6 +733,7 @@ module.exports = {
       "folder": "Osmo Nano/Red backdrop",
       "h": 1684,
       "name": "Red, hand from left (wide)",
+      "ph": "f8f8c8c6941c7cfc",
       "tags": [
         "osmo nano",
         "camera",
