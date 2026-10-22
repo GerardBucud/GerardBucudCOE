@@ -66,6 +66,15 @@ h1.title{font-size:clamp(26px,4vw,40px);line-height:1.02;letter-spacing:-.05em;t
 .board{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:34px 26px;padding-block:26px}
 .card{min-width:0;display:flex;flex-direction:column;gap:10px}
 .card-h{display:flex;align-items:center;gap:10px}
+/* a folded card shows only its header row (with a small thumbnail) */
+.card-h .fold svg{transition:transform .15s}
+.card.folded .card-h .fold svg{transform:rotate(-90deg)}
+.card-h .thumb{display:none;width:34px;height:51px;border-radius:3px;background:var(--frame);flex:0 0 auto;cursor:pointer}
+.card.folded .card-h .thumb{display:block}
+.card.folded>:not(.card-h){display:none!important}
+.card.folded .num{font-size:19px}
+.boardtools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-top:18px}
+.boardtools .hint{margin:0;font-size:13px;color:var(--muted)}
 .num{font-weight:700;font-size:22px;letter-spacing:-.06em;font-variant-numeric:tabular-nums}
 .num span{color:var(--muted);font-weight:400;letter-spacing:-.04em}
 .num .ver{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--accent-ink);background:var(--accent);border-radius:999px;padding:3px 8px;margin-left:8px;vertical-align:4px}
@@ -184,6 +193,91 @@ html.modal-open,html.modal-open body{overflow:hidden}
 .frow{display:flex;align-items:center;gap:10px}
 .frow input[type=range]{flex:1 1 auto;min-width:0;accent-color:var(--accent);min-height:34px;margin:0}
 #focusDlg .numbox{background:#1c1918;border-color:#3a3432;color:#f3eeeb}
+.fpanel.text{max-height:min(46vh,440px);overflow:auto;overscroll-behavior:contain}
+.fpanel .ctl{background:#1c1918;border-color:#3a3432;color:#f3eeeb}
+.fpanel .lbl{color:#a8a09c}
+.fpanel .rowbox{background:#0f0d0c;border-color:#2a2524}
+.fpanel .rowhead{color:#a8a09c}
+.fpanel .btn{background:#1c1918;border-color:#3a3432;color:#f3eeeb}
+.fpanel h4{margin:6px 0 0;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#a8a09c}
+.fpanel .check{color:#f3eeeb}
+#focusDlg .fpanel .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.fpanel .btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.fpanel.one{max-height:none}
+.fone{display:grid;gap:8px}
+.fone .lbl{margin:0}
+.fone .actions{align-items:center}
+.fone textarea.ctl{min-height:56px}
+/* typing on a phone: the large view fits above the keyboard, so the toolbar and hint step aside */
+#focusDlg.kb .ftools,#focusDlg.kb .fhint{display:none}
+#focusDlg.kb .fpanel.text{max-height:calc(var(--vvh,100vh) * .45)}
+#focusDlg .menu{background:#1c1918;border-color:#3a3432;top:42px}
+#focusDlg .menu button{color:#f3eeeb}
+#focusDlg .menu button:hover{background:#2a2524}
+#focusDlg .menu small{display:block;color:#a8a09c;font-size:12px}
+/* full screen and phone previews of the current slide */
+.fover{position:fixed;inset:0;z-index:60;background:#000;display:flex;flex-direction:column}
+.fover[hidden]{display:none}
+.fover .ftop{display:flex;align-items:center;gap:8px;padding:10px 12px;padding-top:max(10px,env(safe-area-inset-top,0px));flex-wrap:wrap}
+.fover .ftop .grow{flex:1}
+.fover .icon{background:rgba(28,25,24,.9);border-color:#3a3432;color:#f3eeeb}
+.fullimg{flex:1;min-height:0;display:grid;place-items:center;padding:0 0 max(8px,env(safe-area-inset-bottom,0px))}
+.fullimg img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.seg{display:inline-flex;background:#1c1918;border:1px solid #3a3432;border-radius:999px;padding:3px;gap:2px}
+.seg button{border:0;background:none;color:#d9d2ce;font-size:13px;padding:6px 12px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:#fff;font-weight:700}
+.seg[hidden]{display:none}
+.fullimg,.pstage{touch-action:none;-webkit-user-select:none;user-select:none}
+.fover.bare .ftop,.fover.bare .pnote{display:none}
+/* phones: your own phone is the frame, so the preview drops the bezel and the arrows (swipe instead) to show the screen bigger */
+@media (max-width:560px){
+  #fPhone .pphone{width:390px;height:844px;padding:0;background:none;box-shadow:none;border-radius:54px}
+  #fPhone .pscreen{box-shadow:0 0 0 1.5px #3a3432}
+  #fPhone [data-fnav]{display:none}
+  .seg button{padding:6px 10px}
+}
+.pstage{flex:1;min-height:0;position:relative;overflow:hidden}
+.pphone{position:absolute;left:50%;top:50%;width:418px;height:872px;border-radius:66px;background:#111;box-shadow:0 0 0 2px #3a3432,0 20px 60px rgba(0,0,0,.6);padding:14px;transform-origin:center center}
+.pscreen{position:relative;width:390px;height:844px;border-radius:54px;overflow:hidden;background:#000;color:#fff;font:14px/1.3 -apple-system,BlinkMacSystemFont,"Helvetica Neue",Helvetica,Arial,sans-serif}
+.pscreen svg{stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.pisland{position:absolute;top:11px;left:50%;width:122px;height:35px;margin-left:-61px;border-radius:20px;background:#000;z-index:5}
+.pstatus{position:absolute;top:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:space-between;padding:6px 30px 0 44px;font-weight:600;font-size:16px;z-index:4}
+.pnote{color:#a8a09c;font-size:12.5px;line-height:1.4;text-align:center;padding:6px 16px max(10px,env(safe-area-inset-bottom,0px));margin:0 auto;max-width:640px}
+.pstatus svg{fill:#fff;stroke:none}
+.psig{display:flex;gap:6px;align-items:center}
+.pscreen .grow{flex:1}
+.pscreen .fillw{fill:#fff;stroke:none}
+.pbar{position:absolute;left:0;right:0;top:50px;height:46px;display:flex;align-items:center;gap:18px;padding:0 16px;font-size:21px}
+.phead{position:absolute;left:0;right:0;top:96px;height:52px;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:13.5px}
+.pav{width:32px;height:32px;border-radius:50%;background:#3a3432;box-shadow:0 0 0 2px #000,0 0 0 3.5px #bdb5b1;flex:0 0 auto}
+.pimg{position:absolute;left:0;right:0;overflow:hidden;background:#161212}
+.pimg img{width:100%;height:100%;object-fit:cover;display:block}
+.pimg.fit img{object-fit:contain}
+.pcount{position:absolute;top:14px;right:14px;background:rgba(18,18,18,.72);border-radius:999px;padding:4px 9px;font-size:12px;font-weight:600}
+.pact{position:absolute;left:0;right:0;height:46px;display:flex;align-items:center;gap:16px;padding:0 14px}
+.pdots,.tdots{position:absolute;display:flex;gap:4px}
+.pdots{left:50%;transform:translateX(-50%)}
+.pdots i,.tdots i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.35)}
+.pdots i.on{background:#4aa3ff}
+.tdots i.on{background:#fff}
+.pcap{position:absolute;left:14px;right:14px;font-size:13.5px;line-height:1.45}
+.pmut{color:#a8a8a8}
+.pnav{position:absolute;left:0;right:0;bottom:0;height:83px;padding:12px 22px 0;display:flex;justify-content:space-between;align-items:flex-start;background:#000;border-top:1px solid #262626;z-index:3}
+.phome{position:absolute;left:50%;bottom:8px;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:#fff;z-index:6}
+.pscreen.tt .pnav{border-top:0}
+.ttop{position:absolute;left:0;right:0;top:52px;height:40px;display:flex;align-items:center;justify-content:center;gap:22px;font-size:16.5px;color:rgba(255,255,255,.72);text-shadow:0 1px 2px rgba(0,0,0,.5)}
+.ttop b{color:#fff;position:relative}
+.ttop b::after{content:"";position:absolute;left:50%;bottom:-7px;width:26px;height:3px;margin-left:-13px;border-radius:2px;background:#fff}
+.ttop svg{position:absolute;right:16px}
+.trail{position:absolute;right:6px;bottom:150px;width:56px;display:flex;flex-direction:column;align-items:center;gap:16px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.45))}
+.trail span{display:flex;flex-direction:column;align-items:center;gap:3px}
+.trail small{font-size:12px;font-weight:600}
+.tav{width:46px;height:46px;border-radius:50%;background:#3a3432;border:2px solid #fff;position:relative;margin-bottom:6px}
+.tav i{position:absolute;left:50%;bottom:-10px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:#e8363c;color:#fff;font:700 16px/20px -apple-system,Arial,sans-serif;font-style:normal;text-align:center}
+.tcap{position:absolute;left:12px;right:84px;bottom:112px;font-size:14px;line-height:1.35;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.tcap p{margin:4px 0 0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tdots{left:0;right:0;bottom:94px;justify-content:center}
+.tplus{display:grid;place-items:center;width:46px;height:30px;border-radius:9px;background:#fff;color:#000}
 #focusDlg .numbox i{color:#a8a09c}
 @media (max-width:760px){
   #focusDlg[open]{width:100vw;height:100vh;height:100dvh;margin:0;border:0;border-radius:0;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)}
@@ -204,13 +298,22 @@ html.modal-open,html.modal-open body{overflow:hidden}
 .hrail i{position:absolute;left:0;right:0;top:50%;height:4px;margin-top:-2px;border-radius:2px;background:rgba(255,255,255,.45)}
 .hrail em{position:absolute;left:50%;top:50%;width:2px;height:16px;margin:-8px 0 0 -1px;border-radius:1px;background:rgba(255,255,255,.85)}
 .hrail b{position:absolute;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.45)}
+.tsel{position:absolute;border:3px dashed rgba(255,255,255,.92);border-radius:4px;pointer-events:none;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+.tsel[hidden]{display:none}
+.fbar{position:absolute;display:flex;gap:2px;background:#f3eeeb;border-radius:999px;padding:3px;box-shadow:0 3px 12px rgba(0,0,0,.45);transform:translateX(-50%);white-space:nowrap;z-index:2;line-height:1.2}
+.fbar[hidden]{display:none}
+.fbar button{display:inline-flex;align-items:center;gap:5px;border:0;background:none;color:#131111;font-size:13px;font-weight:700;padding:7px 11px;border-radius:999px;cursor:pointer}
+.fbar button:hover{background:rgba(0,0,0,.08)}
+.fbar button.del{color:#c4260f}
+.fbar svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .fdel{position:absolute;width:36px;height:36px;border-radius:50%;border:2px solid #fff;background:#e02d12;color:#fff;display:grid;place-items:center;padding:0;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .fdel svg{width:18px;height:18px}
 .fdel[hidden]{display:none}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;z-index:20;max-width:calc(100vw - 32px);display:flex;align-items:center;gap:12px}
 .toast[hidden]{display:none}
 .toast button{background:none;border:0;color:inherit;font-weight:700;text-decoration:underline;cursor:pointer;padding:6px 2px;font-size:14px}
-#focusDlg .toast{background:#f3eeeb;color:#131111}
+#focusDlg .toast{background:#f3eeeb;color:#131111;z-index:70}
+@media (max-width:760px){#focusDlg .toast{top:calc(64px + env(safe-area-inset-top,0px));bottom:auto}}   /* phones: over the slide's top edge, clear of the editor and toolbar */
 .choices{display:grid;gap:10px}
 .choice{display:grid;gap:4px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:14px 16px;cursor:pointer;font-size:14px;color:var(--muted)}
 .choice b{font-size:15px;color:var(--ink)}
@@ -350,6 +453,7 @@ details.gsec[open]{padding-bottom:14px}
 
 <dialog id="focusDlg" aria-labelledby="focusTitle">
   <div class="dlg-h"><h3 id="focusTitle" tabindex="-1" autofocus>Slide</h3><span class="grow"></span>
+    <div class="more"><button class="icon" id="fDl" aria-label="Download or preview this slide" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></button></div>
     <button class="icon" id="fPrev" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
     <button class="icon" id="fNext" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
     <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -357,17 +461,32 @@ details.gsec[open]{padding-bottom:14px}
     <div class="fwrap" id="fWrap"><div class="fstage" id="fStage"><canvas id="focusCv" width="900" height="1350"></canvas>
       <div class="hrail" id="fRot" role="slider" tabindex="0" aria-label="Rotate sticker" aria-valuemin="-180" aria-valuemax="180" hidden><i></i><em></em><b></b></div>
       <div class="rail" id="fRail" role="slider" tabindex="0" aria-label="Sticker size" aria-orientation="vertical" aria-valuemin="40" aria-valuemax="600" hidden><i></i><b></b></div>
+      <div class="tsel" id="fTsel" hidden></div>
+      <div class="fbar" id="fBar" role="toolbar" aria-label="Selected text" hidden></div>
       <button type="button" class="fdel" id="fDel" aria-label="Delete this sticker" hidden><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
       <div class="ftrash" id="fTrash" aria-hidden="true" hidden><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></div></div></div>
     <div class="fpanel" id="fPanel" hidden></div>
     <div class="ftools">
       <button type="button" class="tbtn" id="fAdd"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="M12 8v8M8 12h8"/></svg>Sticker</button>
+      <button type="button" class="tbtn" id="fTextBtn" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg>Text</button>
       <button type="button" class="tbtn hist" id="fUndo" disabled><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>Undo</button>
       <button type="button" class="tbtn hist" id="fRedo" disabled><svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>Redo</button>
       <button type="button" class="tbtn" id="fEdit" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Edit photo</button>
     </div>
     <p class="fhint" id="fHint"></p>
   </div>
+  <div class="fover" id="fFull" hidden><div class="ftop"><span class="grow"></span>
+      <button class="icon" data-fnav="-1" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><button class="icon" data-fnav="1" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+      <button class="icon" data-fshut aria-label="Close full screen"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="fullimg"><img id="fFullImg" alt=""></div></div>
+  <div class="fover" id="fPhone" hidden><div class="ftop">
+      <div class="seg" role="group" aria-label="App"><button type="button" data-papp="ig" aria-pressed="true">Instagram</button><button type="button" data-papp="tt" aria-pressed="false">TikTok</button></div>
+      <div class="seg" id="pShape" role="group" aria-label="Feed shape"><button type="button" data-pshape="0.75" aria-pressed="true">3:4</button><button type="button" data-pshape="0.8" aria-pressed="false">4:5</button></div>
+      <span class="grow"></span>
+      <button class="icon" data-fnav="-1" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><button class="icon" data-fnav="1" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+      <button class="icon" data-fshut aria-label="Close phone preview"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="pstage" id="pStage"><div class="pphone" id="pPhone"><div class="pscreen" id="pScreen"></div></div></div>
+    <p class="pnote" id="pNote"></p></div>
 </dialog>
 
 <dialog id="delDlg" aria-labelledby="delTitle">
@@ -418,7 +537,8 @@ const capH = size => CAPR * size;
 const ICON = {
   left: '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>',
   right: '<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>',
-  more: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg>'
+  more: '<svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg>',
+  down: '<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>'
 };
 
 /* ---------- templates ---------- */
@@ -483,6 +603,9 @@ function richW(ctx, str, size, baseW, track) {
   segs.forEach((sg, i) => { w += measureW(ctx, sg.t, size, sg.w, track) + (i ? track * size : 0); });
   return w;
 }
+/* While a slide renders, TF names the field being drawn ("text.title", "text.rows.0.value", "post.series") and TB collects
+   the box each field covers, in slide pixels, with its biggest size and weight. The large view uses them to select text. */
+let TF = null, TB = null;
 /* draw text with its cap top at capTop; returns drawn width */
 function txt(ctx, str, x, capTop, o) {
   const size = o.size, track = o.track ?? -0.05, baseW = o.weight ?? 700;
@@ -506,6 +629,11 @@ function txt(ctx, str, x, capTop, o) {
     cx += widths[i] + track * size;
   });
   ctx.restore();
+  if (TB && TF) {
+    const b = TB[TF] || (TB[TF] = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity, size: 0, w: baseW, lines: [], al: o.align || "left" });
+    b.lines.push(str); b.x0 = Math.min(b.x0, x0); b.x1 = Math.max(b.x1, x0 + total); b.y0 = Math.min(b.y0, capTop); b.y1 = Math.max(b.y1, capTop + capH(size));
+    if (size > b.size) { b.size = size; b.w = baseW; b.tr = track; }
+  }
   return total;
 }
 function wrap(ctx, str, maxW, size, weight, track) {
@@ -771,14 +899,16 @@ function spot(ctx, cx, cy, r, a) {
 
 /* ---------- shared pieces ---------- */
 function drawHeader(ctx, post) {
-  txt(ctx, up(post.series), M, 150, { size: 41, weight: 700, track: -0.05 });
-  txt(ctx, up(post.subject), W - M, 150, { size: 41, weight: 400, track: -0.05, align: "right", alpha: 0.8 });
+  TF = "post.series"; txt(ctx, up(post.series), M, 150, { size: 41, weight: 700, track: -0.05 });
+  TF = "post.subject"; txt(ctx, up(post.subject), W - M, 150, { size: 41, weight: 400, track: -0.05, align: "right", alpha: 0.8 });
+  TF = null;
 }
 function drawFooter(ctx, post, t, idx, total) {
   const o = { size: 43, weight: 700, track: -0.05 };
-  txt(ctx, `${pad2(idx)}/${pad2(total)}`, M, FOOT_Y, o);
-  txt(ctx, up(fill(t.section, post)), W / 2, FOOT_Y, { ...o, align: "center" });
-  txt(ctx, up(fill(t.foot, post)), W - M, FOOT_Y, { ...o, align: "right" });
+  TF = null; txt(ctx, `${pad2(idx)}/${pad2(total)}`, M, FOOT_Y, o);
+  TF = "text.section"; txt(ctx, up(fill(t.section, post)), W / 2, FOOT_Y, { ...o, align: "center" });
+  TF = "text.foot"; txt(ctx, up(fill(t.foot, post)), W - M, FOOT_Y, { ...o, align: "right" });
+  TF = null;
 }
 const footFor = s => s.p90 <= 105 ? 0 : clamp(1 - 78 / s.p90, 0.15, 0.8);
 function footScrim(A, y0 = 2470, y1 = 2610) { return A ? footFor(A.stats(M, y0, W - M, y1)) : 0; }
@@ -808,7 +938,8 @@ const STICKERS = {
   save: { label: "Save button", type: "pill", icon: "bookmark", text: "SAVE THIS", bg: "#ffffff", size: 96 },
   keyword: { label: "Comment keyword", type: "pill", icon: "comment", text: "COMMENT “SETTINGS”", bg: "#ffffff", size: 96 },
   handle: { label: "Handle tag", type: "pill", icon: "", text: "{handle}", bg: "#111111", size: 84 },
-  actions: { label: "Post action row", type: "row", size: 120 }
+  actions: { label: "Post action row", type: "row", size: 120 },
+  text: { label: "Text", type: "text", text: "YOUR TEXT", size: 90 }
 };
 const STICKER_COLORS = [["#ffffff", "White"], ["#111111", "Black"], ["#e02d12", "Cover red"], ["#ffd23f", "Yellow"]];
 const iconPaths = {};
@@ -850,6 +981,14 @@ function drawStickers(ctx, post, s, hiliteId) {
       let x = -bw / 2 + padX;
       if (icon) { drawIcon(ctx, icon, x + is / 2, 0, is, fg, false); x += is + gap; }
       txt(ctx, label, x, -capH(fs) / 2, { size: fs, weight: 700, track: -0.05, color: fg });
+    } else if (P.type === "text") {
+      const wt = +st.w === 400 ? 400 : 700, lines = up(fill(st.label ?? P.text, post)).split(/\n/).map(x => x.trim()).filter(Boolean), lh = size * 1.06;
+      bh = capH(size) + Math.max(0, lines.length - 1) * lh;
+      ctx.shadowColor = "rgba(0,0,0,.3)"; ctx.shadowBlur = size * 0.12;
+      const tr = Number.isFinite(+st.tr) ? clamp(+st.tr, -0.15, 0.1) : -0.05, al = st.al === "left" || st.al === "right" ? st.al : "center";
+      bw = Math.max(size, ...lines.map(l => richW(ctx, l, size, wt, tr)));
+      const ax = al === "left" ? -bw / 2 : al === "right" ? bw / 2 : 0;   /* lines line up inside the box; the box stays centered on x, y */
+      lines.forEach((l, i) => txt(ctx, l, ax, -bh / 2 + i * lh, { size, weight: wt, track: tr, align: al, color: st.color || "#ffffff" }));
     } else {
       const color = st.color || "#ffffff";
       if (st.shadow !== false) { ctx.shadowColor = "rgba(0,0,0,.38)"; ctx.shadowBlur = size * 0.14; ctx.shadowOffsetY = size * 0.03; }
@@ -884,13 +1023,15 @@ function rowGeo(ctx, row, maxNote = 660) {
   const leftH = (label ? capH(41) : 0) + (lines.length ? (label ? 33 : 0) + capH(37) + (lines.length - 1) * LH : 0);
   return { v, vs, vw, label, lines, h: 46 + Math.max(v ? capH(vs) : 0, leftH) + 50 };
 }
-function drawRow(ctx, g, top) {
+function drawRow(ctx, g, top, f) {   /* f: the fields behind the row's label, note and value, for text boxes */
   const ct = top + 46;
-  if (g.label) txt(ctx, g.label, M, ct, { size: 41, weight: 700, track: -0.05 });
+  TF = f && f.label; if (g.label) txt(ctx, g.label, M, ct, { size: 41, weight: 700, track: -0.05 });
   const nt = ct + (g.label ? capH(41) + 33 : 0);
-  g.lines.forEach((ln, i) => txt(ctx, ln, M, nt + i * LH, { size: 37, weight: 400, track: -0.035, alpha: 0.82 }));
-  if (g.v) txt(ctx, g.v, W - M, ct, { size: g.vs, weight: 700, track: -0.08, align: "right" });
+  TF = f && f.note; g.lines.forEach((ln, i) => txt(ctx, ln, M, nt + i * LH, { size: 37, weight: 400, track: -0.035, alpha: 0.82 }));
+  TF = f && f.value; if (g.v) txt(ctx, g.v, W - M, ct, { size: g.vs, weight: 700, track: -0.08, align: "right" });
+  TF = null;
 }
+const rowFields = pre => ({ label: pre + "label", note: pre + "note", value: pre + "value" });
 function tipGeo(ctx, t, w) {
   const k = up(t.tipK || ""), lines = wrap(ctx, up(t.tip || ""), w, 37, 400, -0.035);
   return { k, lines, w, h: (k ? capH(41) : 0) + (lines.length ? (k ? 26 : 0) + capH(37) + (lines.length - 1) * LH : 0) };
@@ -898,8 +1039,9 @@ function tipGeo(ctx, t, w) {
 function drawTip(ctx, g, x, capTop, align, withRule) {
   if (withRule) { const xl = align === "right" ? x - g.w : x; rule(ctx, capTop - 40, xl, xl + g.w); }
   let y = capTop;
-  if (g.k) { txt(ctx, g.k, x, y, { size: 41, weight: 700, track: -0.05, align }); y += capH(41) + 26; }
-  g.lines.forEach((ln, i) => txt(ctx, ln, x, y + i * LH, { size: 37, weight: 400, track: -0.035, align, alpha: 0.85 }));
+  TF = "text.tipK"; if (g.k) { txt(ctx, g.k, x, y, { size: 41, weight: 700, track: -0.05, align }); y += capH(41) + 26; }
+  TF = "text.tip"; g.lines.forEach((ln, i) => txt(ctx, ln, x, y + i * LH, { size: 37, weight: 400, track: -0.035, align, alpha: 0.85 }));
+  TF = null;
 }
 
 /* ---------- design (auto layout) per template ---------- */
@@ -988,7 +1130,7 @@ function renderSpecs(ctx, post, s, idx, total, d) {
   drawHeader(ctx, post);
   let y = d.tableTop;
   rule(ctx, y);
-  for (const g of d.rows) { drawRow(ctx, g, y); y += g.h; rule(ctx, y); }
+  d.rows.forEach((g, i) => { drawRow(ctx, g, y, rowFields(`text.rows.${i}.`)); y += g.h; rule(ctx, y); });
   if (d.tip.mode === "inline") drawTip(ctx, d.tipIn, M, y + 64, "left", false);
   else if (d.tip.mode === "corner") drawTip(ctx, d.tip.g, d.tip.side === "right" ? W - M : M, d.tip.top, d.tip.side, true);
   drawFooter(ctx, post, t, idx, total);
@@ -1047,12 +1189,14 @@ function renderTitle(ctx, post, s, idx, total, d) {
   const x0 = W / 2 - m.bw / 2, x1 = W / 2 + m.bw / 2;
   let y = d.y;
   if (m.hasSmall) {
-    txt(ctx, up(fill(t.left, post)), x0, y, { size: b.small, weight: 700, track: -0.05 });
-    txt(ctx, up(fill(t.right, post)), x1, y, { size: b.small, weight: 700, track: -0.05, align: "right" });
+    TF = "text.left"; txt(ctx, up(fill(t.left, post)), x0, y, { size: b.small, weight: 700, track: -0.05 });
+    TF = "text.right"; txt(ctx, up(fill(t.right, post)), x1, y, { size: b.small, weight: 700, track: -0.05, align: "right" });
     y += capH(b.small) + b.gap1;
   }
+  TF = s.type === "cover" ? "text.title" : "text.big";
   b.lines.forEach((ln, i) => { txt(ctx, ln, W / 2, y, { size: b.bs, weight: b.baseW, track: -0.10, align: "center" }); y += capH(b.bs) + (i < b.lines.length - 1 ? b.lead * b.bs : 0); });
-  if (m.hasSub) txt(ctx, up(fill(t.sub, post)), W / 2, y + b.gap2, { size: b.sub, weight: s.type === "cover" ? 700 : 400, track: -0.05, align: "center" });
+  TF = "text.sub"; if (m.hasSub) txt(ctx, up(fill(t.sub, post)), W / 2, y + b.gap2, { size: b.sub, weight: s.type === "cover" ? 700 : 400, track: -0.05, align: "center" });
+  TF = null;
   drawFooter(ctx, post, t, idx, total);
 }
 
@@ -1080,8 +1224,8 @@ function renderBA(ctx, post, s, idx, total, d) {
   if (d.sf) shade(ctx, H - 640, H, d.sf, "bottom");
   ctx.fillStyle = "#000"; ctx.fillRect(0, half - 3, W, 6);
   drawHeader(ctx, post);
-  drawRow(ctx, d.ga, d.aTop - 46);
-  drawRow(ctx, d.gb, d.bTop);
+  drawRow(ctx, d.ga, d.aTop - 46, { label: "text.aLabel", note: "text.aNote", value: "text.aValue" });
+  drawRow(ctx, d.gb, d.bTop, { label: "text.bLabel", note: "text.bNote", value: "text.bValue" });
   drawFooter(ctx, post, t, idx, total);
 }
 
@@ -1110,8 +1254,9 @@ function renderPhotoSlide(ctx, post, s, idx, total, d) {
   if (d.scrimFoot) shade(ctx, H - 640, H, d.scrimFoot, "bottom");
   drawHeader(ctx, post);
   let y = d.y;
-  if (t.label) { txt(ctx, up(t.label), M, y, { size: 41, weight: 700, track: -0.05 }); y += capH(41) + 30; }
-  d.lines.forEach((ln, i) => txt(ctx, ln, M, y + i * LH, { size: 37, weight: 400, track: -0.035, alpha: 0.85 }));
+  TF = "text.label"; if (t.label) { txt(ctx, up(t.label), M, y, { size: 41, weight: 700, track: -0.05 }); y += capH(41) + 30; }
+  TF = "text.note"; d.lines.forEach((ln, i) => txt(ctx, ln, M, y + i * LH, { size: 37, weight: 400, track: -0.035, alpha: 0.85 }));
+  TF = null;
   drawFooter(ctx, post, t, idx, total);
 }
 
@@ -1130,7 +1275,7 @@ function renderSlide(cv, post, s, idx, total, scale, forExport, hiliteId) {
   const ctx = cv.getContext("2d");
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
-  OVERLAY = !!s.overlay; RENDER_SCALE = forExport ? 1 : scale;
+  OVERLAY = !!s.overlay; RENDER_SCALE = forExport ? 1 : scale; TB = {}; TF = null;
   if (OVERLAY) { if (!forExport) checker(ctx); } else { ctx.fillStyle = "#100c0b"; ctx.fillRect(0, 0, W, H); }
   const d = design(ctx, post, s);
   if (OVERLAY) d.note = (d.note || "") + " · <b>transparent PNG</b>";
@@ -1138,6 +1283,7 @@ function renderSlide(cv, post, s, idx, total, scale, forExport, hiliteId) {
   else if (s.type === "cover" || s.type === "save") renderTitle(ctx, post, s, idx, total, d);
   else if (s.type === "beforeafter") renderBA(ctx, post, s, idx, total, d);
   else renderPhotoSlide(ctx, post, s, idx, total, d);
+  d.tboxes = TB; TB = null; TF = null;
   d.boxes = drawStickers(ctx, post, s, forExport ? null : hiliteId);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   OVERLAY = false;
@@ -1152,7 +1298,8 @@ const S = {
   dirty: new Set(), writing: new Set(), again: new Set(), timers: new Map(), unsubSlides: null, readOnly: false, errors: 0,
   busy: new Set(), applyCtl: null, notes: "",
   boxes: {}, focusBoxes: [], hilite: null, suppressClick: 0, fsel: null,
-  libQuery: "", pickQuery: "", imgLimits: null, tagBusy: false, tagOff: false, delPlan: null
+  libQuery: "", pickQuery: "", imgLimits: null, tagBusy: false, tagOff: false, delPlan: null,
+  folded: new Set(), ftsel: null, ftboxes: {}, ftfield: null, papp: "ig", pshape: 0.75
 };
 const metaPath = () => `posts/${S.pid}`;
 const slidePath = sid => `posts/${S.pid}/slides/${sid}`;
@@ -1239,8 +1386,10 @@ function drawNow() {
   for (const sid of pendingDraw) {
     const card = document.getElementById("card-" + sid), s = S.slides[sid];
     if (!card || !s) continue;
-    const cv = card.querySelector("canvas"), x = numOf(sid, nm);
+    const cv = card.querySelector(".frame canvas"), x = numOf(sid, nm);
     const d = renderSlide(cv, S.post, s, x.n, x.total, cv.width / W, false, S.hilite);
+    const th = card.querySelector(".thumb");
+    if (th && S.folded.has(sid)) { const tc = th.getContext("2d"); tc.clearRect(0, 0, th.width, th.height); tc.drawImage(cv, 0, 0, th.width, th.height); }
     S.boxes[sid] = d.boxes || [];
     const n = card.querySelector(".autonote");
     if (n) n.innerHTML = d.note ? "Auto layout: " + d.note : "";
@@ -1286,6 +1435,23 @@ function fieldHTML(sid, s) {
       : `<div><label class="lbl" for="${id(k)}">${esc(label)}</label><input class="ctl" id="${id(k)}" data-f="text.${k}" value="${esc(t[k])}"></div>`);
   }
   return parts.join("");
+}
+/* extra text layers (free text on top of the slide), listed under Edit text */
+function layerHTML(sid, s) {
+  const ls = (s.stickers || []).map((st, i) => [st, i]).filter(([st]) => st.kind === "text");
+  return `<div class="rowhead" style="margin-top:4px"><span>Extra text${ls.length ? ` (${ls.length})` : ""}</span></div>`
+    + ls.map(([st, i], n) => `<div class="rowbox"><div class="rowhead"><span>Text ${n + 1}</span><button class="btn ghost sm" data-act="delsticker" data-i="${i}">Remove</button></div>
+      <div><label class="lbl" for="${sid}-tl${i}">Text (**bold**, Enter = new line)</label><textarea class="ctl" id="${sid}-tl${i}" data-f="stickers.${i}.label">${esc(st.label ?? "")}</textarea></div></div>`).join("")
+    + `<button class="btn sm" data-act="addtext" style="justify-self:start">Add text</button><p class="hint" style="margin:0">Extra text sits on top of the slide. Move, resize or turn it in the large view, or in Stickers.</p>`;
+}
+const alignSel = (id, attr, v) => `<select class="ctl" id="${id}" ${attr}>${[["left", "Left"], ["center", "Center"], ["right", "Right"]].map(([k, l]) => `<option value="${k}"${(v || "center") === k ? " selected" : ""}>${l}</option>`).join("")}</select>`;
+const newStickerId = () => "k" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+function addTextLayer(sid, label, extra) {
+  const s = S.slides[sid]; if (!s) return null;
+  remember(sid); s.stickers = s.stickers || [];
+  const st = { id: newStickerId(), kind: "text", label: label || "YOUR TEXT", x: 0.5, y: 0.5, size: 90, rot: 0, w: 700, ...(extra || {}) };
+  s.stickers.push(st); saveSlide(sid);
+  return st;
 }
 function sel(sid, key, label, opts, val) {
   const idv = `${sid}-${key.replace(/\./g, "-")}`;
@@ -1333,8 +1499,8 @@ const WIDE = () => matchMedia("(min-width: 761px)").matches;
 function cardHTML(sid) {
   const s = S.slides[sid], st = s.status || "review";
   const replace = TEMPLATES[s.type].slots.map(slot => `<button class="btn sm" data-act="replace" data-slot="${slot}">${s.type === "beforeafter" ? (slot === "img" ? "Replace before" : "Replace after") : "Replace image"}</button>`).join("");
-  return `<article class="card" id="card-${sid}" data-sid="${sid}" data-st="${st}">
-    <header class="card-h"><span class="num"></span><span class="kind">${esc(TEMPLATES[s.type].label)}</span>
+  return `<article class="card${S.folded.has(sid) ? " folded" : ""}" id="card-${sid}" data-sid="${sid}" data-st="${st}">
+    <header class="card-h"><button class="icon fold" data-act="fold" aria-expanded="${!S.folded.has(sid)}" aria-label="${S.folded.has(sid) ? "Open" : "Fold"} this slide">${ICON.down}</button><canvas class="thumb" width="68" height="102" data-act="fold" aria-hidden="true"></canvas><span class="num"></span><span class="kind">${esc(TEMPLATES[s.type].label)}</span>
       <div class="card-tools"><button class="icon" data-act="left" aria-label="Move earlier">${ICON.left}</button><button class="icon" data-act="right" aria-label="Move later">${ICON.right}</button>
       <div class="more"><button class="icon" data-act="menu" aria-label="More actions" aria-expanded="false">${ICON.more}</button></div></div></header>
     <div class="stick"><button class="frame" data-act="focus" aria-label="Open this slide large"><canvas width="600" height="900"></canvas></button><div class="ctrash" aria-hidden="true" hidden>${TRASH}</div></div>
@@ -1345,7 +1511,7 @@ function cardHTML(sid) {
       <div class="status" role="group" aria-label="Review status">${STATUS.map(([v, l]) => `<button data-act="status" data-v="${v}" aria-pressed="${st === v}">${l}</button>`).join("")}</div>
       <div><label class="lbl" for="${sid}-comment">Comment for Claude</label><textarea class="ctl" id="${sid}-comment" data-f="comment" placeholder="What should change on this slide?">${esc(s.comment)}</textarea></div>
       <div class="applybar">${applyBtnHTML(sid, s)}</div></div></details>
-    <details class="txt"><summary>Edit text</summary><div class="fields">${fieldHTML(sid, s)}</div></details>
+    <details class="txt"><summary>Edit text</summary><div class="fields">${fieldHTML(sid, s)}${layerHTML(sid, s)}</div></details>
     <details class="pho"><summary>Edit photo</summary><div class="fields">${editHTML(sid, s)}</div></details>
     <details class="stk"><summary>Stickers${(s.stickers || []).length ? ` (${s.stickers.length})` : ""}</summary><div class="fields">${stickerHTML(sid, s)}</div></details>
     <details class="lay"><summary>Layout and framing</summary><div class="fields">${layoutHTML(sid, s)}</div></details>
@@ -1357,7 +1523,18 @@ function renumber() {
   for (const [sid, x] of nm) { const c = document.getElementById("card-" + sid); if (c) c.querySelector(".num").innerHTML = `${pad2(x.n)}<span>/${pad2(x.total)}</span>${x.of > 1 ? `<em class="ver" title="Version ${x.v} of slide ${pad2(x.n)}">V${x.v}</em>` : ""}`; }
 }
 /* phones: a card with an open section keeps its slide pinned at the top (see .card.editing in the styles) */
-const syncEditing = card => card.classList.toggle("editing", $$("details", card).some(d => d.open));
+const syncEditing = card => card.classList.toggle("editing", !card.classList.contains("folded") && $$("details", card).some(d => d.open));
+/* folding: a folded card is just its header row with a thumbnail. Remembered per post on this device. */
+const foldKey = () => "carousel-artboard:folded:" + S.pid;
+function loadFolds() { try { S.folded = new Set(JSON.parse(localStorage.getItem(foldKey()) || "[]")); } catch (e) { S.folded = new Set(); } }
+function saveFolds() { try { localStorage.setItem(foldKey(), JSON.stringify([...S.folded])); } catch (e) {} }
+function setFold(sid, on) {
+  if (on) S.folded.add(sid); else S.folded.delete(sid);
+  const c = document.getElementById("card-" + sid);
+  if (c) { c.classList.toggle("folded", on); const b = c.querySelector(".fold"); b.setAttribute("aria-expanded", String(!on)); b.setAttribute("aria-label", on ? "Open this slide" : "Fold this slide"); syncEditing(c); }
+  scheduleDraw(sid); queueBar(); updateFoldAll();
+}
+function updateFoldAll() { const b = $("#foldAll"), o = order(); if (b) b.textContent = o.length && o.every(id => S.folded.has(id)) ? "Open all slides" : "Fold all slides"; }
 document.addEventListener("toggle", e => { const c = e.target.closest && e.target.closest(".card"); if (c) { syncEditing(c); queueBar(); } }, true);
 function renderBoard(rebuild) {
   const board = $("#board");
@@ -1376,7 +1553,7 @@ function renderBoard(rebuild) {
   }
   $$(".card", board).forEach(c => { if (!S.slides[c.dataset.sid]) c.remove(); });
   o.forEach(sid => board.appendChild(document.getElementById("card-" + sid)));
-  renumber();
+  renumber(); updateFoldAll();
   scheduleDraw(); queueBar();
   $("#dlAll").disabled = !o.length;
   updateApplyAll();
@@ -1403,6 +1580,7 @@ function renderMain() {
         <div><label class="lbl" for="m-handle">Your handle</label><input class="ctl" id="m-handle" data-m="handle"></div>
       </div>
       <div class="actions" style="padding-bottom:10px"><button class="btn ghost sm danger" id="delPost">Delete this post</button></div></details>
+    <div class="boardtools"><button class="btn ghost sm" id="foldAll">Fold all slides</button><span class="hint">Tap the arrow on a slide to fold or open just that one.</span></div>
     <section class="board" id="board" aria-label="Slides"></section>
     <div class="actions" style="padding-bottom:26px"><label class="lbl sr" for="addType">Slide type</label>
       <select class="ctl" id="addType" style="width:auto">${Object.entries(TEMPLATES).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join("")}</select>
@@ -1462,6 +1640,7 @@ function onField(el) {
   if (/^img2?\./.test(f) && !s[f.split(".")[0]]) return;
   if (f !== "comment") remember(sid, f);
   setPath(s, f, v);
+  if (/^stickers\.\d+\.label$/.test(f)) card.querySelectorAll(`[data-f="${f}"]`).forEach(x => { if (x !== el) x.value = v; });
   saveSlide(sid);
   if (f === "comment") {
     const b = card.querySelector('[data-act="apply"]'); if (b) b.disabled = !String(v).trim() || S.busy.has(sid);
@@ -1530,8 +1709,9 @@ document.addEventListener("click", e => {
   if (pf) { S.pickFolder = pf.dataset.pf; renderPicker(); return; }
   const lb = t.closest("[data-lib]");
   if (lb) return libAction(lb.dataset.lib, lb);
-  const b = t.closest("[data-act],[data-close],[data-newpost],#dlAll,#applyAll,#addSlide,#copyAll,#newPost,#fPrev,#fNext,#delPost,#notesClose,#overallOk,#newFolderBtn,#folderCancel,#tagBtn");
-  if (!b) { closeMenus(); return; }
+  const b = t.closest("[data-act],[data-close],[data-newpost],#dlAll,#applyAll,#addSlide,#copyAll,#newPost,#fPrev,#fNext,#delPost,#notesClose,#overallOk,#newFolderBtn,#folderCancel,#tagBtn,#foldAll");
+  if (!b) { if (!t.closest(".more")) closeMenus(); return; }
+  if (b.id === "foldAll") { const o = order(), all = o.every(id => S.folded.has(id)); o.forEach(id => setFold(id, !all)); saveFolds(); return; }
   if (b.hasAttribute("data-close")) { b.closest("dialog").close(); return; }
   if (b.id === "tagBtn") return tagPhotos([...S.photos.keys()].filter(id => !Array.isArray(S.photos.get(id).tags)), true);
   if (b.dataset.newpost) { closeMenus(); return newPost(b.dataset.newpost); }
@@ -1550,7 +1730,8 @@ document.addEventListener("click", e => {
   const card = b.closest(".card"); if (!card) return;
   const sid = card.dataset.sid, s = S.slides[sid], act = b.dataset.act;
   if (act !== "menu" && act !== "del" && act !== "delok") closeMenus();
-  if (act === "focus") { if (Date.now() - S.suppressClick > 450) openFocus(sid); }
+  if (act === "fold") { setFold(sid, !S.folded.has(sid)); saveFolds(); }
+  else if (act === "focus") { if (Date.now() - S.suppressClick > 450) openFocus(sid); }
   else if (act === "replace") openPicker(sid, b.dataset.slot);
   else if (act === "autofit") { remember(sid); s.layout = {}; saveSlide(sid); renderBoard(new Set([sid])); toast("Text re-fitted to the photo"); }
   else if (act === "png") exportOne(sid);
@@ -1572,6 +1753,7 @@ document.addEventListener("click", e => {
   else if (act === "undo") undoApply(sid);
   else if (act === "keep") { delete s.undo; delete s.applied; saveSlide(sid); refreshApplySlot(sid); }
   else if (act === "addsticker") openStickers(sid);
+  else if (act === "addtext") { addTextLayer(sid); renderBoard(new Set([sid])); const c = document.getElementById("card-" + sid), d = c && c.querySelector("details.txt"); if (d) d.open = true; toast("Text added. Move it in the large view"); }
   else if (act === "delsticker") { const st = (s.stickers || [])[+b.dataset.i]; if (st) removeSticker(sid, st.id); }
   else if (act === "resetadj") { if (s[b.dataset.slot]) { remember(sid); delete s[b.dataset.slot].adj; saveSlide(sid); renderBoard(new Set([sid])); } }
   else if (act === "adjall") copyEditsToAll(sid, b.dataset.slot);
@@ -1709,15 +1891,17 @@ function editHTML(sid, s) {
 }
 function stickerHTML(sid, s) {
   const list = (s.stickers || []).map((st, i) => {
-    const P = STICKERS[st.kind] || { label: st.kind, type: "icon" }, pill = P.type === "pill";
+    const P = STICKERS[st.kind] || { label: st.kind, type: "icon" }, pill = P.type === "pill", isText = P.type === "text";
     const cur = String(pill ? (st.bg || P.bg) : (st.color || "#ffffff")).toLowerCase();
     const opts = STICKER_COLORS.map(([v, l]) => `<option value="${v}"${cur === v ? " selected" : ""}>${l}</option>`).join("") + (STICKER_COLORS.some(([v]) => v === cur) ? "" : `<option value="${esc(cur)}" selected>Custom</option>`);
     const color = `<div><label class="lbl" for="${sid}-st${i}-c">${pill ? "Button color" : "Color"}</label><select class="ctl" id="${sid}-st${i}-c" data-f="stickers.${i}.${pill ? "bg" : "color"}">${opts}</select></div>`;
     const extra = pill ? `<div><label class="lbl" for="${sid}-st${i}-l">Text</label><input class="ctl" id="${sid}-st${i}-l" data-f="stickers.${i}.label" value="${esc(st.label ?? P.text)}"></div>`
+      : isText ? `<div><label class="lbl" for="${sid}-st${i}-w">Weight</label><select class="ctl" id="${sid}-st${i}-w" data-f="stickers.${i}.w"><option value="700"${+st.w === 400 ? "" : " selected"}>Bold</option><option value="400"${+st.w === 400 ? " selected" : ""}>Regular</option></select></div><div><label class="lbl" for="${sid}-st${i}-al">Align</label>${alignSel(`${sid}-st${i}-al`, `data-f="stickers.${i}.al"`, st.al)}</div>`
       : `<label class="check" style="align-self:end;min-height:40px;align-items:center"><input type="checkbox" id="${sid}-st${i}-s" data-f="stickers.${i}.solid" data-bool${(P.type === "row" ? st.solid !== false : st.solid) ? " checked" : ""}><span>${P.type === "row" ? "Filled bookmark" : "Filled"}</span></label>`;
     return `<div class="rowbox"><div class="rowhead"><span>${esc(P.label)}</span><button class="btn ghost sm" data-act="delsticker" data-i="${i}">Remove</button></div>
       <div class="two">${rng(sid, `stickers.${i}.x`, "Left / right", 0, 1, 0.005, st.x ?? 0.5, "pct")}${rng(sid, `stickers.${i}.y`, "Up / down", 0, 1, 0.005, st.y ?? 0.8, "pct")}</div>
-      <div class="two">${rng(sid, `stickers.${i}.size`, "Size", 40, 600, 2, st.size || P.size, "px")}${rng(sid, `stickers.${i}.rot`, "Rotate", -180, 180, 1, st.rot || 0, "deg")}</div>
+      ${isText ? `<div><label class="lbl" for="${sid}-st${i}-t">Text (**bold**, Enter = new line)</label><textarea class="ctl" id="${sid}-st${i}-t" data-f="stickers.${i}.label">${esc(st.label ?? P.text)}</textarea></div>` : ""}
+      <div class="two">${rng(sid, `stickers.${i}.size`, isText ? "Text size" : "Size", 40, 600, 2, st.size || P.size, "px")}${rng(sid, `stickers.${i}.rot`, "Rotate", -180, 180, 1, st.rot || 0, "deg")}</div>
       <div class="two">${color}${extra}</div></div>`;
   }).join("");
   return `${list}<button class="btn sm" data-act="addsticker">Add sticker</button><p class="hint" style="margin:0">Drag a sticker on the slide to move it. On a phone, tap the slide to open it large: there you can drag, pinch to resize, twist to rotate, and drop a sticker on the bin to delete it.</p>`;
@@ -1735,6 +1919,7 @@ function removeSticker(sid, id) {
   const [gone] = s.stickers.splice(i, 1);
   if (S.fsel === id) S.fsel = null;
   saveSlide(sid); renderBoard(new Set([sid])); updateFocusUI();
+  if (focusSid === sid && S.fpanel === "text") renderFPanel();
   toast(`${(STICKERS[gone.kind] || { label: "Sticker" }).label} deleted`, () => stepHistory(sid, true));
 }
 let stickFor = null;
@@ -1749,6 +1934,7 @@ function previewSticker(cv, kind) {
   const ctx = cv.getContext("2d"), P = STICKERS[kind];
   ctx.fillStyle = "#2b2626"; ctx.fillRect(0, 0, cv.width, cv.height);
   let bw = P.size * (P.type === "row" ? 6.2 : 1);
+  if (P.type === "text") bw = measureW(ctx, P.text, P.size, 700, -0.05);
   if (P.type === "pill") { const fs = P.size * 0.4; bw = P.size + (P.icon ? P.size * 0.66 : 0) + measureW(ctx, up(fill(P.text, S.post)), fs, 700, -0.05); }
   const k = Math.min(cv.height * 0.55 / P.size, cv.width * 0.86 / bw);
   ctx.setTransform(k, 0, 0, k, cv.width / 2 - k * W / 2, cv.height / 2 - k * H / 2);
@@ -1797,7 +1983,7 @@ const sizeOf = st => +st.size || STICKERS[st.kind].size;
 /* cards: mouse only, so a finger on a card still scrolls the page */
 let drag = null;
 document.addEventListener("pointerdown", e => {
-  const cv = e.target.closest && e.target.closest(".card canvas"); if (!cv || e.pointerType === "touch" || e.button !== 0) return;
+  const cv = e.target.closest && e.target.closest(".card .frame canvas"); if (!cv || e.pointerType === "touch" || e.button !== 0) return;
   const sid = cv.closest(".card").dataset.sid, s = S.slides[sid]; if (!s) return;
   const [x, y] = frameXY(cv, e), st = stickerAt(s, S.boxes[sid] || [], x, y);
   if (!st) return;
@@ -1846,9 +2032,13 @@ fcv.addEventListener("pointerdown", e => {
   try { fcv.setPointerCapture(e.pointerId); } catch (err) {}
   const p = frameXY(fcv, e); fpts.set(e.pointerId, p);
   if (fpts.size === 1) {
-    const st = stickerAt(s, S.focusBoxes, p[0], p[1]);
-    S.fsel = st ? st.id : null; fg = null; fgRem = false;
+    const st = stickerAt(s, S.focusBoxes, p[0], p[1]), tf = st ? null : textAt(p[0], p[1]);
+    fg = null; fgRem = false;
+    if (!st && !tf && S.fpanel === "text" && S.ftfield) return;   /* a tap beside the text while typing keeps the editor on it */
+    S.fsel = st ? st.id : null; S.ftsel = tf;
     if (st) fDragFrom(st, p, [e.clientX, e.clientY]);
+    const nf = st ? (st.kind === "text" ? "layer:" + st.id : null) : tf;
+    if (S.fpanel === "text" && S.ftfield && nf && nf !== S.ftfield) { const typing = $("#fPanel").contains(document.activeElement); S.ftfield = nf; renderFPanel(); if (typing) focusEditor(); }
     drawFocus();
   } else if (fpts.size === 2) {
     const [a, b] = [...fpts.values()], mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
@@ -1969,7 +2159,7 @@ rot.addEventListener("keydown", e => {
 function updateFocusUI() {
   const st = focusSid && selSticker(), del = $("#fDel"), busy = !!(fg && fg.moved);
   rail.hidden = rot.hidden = !st; del.hidden = !st || busy;
-  updateHistUI();
+  updateHistUI(); updateTextUI();
   if (!st) return;
   placeRail(st, false); placeRot(st, false);
   const box = (S.focusBoxes || []).find(b => b.id === st.id), k = fcv.clientWidth / W;
@@ -1977,12 +2167,17 @@ function updateFocusUI() {
   del.style.left = clamp(box.x1 * k - 18, 0, fcv.clientWidth - 36) + "px";
   del.style.top = clamp(box.y0 * k - 18, 0, fcv.clientHeight - 36) + "px";
 }
-/* Edit photo in the large view: pick an adjustment, move its slider (or type the value), see it on the big slide */
+/* the panel under the slide in the large view: Edit photo (S.fpanel "photo") or Text ("text"); false when closed.
+   Edit photo: pick an adjustment, move its slider (or type the value), see it on the big slide. */
 S.fpanel = false; S.fslot = "img"; S.fadj = "exposure";
 function renderFPanel() {
   const el = $("#fPanel"), s = S.slides[focusSid];
-  $("#fEdit").setAttribute("aria-pressed", String(S.fpanel));
-  el.hidden = !S.fpanel; if (!S.fpanel || !s) return;
+  $("#fEdit").setAttribute("aria-pressed", String(S.fpanel === "photo"));
+  $("#fTextBtn").setAttribute("aria-pressed", String(S.fpanel === "text"));
+  if (S.fpanel === "text" && s && S.ftfield && !fieldPath(s, S.ftfield)) S.ftfield = null;
+  el.hidden = !S.fpanel || !s; el.classList.toggle("text", S.fpanel === "text"); el.classList.toggle("one", S.fpanel === "text" && !!S.ftfield);
+  if (!S.fpanel || !s) return;
+  if (S.fpanel === "text") { el.innerHTML = textPanelHTML(s); return; }
   const slots = TEMPLATES[s.type].slots.filter(k => s[k]);
   if (s.overlay || !slots.length) { el.innerHTML = `<p class="hint">${s.overlay ? "This slide is a text-only overlay, so there's no photo to edit." : "Add a photo to this slide first."}</p>`; return; }
   if (!slots.includes(S.fslot)) S.fslot = slots[0];
@@ -1994,14 +2189,20 @@ function renderFPanel() {
       <button type="button" class="btn ghost sm" id="fAdjReset">Reset</button></div>`;
   const chip = el.querySelector('[data-fadj][aria-pressed="true"]'); if (chip) chip.scrollIntoView({ block: "nearest", inline: "nearest" });
 }
-$("#fEdit").addEventListener("click", () => { S.fpanel = !S.fpanel; renderFPanel(); drawFocus(); });
+$("#fEdit").addEventListener("click", () => { S.fpanel = S.fpanel === "photo" ? false : "photo"; renderFPanel(); drawFocus(); });
+$("#fTextBtn").addEventListener("click", () => {
+  const open = S.fpanel === "text" && !S.ftfield;
+  S.fpanel = open ? false : "text"; S.ftfield = null; renderFPanel(); drawFocus();
+});
 $("#fPanel").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
-  if (b.dataset.fslot) { S.fslot = b.dataset.fslot; renderFPanel(); }
+  if (b.dataset.fact) onFact(b);
+  else if (b.dataset.fslot) { S.fslot = b.dataset.fslot; renderFPanel(); }
   else if (b.dataset.fadj) { S.fadj = b.dataset.fadj; renderFPanel(); }
   else if (b.id === "fAdjReset") { const r = $("#fAdj"); r.value = 0; r.dispatchEvent(new Event("input", { bubbles: true })); }
 });
 $("#fPanel").addEventListener("input", e => {
+  if (e.target.dataset.ff) return onFF(e.target);
   if (e.target.id !== "fAdj") return;
   const s = S.slides[focusSid], slot = S.fslot, k = S.fadj; if (!s || !s[slot]) return;
   remember(focusSid, `${slot}.adj.${k}`);
@@ -2010,6 +2211,186 @@ $("#fPanel").addEventListener("input", e => {
   setRange(`${focusSid}-${slot}-adj-${k}`, v);
   const i = $(`#fPanel [data-fadj="${k}"] i`); if (i) i.textContent = FMT.signed(v);
 });
+
+/* ---------- text in the large view ----------
+   Tap any text on the slide to select it (the renderer reports where it drew each field), then Edit it in a small editor
+   under the slide, or Duplicate it: a settings row is copied as a new row, anything else becomes extra text you can drag.
+   The Text button lists all of the slide's text. Field refs: "text.title", "text.rows.1.value", "post.series", "layer:<sticker id>". */
+const PEN_I = `<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>`;
+const DUP_I = `<svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>`;
+const HEAD_FIELDS = { "post.series": "Header, left (every slide)", "post.subject": "Header, right (every slide)" };
+function textAt(x, y) {   /* the text nearest the tap, within about 14 screen pixels; a tie goes to the smaller box */
+  const k = fcv.clientWidth / W || 1, tol = 14 / k;
+  let best = null, bd = Infinity, ba = Infinity;
+  for (const [f, b] of Object.entries(S.ftboxes || {})) {
+    const d = Math.hypot(Math.max(b.x0 - x, 0, x - b.x1), Math.max(b.y0 - y, 0, y - b.y1)), a = (b.x1 - b.x0) * (b.y1 - b.y0);
+    if (d <= tol && (d < bd - 0.5 || (Math.abs(d - bd) <= 0.5 && a < ba))) { best = f; bd = d; ba = a; }
+  }
+  return best;
+}
+/* a field ref as a path into the slide (or the post, for the header), or null once that field is gone */
+function fieldPath(s, f) {
+  if (!f || !s) return null;
+  if (HEAD_FIELDS[f]) return f;
+  if (f.startsWith("layer:")) { const i = (s.stickers || []).findIndex(t => t.id === f.slice(6) && t.kind === "text"); return i < 0 ? null : `stickers.${i}.label`; }
+  const m = f.match(/^text\.rows\.(\d+)\.(label|value|note)$/);
+  if (m) return ((s.text || {}).rows || [])[+m[1]] ? f : null;
+  return (FIELDS[s.type] || []).some(d => Array.isArray(d) && "text." + d[0] === f) ? f : null;
+}
+function fieldInfo(s, path) {   /* label, current value, and "line" or "area" */
+  if (HEAD_FIELDS[path]) return { label: HEAD_FIELDS[path], value: S.post[path.slice(5)] ?? "", kind: "line" };
+  let m = path.match(/^text\.rows\.(\d+)\.(label|value|note)$/);
+  if (m) return { label: `Row ${+m[1] + 1}, ${{ label: "label", value: "big value", note: "why (small text)" }[m[2]]}`, value: s.text.rows[+m[1]][m[2]] ?? "", kind: m[2] === "note" ? "area" : "line" };
+  m = path.match(/^stickers\.(\d+)\.label$/);
+  if (m) return { label: `Extra text ${s.stickers.slice(0, +m[1] + 1).filter(t => t.kind === "text").length} (**bold**, Enter = new line)`, value: s.stickers[+m[1]].label ?? "", kind: "area" };
+  const k = path.slice(5), d = FIELDS[s.type].find(x => Array.isArray(x) && x[0] === k);
+  return { label: d ? d[1] : k, value: (s.text || {})[k] ?? "", kind: d && d[2] === "area" ? "area" : "line" };
+}
+const ffId = path => "ff-" + path.replace(/\./g, "-");
+function ffInput(s, path, label) {
+  const v = fieldInfo(s, path);
+  return `<label class="lbl" for="${ffId(path)}">${esc(label || v.label)}</label>` + (v.kind === "area"
+    ? `<textarea class="ctl" id="${ffId(path)}" data-ff="${path}" rows="2">${esc(v.value)}</textarea>`
+    : `<input class="ctl" id="${ffId(path)}" data-ff="${path}" value="${esc(v.value)}" enterkeyhint="done" autocomplete="off">`);
+}
+function textPanelHTML(s) {
+  if (S.ftfield) return `<div class="fone">${ffInput(s, fieldPath(s, S.ftfield))}<div class="actions"><button type="button" class="btn sm" data-fact="dup">${DUP_I}Duplicate</button><button type="button" class="btn sm" data-fact="all">All text</button><span class="grow"></span><button type="button" class="btn primary sm" data-fact="done">Done</button></div></div>`;
+  const t = s.text || {}, out = [`<h4>This slide</h4>`];
+  for (const d of FIELDS[s.type]) {
+    if (d !== "ROWS") { out.push(`<div>${ffInput(s, "text." + d[0])}</div>`); continue; }
+    (t.rows || []).forEach((r, i) => out.push(`<div class="rowbox"><div class="rowhead"><span>Row ${i + 1}</span><button type="button" class="btn ghost sm" data-fact="delrow" data-i="${i}">Remove</button></div>
+      <div class="two"><div>${ffInput(s, `text.rows.${i}.label`, "Label")}</div><div>${ffInput(s, `text.rows.${i}.value`, "Big value")}</div></div><div>${ffInput(s, `text.rows.${i}.note`, "Why (small text)")}</div></div>`));
+    if ((t.rows || []).length < 4) out.push(`<button type="button" class="btn sm" data-fact="addrow" style="justify-self:start">Add a row</button>`);
+  }
+  out.push(`<h4>Extra text</h4>`);
+  (s.stickers || []).forEach((st, i) => {
+    if (st.kind === "text") out.push(`<div class="rowbox"><div>${ffInput(s, `stickers.${i}.label`)}</div><div class="rowhead"><select class="ctl" id="ff-stickers-${i}-w" data-ff="stickers.${i}.w" aria-label="Weight" style="width:auto"><option value="700"${+st.w === 400 ? "" : " selected"}>Bold</option><option value="400"${+st.w === 400 ? " selected" : ""}>Regular</option></select>${alignSel(`ff-stickers-${i}-al`, `data-ff="stickers.${i}.al" aria-label="Align" style="width:auto"`, st.al)}<span class="grow"></span><button type="button" class="btn ghost sm" data-fact="dellayer" data-id="${esc(st.id)}">Remove</button></div></div>`);
+  });
+  out.push(`<button type="button" class="btn sm" data-fact="addtext" style="justify-self:start">Add text</button>`);
+  out.push(`<h4>Header (every slide)</h4><div class="two"><div>${ffInput(s, "post.series")}</div><div>${ffInput(s, "post.subject")}</div></div>`);
+  return out.join("");
+}
+/* typing in the Text panel: the slide redraws as you type, and the card's own fields follow */
+function onFF(el) {
+  const sid = focusSid, s = S.slides[sid], path = el.dataset.ff; if (!s || !path) return;
+  if (HEAD_FIELDS[path]) {
+    const k = path.slice(5); S.post[k] = el.value; saveMeta();
+    $$(`[data-m="${k}"]`).forEach(x => { x.value = el.value; });
+    scheduleDraw(); return;
+  }
+  const v = /\.w$/.test(path) ? (+el.value === 400 ? 400 : 700) : el.value;
+  remember(sid, path); setPath(s, path, v); saveSlide(sid); scheduleDraw(sid);
+  const card = document.getElementById("card-" + sid);
+  if (card) card.querySelectorAll(`[data-f="${path}"]`).forEach(x => { x.value = v; });
+  if (path === "text.section") renderLibrary();
+}
+function closeTextEditor() { S.fpanel = false; S.ftfield = null; renderFPanel(); drawFocus(); }
+function onFact(b) {
+  const sid = focusSid, s = S.slides[sid], a = b.dataset.fact; if (!s) return;
+  if (a === "done") closeTextEditor();
+  else if (a === "all") { S.ftfield = null; renderFPanel(); drawFocus(); }
+  else if (a === "dup") duplicateText(S.ftfield);
+  else if (a === "addrow") {
+    remember(sid); s.text = s.text || {}; s.text.rows = s.text.rows || []; s.text.rows.push({ label: "SETTING", value: "VALUE", note: "" });
+    saveSlide(sid); renderBoard(new Set([sid])); renderFPanel();
+    const el = document.getElementById(ffId(`text.rows.${s.text.rows.length - 1}.label`)); if (el) { el.focus(); el.select(); }
+  } else if (a === "delrow") {
+    const i = +b.dataset.i; remember(sid); s.text.rows.splice(i, 1); S.ftsel = null;
+    saveSlide(sid); renderBoard(new Set([sid])); renderFPanel();
+    toast(`Row ${i + 1} removed`, () => stepHistory(sid, true));
+  } else if (a === "addtext") {
+    const n = (s.stickers || []).filter(t => t.kind === "text").length, st = addTextLayer(sid, "", { y: clamp(0.42 + 0.08 * n, 0.1, 0.9) });
+    S.fsel = st.id; S.ftsel = null; renderBoard(new Set([sid])); renderFPanel();
+    const el = document.getElementById(ffId(fieldPath(s, "layer:" + st.id))); if (el) { el.focus(); el.select(); }
+    toast("Text added. Drag it where you want it");
+  } else if (a === "dellayer") removeSticker(sid, b.dataset.id);
+}
+$("#fPanel").addEventListener("keydown", e => {
+  if (e.key !== "Enter" || e.target.tagName !== "INPUT" || !e.target.dataset.ff) return;
+  e.preventDefault();
+  if (S.ftfield) closeTextEditor(); else e.target.blur();
+});
+/* the dashed box around the selected text, and its Edit / Duplicate bar (under the text, or over it near the bottom) */
+let barKey = "";
+const selRef = () => { const st = selSticker(); return st ? (st.kind === "text" ? "layer:" + st.id : null) : S.ftsel; };
+function updateTextUI() {
+  const tsel = $("#fTsel"), bar = $("#fBar"), k = fcv.clientWidth / W, st = focusSid && selSticker();
+  const layer = st && st.kind === "text" ? st : null;
+  const box = layer ? (S.focusBoxes || []).find(b => b.id === layer.id) : st ? null : (S.ftboxes || {})[S.ftsel];
+  if (!box || !k || (fg && fg.moved) || railDrag || rotDrag) { tsel.hidden = bar.hidden = true; return; }
+  const pad = 6, sw = fcv.clientWidth, sh = fcv.clientHeight;
+  tsel.hidden = !!layer;   /* a text layer is outlined on the slide like any sticker */
+  if (!layer) Object.assign(tsel.style, { left: box.x0 * k - pad + "px", top: box.y0 * k - pad + "px", width: (box.x1 - box.x0) * k + 2 * pad + "px", height: (box.y1 - box.y0) * k + 2 * pad + "px" });
+  const ref = selRef();
+  if (S.fpanel === "text" && S.ftfield === ref) { bar.hidden = true; return; }   /* already open in the editor */
+  const row = /^text\.rows\./.test(ref), key = row ? "row" : "text";
+  if (barKey !== key) {
+    barKey = key;
+    bar.innerHTML = `<button type="button" data-fbar="edit">${PEN_I}Edit</button><button type="button" data-fbar="dup">${DUP_I}${row ? "Duplicate row" : "Duplicate"}</button>${row ? `<button type="button" class="del" data-fbar="delrow">${TRASH}Delete row</button>` : ""}`;
+  }
+  bar.hidden = false;
+  const bw = bar.offsetWidth, bh = bar.offsetHeight;
+  let y = box.y1 * k + pad + 8;
+  if (y + bh > sh - 4) y = box.y0 * k - pad - 8 - bh;
+  bar.style.left = clamp((box.x0 + box.x1) / 2 * k, bw / 2 + 4, Math.max(bw / 2 + 4, sw - bw / 2 - 4)) + "px";
+  bar.style.top = clamp(y, 4, Math.max(4, sh - bh - 4)) + "px";
+}
+$("#fBar").addEventListener("click", e => {
+  const b = e.target.closest("[data-fbar]"); if (!b || !focusSid) return;
+  if (b.dataset.fbar === "edit") openTextEditor();
+  else if (b.dataset.fbar === "dup") duplicateText(selRef());
+  else deleteRowSel();
+});
+function openTextEditor() {
+  const ref = selRef(); if (!ref) return;
+  S.fpanel = "text"; S.ftfield = ref; renderFPanel(); drawFocus(); focusEditor();
+}
+function focusEditor() {
+  const el = $("#fPanel .fone [data-ff]"); if (!el) return;
+  el.focus({ preventScroll: true });
+  try { const n = el.value.length; el.setSelectionRange(n, n); } catch (e) {}
+}
+/* Duplicate: a settings row is copied as a new row under it (a slide holds up to 4); a text layer is copied as is; any other text
+   becomes extra text with the same size and weight, just under the original. The copy is selected, ready to drag or edit. */
+function duplicateText(ref) {
+  const sid = focusSid, s = S.slides[sid], path = fieldPath(s, ref); if (!path) return;
+  let copy = null, msg = "";
+  const m = path.match(/^text\.rows\.(\d+)\.(\w+)$/), rows = (s.text || {}).rows || [];
+  if (ref.startsWith("layer:")) {
+    const st = s.stickers.find(t => t.id === ref.slice(6)), box = (S.focusBoxes || []).find(b => b.id === st.id);
+    remember(sid);
+    const c = { ...clone(st), id: newStickerId(), y: box ? clamp(freeSpot(box, box.x1 - box.x0, box.y1 - box.y0) / H, 0.03, 0.97) : clamp((st.y ?? 0.5) + 0.06, 0.03, 0.97) };
+    s.stickers.push(c); saveSlide(sid);
+    S.fsel = c.id; S.ftsel = null; copy = "layer:" + c.id; msg = "Text copied. Drag it where you want it";
+  } else if (m && rows.length < 4) {
+    const i = +m[1]; remember(sid); rows.splice(i + 1, 0, clone(rows[i])); saveSlide(sid);
+    S.fsel = null; S.ftsel = copy = `text.rows.${i + 1}.${m[2]}`; msg = `Row ${i + 2} added, a copy of row ${i + 1}. It's under Edit text too`;
+  } else {
+    const b = (S.ftboxes || {})[path]; if (!b) { toast("Type some text first"); return; }
+    const lines = b.lines.length > 1 ? b.lines : [String(fieldInfo(s, path).value)];
+    const size = Math.round(clamp(b.size, 30, 600)), hh = capH(size) + (lines.length - 1) * size * 1.06;
+    const c = addTextLayer(sid, lines.join("\n"), { x: clamp((b.x0 + b.x1) / 2 / W, 0.03, 0.97), y: clamp(freeSpot(b, b.x1 - b.x0, hh) / H, 0.03, 0.97), size, w: b.w === 400 ? 400 : 700, tr: b.tr ?? -0.05, al: b.al || "left" });
+    S.fsel = c.id; S.ftsel = null; copy = "layer:" + c.id;
+    msg = m ? "This slide has 4 rows already, so the copy is extra text. Drag it where you want it" : "Copy added as extra text, under Edit text. Drag it where you want it";
+  }
+  if (S.fpanel === "text" && S.ftfield) S.ftfield = copy;   /* from the editor: keep typing, now in the copy */
+  renderBoard(new Set([sid])); if (S.fpanel === "text") renderFPanel(); drawFocus();
+  toast(msg);
+}
+/* where a copy of box b (w × h) goes: the first spot under it that's clear of other text and stickers, else over it, else just under */
+function freeSpot(b, w, h) {
+  const cx = (b.x0 + b.x1) / 2, others = [...Object.values(S.ftboxes || {}), ...(S.focusBoxes || [])].filter(o => o !== b);
+  const clear = cy => !others.some(o => cx + w / 2 > o.x0 && cx - w / 2 < o.x1 && cy + h / 2 > o.y0 - 20 && cy - h / 2 < o.y1 + 20);
+  for (let cy = b.y1 + 40 + h / 2; cy + h / 2 <= H - 160; cy += 30) if (clear(cy)) return cy;
+  for (let cy = b.y0 - 40 - h / 2; cy - h / 2 >= 230; cy -= 30) if (clear(cy)) return cy;
+  return b.y1 + 40 + h <= H - 160 ? b.y1 + 40 + h / 2 : b.y0 - 40 - h / 2;
+}
+function deleteRowSel() {
+  const sid = focusSid, s = S.slides[sid], m = String(S.ftsel || "").match(/^text\.rows\.(\d+)\./); if (!s || !m) return;
+  const i = +m[1]; remember(sid); s.text.rows.splice(i, 1); S.ftsel = null;
+  saveSlide(sid); renderBoard(new Set([sid])); if (S.fpanel === "text") renderFPanel(); drawFocus();
+  toast(`Row ${i + 1} deleted`, () => stepHistory(sid, true));
+}
 
 /* ---------- photo library: one shared library, folders and subfolders ---------- */
 const realFolder = f => (f === "*" || f === "" || f === "~sim" || f == null) ? "" : f;
@@ -2185,6 +2566,7 @@ function goToSlide(pid, sid) {
   const go = () => {
     const c = document.getElementById("card-" + sid);
     if (!c) { if (++tries < 20) setTimeout(go, 250); return; }
+    if (S.folded.has(sid)) { setFold(sid, false); saveFolds(); }
     c.scrollIntoView({ behavior: "smooth", block: "start" }); c.classList.add("flash"); setTimeout(() => c.classList.remove("flash"), 2200);
   };
   go();
@@ -2400,8 +2782,8 @@ photo: label, note, section, foot
 
 Layout (change only when a comment asks about placement): pos top|middle|bottom, style overlay|panel (specs only), tip left|right|inline (specs only), panel black|red (specs only), scrim 0 to 0.9 (how much to darken behind text). "auto" puts everything back to auto-fit.
 
-Stickers are icons and buttons drawn on top of a slide. "stickers" is the slide's list of {kind, x, y, size, rot, color, solid, label, bg}:
-- kind: bookmark, heart, comment, share, bell, like, arrow (icons); follow, subscribe, save, keyword, handle (pill buttons showing a label); actions (an Instagram-style row of heart, comment and share with a bookmark on the right).
+Stickers are icons and buttons drawn on top of a slide. "stickers" is the slide's list of {kind, x, y, size, rot, color, solid, label, bg, w, al, tr}:
+- kind: bookmark, heart, comment, share, bell, like, arrow (icons); follow, subscribe, save, keyword, handle (pill buttons showing a label); actions (an Instagram-style row of heart, comment and share with a bookmark on the right); text (free text on top of the slide: label is the text, **word** for bold, a line break for a new line; size is the font size in px, 40 to 300; w is 700 for bold or 400 for regular; al is left, center or right, how its lines line up (center if missing); tr is letter spacing, -0.15 to 0.1, default -0.05).
 - x and y: the sticker's centre as a fraction of the slide's width and height (0 to 1). The header sits near y 0.06 and the footer near y 0.95; keep stickers clear of text and of the main subject.
 - size: pixels on the 1800x2700 slide (icons 120 to 240, buttons 80 to 110 tall). rot: degrees (-180 to 180). color: hex (icons default #FFFFFF; for buttons it is the text color). solid: true fills an icon. label: button text in UPPERCASE. bg: the button's hex color.
 Return "stickers": "keep" unless a comment asks to add, move or remove a sticker; then return the slide's complete new list.
@@ -2460,6 +2842,7 @@ function cleanStickers(raw, prev) {
     if (HEX.test(x.color)) out.color = x.color;
     if (x.solid === true || x.solid === false) out.solid = x.solid;
     if (P.type === "pill") { if (x.label != null) out.label = String(x.label).slice(0, 40); if (HEX.test(x.bg)) out.bg = x.bg; }
+    if (P.type === "text") { out.label = String(x.label ?? P.text).slice(0, 160); out.w = +x.w === 400 ? 400 : 700; if (x.tr != null && Number.isFinite(+x.tr)) out.tr = clamp(+x.tr, -0.15, 0.1); if (x.al === "left" || x.al === "right") out.al = x.al; }
     return out;
   });
 }
@@ -2552,12 +2935,17 @@ function undoApply(sid) {
 /* ---------- focus view ---------- */
 let focusSid = null;
 function openFocus(sid) {
-  focusSid = sid; S.fsel = null;
+  focusSid = sid; S.fsel = null; S.ftsel = null; S.ftfield = null; if (S.fpanel === "text") S.fpanel = false;
   const dlg = $("#focusDlg"); if (!dlg.open) dlg.showModal();
   document.documentElement.classList.add("modal-open");
   renderFPanel(); drawFocus();
 }
-$("#focusDlg").addEventListener("close", () => { focusSid = null; S.fsel = null; fpts.clear(); fg = null; $("#fTrash").hidden = true; hideBubble(); document.documentElement.classList.remove("modal-open"); });
+$("#focusDlg").addEventListener("close", () => { closeOverlays(); focusSid = null; S.fsel = null; S.ftsel = null; S.ftfield = null; fpts.clear(); fg = null; $("#fTrash").hidden = true; hideBubble(); fitKeyboard(); document.documentElement.classList.remove("modal-open"); });
+/* Esc closes a preview first, then the text editor, then the large view */
+$("#focusDlg").addEventListener("cancel", e => {
+  if (closeOverlays()) e.preventDefault();
+  else if (S.fpanel === "text" && S.ftfield) { e.preventDefault(); closeTextEditor(); }
+});
 function drawFocus() {
   const dlg = $("#focusDlg"), s = S.slides[focusSid]; if (!s || !dlg.open) return;
   const x = numOf(focusSid), dpr = window.devicePixelRatio || 1, box = $("#fWrap").getBoundingClientRect();
@@ -2566,17 +2954,43 @@ function drawFocus() {
   if (cv.width !== cw || cv.height !== ch) { cv.width = cw; cv.height = ch; }
   cv.style.width = Math.floor(W * css) + "px"; cv.style.height = Math.floor(H * css) + "px";
   if (S.fsel && !(s.stickers || []).some(t => t.id === S.fsel)) S.fsel = null;
-  S.focusBoxes = renderSlide(cv, S.post, s, x.n, x.total, sc, false, S.fsel || S.hilite).boxes || [];
+  if (S.fpanel === "text" && S.ftfield && !S.ftfield.startsWith("layer:") && !S.fsel) S.ftsel = S.ftfield;   /* the editor's text stays outlined */
+  if (S.ftsel && !fieldPath(s, S.ftsel)) S.ftsel = null;
+  const d = renderSlide(cv, S.post, s, x.n, x.total, sc, false, S.fsel || S.hilite);
+  S.focusBoxes = d.boxes || []; S.ftboxes = d.tboxes || {};
   $("#focusTitle").textContent = `${pad2(x.n)}/${pad2(x.total)}${x.of > 1 ? ` · V${x.v}` : ""} ${slideName(s)}`;
-  $("#fHint").innerHTML = (s.stickers || []).length
-    ? `<span class="long">Tap a sticker to select it. Drag to move it, pinch to resize, twist to rotate, or use the sliders on the slide. Drag it onto the bin to delete it.</span><span class="short">Tap a sticker, then drag, pinch or twist it. Bin to delete.</span>`
-    : `<span class="long">Tap Sticker to add one. Edit photo adjusts the photo right here.</span><span class="short">Tap Sticker to add one.</span>`;
+  $("#fHint").innerHTML = S.fpanel === "text" && S.ftfield
+    ? `<span class="long">The slide changes as you type. Tap other text on the slide to edit that instead.</span><span class="short">Tap other text to edit that instead.</span>`
+    : S.ftsel
+    ? `<span class="long">Edit changes this text right here. Duplicate adds a copy to this slide, under Edit text.</span><span class="short">Edit it here, or Duplicate it.</span>`
+    : (s.stickers || []).length
+    ? `<span class="long">Tap a sticker or any text to select it. Drag a sticker to move it, pinch to resize, twist to rotate. Drop it on the bin to delete it.</span><span class="short">Tap text or a sticker. Drag, pinch, twist. Bin deletes.</span>`
+    : `<span class="long">Tap any text to edit or duplicate it. Sticker adds one; Edit photo adjusts the photo right here.</span><span class="short">Tap any text to edit it.</span>`;
   updateFocusUI();
 }
-function stepFocus(d) { const o = order(), i = o.indexOf(focusSid); const j = clamp(i + d, 0, o.length - 1); if (j !== i) { focusSid = o[j]; S.fsel = null; renderFPanel(); drawFocus(); } }
-addEventListener("resize", () => { if ($("#focusDlg").open) drawFocus(); });
+function stepFocus(d) {
+  const o = order(), i = o.indexOf(focusSid), j = clamp(i + d, 0, o.length - 1);
+  if (j === i) return;
+  focusSid = o[j]; S.fsel = null; S.ftsel = null;
+  if (S.ftfield) { S.ftfield = null; S.fpanel = false; }   /* the small editor was for the other slide's text */
+  renderFPanel(); drawFocus();
+}
+addEventListener("resize", () => { if ($("#focusDlg").open) drawFocus(); if (ovKind === "phone") fitPhone(); });
+if (window.ResizeObserver) { let fwSize = ""; new ResizeObserver(([en]) => { const k = Math.round(en.contentRect.width) + "x" + Math.round(en.contentRect.height); if (k !== fwSize) { fwSize = k; if ($("#focusDlg").open) drawFocus(); } }).observe($("#fWrap")); }
+/* phones: while you type in the large view it fits the part of the screen above the keyboard; the toolbar steps aside */
+function fitKeyboard() {
+  const dlg = $("#focusDlg"), vv = window.visualViewport; if (!vv) return;
+  const on = dlg.open && !WIDE() && $("#fPanel").contains(document.activeElement) && vv.height < innerHeight - 80;
+  dlg.classList.toggle("kb", on);
+  dlg.style.height = on ? vv.height + "px" : ""; dlg.style.top = on ? vv.offsetTop + "px" : "";
+  dlg.style.setProperty("--vvh", Math.round(on ? vv.height : innerHeight) + "px");
+}
+if (window.visualViewport) { visualViewport.addEventListener("resize", fitKeyboard); visualViewport.addEventListener("scroll", fitKeyboard); }
+$("#fPanel").addEventListener("focusin", () => setTimeout(fitKeyboard, 80));
+$("#fPanel").addEventListener("focusout", () => setTimeout(fitKeyboard, 80));
 document.addEventListener("keydown", e => {
   if (!$("#focusDlg").open || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  if (ovKind) { if (e.key === "ArrowLeft") navOverlay(-1); else if (e.key === "ArrowRight") navOverlay(1); return; }
   const mod = e.metaKey || e.ctrlKey, k = e.key.toLowerCase();
   if (mod && k === "z") { e.preventDefault(); stepHistory(focusSid, !e.shiftKey); return; }
   if (mod && k === "y") { e.preventDefault(); stepHistory(focusSid, false); return; }
@@ -2594,12 +3008,12 @@ function waitImages(s) {
     e.img.addEventListener("load", res, { once: true }); e.img.addEventListener("error", res, { once: true });
   })));
 }
-async function slideBlob(sid) {
+async function slideBlob(sid, type = "image/png", quality) {   /* full size, 1800 × 2700; a JPG of an overlay slide gets a black background */
   const s = S.slides[sid], x = numOf(sid);
   await waitImages(s);
   const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
   renderSlide(cv, S.post, s, x.n, x.total, 1, true);
-  const blob = await new Promise(res => cv.toBlob(res, "image/png"));
+  const blob = await new Promise(res => cv.toBlob(res, type, quality));
   cv.width = cv.height = 1;
   return blob;
 }
@@ -2609,11 +3023,137 @@ async function offer(filename, blob) {
     try { await S.downloads.save({ filename, data: blob }); return true; }
     catch (e) { if (e && e.code === "declined") return false; if (e && e.code === "rate_limited") { toast("Another download is waiting for you to confirm"); return false; } }
   }
-  if (/\.png$/.test(filename)) { $("#imgOut").src = URL.createObjectURL(blob); $("#imgTitle").textContent = filename; $("#imgDlg").showModal(); return true; }
+  if (/\.(png|jpg)$/.test(filename)) { $("#imgOut").src = URL.createObjectURL(blob); $("#imgTitle").textContent = filename; $("#imgDlg").showModal(); return true; }
   toast("Downloads aren't available here. Use PNG on each slide instead");
   return false;
 }
 async function exportOne(sid) { toast("Rendering PNG…"); const blob = await slideBlob(sid); if (blob) offer(fileName(sid), blob); }
+/* ---------- the large view's download menu: PNG and JPG at full size, full screen, and a phone preview ---------- */
+$("#fDl").addEventListener("click", () => {
+  const btn = $("#fDl"), open = btn.nextElementSibling;
+  closeMenus(); if (open) return;
+  const m = document.createElement("div"); m.className = "menu";
+  m.innerHTML = `<button type="button" data-fdl="png">Download PNG<small>Full quality, ${W} × ${H}</small></button><button type="button" data-fdl="jpg">Download JPG<small>Best quality, smaller file</small></button><button type="button" data-fdl="full">Full screen<small>As big as this screen shows it</small></button><button type="button" data-fdl="phone">Phone preview<small>With Instagram or TikTok on top</small></button>`;
+  btn.after(m); btn.setAttribute("aria-expanded", "true");
+});
+$("#focusDlg").addEventListener("click", e => {
+  const t = e.target, d = t.closest("[data-fdl]");
+  if (d) { closeMenus(); focusDownload(d.dataset.fdl); return; }
+  const nv = t.closest("[data-fnav]"); if (nv) { navOverlay(+nv.dataset.fnav); return; }
+  if (t.closest("[data-fshut]")) { closeOverlays(); return; }
+  const pa = t.closest("[data-papp]"); if (pa) { S.papp = pa.dataset.papp; renderPhone(); return; }
+  const ps = t.closest("[data-pshape]"); if (ps) { S.pshape = +ps.dataset.pshape; renderPhone(); }
+});
+function focusDownload(kind) {
+  const sid = focusSid; if (!sid) return;
+  if (kind === "png") return exportOne(sid);
+  if (kind === "jpg") { toast("Rendering JPG…"); return slideBlob(sid, "image/jpeg", 1).then(b => { if (b) offer(fileName(sid).replace(/\.png$/, ".jpg"), b); }); }
+  openOverlay(kind);
+}
+/* previews: the slide rendered at full size, so what you see is what you'd post. Swipe or use the arrows to change slides. */
+let ovKind = null, ovURL = null, ovSeq = 0, ovFS = false;
+function openOverlay(kind) {
+  ovKind = kind; $("#fFull").hidden = kind !== "full"; $("#fPhone").hidden = kind !== "phone";
+  if (kind === "full") {
+    const el = $("#fFull"); ovFS = false;
+    try { if (el.requestFullscreen && !document.fullscreenElement) el.requestFullscreen({ navigationUI: "hide" }).then(() => { ovFS = true; }, () => {}); } catch (e) {}
+  } else renderPhone();
+  refreshOverlay();
+}
+async function refreshOverlay() {
+  if (!ovKind || !focusSid) return;
+  const seq = ++ovSeq, s = S.slides[focusSid];
+  const blob = await slideBlob(focusSid, s.overlay ? "image/png" : "image/jpeg", 0.95);
+  if (seq !== ovSeq || !ovKind || !blob) return;
+  if (ovURL) URL.revokeObjectURL(ovURL);
+  ovURL = URL.createObjectURL(blob);
+  if (ovKind === "full") { const img = $("#fFullImg"); img.src = ovURL; img.alt = "Slide " + $("#focusTitle").textContent; }
+  else renderPhone();
+}
+function closeOverlays() {
+  if (!ovKind) return false;
+  ovKind = null; ovSeq++; ovFS = false;
+  $("#fFull").hidden = $("#fPhone").hidden = true; $$(".fover.bare").forEach(o => o.classList.remove("bare"));
+  if (document.fullscreenElement) { try { document.exitFullscreen().catch(() => {}); } catch (e) {} }
+  if (ovURL) { URL.revokeObjectURL(ovURL); ovURL = null; }
+  $("#fFullImg").removeAttribute("src"); $("#pScreen").innerHTML = "";
+  return true;
+}
+document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && ovFS && ovKind === "full") closeOverlays(); });
+function navOverlay(d) { const before = focusSid; stepFocus(d); if (focusSid !== before) refreshOverlay(); }
+let ovSwipe = null;
+for (const el of [$("#fFull .fullimg"), $("#pStage")]) {
+  el.addEventListener("pointerdown", e => { ovSwipe = { x: e.clientX, y: e.clientY, id: e.pointerId }; });
+  el.addEventListener("pointerup", e => {
+    if (!ovSwipe || ovSwipe.id !== e.pointerId) return;
+    const dx = e.clientX - ovSwipe.x, dy = e.clientY - ovSwipe.y; ovSwipe = null;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) navOverlay(dx < 0 ? 1 : -1);
+    else if (Math.abs(dx) < 8 && Math.abs(dy) < 8) { el.closest(".fover").classList.toggle("bare"); if (ovKind === "phone") requestAnimationFrame(fitPhone); }
+  });
+  el.addEventListener("pointercancel", () => { ovSwipe = null; });
+}
+/* the phone preview: a 390 × 844 screen with the app's usual buttons drawn on top (plain outlines, no app logos), scaled to fit */
+const PHI = {
+  heart: '<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',
+  comment: '<path d="M20 12a8 8 0 0 1-11.8 7L4 20l1.1-4A8 8 0 1 1 20 12z"/>',
+  send: '<path d="M21 3L10 14M21 3l-7 18-4-7-7-4z"/>',
+  save: '<path d="M6 3h12v18l-6-4-6 4z"/>',
+  dots: '<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
+  home: '<path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/>',
+  search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
+  plus: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M12 8v8M8 12h8"/>',
+  play: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M10 9v6l5-3z"/>',
+  user: '<circle cx="12" cy="9" r="3.5"/><path d="M5 20c1.2-3.5 4-5 7-5s5.8 1.5 7 5"/>',
+  share: '<path d="M14 5l7 7-7 7v-4c-5 0-8 1.5-11 5 1-6 4-10 11-11z"/>',
+  inbox: '<path d="M4 6h16v12H4z"/><path d="M4 13h5l1 2h4l1-2h5"/>',
+  cross: '<path d="M12 6v12M6 12h12"/>',
+  friends: '<circle cx="9" cy="9" r="3"/><path d="M3 19c.8-3 3.2-4.5 6-4.5s5.2 1.5 6 4.5"/><circle cx="17" cy="8" r="2.4"/><path d="M16.5 13.5c2.3.2 4 1.6 4.5 4"/>'
+};
+const phi = (k, sz = 26, cls = "") => `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}"${cls ? ` class="${cls}"` : ""} aria-hidden="true">${PHI[k]}</svg>`;
+const PSIG = `<svg viewBox="0 0 18 12" width="18" height="12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg><svg viewBox="0 0 27 12" width="27" height="12"><rect x=".5" y=".5" width="23" height="11" rx="3" fill="none" stroke="#fff" stroke-opacity=".5"/><rect x="2" y="2" width="20" height="8" rx="1.8"/><rect x="24.5" y="4" width="1.6" height="4" rx=".8" fill-opacity=".5"/></svg>`;
+function phoneDots(x, cls) { return `<span class="${cls}">${Array.from({ length: Math.min(x.total, 10) }, (_, i) => `<i${i === x.n - 1 ? ' class="on"' : ""}></i>`).join("")}</span>`; }
+function igScreen(x, handle, caption) {
+  const ih = Math.round(390 / S.pshape), top = 148, img = ovURL ? `<img src="${ovURL}" alt="">` : "";
+  return `<div class="pbar"><b>Feed</b><span class="grow"></span>${phi("heart")}${phi("send")}</div>
+    <div class="phead"><span class="pav"></span><b>${esc(handle)}</b><span class="grow"></span>${phi("dots", 22)}</div>
+    <div class="pimg" style="top:${top}px;height:${ih}px">${img}<span class="pcount">${x.n}/${x.total}</span></div>
+    <div class="pact" style="top:${top + ih}px">${phi("heart")}${phi("comment")}${phi("send")}${phoneDots(x, "pdots")}<span class="grow"></span>${phi("save")}</div>
+    <div class="pcap" style="top:${top + ih + 46}px"><b>1,284 likes</b><br><b>${esc(handle)}</b> ${esc(caption)}<br><span class="pmut">View all 86 comments</span></div>
+    <div class="pnav">${phi("home")}${phi("search")}${phi("plus")}${phi("play")}${phi("user")}</div>`;
+}
+function ttScreen(x, handle, caption) {
+  const ih = Math.round(390 * H / W), top = Math.max(0, Math.round((761 - ih) / 2)), img = ovURL ? `<img src="${ovURL}" alt="">` : "";
+  return `<div class="pimg fit" style="top:${top}px;height:${ih}px">${img}</div>
+    <div class="ttop"><span>Following</span><b>For You</b>${phi("search", 24)}</div>
+    <div class="trail"><span class="tav"><i>+</i></span><span>${phi("heart", 34, "fillw")}<small>12.4K</small></span><span>${phi("comment", 32, "fillw")}<small>318</small></span><span>${phi("save", 30, "fillw")}<small>2,051</small></span><span>${phi("share", 32, "fillw")}<small>540</small></span></div>
+    <div class="tcap"><b>@${esc(handle)}</b><p>${esc(caption)}</p></div>${phoneDots(x, "tdots")}
+    <div class="pnav">${phi("home")}${phi("friends")}<span class="tplus">${phi("cross", 22)}</span>${phi("inbox")}${phi("user")}</div>`;
+}
+function phoneNote() {
+  const how = " Swipe for the next slide; tap to hide the controls.";
+  if (S.papp === "tt") return "TikTok fits the whole slide to the screen width. Its buttons sit over the right edge and the caption over the bottom." + how;
+  const keep = Math.round(W / S.pshape), cut = Math.round((H - keep) / 2), label = S.pshape === 0.75 ? "3:4" : "4:5";
+  const near = [...new Set(Object.entries(S.ftboxes || {}).filter(([, b]) => b.y0 < cut + 24 || b.y1 > H - cut - 24)
+    .map(([f]) => f.startsWith("post.") ? "the header" : f === "text.section" || f === "text.foot" ? "the footer" : "some text"))];
+  return `Instagram's feed shows tall posts at ${label} at most, so ${cut} px of this 2:3 slide is cut at the top and at the bottom (you can shift the crop when you post).`
+    + (near.length ? ` ${near.join(" and ").replace(/^t/, "T")} ${near.length > 1 ? "sit" : "sits"} in that strip.` : "") + how;
+}
+function renderPhone() {
+  if (ovKind !== "phone" || !focusSid) return;
+  const x = numOf(focusSid), handle = String(S.post.handle || "").replace(/^@/, "") || "yourhandle", caption = String(S.post.title || "").replace(/\*\*/g, "");
+  $$("#fPhone [data-papp]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.papp === S.papp)));
+  $$("#fPhone [data-pshape]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.pshape === S.pshape)));
+  $("#pShape").hidden = S.papp !== "ig";
+  const scr = $("#pScreen");
+  scr.className = "pscreen " + S.papp;
+  scr.innerHTML = `<div class="pisland"></div><div class="pstatus"><span>9:41</span><span class="psig">${PSIG}</span></div>` + (S.papp === "tt" ? ttScreen(x, handle, caption) : igScreen(x, handle, caption)) + `<i class="phome"></i>`;
+  $("#pNote").textContent = phoneNote();
+  fitPhone();
+}
+function fitPhone() {
+  const ph = $("#pPhone"), r = $("#pStage").getBoundingClientRect(), k = Math.max(0.2, Math.min(r.width / ph.offsetWidth, r.height / ph.offsetHeight) * 0.97);
+  $("#pPhone").style.transform = `translate(-50%,-50%) scale(${k.toFixed(4)})`;
+}
 async function exportAll() {
   const o = order(), btn = $("#dlAll");
   btn.disabled = true;
@@ -2630,6 +3170,8 @@ window.__exportPNG = async i => { const sid = order()[i]; const blob = await sli
 window.__exportName = i => fileName(order()[i]);
 window.__debugDesign = i => { const sid = order()[i], x = numOf(sid); const cv = document.createElement("canvas"); cv.width = 60; cv.height = 90; const d = renderSlide(cv, S.post, S.slides[sid], x.n, x.total, 60 / W); return { note: d.note, mode: d.mode, pos: d.pos, tip: d.tip && { mode: d.tip.mode, side: d.tip.side, w: d.tip.w } }; };
 window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.entries()], folders: S.folders, notes: S.notes });
+window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
+window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
@@ -3027,7 +3569,7 @@ window.__guidePDF = async () => { const bytes = await buildGuidePdf(); let s = "
 /* ---------- posts ---------- */
 function selectPost(pid) {
   if (S.unsubSlides) { S.unsubSlides(); S.unsubSlides = null; }
-  S.pid = pid; S.slides = {}; S.notes = "";
+  S.pid = pid; S.slides = {}; S.notes = ""; loadFolds();
   const p = S.posts.find(x => x.id === pid); S.post = clone(p ? p.data : {}) || {};
   renderMain();
   subscribeGuide(pid);
