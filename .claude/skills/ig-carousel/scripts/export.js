@@ -5,7 +5,7 @@
 //
 //   --db      folder written by ArtifactData list/get with out_dir: holds posts/<pid>.json, posts/<pid>/slides/*.json
 //             and, for --pdf, posts/<pid>/guide/main.json
-//   --assets  the post's photos, each file named <asset id>.<ext> (what Artifact read with path=<asset id> saves)
+//   --assets  the post's photos (and custom sticker images), each file named <asset id>.<ext> (what Artifact read with path=<asset id> saves)
 //   --fonts   folder with NimbusSans-Regular.otf, NimbusSans-Bold.otf, NimbusSans-Italic.otf and NimbusSans-BoldItalic.otf, plus NimbusSans-Regular.ttf and
 //             NimbusSans-Bold.ttf for --pdf (default: /usr/share/fonts/opentype/urw-base35, which has the .otf only).
 //             All six are published on the board under fonts/.
@@ -55,8 +55,8 @@ const srv = http.createServer((q, r) => {
 (async () => {
   await new Promise(res => srv.listen(0, res));
   const port = srv.address().port;
-  const missing = Object.values(slides).flatMap(s => ["img", "img2"].map(k => s[k] && s[k].asset).filter(Boolean)).filter(id => !assetFiles[id]);
-  if (missing.length) console.warn("photos missing from --assets (those slides render a placeholder):", [...new Set(missing)].join(", "));
+  const missing = Object.values(slides).flatMap(s => [...["img", "img2"].map(k => s[k] && s[k].asset), ...(s.stickers || []).map(t => t.src && t.src.asset)].filter(Boolean)).filter(id => !assetFiles[id]);
+  if (missing.length) console.warn("photos or sticker images missing from --assets (they render a placeholder):", [...new Set(missing)].join(", "));
   const browser = await playwright.chromium.launch(fs.existsSync("/opt/pw-browsers/chromium") ? { executablePath: "/opt/pw-browsers/chromium" } : {});
   const p = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   p.on("pageerror", e => console.error("page error:", e.message));

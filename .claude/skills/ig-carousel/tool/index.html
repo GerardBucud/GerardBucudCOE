@@ -75,6 +75,12 @@ h1.title{font-size:clamp(26px,4vw,40px);line-height:1.02;letter-spacing:-.05em;t
 .card.folded .card-h .thumb{display:block}
 .card.folded>:not(.card-h){display:none!important}
 .card.folded .num{font-size:19px}
+/* folded cards read as a list: each one takes a whole row of the board, and the header row folds and opens it */
+.board .card.folded{grid-column:1/-1}
+.card-h{cursor:pointer;border-radius:8px}
+.card-h .card-tools{cursor:default}
+.card.folded .card-h{padding:4px 0}
+@media (hover:hover){.card-h:hover .num{color:var(--accent)}}
 .boardtools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-top:18px}
 .boardtools .hint{margin:0;font-size:13px;color:var(--muted)}
 .num{font-weight:700;font-size:22px;letter-spacing:-.06em;font-variant-numeric:tabular-nums}
@@ -391,6 +397,14 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .fdel{position:absolute;width:36px;height:36px;border-radius:50%;border:2px solid #fff;background:#e02d12;color:#fff;display:grid;place-items:center;padding:0;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .fdel svg{width:18px;height:18px}
 .fdel[hidden]{display:none}
+/* previous / next at the slide's left and right edges: they show on hover with a mouse, softly all the time on touch screens */
+.fside{position:absolute;top:50%;width:42px;height:42px;margin-top:-21px;border-radius:50%;border:0;padding:0;background:rgba(12,10,10,.55);color:#fff;display:grid;place-items:center;cursor:pointer;opacity:0;transition:opacity .15s;z-index:2;box-shadow:0 1px 6px rgba(0,0,0,.35)}
+.fside svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.fside.l{left:8px}.fside.r{right:8px}
+.fstage:hover .fside,.fside:focus-visible{opacity:1}
+.fside:hover{background:rgba(12,10,10,.8)}
+@media (pointer:coarse){.fside{opacity:.72;width:36px;height:36px;margin-top:-18px}.fside.l{left:4px}.fside.r{right:4px}}
+.fside[hidden],#focusDlg.lite .fside{display:none}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;z-index:20;max-width:calc(100vw - 32px);display:flex;align-items:center;gap:12px}
 .toast[hidden]{display:none}
 .toast{pointer-events:none}.toast button{pointer-events:auto}   /* a touch on the message goes through to what's under it */
@@ -471,6 +485,28 @@ html.canref .refb{display:inline-flex}
 .refopts .actions{align-items:center}
 .refopts .hint{margin:0;font-size:13px;color:var(--muted)}
 #refDlg .dlg-b{max-height:min(78vh,900px)}
+.mineh{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.mineh h4,.mineh2{margin:0;font-size:14px}
+.mineh2{margin:18px 0 10px}
+#mineBox{border-bottom:1px solid var(--line);padding-bottom:14px}
+.minegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px}
+.minecell{position:relative}
+.mine{width:100%;border:1px solid var(--line);background:#2b2626;border-radius:10px;padding:8px;display:grid;gap:6px;cursor:pointer;font-size:12px;color:#f3eeeb;justify-items:center}
+.mine:hover{border-color:var(--accent)}
+.mine svg,.mine img{width:100%;height:72px;object-fit:contain;color:#fff;display:block}
+.mine span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.minedel{position:absolute;top:-6px;right:-6px;width:26px;height:26px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-size:16px;line-height:1}
+.mkrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.mkrow .ctl{flex:1 1 200px;width:auto}
+.mktabs{margin-bottom:14px}
+.mkgrid{max-height:52vh;overflow:auto}
+.mkcols{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:16px;align-items:start}
+.mkstage canvas{max-width:100%;max-height:48vh;display:block;margin:auto;touch-action:none;cursor:crosshair;border-radius:6px}
+.mkside canvas{width:100%;height:auto;border-radius:8px;display:block}
+.mkside input[type=range]{width:100%}
+.mkfoot{display:flex;gap:12px;align-items:end;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:14px;padding-top:14px}
+#mkDlg #mkOut{display:block}
+#mkGenOut{width:100%;max-width:360px;height:auto;border-radius:8px;display:block;margin-top:10px}
+#mkDlg .dlg-b{max-height:min(86vh,1000px)}
+@media (max-width:700px){.mkcols{grid-template-columns:1fr}.mkstage canvas{max-height:36vh}}
 .stickgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
 .stickgrid button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px;display:grid;gap:6px;cursor:pointer;font-size:13px;color:var(--ink);text-align:center}
 .stickgrid button:hover{border-color:var(--accent)}
@@ -574,7 +610,48 @@ details.gsec[open]{padding-bottom:14px}
 <dialog id="stickDlg" aria-labelledby="stickTitle">
   <div class="dlg-h"><h3 id="stickTitle">Add a sticker</h3><span class="grow"></span>
     <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-  <div class="dlg-b"><div class="stickgrid" id="stickGrid"></div></div>
+  <div class="dlg-b"><div id="mineBox"></div><h4 class="mineh2">Stickers</h4><div class="stickgrid" id="stickGrid"></div></div>
+</dialog>
+
+<dialog id="mkDlg" aria-labelledby="mkTitle">
+  <div class="dlg-h"><h3 id="mkTitle">Make a sticker</h3><span class="grow"></span>
+    <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="dlg-b">
+    <div class="seg mktabs" role="group" aria-label="How to make it"><button type="button" data-mktab="photo">From a photo</button><button type="button" data-mktab="gen" id="mkTabGen">Claude draws it</button></div>
+    <div id="mkPhoto">
+      <div id="mkPick">
+        <div class="mkrow"><input class="ctl" id="mkSearch" type="search" placeholder="Search your photos" aria-label="Search your photos"><label class="btn sm">From this device<input type="file" id="mkFile" accept="image/*" class="sr"></label></div>
+        <div class="pick mkgrid" id="mkGrid"></div>
+      </div>
+      <div id="mkWork" hidden>
+        <div class="mkrow"><button type="button" class="btn ghost sm" id="mkBack">← Other photo</button><button type="button" class="btn ghost sm" id="mkWhole">Use the whole photo</button><span class="grow"></span>
+          <div class="seg" role="group" aria-label="Result"><button type="button" data-mkmode="vec">Vector</button><button type="button" data-mkmode="cut">Cut-out</button></div></div>
+        <div class="mkrow" id="mkFindRow" hidden><input class="ctl" id="mkFind" placeholder="Or say what to take, e.g. the Super Night logo" aria-label="What to take from the photo"><button type="button" class="btn sm" id="mkFindGo">Find it</button></div>
+        <div class="mkcols">
+          <div class="mkstage"><canvas id="mkCv" width="10" height="10" aria-label="The photo: drag a box around the part you want"></canvas><p class="hint">Drag a box around the part you want.</p></div>
+          <div class="mkside">
+            <canvas id="mkOut" width="360" height="240" aria-label="The sticker"></canvas>
+            <p class="hint" id="mkStatus" role="status"></p>
+            <div id="mkVecOpts"><label class="lbl" for="mkThr">Threshold</label><input type="range" id="mkThr" min="0" max="255" value="128">
+              <div class="mkrow"><label class="check"><input type="checkbox" id="mkInv"><span>Invert</span></label><label class="check"><input type="checkbox" id="mkSmooth" checked><span>Smooth</span></label></div></div>
+            <div id="mkCutOpts" hidden><label class="lbl" for="mkTol">Remove the background around it</label><input type="range" id="mkTol" min="0" max="100" value="40"><p class="hint">0 keeps the whole box. Works best on a plain background.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="mkGen" hidden>
+      <label class="lbl" for="mkDesc">Describe the sticker</label>
+      <textarea class="ctl" id="mkDesc" rows="3" placeholder="e.g. a bookmark ribbon with a small heart"></textarea>
+      <div class="chips mkpre"><button type="button" data-mkpre="a bookmark ribbon icon">Bookmark</button><button type="button" data-mkpre="a hand-drawn curved arrow pointing down and right">Arrow</button><button type="button" data-mkpre="a camera icon">Camera</button><button type="button" data-mkpre="a crescent moon with two small stars">Night</button><button type="button" data-mkpre="a sparkle, three four-pointed stars">Sparkle</button><button type="button" data-mkpre="a speech bubble saying nothing, with three dots">Comment</button></div>
+      <div class="mkrow"><button type="button" class="btn primary sm" id="mkGenGo">Draw it</button><span class="hint" id="mkGenStatus" role="status"></span></div>
+      <canvas id="mkGenOut" width="360" height="240" aria-label="The sticker"></canvas>
+    </div>
+    <div class="mkfoot">
+      <div><label class="lbl" for="mkName">Name</label><input class="ctl" id="mkName" maxlength="40" placeholder="Sticker"></div>
+      <label class="check"><input type="checkbox" id="mkSave"><span>Save to My stickers<small>to use it again on other slides</small></span></label>
+      <span class="grow"></span><button type="button" class="btn primary" id="mkAdd" disabled>Add to the slide</button>
+    </div>
+  </div>
 </dialog>
 
 <dialog id="focusDlg" aria-labelledby="focusTitle">
@@ -590,6 +667,8 @@ details.gsec[open]{padding-bottom:14px}
       <div class="tsel" id="fTsel" hidden></div>
       <div class="fbar" id="fBar" role="toolbar" aria-label="Selected text" hidden></div>
       <button type="button" class="fdel" id="fDel" aria-label="Delete this sticker" hidden><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+      <button type="button" class="fside l" id="fSideL" data-fside="-1" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button type="button" class="fside r" id="fSideR" data-fside="1" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
       <div class="ftrash" id="fTrash" aria-hidden="true" hidden><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></div></div></div>
     <div class="fpanel" id="fPanel" hidden></div>
     <div class="ftools">
@@ -874,14 +953,15 @@ function coverRect(img, rw, rh, slot) {
 }
 let OVERLAY = false; /* true while rendering a text-only (transparent) slide */
 let WHOLE = false;   /* true while rendering a slide set to show its whole photo */
-/* A slide's own background instead of its photo: slide.bg = {c1, c2, dir} (c2 makes it a gradient; dir down | right | diag | radial).
-   BG is it while the slide renders; the gradient spans the whole slide, so panels and halves line up. */
+/* A slide's own background: slide.bg = {c1, c2, dir, photo} (c2 makes it a gradient; dir down | right | diag | radial). Without
+   photo it replaces the photo; with photo: true the whole photo sits on it, uncropped (like Show the whole photo, on the color
+   instead of a blurred copy). BG is it while the slide renders; the gradient spans the whole slide, so panels and halves line up. */
 let BG = null;
 const HEXCOL = /^#[0-9a-f]{6}$/i;
 const BG_DIRS = ["down", "right", "diag", "radial"];
 function bgOf(s) {
   const b = s && !s.overlay && s.bg;
-  return b && HEXCOL.test(b.c1) ? { c1: b.c1, c2: HEXCOL.test(b.c2) ? b.c2 : null, dir: BG_DIRS.includes(b.dir) ? b.dir : "down" } : null;
+  return b && HEXCOL.test(b.c1) ? { c1: b.c1, c2: HEXCOL.test(b.c2) ? b.c2 : null, dir: BG_DIRS.includes(b.dir) ? b.dir : "down", photo: b.photo === true } : null;
 }
 const mixHex = (a, b) => "#" + [1, 3, 5].map(i => Math.round((parseInt(a.slice(i, i + 2), 16) + parseInt(b.slice(i, i + 2), 16)) / 2).toString(16).padStart(2, "0")).join("");
 function paintBg(ctx, rx, ry, rw, rh) {
@@ -893,20 +973,29 @@ function paintBg(ctx, rx, ry, rw, rh) {
   }
   ctx.save(); ctx.fillStyle = f; ctx.fillRect(rx, ry, rw, rh); ctx.restore();
 }
+/* the whole photo inside the frame, uncropped: zoom enlarges it, fx / fy slide it through the room left over (0.5 = centred) */
+function containRect(img, rw, rh, slot) {
+  const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height, z = clamp(+(slot && slot.zoom) || 1, 1, 3), k = Math.min(rw / iw, rh / ih) * z, dw = iw * k, dh = ih * k;
+  const fx = clamp(slot && slot.fx != null ? +slot.fx : 0.5, 0, 1), fy = clamp(slot && slot.fy != null ? +slot.fy : 0.5, 0, 1);
+  return { dx: (rw - dw) * fx, dy: (rh - dh) * fy, dw, dh };
+}
 function drawPhoto(ctx, slot, rx, ry, rw, rh, emptyText) {
   if (OVERLAY) return;
-  if (BG) return paintBg(ctx, rx, ry, rw, rh);
+  if (BG && !BG.photo) return paintBg(ctx, rx, ry, rw, rh);
   const img0 = getImg(slot);
   ctx.save();
   ctx.beginPath(); ctx.rect(rx, ry, rw, rh); ctx.clip();
-  if (img0 && WHOLE) {
-    const iw = img0.naturalWidth || img0.width, ih = img0.naturalHeight || img0.height, k = Math.min(rw / iw, rh / ih), dw = iw * k, dh = ih * k;
-    const back = coverRect(img0, rw, rh, null), soft = photoFor(slot, img0, 480);
-    ctx.save(); ctx.filter = `blur(${Math.max(2, Math.round(Math.max(rw, rh) * 0.03 * RENDER_SCALE))}px)`;
-    ctx.drawImage(soft, rx + back.dx - 40, ry + back.dy - 40, back.dw + 80, back.dh + 80); ctx.restore();
-    ctx.fillStyle = "rgba(0,0,0,.45)"; ctx.fillRect(rx, ry, rw, rh);
+  if (img0 && (WHOLE || BG)) {
+    const c = containRect(img0, rw, rh, slot);
+    if (BG) paintBg(ctx, rx, ry, rw, rh);   /* on the slide's color or gradient */
+    else {   /* on a blurred, darkened copy of itself */
+      const back = coverRect(img0, rw, rh, null), soft = photoFor(slot, img0, 480);
+      ctx.save(); ctx.filter = `blur(${Math.max(2, Math.round(Math.max(rw, rh) * 0.03 * RENDER_SCALE))}px)`;
+      ctx.drawImage(soft, rx + back.dx - 40, ry + back.dy - 40, back.dw + 80, back.dh + 80); ctx.restore();
+      ctx.fillStyle = "rgba(0,0,0,.45)"; ctx.fillRect(rx, ry, rw, rh);
+    }
     ctx.imageSmoothingQuality = "high";
-    ctx.drawImage(photoFor(slot, img0, Math.max(dw, dh) * RENDER_SCALE), rx + (rw - dw) / 2, ry + (rh - dh) / 2, dw, dh);
+    ctx.drawImage(photoFor(slot, img0, Math.max(c.dw, c.dh) * RENDER_SCALE), rx + c.dx, ry + c.dy, c.dw, c.dh);
   } else if (img0) {
     const r0 = coverRect(img0, rw, rh, slot);
     const img = photoFor(slot, img0, Math.max(r0.dw, r0.dh) * RENDER_SCALE);
@@ -914,7 +1003,7 @@ function drawPhoto(ctx, slot, rx, ry, rw, rh, emptyText) {
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(img, rx + r.dx, ry + r.dy, r.dw, r.dh);
   } else {
-    ctx.fillStyle = "#1d1817"; ctx.fillRect(rx, ry, rw, rh);
+    if (BG) paintBg(ctx, rx, ry, rw, rh); else { ctx.fillStyle = "#1d1817"; ctx.fillRect(rx, ry, rw, rh); }
     const st = imgState(slot);
     const label = st === "loading" ? "LOADING PHOTO…" : st === "error" ? "PHOTO DIDN’T LOAD" : (emptyText || "ADD A PHOTO");
     txt(ctx, label, rx + rw / 2, ry + rh / 2 - 14, { size: 37, weight: 400, track: -0.035, align: "center", alpha: 0.55 });
@@ -1160,7 +1249,8 @@ const STICKERS = {
   keyword: { label: "Comment keyword", type: "pill", icon: "comment", text: "COMMENT “SETTINGS”", bg: "#ffffff", size: 96 },
   handle: { label: "Handle tag", type: "pill", icon: "", text: "{handle}", bg: "#111111", size: 84 },
   actions: { label: "Post action row", type: "row", size: 120 },
-  text: { label: "Text", type: "text", text: "YOUR TEXT", size: 90 }
+  text: { label: "Text", type: "text", text: "YOUR TEXT", size: 90 },
+  custom: { label: "Your sticker", type: "custom", size: 420 }   /* the creator's own: an uploaded or cut-out image, or a vector shape */
 };
 const STICKER_COLORS = [["#ffffff", "White"], ["#111111", "Black"], ["#e02d12", "Cover red"], ["#ffd23f", "Yellow"]];
 const iconPaths = {};
@@ -1183,13 +1273,37 @@ function pillPath(ctx, x, y, w, h) {
   ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.arc(x + w - r, y + r, r, -Math.PI / 2, Math.PI / 2);
   ctx.lineTo(x + r, y + h); ctx.arc(x + r, y + r, r, Math.PI / 2, 1.5 * Math.PI); ctx.closePath();
 }
+/* The creator's own stickers. st.vec = {vb: [w, h], paths: [{d, fill, stroke, width, rule}]} is drawn as vector paths ("currentColor"
+   or no fill = the sticker's color); otherwise st.src ({asset} or {file}) is an image, PNG or SVG. */
+const vecCache = new Map();
+function vecPath(d) {
+  let p = vecCache.get(d);
+  if (!p) { try { p = new Path2D(d); } catch (e) { p = new Path2D(); } if (vecCache.size > 500) vecCache.clear(); vecCache.set(d, p); }
+  return p;
+}
+function drawCustom(ctx, st, bw, bh) {
+  const v = st.vec;
+  if (v && Array.isArray(v.paths)) {
+    const vw = +(v.vb && v.vb[0]) || 24, vh = +(v.vb && v.vb[1]) || 24, k = Math.min(bw / vw, bh / vh), col = st.color || INK, cc = c => !c || c === "currentColor" ? col : c;
+    ctx.save(); ctx.translate(-vw * k / 2, -vh * k / 2); ctx.scale(k, k); ctx.lineJoin = "round"; ctx.lineCap = "round";
+    for (const p of v.paths) {
+      const path = vecPath(String(p.d || ""));
+      if (p.fill !== "none") { ctx.fillStyle = cc(p.fill); ctx.fill(path, p.rule === "nonzero" ? "nonzero" : "evenodd"); }
+      if (p.stroke) { ctx.strokeStyle = cc(p.stroke); ctx.lineWidth = +p.width || 1; ctx.stroke(path); }
+    }
+    ctx.restore(); return;
+  }
+  const img = getImg(st.src);
+  if (img) { ctx.imageSmoothingQuality = "high"; ctx.drawImage(img, -bw / 2, -bh / 2, bw, bh); }
+  else { ctx.save(); ctx.setLineDash([14, 10]); ctx.lineWidth = 4; ctx.strokeStyle = "rgba(255,255,255,.6)"; ctx.strokeRect(-bw / 2, -bh / 2, bw, bh); ctx.restore(); }
+}
 /* draws a slide's stickers; returns their boxes (slide pixels) for dragging */
 function drawStickers(ctx, post, s, hiliteId) {
   const boxes = [];
   (s.stickers || []).forEach(st => {
     const P = STICKERS[st && st.kind]; if (!P) return;
     const cx = clamp(st.x ?? 0.5, 0, 1) * W, cy = clamp(st.y ?? 0.5, 0, 1) * H;
-    const size = clamp(+st.size || P.size, 30, 700), rot = clamp(+st.rot || 0, -180, 180) * Math.PI / 180;
+    const size = clamp(+st.size || P.size, 30, P.type === "custom" ? 1800 : 700), rot = clamp(+st.rot || 0, -180, 180) * Math.PI / 180;
     let bw = size, bh = size;
     ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot);
     if (P.type === "pill") {
@@ -1210,6 +1324,11 @@ function drawStickers(ctx, post, s, hiliteId) {
       bw = Math.max(size, ...lines.map(l => richW(ctx, l, size, wt, tr)));
       const ax = al === "left" ? -bw / 2 : al === "right" ? bw / 2 : 0;   /* lines line up inside the box; the box stays centered on x, y */
       lines.forEach((l, i) => txt(ctx, l, ax, -bh / 2 + i * lh, { size, weight: wt, track: tr, align: al, color: st.color || INK }));
+    } else if (P.type === "custom") {   /* size is its longer side */
+      const ar = clamp(+st.ar || 1, 0.05, 20);
+      bw = ar >= 1 ? size : size * ar; bh = ar >= 1 ? size / ar : size;
+      if (st.shadow) { ctx.shadowColor = "rgba(0,0,0,.35)"; ctx.shadowBlur = size * 0.05; ctx.shadowOffsetY = size * 0.015; }
+      drawCustom(ctx, st, bw, bh);
     } else {
       const color = st.color || INK;
       if (st.shadow !== false) { ctx.shadowColor = "rgba(0,0,0,.38)"; ctx.shadowBlur = size * 0.14; ctx.shadowOffsetY = size * 0.03; }
@@ -1604,7 +1723,7 @@ function renderSlide(cv, post, s, idx, total, scale, forExport, hiliteId) {
 const S = {
   db: null, assets: null, downloads: null, sample: null, local: false,
   posts: [], pid: null, post: null, slides: {},
-  photos: new Map(), folders: [], libFolder: "*", pickFolder: "*", selected: new Set(), lastTile: null, folderForm: null,
+  photos: new Map(), mine: new Map(), folders: [], libFolder: "*", pickFolder: "*", selected: new Set(), lastTile: null, folderForm: null,
   dirty: new Set(), writing: new Set(), again: new Set(), timers: new Map(), unsubSlides: null, readOnly: false, errors: 0,
   busy: new Set(), busyMsg: {}, applyCtl: null, notes: "",
   boxes: {}, focusBoxes: [], hilite: null, suppressClick: 0, fsel: null,
@@ -1711,7 +1830,7 @@ function drawNow() {
   if (focusSid) drawFocus();
 }
 function upscaleWarning(s, d) {
-  if (bgOf(s)) return "";
+  if (bgOf(s) || s.whole) return "";
   const g = (d && d.geo) || geoFor(S.post, s);
   for (const slot of TEMPLATES[s.type].slots) {
     const img = getImg(s[slot]);
@@ -1724,7 +1843,7 @@ function upscaleWarning(s, d) {
   return "";
 }
 onImageReady = src => {
-  for (const [sid, s] of Object.entries(S.slides)) for (const slot of ["img", "img2"]) if (srcOf(s[slot]) === src) scheduleDraw(sid);
+  for (const [sid, s] of Object.entries(S.slides)) if (["img", "img2"].some(k => srcOf(s[k]) === src) || (s.stickers || []).some(t => t.src && srcOf(t.src) === src)) scheduleDraw(sid);
   if (focusSid) drawFocus();
 };
 
@@ -1790,10 +1909,11 @@ const BG_GRADS = [["#e02d12", "#3a0b04", "down", "Ember"], ["#2b2524", "#0b0909"
 const BG_DIR_NAMES = [["down", "Top to bottom"], ["right", "Left to right"], ["diag", "Corner to corner"], ["radial", "From the middle"]];
 const gradCSS = (c1, c2, dir) => dir === "radial" ? `radial-gradient(circle at 50% 40%,${c1},${c2})` : `linear-gradient(${dir === "right" ? "90deg" : dir === "diag" ? "135deg" : "180deg"},${c1},${c2})`;
 function bgHTML(sid, s) {
-  const B = bgOf(s), mode = !B ? "photo" : B.c2 ? "grad" : "plain";
+  const B = bgOf(s), mode = !B ? "photo" : (B.photo ? "p" : "") + (B.c2 ? "grad" : "plain");
   const opt = (v, l) => `<option value="${v}"${mode === v ? " selected" : ""}>${l}</option>`;
-  let h = `<div class="two"><div><label class="lbl" for="${sid}-bgmode">Background</label><select class="ctl" id="${sid}-bgmode" data-act="bgmode"${s.overlay ? " disabled" : ""}>${opt("photo", "Photo")}${opt("plain", "Plain color")}${opt("grad", "Gradient")}</select></div>${sel(sid, "ink", "Text color", [["auto", "Auto"], ["white", "White"], ["black", "Black"]], s.ink)}</div>`;
+  let h = `<div class="two"><div><label class="lbl" for="${sid}-bgmode">Background</label><select class="ctl" id="${sid}-bgmode" data-act="bgmode"${s.overlay ? " disabled" : ""}>${opt("photo", "Photo")}${opt("pplain", "Photo on a color")}${opt("pgrad", "Photo on a gradient")}${opt("plain", "Plain color")}${opt("grad", "Gradient")}</select></div>${sel(sid, "ink", "Text color", [["auto", "Auto"], ["white", "White"], ["black", "Black"]], s.ink)}</div>`;
   if (!B) return h;
+  if (B.photo) h += `<p class="hint" style="margin:0">The whole photo sits on the ${B.c2 ? "gradient" : "color"}, uncropped. Move and size it with the Photo sliders below (zoom makes it bigger).</p>`;
   h += `<div class="bgrow"><label class="colr"><input type="color" data-bg="c1" value="${B.c1}"><span>${B.c2 ? "From" : "Color"}</span></label>`
     + (B.c2 ? `<label class="colr"><input type="color" data-bg="c2" value="${B.c2}"><span>To</span></label><select class="ctl" data-bg="dir" aria-label="Direction">${BG_DIR_NAMES.map(([v, l]) => `<option value="${v}"${B.dir === v ? " selected" : ""}>${l}</option>`).join("")}</select>` : "") + `</div>`;
   const sw = B.c2 ? BG_GRADS.map(([c1, c2, d, l]) => `<button type="button" class="sw" data-act="bgpreset" data-c1="${c1}" data-c2="${c2}" data-dir="${d}" title="${l}" aria-label="${l}" style="background:${gradCSS(c1, c2, d)}"></button>`)
@@ -1803,11 +1923,13 @@ function bgHTML(sid, s) {
 function setBgMode(sid, mode) {
   const s = S.slides[sid]; if (!s) return;
   remember(sid); const b = bgOf(s) || {};
+  const photo = mode === "pplain" || mode === "pgrad", kind = photo ? mode.slice(1) : mode;
   if (mode === "photo") delete s.bg;
-  else if (mode === "plain") s.bg = { c1: b.c1 || "#0e0b0a" };
+  else if (kind === "plain") s.bg = { c1: b.c1 || "#0e0b0a" };
   else s.bg = { c1: b.c1 || "#e02d12", c2: b.c2 || (b.c1 ? mixHex(b.c1, "#000000") : "#3a0b04"), dir: b.dir || "down" };
+  if (photo) s.bg.photo = true;
   saveSlide(sid); renderBoard(new Set([sid])); if (focusSid === sid) { renderFPanel(); drawFocus(); }
-  toast(mode === "photo" ? "The photo is back" : TEMPLATES[s.type].slots.some(k => s[k]) ? "Background on. The photo stays saved: pick Photo to bring it back" : "Background on");
+  toast(mode === "photo" ? "The photo is back" : photo ? "The whole photo now sits on the background. Move or size it with the Photo sliders" : TEMPLATES[s.type].slots.some(k => s[k]) ? "Background on. The photo stays saved: pick Photo to bring it back" : "Background on");
 }
 function layoutHTML(sid, s) {
   const L = s.layout || {}, parts = [`<div class="autonote"></div>`, `<button class="btn sm" data-act="autofit" style="justify-self:start">Auto-fit text to the photo</button>`, `<div class="bgbox">${bgHTML(sid, s)}</div>`];
@@ -2068,6 +2190,8 @@ document.addEventListener("click", e => {
   if (pf) { S.pickFolder = pf.dataset.pf; renderPicker(); return; }
   const lb = t.closest("[data-lib]");
   if (lb) return libAction(lb.dataset.lib, lb);
+  const hd = t.closest(".card-h");   /* the card's header row (number, kind, thumbnail) folds and opens it too */
+  if (hd && !t.closest("button,.card-tools,.more,input,select")) { const sid = hd.closest(".card").dataset.sid; setFold(sid, !S.folded.has(sid)); saveFolds(); return; }
   const b = t.closest("[data-act],[data-close],[data-newpost],#dlAll,#applyAll,#addSlide,#copyAll,#newPost,#fPrev,#fNext,#delPost,#notesClose,#overallOk,#newFolderBtn,#folderCancel,#tagBtn,#foldAll");
   if (!b) { if (!t.closest(".more")) closeMenus(); return; }
   if (b.id === "foldAll") { const o = order(), all = o.every(id => S.folded.has(id)); o.forEach(id => setFold(id, !all)); saveFolds(); return; }
@@ -2093,7 +2217,7 @@ document.addEventListener("click", e => {
   else if (act === "focus") { if (Date.now() - S.suppressClick > 450) openFocus(sid); }
   else if (act === "replace") openPicker(sid, b.dataset.slot);
   else if (act === "refimg") openPicker(sid, "ref");
-  else if (act === "bgpreset") { remember(sid); s.bg = b.dataset.c2 ? { c1: b.dataset.c1, c2: b.dataset.c2, dir: b.dataset.dir || "down" } : { c1: b.dataset.c1 }; saveSlide(sid); renderBoard(new Set([sid])); if (focusSid === sid) drawFocus(); }
+  else if (act === "bgpreset") { remember(sid); const ph = !!(s.bg && s.bg.photo); s.bg = b.dataset.c2 ? { c1: b.dataset.c1, c2: b.dataset.c2, dir: b.dataset.dir || "down" } : { c1: b.dataset.c1 }; if (ph) s.bg.photo = true; saveSlide(sid); renderBoard(new Set([sid])); if (focusSid === sid) drawFocus(); }
   else if (act === "autofit") { remember(sid); s.layout = {}; saveSlide(sid); renderBoard(new Set([sid])); toast("Text re-fitted to the photo"); }
   else if (act === "png") exportOne(sid);
   else if (act === "status") {
@@ -2115,6 +2239,7 @@ document.addEventListener("click", e => {
   else if (act === "keep") { delete s.undo; delete s.applied; saveSlide(sid); refreshApplySlot(sid); }
   else if (act === "addsticker") openStickers(sid);
   else if (act === "addtext") { addTextLayer(sid); renderBoard(new Set([sid])); const c = document.getElementById("card-" + sid), d = c && c.querySelector("details.txt"); if (d) d.open = true; toast("Text added. Move it in the large view"); }
+  else if (act === "savemine") saveToMine(sid, (s.stickers || [])[+b.dataset.i]);
   else if (act === "delsticker") { const st = (s.stickers || [])[+b.dataset.i]; if (st) removeSticker(sid, st.id); }
   else if (act === "resetadj") { if (s[b.dataset.slot]) { remember(sid); delete s[b.dataset.slot].adj; saveSlide(sid); renderBoard(new Set([sid])); } }
   else if (act === "adjall") copyEditsToAll(sid, b.dataset.slot);
@@ -2241,7 +2366,7 @@ document.addEventListener("pointercancel", releaseBubble, true);
 /* ---------- photo edits + stickers: card sections, picker, dragging ---------- */
 function editHTML(sid, s) {
   if (s.overlay) return `<p class="hint" style="margin:0">This slide is a text-only overlay, so there's no photo to edit.</p>`;
-  if (bgOf(s)) return `<p class="hint" style="margin:0">This slide shows a ${s.bg.c2 ? "gradient" : "plain"} background instead of its photo. Pick Photo under Background in Layout and framing to edit the photo.</p>`;
+  if (bgOf(s) && !bgOf(s).photo) return `<p class="hint" style="margin:0">This slide shows a ${s.bg.c2 ? "gradient" : "plain"} background instead of its photo. Pick Photo under Background in Layout and framing to edit the photo.</p>`;
   const slots = TEMPLATES[s.type].slots.filter(k => s[k]);
   if (!slots.length) return `<p class="hint" style="margin:0">Add a photo first.</p>`;
   return slots.map(slot => {
@@ -2254,6 +2379,7 @@ function editHTML(sid, s) {
 function stickerHTML(sid, s) {
   const list = (s.stickers || []).map((st, i) => {
     const P = STICKERS[st.kind] || { label: st.kind, type: "icon" }, pill = P.type === "pill", isText = P.type === "text";
+    if (P.type === "custom") return customHTML(sid, st, i);
     const cur = String(pill ? (st.bg || P.bg) : (st.color || "#ffffff")).toLowerCase();
     const opts = STICKER_COLORS.map(([v, l]) => `<option value="${v}"${cur === v ? " selected" : ""}>${l}</option>`).join("") + (STICKER_COLORS.some(([v]) => v === cur) ? "" : `<option value="${esc(cur)}" selected>Custom</option>`);
     const color = `<div><label class="lbl" for="${sid}-st${i}-c">${pill ? "Button color" : "Color"}</label><select class="ctl" id="${sid}-st${i}-c" data-f="stickers.${i}.${pill ? "bg" : "color"}">${opts}</select></div>`;
@@ -2267,6 +2393,16 @@ function stickerHTML(sid, s) {
       <div class="two">${color}${extra}</div></div>`;
   }).join("");
   return `${list}<button class="btn sm" data-act="addsticker">Add sticker</button><p class="hint" style="margin:0">Drag a sticker on the slide to move it. On a phone, tap the slide to open it large: there you can drag, pinch to resize, twist to rotate, and drop a sticker on the bin to delete it.</p>`;
+}
+/* one of your own stickers: an image keeps its colors; a vector takes the sticker's color */
+function customHTML(sid, st, i) {
+  const cur = String(st.color || "#ffffff").toLowerCase();
+  const color = st.vec ? `<div><label class="lbl" for="${sid}-st${i}-c">Color</label><select class="ctl" id="${sid}-st${i}-c" data-f="stickers.${i}.color">${STICKER_COLORS.map(([v, l]) => `<option value="${v}"${cur === v ? " selected" : ""}>${l}</option>`).join("")}${STICKER_COLORS.some(([v]) => v === cur) ? "" : `<option value="${esc(cur)}" selected>Custom</option>`}</select></div>` : "";
+  const inPool = st.pool && S.mine.has(st.pool);
+  return `<div class="rowbox"><div class="rowhead"><span>${esc(st.name || "Your sticker")}</span>${inPool ? "" : `<button class="btn ghost sm" data-act="savemine" data-i="${i}">Save to My stickers</button>`}<button class="btn ghost sm" data-act="delsticker" data-i="${i}">Remove</button></div>
+      <div class="two">${rng(sid, `stickers.${i}.x`, "Left / right", 0, 1, 0.005, st.x ?? 0.5, "pct")}${rng(sid, `stickers.${i}.y`, "Up / down", 0, 1, 0.005, st.y ?? 0.8, "pct")}</div>
+      <div class="two">${rng(sid, `stickers.${i}.size`, "Size", 40, 1800, 2, st.size || 420, "px")}${rng(sid, `stickers.${i}.rot`, "Rotate", -180, 180, 1, st.rot || 0, "deg")}</div>
+      ${color ? `<div class="two">${color}<label class="check" style="align-self:end;min-height:40px;align-items:center"><input type="checkbox" id="${sid}-st${i}-sh" data-f="stickers.${i}.shadow" data-bool${st.shadow ? " checked" : ""}><span>Shadow</span></label></div>` : `<label class="check"><input type="checkbox" id="${sid}-st${i}-sh" data-f="stickers.${i}.shadow" data-bool${st.shadow ? " checked" : ""}><span>Shadow</span></label>`}</div>`;
 }
 /* after a drag or pinch, put the sticker's new numbers into its sliders */
 function syncStickerControls(sid, st) {
@@ -2288,7 +2424,8 @@ let stickFor = null;
 function openStickers(sid) {
   stickFor = sid;
   const grid = $("#stickGrid");
-  grid.innerHTML = Object.entries(STICKERS).map(([k, P]) => `<button type="button" data-stick="${k}"><canvas width="300" height="180" aria-hidden="true"></canvas><span>${esc(P.label)}</span></button>`).join("");
+  renderMine();
+  grid.innerHTML = Object.entries(STICKERS).filter(([, P]) => P.type !== "custom").map(([k, P]) => `<button type="button" data-stick="${k}"><canvas width="300" height="180" aria-hidden="true"></canvas><span>${esc(P.label)}</span></button>`).join("");
   $$("[data-stick]", grid).forEach(b => previewSticker(b.querySelector("canvas"), b.dataset.stick));
   $("#stickDlg").showModal();
 }
@@ -2317,6 +2454,369 @@ $("#stickGrid").addEventListener("click", e => {
   if (focusSid === stickFor) { S.fsel = s.stickers[s.stickers.length - 1].id; drawFocus(); }
   toast(`${P.label} added. Drag it where you want it`);
 });
+/* ---------- your own stickers: uploads, cut-outs and traces from photos, and stickers Claude draws ----------
+   A custom sticker on a slide carries all it needs ({kind: "custom", name, ar, src | vec}: an image, or vector paths that take the
+   sticker's color), so it keeps working even if it's taken out of My stickers. My stickers (db "stickers/{id}") is the pool to add
+   them again from; saving to it is optional. */
+const MAX_SIZE = st => st && st.kind === "custom" ? 1800 : 600;
+const mineDocPath = id => `stickers/${id}`;
+const saveMine = id => queueSave(mineDocPath(id), () => S.mine.get(id), 300);
+const VEC_D = /^[MmLlHhVvCcSsQqTtAaZz0-9eE.,+\-\s]*$/;
+function cleanVec(v) {   /* {vb: [w, h], paths} with safe path data, or null */
+  if (!v || typeof v !== "object" || !Array.isArray(v.paths)) return null;
+  const vb = Array.isArray(v.vb) ? v.vb : Array.isArray(v.viewBox) ? v.viewBox.slice(-2) : null, w = num(vb && vb[0], 0), h = num(vb && vb[1], 0);
+  if (!(w > 0 && h > 0 && w <= 4000 && h <= 4000)) return null;
+  const col = c => c === "currentColor" || c === "none" ? c : HEXCOL.test(c) ? c : undefined;
+  let total = 0;
+  const paths = v.paths.slice(0, 400).map(p => {
+    const d = String((p && p.d) || "").trim(); if (!d || !VEC_D.test(d) || (total += d.length) > 150000) return null;
+    const o = { d }, f = col(p.fill), s = col(p.stroke);
+    if (f) o.fill = f;
+    if (s && s !== "none") { o.stroke = s; o.width = clamp(num(p.width, 1), 0.1, Math.max(w, h) / 4); }
+    if (p.rule === "nonzero") o.rule = "nonzero";
+    return o;
+  }).filter(Boolean);
+  return paths.length ? { vb: [w, h], paths } : null;
+}
+function minePreview(d) {
+  if (d.vec) return `<svg viewBox="0 0 ${+d.vec.vb[0]} ${+d.vec.vb[1]}" aria-hidden="true">${d.vec.paths.map(p => `<path d="${esc(p.d)}" fill="${esc(p.fill || "currentColor")}" fill-rule="${p.rule === "nonzero" ? "nonzero" : "evenodd"}"${p.stroke ? ` stroke="${esc(p.stroke)}" stroke-width="${+p.width || 1}" stroke-linecap="round" stroke-linejoin="round"` : ""}/>`).join("")}</svg>`;
+  return `<img src="${esc(srcOf(d.src))}" alt="">`;
+}
+function addMine(def) {
+  const id = "m" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  S.mine.set(id, { name: String(def.name || "Sticker").slice(0, 40), ar: def.ar, ...(def.vec ? { vec: clone(def.vec) } : { src: clone(def.src) }), addedAt: Date.now() });
+  saveMine(id); renderMine();
+  return id;
+}
+/* put a custom sticker on a slide (selected, so it can be dragged right away) */
+function addCustom(sid, def, poolId) {
+  const s = S.slides[sid]; if (!s) return null;
+  remember(sid); s.stickers = s.stickers || [];
+  const st = { id: newStickerId(), kind: "custom", name: String(def.name || "Sticker").slice(0, 40), ar: clamp(+def.ar || 1, 0.05, 20), ...(def.vec ? { vec: clone(def.vec) } : { src: clone(def.src) }),
+    ...(poolId ? { pool: poolId } : {}), x: 0.5, y: clamp(0.5 + 0.06 * (s.stickers.length % 4), 0.2, 0.8), size: 420, rot: 0 };
+  s.stickers.push(st); saveSlide(sid);
+  renderBoard(new Set([sid]));
+  const c = document.getElementById("card-" + sid), stk = c && c.querySelector("details.stk"); if (stk) stk.open = true;
+  if (focusSid === sid) { S.fsel = st.id; S.ftsel = null; drawFocus(); }
+  return st;
+}
+function saveToMine(sid, st) {
+  if (!st || st.kind !== "custom") return;
+  if (st.pool && S.mine.has(st.pool)) { toast("It's in My stickers already"); return; }
+  st.pool = addMine(st); saveSlide(sid);
+  if (focusSid === sid) updateFocusUI();
+  const c = document.getElementById("card-" + sid); if (c) renderBoard(new Set([sid]));
+  toast(`“${st.name || "Sticker"}” saved to My stickers`);
+}
+function renderMine() {
+  const box = $("#mineBox"); if (!box) return;
+  const items = [...S.mine.entries()].sort((a, b) => (b[1].addedAt || 0) - (a[1].addedAt || 0));
+  box.innerHTML = `<div class="mineh"><h4>My stickers</h4><span class="grow"></span>
+    ${S.assets || S.local ? `<label class="btn sm">Upload PNG or SVG<input type="file" id="stkUpload" accept="image/png,image/svg+xml,image/webp" class="sr"></label>` : ""}
+    <button type="button" class="btn sm" data-mk="photo">From a photo…</button>${S.sample ? `<button type="button" class="btn sm" data-mk="gen">Ask Claude to draw one…</button>` : ""}</div>
+    ${items.length ? `<div class="minegrid">${items.map(([id, d]) => `<div class="minecell"><button type="button" class="mine" data-mine="${esc(id)}" title="${esc(d.name)}">${minePreview(d)}<span>${esc(d.name)}</span></button><button type="button" class="minedel" data-minedel="${esc(id)}" aria-label="Remove ${esc(d.name)} from My stickers">×</button></div>`).join("")}</div>`
+      : `<p class="hint" style="margin:0">Your own stickers go here: upload a PNG or SVG, cut one out of a photo (or trace it as a vector you can recolor), or ask Claude to draw one. Saving one here is optional.</p>`}`;
+}
+async function uploadSticker(f) {
+  if (!f || !/^image\/(png|svg\+xml|webp)$/.test(f.type)) { toast("Use a PNG, SVG or WebP file (transparent works best)"); return; }
+  const sid = stickFor; toast(`Uploading ${f.name}…`);
+  let src;
+  try { src = S.assets ? { asset: (await S.assets.upload(f)).id } : { file: URL.createObjectURL(f) }; }
+  catch (e) { toast(`${f.name} wasn't added: ${{ too_large: "it's too big", unsupported_type: "that file type isn't supported", quota_or_state: "the board's storage is full" }[e && e.code] || "the upload failed"}`); return; }
+  const [w, h] = await imageSize(srcOf(src)), def = { name: f.name.replace(/\.[^.]+$/, "").slice(0, 40) || "Sticker", ar: w && h ? w / h : 1, src };
+  const id = addMine(def);
+  $("#stickDlg").close(); addCustom(sid, def, id);
+  toast("Sticker added, and saved to My stickers. Drag it where you want it");
+}
+$("#stickDlg").addEventListener("click", e => {
+  const t = e.target, m = t.closest("[data-mine]"), del = t.closest("[data-minedel]"), mk = t.closest("[data-mk]");
+  if (del) { const id = del.dataset.minedel, d = S.mine.get(id); S.mine.delete(id); removeDoc(mineDocPath(id)); renderMine(); toast(`“${d ? d.name : "Sticker"}” removed from My stickers. Slides that use it keep it`); }
+  else if (m && stickFor) { const d = S.mine.get(m.dataset.mine); if (!d) return; $("#stickDlg").close(); addCustom(stickFor, d, m.dataset.mine); toast(`${d.name} added. Drag it where you want it`); }
+  else if (mk && stickFor) { $("#stickDlg").close(); openMaker(stickFor, mk.dataset.mk); }
+});
+$("#stickDlg").addEventListener("change", e => { if (e.target.id === "stkUpload") { const f = e.target.files[0]; e.target.value = ""; uploadSticker(f); } });
+
+/* ---------- the sticker maker ----------
+   From a photo: drag a box on it (or describe the part and Claude finds it), then either cut it out (the background around it, the
+   color at the box's edges, turns see-through) or trace it as a one-color vector (light or dark parts by a threshold) that takes the
+   sticker's color. Ask Claude: describe a sticker and Claude draws it as vector paths. */
+const MK = { sid: null, tab: "photo", img: null, name: "", crop: null, mode: "vec", tol: 40, thr: null, inv: false, smooth: true, out: null, gen: null, busy: false, pick: "" };
+function openMaker(sid, tab) {
+  Object.assign(MK, { sid, tab: tab === "gen" ? "gen" : "photo", img: null, crop: null, out: null, gen: null, busy: false, thr: null, inv: false });
+  $("#mkName").value = ""; $("#mkSave").checked = false; $("#mkStatus").textContent = ""; $("#mkGenStatus").textContent = "";
+  renderMaker(); $("#mkDlg").showModal(); drawMkOut();
+}
+function renderMaker() {
+  $$("#mkDlg [data-mktab]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mktab === MK.tab)));
+  $("#mkPhoto").hidden = MK.tab !== "photo"; $("#mkGen").hidden = MK.tab !== "gen";
+  $("#mkTabGen").hidden = !S.sample;
+  if (MK.tab === "photo") {
+    $("#mkPick").hidden = !!MK.img; $("#mkWork").hidden = !MK.img;
+    if (!MK.img) {
+      const q = MK.pick.trim(), items = q ? photosIn("*").filter(([, p]) => matches(p, q)) : photosIn("*");
+      $("#mkGrid").innerHTML = items.slice(0, 120).map(([id, p]) => `<button type="button" data-mkpick="${esc(id)}" title="${esc(p.desc || p.name)}"><img loading="lazy" src="${esc(srcOf(p))}" alt=""><span>${esc(p.name)}</span></button>`).join("") || `<p>No photos${q ? ` match “${esc(q)}”` : " yet"}.</p>`;
+    } else {
+      $$("#mkDlg [data-mkmode]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mkmode === MK.mode)));
+      $("#mkFindRow").hidden = !(S.sample && S.imgLimits && !S.tagOff);
+      $("#mkVecOpts").hidden = MK.mode !== "vec"; $("#mkCutOpts").hidden = MK.mode !== "cut";
+      drawMkStage();
+    }
+  }
+  $("#mkAdd").disabled = !(MK.tab === "photo" ? MK.out : MK.gen) || MK.busy;
+}
+function loadMkImage(src, name) {
+  const im = new Image();
+  im.onload = () => { MK.img = im; MK.name = name || "Sticker"; MK.crop = null; MK.thr = null; if (!$("#mkName").value) $("#mkName").value = MK.name; renderMaker(); mkProcess(); };
+  im.onerror = () => toast("That photo didn't load");
+  im.src = src;
+}
+$("#mkDlg").addEventListener("click", e => {
+  const t = e.target, tab = t.closest("[data-mktab]"), pk = t.closest("[data-mkpick]"), mode = t.closest("[data-mkmode]"), pre = t.closest("[data-mkpre]");
+  if (tab) { MK.tab = tab.dataset.mktab; renderMaker(); drawMkOut(); }
+  else if (pk) { const p = S.photos.get(pk.dataset.mkpick); if (p) loadMkImage(srcOf(p), p.name); }
+  else if (mode) { MK.mode = mode.dataset.mkmode; renderMaker(); mkProcess(); }
+  else if (pre) { $("#mkDesc").value = pre.dataset.mkpre; }
+  else if (t.closest("#mkBack")) { MK.img = null; MK.out = null; renderMaker(); }
+  else if (t.closest("#mkWhole")) { MK.crop = null; drawMkStage(); mkProcess(); }
+  else if (t.closest("#mkFindGo")) mkFind();
+  else if (t.closest("#mkGenGo")) mkGenerate();
+  else if (t.closest("#mkAdd")) mkAdd();
+});
+$("#mkDlg").addEventListener("input", e => {
+  const id = e.target.id;
+  if (id === "mkSearch") { MK.pick = e.target.value; renderMaker(); }
+  else if (id === "mkTol") { MK.tol = +e.target.value; mkQueue(); }
+  else if (id === "mkThr") { MK.thr = +e.target.value; mkQueue(); }
+  else if (id === "mkInv") { MK.inv = e.target.checked; mkQueue(); }
+  else if (id === "mkSmooth") { MK.smooth = e.target.checked; mkQueue(); }
+});
+$("#mkDlg").addEventListener("change", e => { if (e.target.id === "mkFile") { const f = e.target.files[0]; e.target.value = ""; if (f) loadMkImage(URL.createObjectURL(f), f.name.replace(/\.[^.]+$/, "")); } });
+/* the work area: the photo, fitted, with the chosen box; drag to draw a new box */
+function drawMkStage() {
+  const cv = $("#mkCv"), im = MK.img; if (!cv || !im) return;
+  const iw = im.naturalWidth, ih = im.naturalHeight, k = Math.min(1, 900 / Math.max(iw, ih)), w = Math.round(iw * k), h = Math.round(ih * k);
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  const x = cv.getContext("2d"); x.drawImage(im, 0, 0, w, h);
+  const c = MK.crop; if (!c) return;
+  const [x0, y0, x1, y1] = c.map((v, i) => v * (i % 2 ? h / ih : w / iw));
+  x.save(); x.fillStyle = "rgba(0,0,0,.55)"; x.beginPath(); x.rect(0, 0, w, h); x.rect(x0, y0, x1 - x0, y1 - y0); x.fill("evenodd");
+  x.setLineDash([8, 6]); x.lineWidth = 2; x.strokeStyle = "#fff"; x.strokeRect(x0 + 1, y0 + 1, x1 - x0 - 2, y1 - y0 - 2); x.restore();
+}
+let mkDrag = null;
+$("#mkCv").addEventListener("pointerdown", e => {
+  if (!MK.img) return; e.preventDefault(); try { e.target.setPointerCapture(e.pointerId); } catch (err) {}
+  const r = e.target.getBoundingClientRect(), sx = MK.img.naturalWidth / r.width, sy = MK.img.naturalHeight / r.height;
+  mkDrag = { r, sx, sy, x: (e.clientX - r.left) * sx, y: (e.clientY - r.top) * sy };
+});
+$("#mkCv").addEventListener("pointermove", e => {
+  if (!mkDrag) return;
+  const iw = MK.img.naturalWidth, ih = MK.img.naturalHeight, x = clamp((e.clientX - mkDrag.r.left) * mkDrag.sx, 0, iw), y = clamp((e.clientY - mkDrag.r.top) * mkDrag.sy, 0, ih);
+  if (Math.abs(x - mkDrag.x) < 4 && Math.abs(y - mkDrag.y) < 4) return;
+  MK.crop = [Math.min(x, mkDrag.x), Math.min(y, mkDrag.y), Math.max(x, mkDrag.x), Math.max(y, mkDrag.y)]; drawMkStage();
+});
+const mkUp = () => { if (!mkDrag) return; mkDrag = null; if (MK.crop && (MK.crop[2] - MK.crop[0] < 8 || MK.crop[3] - MK.crop[1] < 8)) MK.crop = null; drawMkStage(); mkProcess(); };
+$("#mkCv").addEventListener("pointerup", mkUp); $("#mkCv").addEventListener("pointercancel", mkUp);
+let mkT = 0; const mkQueue = () => { clearTimeout(mkT); mkT = setTimeout(mkProcess, 90); };
+/* the result, from the box: a see-through cut-out canvas, or vector paths */
+function mkProcess() {
+  const im = MK.img; if (!im) return;
+  const iw = im.naturalWidth, ih = im.naturalHeight, [cx0, cy0, cx1, cy1] = MK.crop || [0, 0, iw, ih], cw = cx1 - cx0, ch = cy1 - cy0;
+  const lim = MK.mode === "vec" ? 560 : 1200, k = Math.min(1, lim / Math.max(cw, ch)), w = Math.max(2, Math.round(cw * k)), h = Math.max(2, Math.round(ch * k));
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d", { willReadFrequently: true }); x.imageSmoothingQuality = "high"; x.drawImage(im, cx0, cy0, cw, ch, 0, 0, w, h);
+  const img = x.getImageData(0, 0, w, h), d = img.data;
+  MK.out = MK.mode === "vec" ? traceSticker(d, w, h) : cutSticker(x, img, w, h);
+  drawMkOut(); renderMaker();
+}
+function borderColor(d, w, h) {   /* the median color around the box's edge */
+  const rs = [], gs = [], bs = [], add = i => { rs.push(d[i]); gs.push(d[i + 1]); bs.push(d[i + 2]); };
+  for (let x = 0; x < w; x++) { add(x * 4); add(((h - 1) * w + x) * 4); }
+  for (let y = 0; y < h; y++) { add(y * w * 4); add((y * w + w - 1) * 4); }
+  const med = a => a.sort((p, q) => p - q)[a.length >> 1];
+  return [med(rs), med(gs), med(bs)];
+}
+function cutSticker(x, img, w, h) {
+  const d = img.data, n = w * h, a = new Uint8Array(n).fill(255);
+  if (MK.tol > 0) {   /* flood from the edges through pixels close to the edge color: those turn see-through */
+    const [br, bg, bb] = borderColor(d, w, h), thr = MK.tol * 2.2, near = i => Math.hypot(d[i * 4] - br, d[i * 4 + 1] - bg, d[i * 4 + 2] - bb) < thr;
+    const q = new Int32Array(n); let qh = 0, qt = 0;
+    const push = i => { if (a[i] && near(i)) { a[i] = 0; q[qt++] = i; } };
+    for (let xx = 0; xx < w; xx++) { push(xx); push((h - 1) * w + xx); }
+    for (let yy = 0; yy < h; yy++) { push(yy * w); push(yy * w + w - 1); }
+    while (qh < qt) { const i = q[qh++], xx = i % w; if (xx > 0) push(i - 1); if (xx < w - 1) push(i + 1); if (i >= w) push(i - w); if (i < n - w) push(i + w); }
+    const s = new Uint8Array(a);   /* soften the edge by a pixel */
+    for (let yy = 1; yy < h - 1; yy++) for (let xx = 1; xx < w - 1; xx++) { const i = yy * w + xx; let t = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) t += s[i + dy * w + dx]; a[i] = Math.round(t / 9); }
+  }
+  let x0 = w, y0 = h, x1 = -1, y1 = -1;
+  for (let i = 0; i < n; i++) { d[i * 4 + 3] = a[i]; if (a[i] > 16) { const xx = i % w, yy = (i / w) | 0; if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; } }
+  if (x1 < 0) return null;
+  x.putImageData(img, 0, 0);
+  const o = document.createElement("canvas"); o.width = x1 - x0 + 1; o.height = y1 - y0 + 1;
+  o.getContext("2d").drawImage(x.canvas, x0, y0, o.width, o.height, 0, 0, o.width, o.height);
+  return { kind: "cut", canvas: o, ar: o.width / o.height };
+}
+function otsu(lum) {
+  const hist = new Array(256).fill(0); for (const v of lum) hist[v]++;
+  const n = lum.length; let sum = 0; for (let t = 0; t < 256; t++) sum += t * hist[t];
+  let sb = 0, wb = 0, best = 0, at = 128;
+  for (let t = 0; t < 256; t++) { wb += hist[t]; if (!wb) continue; const wf = n - wb; if (!wf) break; sb += t * hist[t]; const mb = sb / wb, mf = (sum - sb) / wf, v = wb * wf * (mb - mf) * (mb - mf); if (v > best) { best = v; at = t; } }
+  return at;
+}
+function traceSticker(d, w, h) {
+  const n = w * h, lum = new Uint8Array(n), bl = new Uint8Array(n);
+  for (let i = 0; i < n; i++) lum[i] = Math.round(0.2126 * d[i * 4] + 0.7152 * d[i * 4 + 1] + 0.0722 * d[i * 4 + 2]);
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {   /* a light blur, so photo grain doesn't turn into specks */
+    let t = 0, c = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const xx = x + dx, yy = y + dy; if (xx >= 0 && yy >= 0 && xx < w && yy < h) { t += lum[yy * w + xx]; c++; } }
+    bl[y * w + x] = Math.round(t / c);
+  }
+  const thr = MK.thr ?? otsu(bl);
+  let edge = 0, en = 0; for (let x = 0; x < w; x++) { edge += bl[x] + bl[(h - 1) * w + x]; en += 2; } for (let y = 0; y < h; y++) { edge += bl[y * w] + bl[y * w + w - 1]; en += 2; }
+  const light = (edge / en < thr) !== MK.inv;   /* a dark surround: the shape is the light part */
+  const m = new Uint8Array(n); for (let i = 0; i < n; i++) m[i] = light ? (bl[i] > thr ? 1 : 0) : (bl[i] <= thr ? 1 : 0);
+  if (MK.thr == null) { const r = $("#mkThr"); if (r) r.value = thr; }
+  const minArea = Math.max(6, n * 0.00008), loops = [];
+  for (const lp of traceLoops(m, w, h)) { const s = simplify(lp, 0.75); if (s.length >= 3 && Math.abs(areaOf(s)) >= minArea) loops.push(s); }
+  if (!loops.length) return null;
+  loops.sort((a, b) => Math.abs(areaOf(b)) - Math.abs(areaOf(a))); loops.length = Math.min(loops.length, 600);
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const lp of loops) for (const [x, y] of lp) { if (x < x0) x0 = x; if (y < y0) y0 = y; if (x > x1) x1 = x; if (y > y1) y1 = y; }
+  const f = v => +v.toFixed(1), pt = ([x, y]) => `${f(x - x0)} ${f(y - y0)}`, mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+  const sharp = (lp, i) => {   /* a turn of more than about 70 degrees stays a corner when smoothing */
+    const a = lp[(i - 1 + lp.length) % lp.length], p = lp[i], c = lp[(i + 1) % lp.length], ux = p[0] - a[0], uy = p[1] - a[1], vx = c[0] - p[0], vy = c[1] - p[1];
+    return (ux * vx + uy * vy) / (Math.hypot(ux, uy) * Math.hypot(vx, vy) || 1) < 0.35;
+  };
+  const dd = loops.map(lp => MK.smooth
+    ? `M${pt(mid(lp[lp.length - 1], lp[0]))}` + lp.map((p, i) => { const m = pt(mid(p, lp[(i + 1) % lp.length])); return sharp(lp, i) ? `L${pt(p)}L${m}` : `Q${pt(p)} ${m}`; }).join("") + "Z"
+    : `M${pt(lp[0])}` + lp.slice(1).map(p => `L${pt(p)}`).join("") + "Z").join("");
+  const vec = { vb: [f(x1 - x0) || 1, f(y1 - y0) || 1], paths: [{ d: dd }] };
+  return { kind: "vec", vec, ar: vec.vb[0] / vec.vb[1], shapes: loops.length, size: dd.length };
+}
+/* marching squares: the outlines between 1 and 0 in mask m, as closed loops of points (pixel units) */
+function traceLoops(m, w, h) {
+  const v = (x, y) => x >= 0 && y >= 0 && x < w && y < h && m[y * w + x] ? 1 : 0, W2 = 2 * w + 8, key = (X, Y) => (Y + 2) * W2 + (X + 2);
+  const sg = [], add = (a, b) => sg.push(a[0], a[1], b[0], b[1]);
+  for (let y = -1; y < h; y++) for (let x = -1; x < w; x++) {
+    const c = v(x, y) * 8 + v(x + 1, y) * 4 + v(x + 1, y + 1) * 2 + v(x, y + 1); if (!c || c === 15) continue;
+    const T = [2 * x + 1, 2 * y], R = [2 * x + 2, 2 * y + 1], B = [2 * x + 1, 2 * y + 2], L = [2 * x, 2 * y + 1];
+    switch (c) {
+      case 1: case 14: add(L, B); break;
+      case 2: case 13: add(B, R); break;
+      case 3: case 12: add(L, R); break;
+      case 4: case 11: add(T, R); break;
+      case 6: case 9: add(T, B); break;
+      case 7: case 8: add(L, T); break;
+      case 5: add(L, T); add(B, R); break;
+      case 10: add(T, R); add(L, B); break;
+    }
+  }
+  const ns = sg.length / 4, adj = new Map(), used = new Uint8Array(ns), loops = [];
+  for (let i = 0; i < ns; i++) for (const e of [0, 2]) { const k = key(sg[i * 4 + e], sg[i * 4 + e + 1]); const l = adj.get(k); if (l) l.push(i); else adj.set(k, [i]); }
+  for (let i = 0; i < ns; i++) {
+    if (used[i]) continue;
+    used[i] = 1;
+    const start = key(sg[i * 4], sg[i * 4 + 1]), lp = [[sg[i * 4], sg[i * 4 + 1]]];
+    let X = sg[i * 4 + 2], Y = sg[i * 4 + 3];
+    while (key(X, Y) !== start) {
+      lp.push([X, Y]);
+      const nx = (adj.get(key(X, Y)) || []).find(j => !used[j]); if (nx == null) break;
+      used[nx] = 1;
+      if (sg[nx * 4] === X && sg[nx * 4 + 1] === Y) { X = sg[nx * 4 + 2]; Y = sg[nx * 4 + 3]; } else { X = sg[nx * 4]; Y = sg[nx * 4 + 1]; }
+    }
+    loops.push(lp.map(([a, b]) => [a / 2 + 0.5, b / 2 + 0.5]));
+  }
+  return loops;
+}
+const areaOf = lp => { let a = 0; for (let i = 0; i < lp.length; i++) { const p = lp[i], q = lp[(i + 1) % lp.length]; a += p[0] * q[1] - q[0] * p[1]; } return a / 2; };
+function simplify(lp, eps) {   /* Douglas-Peucker on a closed loop: split at the point farthest from the first, simplify both halves */
+  if (lp.length < 8) return lp;
+  let far = 0, fd = -1; for (let i = 1; i < lp.length; i++) { const dd = (lp[i][0] - lp[0][0]) ** 2 + (lp[i][1] - lp[0][1]) ** 2; if (dd > fd) { fd = dd; far = i; } }
+  const run = pts => {
+    const keep = new Uint8Array(pts.length); keep[0] = keep[pts.length - 1] = 1;
+    const st = [[0, pts.length - 1]];
+    while (st.length) {
+      const [a, b] = st.pop(), [ax, ay] = pts[a], [bx, by] = pts[b], dx = bx - ax, dy = by - ay, L = Math.hypot(dx, dy) || 1;
+      let md = 0, mi = -1;
+      for (let i = a + 1; i < b; i++) { const dd = Math.abs(dy * pts[i][0] - dx * pts[i][1] + bx * ay - by * ax) / L; if (dd > md) { md = dd; mi = i; } }
+      if (md > eps && mi > 0) { keep[mi] = 1; st.push([a, mi], [mi, b]); }
+    }
+    return pts.filter((_, i) => keep[i]);
+  };
+  const A = run(lp.slice(0, far + 1)), B = run(lp.slice(far).concat([lp[0]]));
+  return A.concat(B.slice(1, -1));
+}
+function drawMkOut() {
+  const cv = $(MK.tab === "photo" ? "#mkOut" : "#mkGenOut"), r = MK.tab === "photo" ? MK.out : MK.gen, st = $("#mkStatus");
+  const x = cv.getContext("2d"); x.setTransform(1, 0, 0, 1, 0, 0);
+  for (let yy = 0; yy < cv.height; yy += 16) for (let xx = 0; xx < cv.width; xx += 16) { x.fillStyle = ((xx + yy) / 16) % 2 ? "#3a3432" : "#2b2626"; x.fillRect(xx, yy, 16, 16); }
+  if (!r) { if (MK.tab === "photo" && MK.img) st.textContent = "Nothing found in the box: try another threshold, or Invert."; return; }
+  const pad = 16, k = Math.min((cv.width - 2 * pad) / (r.ar >= 1 ? 1 : r.ar), (cv.height - 2 * pad) * (r.ar >= 1 ? r.ar : 1)), bw = r.ar >= 1 ? k : k * r.ar, bh = r.ar >= 1 ? k / r.ar : k;
+  x.save(); x.translate(cv.width / 2, cv.height / 2);
+  if (r.kind === "cut") x.drawImage(r.canvas, -bw / 2, -bh / 2, bw, bh);
+  else drawCustom(x, { vec: r.vec, color: "#ffffff" }, bw, bh);
+  x.restore();
+  if (MK.tab === "photo") st.textContent = r.kind === "vec" ? `${r.shapes} shape${r.shapes === 1 ? "" : "s"}${r.size > 150000 ? ". Too detailed to keep: draw a tighter box or move the threshold" : ""}. It takes the sticker's color (white to start).` : "The see-through parts show as a checkerboard.";
+}
+async function imgJpeg(im, max) {
+  const k = Math.min(1, max / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement("canvas");
+  c.width = Math.max(1, Math.round(im.naturalWidth * k)); c.height = Math.max(1, Math.round(im.naturalHeight * k));
+  c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+  return await new Promise(r => c.toBlob(r, "image/jpeg", 0.85));
+}
+async function mkFind() {   /* Claude draws the box */
+  const what = $("#mkFind").value.trim(), st = $("#mkStatus"); if (!what || !MK.img || !S.sample || MK.busy) return;
+  MK.busy = true; st.textContent = "Claude is looking for it…"; renderMaker();
+  try {
+    const r = await S.sample.json(`Find this in the photo: ${what}\n\nReply with only JSON: {"box":[x0,y0,x1,y1]}, the box around it with a little margin, as fractions of the photo's width and height (0 to 1, x0 < x1, y0 < y1). If it isn't in the photo: {"box":null}.`, { images: [await imgJpeg(MK.img, 1200)], modelTier: "default", cache: false });
+    const b = r && Array.isArray(r.box) && r.box.map(Number);
+    if (!b || b.length !== 4 || !b.every(Number.isFinite) || b[2] <= b[0] || b[3] <= b[1]) { st.textContent = "Claude couldn't find that in this photo. Drag a box around it instead."; return; }
+    const iw = MK.img.naturalWidth, ih = MK.img.naturalHeight;
+    MK.crop = [clamp(b[0], 0, 1) * iw, clamp(b[1], 0, 1) * ih, clamp(b[2], 0, 1) * iw, clamp(b[3], 0, 1) * ih];
+    st.textContent = "Found it. Adjust the box by dragging a new one if it's off.";
+    drawMkStage(); mkProcess();
+  } catch (e) { st.textContent = e && e.code === "cancelled" ? "" : SAMPLE_ERR[e && e.code] || "Couldn’t reach Claude. Drag a box around it instead."; }
+  finally { MK.busy = false; renderMaker(); }
+}
+const GEN_STICKER = `Draw a sticker for an Instagram carousel as simple vector paths: {DESC}
+
+Make it bold and clean, like a flat app icon or a sticker, easy to read small. A few solid shapes; strokes only where a line is the point. No text, no brand logos.
+Reply with only JSON: {"name":"<2 or 3 words>","viewBox":[<width>,<height>],"paths":[{"d":"<SVG path data: M L H V C S Q T A Z commands and numbers only>","fill":"currentColor","stroke":null,"width":0}]}
+"fill" and "stroke" are "currentColor" (the sticker's color, which the creator can change), "none", or a hex color for a second color; "width" is the stroke width. At most 20 paths, all inside the viewBox; use [100,100] unless the shape is wide or tall.`;
+async function mkGenerate() {
+  const desc = $("#mkDesc").value.trim(), st = $("#mkGenStatus"); if (!desc || !S.sample || MK.busy) return;
+  MK.busy = true; MK.gen = null; st.textContent = "Claude is drawing it…"; renderMaker(); drawMkOut();
+  try {
+    const r = await S.sample.json(GEN_STICKER.replace("{DESC}", desc.slice(0, 500)), { modelTier: "default", cache: false });
+    const vec = cleanVec(r);
+    if (!vec) { st.textContent = "Claude's drawing couldn't be used. Try again, or describe it differently."; return; }
+    MK.gen = { kind: "vec", vec, ar: vec.vb[0] / vec.vb[1] };
+    if (!$("#mkName").value) $("#mkName").value = String((r && r.name) || desc).slice(0, 40);
+    st.textContent = "Here it is. Generate again for another take, or add it.";
+  } catch (e) { st.textContent = e && e.code === "cancelled" ? "" : SAMPLE_ERR[e && e.code] || "Couldn’t reach Claude. Try again."; }
+  finally { MK.busy = false; renderMaker(); drawMkOut(); }
+}
+async function mkAdd() {
+  const r = MK.tab === "photo" ? MK.out : MK.gen, sid = MK.sid; if (!r || MK.busy) return;
+  const name = $("#mkName").value.trim().slice(0, 40) || MK.name || "Sticker";
+  let def;
+  if (r.kind === "vec") {
+    const vec = cleanVec(r.vec); if (!vec) { toast("That shape is too detailed to keep. Draw a tighter box or move the threshold"); return; }
+    def = { name, ar: r.ar, vec };
+  } else {
+    MK.busy = true; renderMaker();
+    try {
+      const k = Math.min(1, 1400 / Math.max(r.canvas.width, r.canvas.height)), c = document.createElement("canvas");
+      c.width = Math.round(r.canvas.width * k); c.height = Math.round(r.canvas.height * k); c.getContext("2d").drawImage(r.canvas, 0, 0, c.width, c.height);
+      const blob = await new Promise(res => c.toBlob(res, "image/png"));
+      const src = S.assets ? { asset: (await S.assets.upload(new File([blob], slug(name) + ".png", { type: "image/png" }))).id } : { file: URL.createObjectURL(blob) };
+      def = { name, ar: c.width / c.height, src };
+    } catch (e) { toast("The cut-out couldn't be saved. Try again"); MK.busy = false; renderMaker(); return; }
+    MK.busy = false;
+  }
+  const poolId = $("#mkSave").checked ? addMine(def) : null;
+  $("#mkDlg").close();
+  addCustom(sid, def, poolId);
+  toast(poolId ? `${name} added, and saved to My stickers` : `${name} added. To keep it for later, select it and Save to My stickers`);
+}
 function copyEditsToAll(sid, slot) {
   const a = clone((S.slides[sid][slot] || {}).adj || {});
   let n = 0;
@@ -2440,7 +2940,7 @@ fcv.addEventListener("pointermove", e => {
     fRemember();
     let r = fg.r0 + (ang - fg.a0) * 180 / Math.PI;
     r = ((r % 360) + 540) % 360 - 180; if (Math.abs(r) < 4) r = 0;
-    st.size = Math.round(clamp(fg.s0 * d / fg.d0, 40, 600)); st.rot = Math.round(r);
+    st.size = Math.round(clamp(fg.s0 * d / fg.d0, 40, MAX_SIZE(st))); st.rot = Math.round(r);
     st.x = clamp(snapX((fg.c0[0] + (a[0] + b[0]) / 2 - fg.m0[0]) / fg.g.w, fg.g.w), 0, 1); st.y = clamp((fg.c0[1] + (a[1] + b[1]) / 2 - fg.m0[1]) / fg.g.h, 0, 1);
     fg.moved = true;
   } else return;
@@ -2577,14 +3077,14 @@ function swipeTo(d) {
 fcv.addEventListener("wheel", e => {
   const st = selSticker(); if (!st || !(e.ctrlKey || e.metaKey)) return;
   e.preventDefault(); remember(focusSid, "wheel");
-  st.size = Math.round(clamp(sizeOf(st) * Math.exp(-e.deltaY * 0.01), 40, 600));
+  st.size = Math.round(clamp(sizeOf(st) * Math.exp(-e.deltaY * 0.01), 40, MAX_SIZE(st)));
   scheduleDraw(focusSid);
   clearTimeout(fWheelT); fWheelT = setTimeout(() => { saveSlide(focusSid); syncStickerControls(focusSid, st); }, 350);
 }, { passive: false });
 /* the size rail on the left edge: top = biggest; finer steps at the small end */
-const RMIN = 40, RMAX = 600;
-const railT = size => Math.sqrt((clamp(size, RMIN, RMAX) - RMIN) / (RMAX - RMIN));
-const railSize = t => Math.round(RMIN + (RMAX - RMIN) * t * t);
+const RMIN = 40, RMAX = () => MAX_SIZE(selSticker());
+const railT = size => Math.sqrt((clamp(size, RMIN, RMAX()) - RMIN) / (RMAX() - RMIN));
+const railSize = t => Math.round(RMIN + (RMAX() - RMIN) * t * t);
 function placeRail(st, withBubble) {
   const t = railT(sizeOf(st)), r = rail.getBoundingClientRect();
   rail.querySelector("b").style.top = ((1 - t) * 100) + "%";
@@ -2605,7 +3105,7 @@ rail.addEventListener("pointercancel", railEnd);
 rail.addEventListener("keydown", e => {
   const st = selSticker(), d = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1 }[e.key]; if (!st || !d) return;
   e.preventDefault(); e.stopPropagation(); remember(focusSid, "rail-key");
-  st.size = clamp(Math.round(sizeOf(st) + d * 8), RMIN, RMAX);
+  st.size = clamp(Math.round(sizeOf(st) + d * 8), RMIN, RMAX());
   scheduleDraw(focusSid); placeRail(st, true);
   clearTimeout(railKeyT); railKeyT = setTimeout(() => { saveSlide(focusSid); syncStickerControls(focusSid, st); }, 400);
 });
@@ -2678,7 +3178,8 @@ function renderFPanel() {
   if (!S.fpanel || !s) return;
   if (S.fpanel === "text") { el.innerHTML = textPanelHTML(s); updateFmtBar(); return; }
   const slots = TEMPLATES[s.type].slots.filter(k => s[k]);
-  if (s.overlay || !slots.length || bgOf(s)) { el.innerHTML = `<p class="hint">${s.overlay ? "This slide is a text-only overlay, so there's no photo to edit." : bgOf(s) ? "This slide shows a background instead of its photo. Pick Photo under Background in Layout and framing to edit the photo." : "Add a photo to this slide first, or give it a plain or gradient background in Layout and framing."}</p>`; return; }
+  const bgOnly = !!bgOf(s) && !bgOf(s).photo;
+  if (s.overlay || !slots.length || bgOnly) { el.innerHTML = `<p class="hint">${s.overlay ? "This slide is a text-only overlay, so there's no photo to edit." : bgOnly ? "This slide shows a background instead of its photo. Pick Photo under Background in Layout and framing to edit the photo." : "Add a photo to this slide first, or give it a plain or gradient background in Layout and framing."}</p>`; return; }
   if (!slots.includes(S.fslot)) S.fslot = slots[0];
   const a = s[S.fslot].adj || {}, cur = ADJ.find(x => x[0] === S.fadj) || ADJ[0], v = +a[cur[0]] || 0;
   el.innerHTML = `${slots.length > 1 ? `<div class="fchips" role="group" aria-label="Photo">${slots.map(k => `<button type="button" data-fslot="${k}" aria-pressed="${k === S.fslot}">${k === "img" ? "Before photo" : "After photo"}</button>`).join("")}</div>` : ""}
@@ -2726,6 +3227,7 @@ $("#fPanel").addEventListener("input", e => {
    The Text button lists all of the slide's text. Field refs: "text.title", "text.rows.1.value", "post.series", "layer:<sticker id>". */
 const PEN_I = `<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>`;
 const DUP_I = `<svg viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg>`;
+const STAR_I = `<svg viewBox="0 0 24 24"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>`;
 const HEAD_FIELDS = { "post.series": "Header, left (every slide)", "post.subject": "Header, right (every slide)" };
 function textAt(x, y) {   /* the text nearest the tap, within about 14 screen pixels; a tie goes to the smaller box */
   const k = fcv.clientWidth / geoOf(focusSid).w || 1, tol = 14 / k;
@@ -3075,6 +3577,7 @@ const selRef = () => { const st = selSticker(); return st ? (st.kind === "text" 
 function updateTextUI() {
   const tsel = $("#fTsel"), bar = $("#fBar"), st = focusSid && selSticker(), k = focusSid ? fcv.clientWidth / geoOf(focusSid).w : 0;
   const layer = st && st.kind === "text" ? st : null;
+  if (st && st.kind === "custom") { customBar(st); tsel.hidden = true; return; }
   const box = layer ? (S.focusBoxes || []).find(b => b.id === layer.id) : st ? null : (S.ftboxes || {})[S.ftsel];
   if (!box || !k || (fg && fg.moved) || railDrag || rotDrag) { tsel.hidden = bar.hidden = true; return; }
   const pad = 6, sw = fcv.clientWidth, sh = fcv.clientHeight;
@@ -3094,8 +3597,20 @@ function updateTextUI() {
   bar.style.left = clamp((box.x0 + box.x1) / 2 * k, bw / 2 + 4, Math.max(bw / 2 + 4, sw - bw / 2 - 4)) + "px";
   bar.style.top = clamp(y, 4, Math.max(4, sh - bh - 4)) + "px";
 }
+/* a selected sticker of your own that isn't in My stickers yet gets a Save to My stickers button under it */
+function customBar(st) {
+  const bar = $("#fBar"), box = (S.focusBoxes || []).find(b => b.id === st.id), k = fcv.clientWidth / geoOf(focusSid).w;
+  if (!box || !k || (st.pool && S.mine.has(st.pool)) || liteOn() || (fg && fg.moved) || railDrag || rotDrag) { bar.hidden = true; return; }
+  if (barKey !== "mine") { barKey = "mine"; bar.innerHTML = `<button type="button" data-fbar="savemine">${STAR_I}Save to My stickers</button>`; }
+  bar.hidden = false;
+  const bw = bar.offsetWidth, bh = bar.offsetHeight, sw = fcv.clientWidth, sh = fcv.clientHeight;
+  let y = box.y1 * k + 14; if (y + bh > sh - 4) y = box.y0 * k - 14 - bh;
+  bar.style.left = clamp((box.x0 + box.x1) / 2 * k, bw / 2 + 4, Math.max(bw / 2 + 4, sw - bw / 2 - 4)) + "px";
+  bar.style.top = clamp(y, 4, Math.max(4, sh - bh - 4)) + "px";
+}
 $("#fBar").addEventListener("click", e => {
   const b = e.target.closest("[data-fbar]"); if (!b || !focusSid) return;
+  if (b.dataset.fbar === "savemine") { saveToMine(focusSid, selSticker()); updateTextUI(); return; }
   if (b.dataset.fbar === "edit") openTextEditor();
   else if (b.dataset.fbar === "dup") duplicateText(selRef());
   else deleteRowSel();
@@ -3530,12 +4045,13 @@ photo: label, note, section, foot
 
 Layout (change only when a comment asks about placement): pos top|middle|bottom, style overlay|panel (specs only), tip left|right|inline (specs only), panel black|red (specs only), scrim 0 to 0.9 (how much to darken behind text). "auto" puts everything back to auto-fit.
 
-Background (change only when a comment asks for it): "bg" is null (the slide shows its photo) or {c1, c2, dir} instead of the photo: c1 alone is a plain color, c1 to c2 a gradient, dir down|right|diag|radial; colors as hex. "ink" is the color of the slide's own text: auto (white, or near-black on a light background), white or black. "hl" is the color of the highlight boxes (hex), or null for the text's own color.
+Background (change only when a comment asks for it): "bg" is null (the slide shows its photo) or {c1, c2, dir, photo}: c1 alone is a plain color, c1 to c2 a gradient, dir down|right|diag|radial; colors as hex. Without "photo" it replaces the photo; with "photo": true the whole photo sits on it uncropped (the photo's fx, fy and zoom then place and size it). "ink" is the color of the slide's own text: auto (white, or near-black on a light background), white or black. "hl" is the color of the highlight boxes (hex), or null for the text's own color.
 
 Stickers are icons and buttons drawn on top of a slide. "stickers" is the slide's list of {kind, x, y, size, rot, color, solid, label, bg, w, al, tr}:
 - kind: bookmark, heart, comment, share, bell, like, arrow (icons); follow, subscribe, save, keyword, handle (pill buttons showing a label); actions (an Instagram-style row of heart, comment and share with a bookmark on the right); text (free text on top of the slide: label is the text, **word** for bold, a line break for a new line; size is the font size in px, 40 to 300; w is 700 for bold or 400 for regular; al is left, center or right, how its lines line up (center if missing); tr is letter spacing, -0.15 to 0.1, default -0.05).
 - x and y: the sticker's centre as a fraction of the slide's width and height (0 to 1). The header sits near y 0.06 and the footer near y 0.95; keep stickers clear of text and of the main subject.
 - size: pixels on the slide, which is 1800 px across when it's portrait (icons 120 to 240, buttons 80 to 110 tall). rot: degrees (-180 to 180). color: hex (icons default #FFFFFF; for buttons it is the text color). solid: true fills an icon. label: button text in UPPERCASE. bg: the button's hex color.
+A sticker with kind "custom" is one of the creator's own (an image or drawing): keep it in the list with its name to keep it; you may change its x, y, size (up to 1800), rot and color, but never add a new custom sticker.
 Return "stickers": "keep" unless a comment asks to add, move or remove a sticker; then return the slide's complete new list.
 
 Photo edits are the slider settings on a slide's photo. "edits" is {exposure, contrast, whites, blacks, saturation, vibrance, grain, sharpen} for the photo ("edits2" for the after photo of a beforeafter slide): whole numbers from -100 to 100 (grain and sharpen 0 to 100); 0 or missing means unchanged. A light touch is 10 to 25, a clear change 30 to 50. There is no white balance, temperature or tint control; if a comment asks for one, say so in notes.
@@ -3572,7 +4088,7 @@ const ownPhotos = () => [...S.photos.entries()].filter(([, p]) => !isRefPhoto(p)
 function slideItem(sid, withComment) {   /* a slide as Claude reads it */
   const s = S.slides[sid];
   return { id: sid, type: s.type, text: s.text, layout: s.layout || {}, photo: (s.img && s.img.asset) || null, photo2: (s.img2 && s.img2.asset) || null, edits: (s.img && s.img.adj) || {}, edits2: (s.img2 && s.img2.adj) || {},
-    overlay: !!s.overlay, bg: s.bg || null, ink: s.ink || "auto", hl: s.hl || null, stickers: (s.stickers || []).map(({ id, ...rest }) => rest), ...(withComment ? { comment: s.comment || "" } : {}) };
+    overlay: !!s.overlay, bg: s.bg || null, ink: s.ink || "auto", hl: s.hl || null, stickers: (s.stickers || []).map(({ id, ...rest }) => rest.kind === "custom" ? { kind: "custom", name: rest.name, x: rest.x, y: rest.y, size: rest.size, rot: rest.rot || 0, ...(rest.vec && rest.color ? { color: rest.color } : {}) } : rest), ...(withComment ? { comment: s.comment || "" } : {}) };
 }
 function buildPrompt(targets, overall) {
   const o = order();
@@ -3609,15 +4125,23 @@ const num = (v, d) => v !== "" && v !== null && v !== undefined && Number.isFini
 function cleanStickers(raw, prev) {
   if (raw === null) return [];
   if (!Array.isArray(raw)) return prev || [];
+  const mine = (prev || []).filter(t => t.kind === "custom"), used = new Set();
   return raw.slice(0, 12).filter(x => x && STICKERS[x.kind]).map(x => {
     const P = STICKERS[x.kind];
+    if (P.type === "custom") {   /* Claude can move, resize or recolor your own stickers, never make one: match each to the slide's own by name */
+      const was = mine.find(t => !used.has(t) && t.name === x.name) || mine.find(t => !used.has(t)); if (!was) return null;
+      used.add(was);
+      const out = { ...clone(was), x: clamp(num(x.x, was.x), 0, 1), y: clamp(num(x.y, was.y), 0, 1), size: clamp(num(x.size, was.size), 40, 1800), rot: clamp(num(x.rot, was.rot || 0), -180, 180) };
+      if (was.vec && HEX.test(x.color)) out.color = x.color;
+      return out;
+    }
     const out = { id: "k" + Math.random().toString(36).slice(2, 9), kind: x.kind, x: clamp(num(x.x, 0.5), 0, 1), y: clamp(num(x.y, 0.8), 0, 1), size: clamp(num(x.size, P.size), 40, 600), rot: clamp(num(x.rot, 0), -180, 180) };
     if (HEX.test(x.color)) out.color = x.color;
     if (x.solid === true || x.solid === false) out.solid = x.solid;
     if (P.type === "pill") { if (x.label != null) out.label = String(x.label).slice(0, 40); if (HEX.test(x.bg)) out.bg = x.bg; }
     if (P.type === "text") { out.label = String(x.label ?? P.text).slice(0, 160); out.w = +x.w === 400 ? 400 : 700; if (x.tr != null && Number.isFinite(+x.tr)) out.tr = clamp(+x.tr, -0.15, 0.1); if (x.al === "left" || x.al === "right") out.al = x.al; }
     return out;
-  });
+  }).filter(Boolean);
 }
 function cleanPhoto(raw, prev) {
   if (raw === undefined || raw === "keep") return { v: prev, changed: false };
@@ -3628,7 +4152,7 @@ function cleanPhoto(raw, prev) {
 }
 function cleanBg(raw) {   /* {c1, c2, dir} or null (the photo) */
   if (!raw || typeof raw !== "object" || !HEXCOL.test(raw.c1)) return null;
-  return { c1: raw.c1, ...(HEXCOL.test(raw.c2) ? { c2: raw.c2, dir: BG_DIRS.includes(raw.dir) ? raw.dir : "down" } : {}) };
+  return { c1: raw.c1, ...(HEXCOL.test(raw.c2) ? { c2: raw.c2, dir: BG_DIRS.includes(raw.dir) ? raw.dir : "down" } : {}), ...(raw.photo === true ? { photo: true } : {}) };
 }
 /* the look of a slide that isn't text or layout: background, text and highlight colors, the whole-photo fit and the photo's framing */
 function applyLook(s, it) {
@@ -3921,8 +4445,11 @@ function drawFocus() {
     ? ((s.stickers || []).length ? H2("Tap text or a sticker to select it. Drag, pinch or twist a sticker; drop it on the bin to delete it. Swipe for the next slide.", "Tap text or a sticker. Swipe for the next slide.")
       : H2("Tap any text to select it, then drag it, edit it or duplicate it. Swipe for the next slide.", "Tap text to select it. Swipe for the next slide."))
     : H2((s.stickers || []).length ? "Click text or a sticker to select it. Drag to move, Ctrl + scroll to resize, the slider on top to turn. Arrow keys change slides." : "Click any text to select it, then drag it, edit it or duplicate it. Arrow keys change slides.");
+  const o = order(), at = o.indexOf(focusSid); $("#fSideL").hidden = at <= 0; $("#fSideR").hidden = at >= o.length - 1;
   updateFocusUI();
 }
+/* the round arrows at the slide's left and right edges: previous and next slide (on touch screens a swipe does it too) */
+$("#fStage").addEventListener("click", e => { const b = e.target.closest("[data-fside]"); if (b) swipeTo(+b.dataset.fside); });
 function stepFocus(d) {
   const o = order(), i = o.indexOf(focusSid), j = clamp(i + d, 0, o.length - 1);
   if (j === i) return;
@@ -3997,7 +4524,7 @@ $("#fKb").addEventListener("click", e => {
   else stepHistory(focusSid, k === "undo");
 });
 document.addEventListener("keydown", e => {
-  if (!$("#focusDlg").open || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+  if (!$("#focusDlg").open || $("#mkDlg").open || $("#stickDlg").open || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
   if (ovKind) { if (e.key === "ArrowLeft") navOverlay(-1); else if (e.key === "ArrowRight") navOverlay(1); return; }
   const mod = e.metaKey || e.ctrlKey, k = e.key.toLowerCase();
   if (mod && k === "z") { e.preventDefault(); stepHistory(focusSid, !e.shiftKey); return; }
@@ -4009,9 +4536,10 @@ document.addEventListener("keydown", e => {
 
 /* ---------- export ---------- */
 function waitImages(s) {
-  return Promise.all(["img", "img2"].map(k => new Promise(res => {
-    const src = srcOf(s[k]); if (!src || s.overlay) return res();
-    getImg(s[k]); const e = imgCache.get(src);
+  const slots = [...(s.overlay ? [] : [s.img, s.img2]), ...(s.stickers || []).map(t => t.kind === "custom" && t.src)];
+  return Promise.all(slots.map(slot => new Promise(res => {
+    const src = srcOf(slot || null); if (!src) return res();
+    getImg(slot); const e = imgCache.get(src);
     if (e.ok || e.err) return res();
     e.img.addEventListener("load", res, { once: true }); e.img.addEventListener("error", res, { once: true });
   })));
@@ -4247,6 +4775,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
+window.__t = { S, MK, applyWithClaude, drawFocus, updateFocusUI, selSticker, cleanStickers };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
@@ -4716,6 +5245,7 @@ async function boot() {
     S.local = true; S.posts = clone(L.posts || []); S.sample = window.__FAKE_SAMPLE__ || null;
     if (S.sample && S.sample.limits) S.sample.limits().then(l => { S.imgLimits = (l && l.images) || null; renderTagUI(); setCanRef(); }, () => {});
     (L.photos || []).forEach(([id, p]) => S.photos.set(id, clone(p))); S.folders = clone(L.folders || []);
+    (L.stickers || []).forEach(([id, d]) => S.mine.set(id, clone(d)));
     setStatus();
     if (S.posts[0]) selectPost(S.posts[0].id);
     return;
@@ -4732,6 +5262,13 @@ async function boot() {
     for (const d of snap.docs) { seen.add(d.id); if (S.dirty.has(photoPath(d.id)) || S.writing.has(photoPath(d.id))) continue; const v = d.data(); if (v) S.photos.set(d.id, clone(v)); }
     for (const id of [...S.photos.keys()]) if (!seen.has(id) && !S.dirty.has(photoPath(id)) && !S.writing.has(photoPath(id))) S.photos.delete(id);
     renderLibrary(); if ($("#pickDlg").open) renderPicker();
+  }, err => console.warn(err));
+  db.collection("stickers").onSnapshot(snap => {
+    const seen = new Set();
+    for (const d of snap.docs) { seen.add(d.id); const pth = mineDocPath(d.id); if (S.dirty.has(pth) || S.writing.has(pth)) continue; const v = d.data(); if (v) S.mine.set(d.id, clone(v)); }
+    for (const id of [...S.mine.keys()]) if (!seen.has(id) && !S.dirty.has(mineDocPath(id)) && !S.writing.has(mineDocPath(id))) S.mine.delete(id);
+    if ($("#stickDlg").open) renderMine();
+    if (focusSid) updateFocusUI();
   }, err => console.warn(err));
   db.doc(LIB_PATH).onSnapshot(snap => {
     if (S.dirty.has(LIB_PATH) || S.writing.has(LIB_PATH)) return;
