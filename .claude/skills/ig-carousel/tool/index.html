@@ -88,6 +88,8 @@ h1.title{font-size:clamp(26px,4vw,40px);line-height:1.02;letter-spacing:-.05em;t
 .num .ver{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--accent-ink);background:var(--accent);border-radius:999px;padding:3px 8px;margin-left:8px;vertical-align:4px}
 .kind{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
 .card-tools{margin-left:auto;display:flex;gap:6px}
+.card-h{min-width:0}.card-h .kind{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.card-h .num,.card-h .icon,.card-h .rbadge{flex:0 0 auto}
+@media (max-width:440px){.card-h{gap:6px}.card-tools{gap:4px}.card-tools .icon{width:32px;height:32px}}
 .icon{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:grid;place-items:center;padding:0}
 .icon svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
 .stick{position:relative}
@@ -277,15 +279,16 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .fkb .khint{margin:0;font-size:12.5px;line-height:1.4;color:#a8a09c;text-align:center}
 .fkb .kacts{display:flex;gap:6px;justify-content:center}
 #focusDlg .menu{background:#1c1918;border-color:#3a3432;top:42px}
-#focusDlg .menu button{color:#f3eeeb}
-#focusDlg .menu button:hover{background:#2a2524}
-#focusDlg .menu small{display:block;color:#a8a09c;font-size:12px}
+.menu.dark{background:#1c1918;border-color:#3a3432;color:#f3eeeb;width:min(330px,calc(100vw - 24px))}
+#focusDlg .menu button,.menu.dark button{color:#f3eeeb}
+#focusDlg .menu button:hover,.menu.dark button:hover{background:#2a2524}
+#focusDlg .menu small,.menu.dark small{display:block;color:#a8a09c;font-size:12px}
 #focusDlg .dlmenu{width:min(330px,calc(100vw - 24px))}
 .mratio{display:grid;gap:6px;padding:4px 6px 10px;margin-bottom:4px;border-bottom:1px solid #3a3432}
 .mratio .fchips{flex-wrap:wrap;overflow:visible}
-#focusDlg .mratio small.mwarn{color:#ffb4a6}
-#focusDlg .mratio .fchips button{padding:6px 10px;font-size:12.5px;border:1px solid #3a3432;background:#141111}
-#focusDlg .mratio .fchips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+#focusDlg .mratio small.mwarn,.menu.dark .mratio small.mwarn{color:#ffb4a6}
+#focusDlg .mratio .fchips button,.menu.dark .mratio .fchips button{padding:6px 10px;font-size:12.5px;border:1px solid #3a3432;background:#141111}
+#focusDlg .mratio .fchips button[aria-pressed="true"],.menu.dark .mratio .fchips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
 /* full screen and phone previews of the current slide */
 .fover{position:fixed;inset:0;z-index:60;background:#000;display:flex;flex-direction:column}
 .fover[hidden]{display:none}
@@ -758,8 +761,9 @@ details.gsec[open]{padding-bottom:14px}
 
 <dialog id="focusDlg" aria-labelledby="focusTitle">
   <div class="dlg-h"><h3 id="focusTitle" tabindex="-1" autofocus>Slide</h3><span class="grow"></span>
+    <div class="more"><button class="icon" id="fPv" aria-label="Preview" title="Preview" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
     <button class="icon" id="fFind" aria-label="Add a sticker or photo (Ctrl+Space)" title="Add a sticker or photo (Ctrl+Space)"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
-    <div class="more"><button class="icon" id="fDl" aria-label="Download or preview this slide" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></button></div>
+    <div class="more"><button class="icon" id="fDl" aria-label="Download" title="Download" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></button></div>
     <button class="icon" id="fPrev" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
     <button class="icon" id="fNext" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
     <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -795,7 +799,7 @@ details.gsec[open]{padding-bottom:14px}
   <div class="fover" id="fPhone" hidden><div class="ftop">
       <div class="seg" role="group" aria-label="App"><button type="button" data-papp="ig" aria-pressed="true">Instagram</button><button type="button" data-papp="tt" aria-pressed="false">TikTok</button></div>
       <div class="seg" role="group" aria-label="View"><button type="button" data-pview="feed" aria-pressed="true">Post</button><button type="button" data-pview="grid" aria-pressed="false">Profile grid</button></div>
-      <div class="seg" id="pPin" role="group" aria-label="Where the post sits" hidden><button type="button" data-ppin="1" aria-pressed="true">After 3 pinned</button><button type="button" data-ppin="0" aria-pressed="false">First</button></div>
+      <div class="seg" id="pPin" role="group" aria-label="Where the post sits" hidden><button type="button" data-ppin="1" aria-pressed="true">Pinned first</button><button type="button" data-ppin="0" aria-pressed="false">After 3 pinned</button></div>
       <div class="seg" id="pShape" role="group" aria-label="Feed shape"><button type="button" data-pshape="0.75" aria-pressed="true">3:4</button><button type="button" data-pshape="0.8" aria-pressed="false">4:5</button></div>
       <span class="grow"></span>
       <button class="icon" data-fnav="-1" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><button class="icon" data-fnav="1" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
@@ -2102,6 +2106,7 @@ function cardHTML(sid) {
   return `<article class="card${S.folded.has(sid) ? " folded" : ""}" id="card-${sid}" data-sid="${sid}" data-st="${st}" data-geo="${g.key}${own ? "+" : ""}">
     <header class="card-h"><button class="icon fold" data-act="fold" aria-expanded="${!S.folded.has(sid)}" aria-label="${S.folded.has(sid) ? "Open" : "Fold"} this slide">${ICON.down}</button><canvas class="thumb" width="${tw}" height="${th}" style="width:${tw / 2}px;height:${th / 2}px" data-act="fold" aria-hidden="true"></canvas><span class="num"></span><span class="kind">${esc(TEMPLATES[s.type].label)}</span>${own}
       <div class="card-tools"><button class="icon" data-act="left" aria-label="Move earlier">${ICON.left}</button><button class="icon" data-act="right" aria-label="Move later">${ICON.right}</button>
+      <div class="more"><button class="icon" data-act="cpv" aria-label="Preview" title="Preview" aria-expanded="false">${EYE_I}</button></div><div class="more"><button class="icon" data-act="cdl" aria-label="Download" title="Download" aria-expanded="false">${DL_I}</button></div>
       <div class="more"><button class="icon" data-act="menu" aria-label="More actions" aria-expanded="false">${ICON.more}</button></div></div></header>
     <div class="stick"><button class="frame${g.land ? " land" : ""}" data-act="focus" aria-label="Open this slide large" style="aspect-ratio:${g.w} / ${g.h}"><canvas width="${cw}" height="${ch}"></canvas></button><div class="ctrash" aria-hidden="true" hidden>${TRASH}</div></div>
     <div class="warn"></div>
@@ -2344,7 +2349,8 @@ document.addEventListener("click", e => {
   if (b.id === "folderCancel") return closeFolderForm();
   const card = b.closest(".card"); if (!card) return;
   const sid = card.dataset.sid, s = S.slides[sid], act = b.dataset.act;
-  if (act !== "menu" && act !== "del" && act !== "delok") closeMenus();
+  if (!["menu", "del", "delok", "cdl", "cpv", "cratio", "cfit"].includes(act)) closeMenus();
+  if (cardMenuAction(b, sid)) return;
   if (act === "fold") { setFold(sid, !S.folded.has(sid)); saveFolds(); }
   else if (act === "focus") { if (Date.now() - S.suppressClick > 450) openFocus(sid); }
   else if (act === "replace") openPicker(sid, b.dataset.slot);
@@ -4529,7 +4535,10 @@ function updateApplyAll() {
 /* the creator's own photos: the library without the References folder (other creators' posts, there to learn from, never to use) */
 const REF_FOLDER = "References";
 const isRefPhoto = p => p && (p.folder === REF_FOLDER || String(p.folder || "").startsWith(REF_FOLDER + "/"));
-const ownPhotos = () => [...S.photos.entries()].filter(([, p]) => !isRefPhoto(p));
+/* ...and without Thumbnails: the creator's finished post covers, there for the profile grid preview, never for a slide */
+const THUMB_FOLDER = "Thumbnails";
+const isThumbPhoto = p => p && (p.folder === THUMB_FOLDER || String(p.folder || "").startsWith(THUMB_FOLDER + "/") || (p.tags || []).includes("thumbnail"));
+const ownPhotos = () => [...S.photos.entries()].filter(([, p]) => !isRefPhoto(p) && !isThumbPhoto(p));
 function slideItem(sid, withComment) {   /* a slide as Claude reads it */
   const s = S.slides[sid];
   return { id: sid, type: s.type, text: s.text, layout: s.layout || {}, photo: (s.img && s.img.asset) || null, photo2: (s.img2 && s.img2.asset) || null, edits: (s.img && s.img.adj) || {}, edits2: (s.img2 && s.img2.adj) || {},
@@ -5026,22 +5035,51 @@ function cutNote(s, g) {
   const cut = 1 - (rw * rh) / (r.dw * r.dh);
   return cut > 0.3 ? `<small class="mwarn">This size crops ${Math.round(cut * 100)}% of the photo. Whole photo shows all of it.</small>` : "";
 }
-function dlMenuHTML() {
-  const s = S.slides[focusSid], g = geoOf(focusSid), own = RATIOS[s.ratio] ? s.ratio : "", chip = (k, l, on) => `<button type="button" data-fratio="${k}" aria-pressed="${on}">${l}</button>`;
-  const photo = !s.overlay && TEMPLATES[s.type].slots.some(k => s[k]), fit = (k, l) => `<button type="button" data-ffit="${k}" aria-pressed="${(k === "whole") === !!s.whole}">${l}</button>`;
+/* the Download menu (the slide's ratio and photo fit, then PNG / JPG) and the Preview menu, in the large view's header and on every
+   card (folded or not). On a card the buttons go through the board's data-act handler. */
+const EYE_I = `<svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg>`;
+const DL_I = `<svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>`;
+function dlMenuHTML(sid = focusSid, card = false) {
+  const A = card ? { dl: 'data-act="dlk" data-k', r: 'data-act="cratio" data-r', f: 'data-act="cfit" data-v' } : { dl: "data-fdl", r: "data-fratio", f: "data-ffit" };
+  const s = S.slides[sid], g = geoOf(sid), own = RATIOS[s.ratio] ? s.ratio : "", chip = (k, l, on) => `<button type="button" ${A.r}="${k}" aria-pressed="${on}">${l}</button>`;
+  const photo = !s.overlay && TEMPLATES[s.type].slots.some(k => s[k]), fit = (k, l) => `<button type="button" ${A.f}="${k}" aria-pressed="${(k === "whole") === !!s.whole}">${l}</button>`;
   return `<div class="mratio"><small>Ratio for this slide</small><div class="fchips" role="group" aria-label="Ratio for this slide">${chip("post", `Post (${ratioKey(S.post)})`, !own)}${Object.entries(RATIOS).map(([k, r]) => chip(k, r[2], own === k)).join("")}</div>`
     + (photo ? `<small>Photo</small><div class="fchips" role="group" aria-label="Photo">${fit("fill", "Fill the slide")}${fit("whole", "Whole photo")}</div>${cutNote(s, g)}` : "") + `</div>`
-    + `<button type="button" data-fdl="png">Download PNG<small>Full quality, ${g.w} × ${g.h}</small></button><button type="button" data-fdl="jpg">Download JPG<small>Best quality, smaller file</small></button><button type="button" data-fdl="full">Full screen<small>As big as this screen shows it</small></button><button type="button" data-fdl="phone">Phone preview<small>With Instagram or TikTok on top</small></button><button type="button" data-fdl="grid">Profile grid preview<small>The thumbnail on your Instagram or TikTok profile</small></button>`;
+    + `<button type="button" ${A.dl}="png">Download PNG<small>Full quality, ${g.w} × ${g.h}</small></button><button type="button" ${A.dl}="jpg">Download JPG<small>Best quality, smaller file</small></button>`;
 }
-$("#fDl").addEventListener("click", () => {
-  const btn = $("#fDl"), open = btn.nextElementSibling;
-  closeMenus(); if (open) return;
-  dropTextSel(true);
-  const m = document.createElement("div"); m.className = "menu dlmenu";
-  m.innerHTML = dlMenuHTML();
+function pvMenuHTML(card = false) {
+  const a = card ? 'data-act="dlk" data-k' : "data-fdl";
+  return `<button type="button" ${a}="phone">Phone preview<small>The post with Instagram or TikTok on top</small></button><button type="button" ${a}="grid">Profile grid preview<small>Its thumbnail on your Instagram or TikTok profile</small></button><button type="button" ${a}="full">Full screen<small>As big as this screen shows it</small></button>`;
+}
+function openMenuUnder(btn, html, cls) {
+  const open = btn.nextElementSibling;
+  closeMenus(); if (open) return null;
+  const m = document.createElement("div"); m.className = "menu " + cls; m.innerHTML = html;
   btn.after(m); btn.setAttribute("aria-expanded", "true");
   const r = m.getBoundingClientRect(); if (r.left < 8) m.style.right = (parseFloat(getComputedStyle(m).right) || 0) + r.left - 8 + "px";   /* keep it on screen */
-});
+  return m;
+}
+/* a card's Download / Preview menu: downloads right there; a preview opens the slide large first (previews live in the large view) */
+function cardMenuAction(b, sid) {
+  const act = b.dataset.act;
+  if (act === "cdl") { openMenuUnder(b, dlMenuHTML(sid, true), "dlmenu dark"); return true; }
+  if (act === "cpv") { openMenuUnder(b, pvMenuHTML(true), "dlmenu dark"); return true; }
+  if (act === "cratio" || act === "cfit") {
+    if (act === "cratio") setSlideRatio(sid, b.dataset.r); else setWhole(sid, b.dataset.v === "whole");
+    const nb = document.querySelector(`#card-${sid} [data-act="cdl"]`); if (nb) openMenuUnder(nb, dlMenuHTML(sid, true), "dlmenu dark");   /* the card redrew: open its menu again */
+    return true;
+  }
+  if (act === "dlk") {
+    const k = b.dataset.k; closeMenus();
+    if (k === "png") exportOne(sid);
+    else if (k === "jpg") { toast("Rendering JPG…"); slideBlob(sid, "image/jpeg", 1).then(bl => { if (bl) offer(fileName(sid).replace(/\.png$/, ".jpg"), bl); }); }
+    else { openFocus(sid); requestAnimationFrame(() => focusDownload(k)); }
+    return true;
+  }
+  return false;
+}
+$("#fDl").addEventListener("click", () => { dropTextSel(true); openMenuUnder($("#fDl"), dlMenuHTML(), "dlmenu"); });
+$("#fPv").addEventListener("click", () => { dropTextSel(true); openMenuUnder($("#fPv"), pvMenuHTML(), "dlmenu"); });
 /* When a slide changes size, its stickers keep their distance from the nearest edge, the way the header, footer and text blocks do
    (one near the middle keeps its place). Switching back puts them where they were. */
 function remapStickers(s, g0, g1) {
@@ -5257,18 +5295,19 @@ function gridCut(g) { const a = g.w / g.h; return { cutX: a > GRID_A + 1e-3 ? Ma
 function gridTiles(app) {
   const used = new Set(order().flatMap(sid => ["img", "img2"].map(k => S.slides[sid][k] && S.slides[sid][k].asset).filter(Boolean)));
   const pool = ownPhotos().filter(([, p]) => !used.has(p.asset)).sort((a, b) => (b[1].addedAt || 0) - (a[1].addedAt || 0));
-  const others = (pool.length >= 8 ? pool : ownPhotos()).slice(0, 14), at = S.ppin ? 3 : 0, n = 12, out = [];
+  const thumbs = [...S.photos.entries()].filter(([, p]) => isThumbPhoto(p) && !isRefPhoto(p)).sort((a, b) => (b[1].addedAt || 0) - (a[1].addedAt || 0));
+  const others = [...thumbs, ...(pool.length >= 8 ? pool : ownPhotos())].slice(0, 14), at = S.ppin ? 0 : 3, n = 12, out = [];   /* your post thumbnails first */
   const views = i => (((i + 3) * 7919) % 8700 + 260).toLocaleString("en-US");
   let k = 0;
   for (let i = 0; i < n; i++) {
-    if (i === at) { out.push(`<div class="gtile gnew">${ovURL ? `<img src="${ovURL}" alt="This post">` : ""}${app === "ig" ? `<span class="gico">${phi("stack", 20, "fillw")}</span>` : ""}<span class="gviews">${phi(app === "ig" ? "eye" : "playo", 15)}0</span></div>`); continue; }
-    const ph = others.length ? others[k++ % others.length][1] : null, pin = S.ppin && i < 3;
+    if (i === at) { out.push(`<div class="gtile gnew">${ovURL ? `<img src="${ovURL}" alt="This post">` : ""}${app === "ig" ? `<span class="gico">${phi(S.ppin ? "pin" : "stack", 20, "fillw")}</span>` : S.ppin ? `<span class="gpin">Pinned</span>` : ""}<span class="gviews">${phi(app === "ig" ? "eye" : "playo", 15)}0</span></div>`); continue; }
+    const ph = others.length ? others[k++ % others.length][1] : null, pin = !S.ppin && i < 3;   /* "After 3 pinned": three of your posts pinned before it */
     out.push(`<div class="gtile">${ph ? `<img loading="lazy" src="${esc(srcOf(ph))}" alt="">` : ""}${pin ? (app === "ig" ? `<span class="gico">${phi("pin", 20, "fillw")}</span>` : `<span class="gpin">Pinned</span>`) : ""}<span class="gviews">${phi(app === "ig" ? "eye" : "playo", 15)}${views(i)}</span></div>`);
   }
   return `<div class="ggrid">${out.join("")}</div>`;
 }
 function igGrid(handle) {
-  const hl = [...new Set([...S.photos.values()].map(p => String(p.folder || "").split("/")[0]).filter(f => f && f !== REF_FOLDER))].slice(0, 4);
+  const hl = [...new Set(ownPhotos().map(([, p]) => String(p.folder || "").split("/")[0]).filter(Boolean))].slice(0, 4);
   const hlPics = ownPhotos().slice(0, 4).map(([, p]) => srcOf(p));
   return `<div class="gbar"><b>${esc(handle)}</b>${phi("chev", 16)}<span class="grow"></span>${phi("plus")}${phi("menu")}</div>
     <div class="gprof"><span class="gav"></span><div class="gstat"><b>128</b><small>posts</small></div><div class="gstat"><b>2,431</b><small>followers</small></div><div class="gstat"><b>312</b><small>following</small></div></div>
