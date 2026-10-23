@@ -299,12 +299,59 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .seg button[aria-pressed="true"]{background:var(--accent);color:#fff;font-weight:700}
 .seg[hidden]{display:none}
 .fullimg,.pstage{touch-action:none;-webkit-user-select:none;user-select:none}
-.fover.bare .ftop,.fover.bare .pnote{display:none}
+.fover.bare .ftop,.fover.bare .pnote,.fover.bare .oside{display:none}
+.fullimg,.pstage{position:relative;overflow:hidden}
+.fullimg img{will-change:transform}
+.fullimg img,.pstage img{-webkit-user-drag:none;user-select:none}
+.oside{position:absolute;top:50%;width:46px;height:46px;margin-top:-23px;border-radius:50%;border:0;padding:0;background:rgba(28,25,24,.72);color:#fff;display:grid;place-items:center;cursor:pointer;z-index:3;box-shadow:0 1px 8px rgba(0,0,0,.4)}
+.oside:hover{background:rgba(28,25,24,.92)}
+.oside svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.oside.l{left:12px}.oside.r{right:12px}.oside[hidden]{display:none}
+@media (pointer:coarse){.oside{width:38px;height:38px;margin-top:-19px;opacity:.8}.oside.l{left:6px}.oside.r{right:6px}}
+/* profile grid preview */
+.gbar{position:absolute;left:0;right:0;top:50px;height:46px;display:flex;align-items:center;gap:6px;padding:0 16px;font-size:20px}
+.gbar svg{margin-left:14px}.gbar b+svg{margin-left:2px}
+.gbar.tt svg{margin-left:16px}.gbar.tt svg:first-child{margin-left:0}
+.gprof{position:absolute;left:16px;right:16px;top:100px;display:flex;align-items:center;gap:22px}
+.gav{width:84px;height:84px;border-radius:50%;background:linear-gradient(135deg,#4a3f3b,#2a2422);flex:0 0 auto;box-shadow:0 0 0 2px #000,0 0 0 3.5px #4a423f}
+.gstat{flex:1;display:flex;flex-direction:column;align-items:center;font-size:16px}.gstat small{font-size:13px;color:#d0d0d0}
+.gbio{position:absolute;left:16px;right:16px;top:196px;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.gbio i,.tprof>i{display:block;height:8px;border-radius:4px;background:#2a2a2a;width:70%}.gbio i.s{width:46%}
+.gbtns{position:absolute;left:16px;right:16px;top:248px;display:flex;gap:8px}
+.gbtns span{flex:1;background:#262626;border-radius:9px;text-align:center;font-weight:600;font-size:13.5px;padding:8px 0}
+.ghl{position:absolute;left:12px;right:0;top:296px;display:flex;gap:14px;overflow:hidden}
+.ghl span{display:flex;flex-direction:column;align-items:center;gap:5px;width:64px;flex:0 0 auto}
+.ghl i{width:62px;height:62px;border-radius:50%;background:#1c1c1c;box-shadow:0 0 0 1.5px #3a3a3a;overflow:hidden;display:grid;place-items:center}
+.ghl i img{width:100%;height:100%;object-fit:cover}
+.ghl i.add{background:none;box-shadow:0 0 0 1.5px #3a3a3a}
+.ghl small{font-size:11.5px;max-width:64px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gtabs{position:absolute;left:0;right:0;top:394px;height:44px;display:flex;justify-content:space-around;align-items:center;color:#a8a8a8}
+.gtabs svg:first-child{color:#fff}
+.gtabs::after{content:"";position:absolute;left:4%;width:17%;bottom:0;height:2px;background:#fff}
+.gwrap{position:absolute;left:0;right:0;top:439px;bottom:83px;overflow:hidden}
+.ggrid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5px}
+.gtile{position:relative;aspect-ratio:3/4;background:#1a1a1a;overflow:hidden}
+.gtile img{width:100%;height:100%;object-fit:cover;display:block}
+.gtile .gico{position:absolute;top:7px;right:7px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.gtile .gviews{position:absolute;left:7px;bottom:6px;display:flex;align-items:center;gap:4px;font-size:12.5px;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.gtile .gviews svg{filter:drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+.gtile .gpin{position:absolute;top:6px;left:6px;background:#fe2c55;color:#fff;font-size:11.5px;font-weight:600;padding:2px 6px;border-radius:3px}
+.gnew{outline:2px solid #e02d12;outline-offset:-2px;z-index:1}
+.fover.bare .gnew{outline:none}
+.tprof{position:absolute;left:0;right:0;top:96px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:17px}
+.tprof .gav{width:78px;height:78px;margin-bottom:6px}
+.tprof>small{color:#a8a8a8;font-size:13.5px}
+.tstat{display:flex;gap:26px;margin:8px 0 6px}.tstat span{display:flex;flex-direction:column;align-items:center;font-size:16px}.tstat small{color:#a8a8a8;font-size:12.5px}
+.tedit{background:#2a2a2a;border-radius:6px;padding:7px 26px;font-size:14px;font-weight:600}
+.tprof>i{width:52%;margin-top:10px}
+.gtabs.tt{top:404px;color:#8a8a8a}
+.gtabs.tt::after{left:5%;width:14%}
+.gwrap.tt{top:449px}
 /* phones: your own phone is the frame, so the preview drops the bezel and the arrows (swipe instead) to show the screen bigger */
 @media (max-width:560px){
   #fPhone .pphone{width:390px;height:844px;padding:0;background:none;box-shadow:none;border-radius:54px}
   #fPhone .pscreen{box-shadow:0 0 0 1.5px #3a3432}
-  #fPhone [data-fnav]{display:none}
+  #fPhone .ftop [data-fnav]{display:none}
   .seg button{padding:6px 10px}
 }
 .pstage{flex:1;min-height:0;position:relative;overflow:hidden}
@@ -744,14 +791,16 @@ details.gsec[open]{padding-bottom:14px}
   <div class="fover" id="fFull" hidden><div class="ftop"><span class="grow"></span>
       <button class="icon" data-fnav="-1" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><button class="icon" data-fnav="1" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
       <button class="icon" data-fshut aria-label="Close full screen"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-    <div class="fullimg"><img id="fFullImg" alt=""></div></div>
+    <div class="fullimg"><img id="fFullImg" alt=""><button type="button" class="oside l" data-fnav="-1" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><button type="button" class="oside r" data-fnav="1" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button></div></div>
   <div class="fover" id="fPhone" hidden><div class="ftop">
       <div class="seg" role="group" aria-label="App"><button type="button" data-papp="ig" aria-pressed="true">Instagram</button><button type="button" data-papp="tt" aria-pressed="false">TikTok</button></div>
+      <div class="seg" role="group" aria-label="View"><button type="button" data-pview="feed" aria-pressed="true">Post</button><button type="button" data-pview="grid" aria-pressed="false">Profile grid</button></div>
+      <div class="seg" id="pPin" role="group" aria-label="Where the post sits" hidden><button type="button" data-ppin="1" aria-pressed="true">After 3 pinned</button><button type="button" data-ppin="0" aria-pressed="false">First</button></div>
       <div class="seg" id="pShape" role="group" aria-label="Feed shape"><button type="button" data-pshape="0.75" aria-pressed="true">3:4</button><button type="button" data-pshape="0.8" aria-pressed="false">4:5</button></div>
       <span class="grow"></span>
       <button class="icon" data-fnav="-1" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><button class="icon" data-fnav="1" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
       <button class="icon" data-fshut aria-label="Close phone preview"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-    <div class="pstage" id="pStage"><div class="pphone" id="pPhone"><div class="pscreen" id="pScreen"></div></div></div>
+    <div class="pstage" id="pStage"><div class="pphone" id="pPhone"><div class="pscreen" id="pScreen"></div></div><button type="button" class="oside l" data-fnav="-1" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><button type="button" class="oside r" data-fnav="1" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button></div>
     <p class="pnote" id="pNote"></p></div>
 </dialog>
 
@@ -4982,7 +5031,7 @@ function dlMenuHTML() {
   const photo = !s.overlay && TEMPLATES[s.type].slots.some(k => s[k]), fit = (k, l) => `<button type="button" data-ffit="${k}" aria-pressed="${(k === "whole") === !!s.whole}">${l}</button>`;
   return `<div class="mratio"><small>Ratio for this slide</small><div class="fchips" role="group" aria-label="Ratio for this slide">${chip("post", `Post (${ratioKey(S.post)})`, !own)}${Object.entries(RATIOS).map(([k, r]) => chip(k, r[2], own === k)).join("")}</div>`
     + (photo ? `<small>Photo</small><div class="fchips" role="group" aria-label="Photo">${fit("fill", "Fill the slide")}${fit("whole", "Whole photo")}</div>${cutNote(s, g)}` : "") + `</div>`
-    + `<button type="button" data-fdl="png">Download PNG<small>Full quality, ${g.w} × ${g.h}</small></button><button type="button" data-fdl="jpg">Download JPG<small>Best quality, smaller file</small></button><button type="button" data-fdl="full">Full screen<small>As big as this screen shows it</small></button><button type="button" data-fdl="phone">Phone preview<small>With Instagram or TikTok on top</small></button>`;
+    + `<button type="button" data-fdl="png">Download PNG<small>Full quality, ${g.w} × ${g.h}</small></button><button type="button" data-fdl="jpg">Download JPG<small>Best quality, smaller file</small></button><button type="button" data-fdl="full">Full screen<small>As big as this screen shows it</small></button><button type="button" data-fdl="phone">Phone preview<small>With Instagram or TikTok on top</small></button><button type="button" data-fdl="grid">Profile grid preview<small>The thumbnail on your Instagram or TikTok profile</small></button>`;
 }
 $("#fDl").addEventListener("click", () => {
   const btn = $("#fDl"), open = btn.nextElementSibling;
@@ -5041,16 +5090,34 @@ $("#focusDlg").addEventListener("click", e => {
   const nv = t.closest("[data-fnav]"); if (nv) { navOverlay(+nv.dataset.fnav); return; }
   if (t.closest("[data-fshut]")) { closeOverlays(); return; }
   const pa = t.closest("[data-papp]"); if (pa) { S.papp = pa.dataset.papp; renderPhone(); return; }
+  const pv = t.closest("[data-pview]"); if (pv) { S.pview = pv.dataset.pview; renderPhone(); return; }
+  const pp = t.closest("[data-ppin]"); if (pp) { S.ppin = pp.dataset.ppin === "1"; renderPhone(); return; }
   const ps = t.closest("[data-pshape]"); if (ps) { S.pshape = +ps.dataset.pshape; renderPhone(); }
 });
 function focusDownload(kind) {
   const sid = focusSid; if (!sid) return;
   if (kind === "png") return exportOne(sid);
   if (kind === "jpg") { toast("Rendering JPG…"); return slideBlob(sid, "image/jpeg", 1).then(b => { if (b) offer(fileName(sid).replace(/\.png$/, ".jpg"), b); }); }
+  if (kind === "phone" || kind === "grid") { S.pview = kind === "grid" ? "grid" : "feed"; return openOverlay("phone"); }
   openOverlay(kind);
 }
-/* previews: the slide rendered at full size, so what you see is what you'd post. Swipe or use the arrows to change slides. */
-let ovKind = null, ovURL = null, ovSeq = 0, ovFS = false;
+/* previews: the slide rendered at full size, so what you see is what you'd post. Change slides by swiping (the slide follows the
+   finger or mouse), the round buttons at the sides, tapping the left or right edge of the full-screen slide, a sideways trackpad
+   swipe, or the arrow keys. Each slide is rendered once and kept (with the ones next to it rendered ahead), so flipping is quick. */
+let ovKind = null, ovURL = null, ovSeq = 0, ovFS = false, ovDir = 0;
+const ovCache = new Map();   /* sid → {sig, url} */
+S.pview = "feed"; S.ppin = true;
+async function ovBlobURL(sid) {
+  const s = S.slides[sid]; if (!s) return null;
+  const p = S.post || {}, sig = JSON.stringify([s, p.series, p.subject, p.handle, p.ratio, numOf(sid)]);
+  const c = ovCache.get(sid); if (c && c.sig === sig) return c.url;
+  const blob = await slideBlob(sid, s.overlay ? "image/png" : "image/jpeg", 0.95); if (!blob || !ovKind) return null;
+  const url = URL.createObjectURL(blob), old = ovCache.get(sid);
+  if (old && old.url !== ovURL) URL.revokeObjectURL(old.url);
+  ovCache.delete(sid); ovCache.set(sid, { sig, url });
+  for (const [k, v] of [...ovCache]) { if (ovCache.size <= 7) break; if (v.url === ovURL || k === focusSid) continue; URL.revokeObjectURL(v.url); ovCache.delete(k); }
+  return url;
+}
 function openOverlay(kind) {
   ovKind = kind; $("#fFull").hidden = kind !== "full"; $("#fPhone").hidden = kind !== "phone";
   if (kind === "full") {
@@ -5061,35 +5128,73 @@ function openOverlay(kind) {
 }
 async function refreshOverlay() {
   if (!ovKind || !focusSid) return;
-  const seq = ++ovSeq, s = S.slides[focusSid];
-  const blob = await slideBlob(focusSid, s.overlay ? "image/png" : "image/jpeg", 0.95);
-  if (seq !== ovSeq || !ovKind || !blob) return;
-  if (ovURL) URL.revokeObjectURL(ovURL);
-  ovURL = URL.createObjectURL(blob);
+  const seq = ++ovSeq, sid = focusSid, url = await ovBlobURL(sid);
+  if (seq !== ovSeq || !ovKind || !url || sid !== focusSid) return;
+  ovURL = url;
   if (ovKind === "full") { const img = $("#fFullImg"); img.src = ovURL; img.alt = "Slide " + $("#focusTitle").textContent; }
   else renderPhone();
+  slideIn(); placeOsides();
+  const o = order(), at = o.indexOf(sid);   /* render the slides on either side ahead */
+  for (const j of [at + 1, at - 1]) { if (!o[j]) continue; await new Promise(r => setTimeout(r, 30)); if (seq !== ovSeq || !ovKind) return; await ovBlobURL(o[j]); }
+}
+/* the picture that moves with a swipe: the full-screen slide, or the post in the phone's feed (the grid view has none) */
+const ovImg = () => ovKind === "full" ? $("#fFullImg") : ovKind === "phone" && S.pview !== "grid" ? $("#pScreen .pimg img") : null;
+function slideIn() {
+  const img = ovImg(), d = ovDir; ovDir = 0; if (!img || !d) return;
+  img.style.transition = "none"; img.style.transform = `translateX(${d * 28}%)`; img.style.opacity = "0";
+  requestAnimationFrame(() => requestAnimationFrame(() => { img.style.transition = "transform .22s ease-out, opacity .22s ease-out"; img.style.transform = ""; img.style.opacity = ""; }));
+}
+function placeOsides() {
+  const o = order(), at = o.indexOf(focusSid);
+  $$(".oside").forEach(b => { b.hidden = +b.dataset.fnav < 0 ? at <= 0 : at < 0 || at >= o.length - 1; });
 }
 function closeOverlays() {
   if (!ovKind) return false;
   ovKind = null; ovSeq++; ovFS = false;
   $("#fFull").hidden = $("#fPhone").hidden = true; $$(".fover.bare").forEach(o => o.classList.remove("bare"));
   if (document.fullscreenElement) { try { document.exitFullscreen().catch(() => {}); } catch (e) {} }
-  if (ovURL) { URL.revokeObjectURL(ovURL); ovURL = null; }
+  for (const v of ovCache.values()) URL.revokeObjectURL(v.url);
+  ovCache.clear(); ovURL = null;
   $("#fFullImg").removeAttribute("src"); $("#pScreen").innerHTML = "";
   return true;
 }
 document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && ovFS && ovKind === "full") closeOverlays(); });
-function navOverlay(d) { const before = focusSid; stepFocus(d); if (focusSid !== before) refreshOverlay(); }
-let ovSwipe = null;
+function navOverlay(d) { const before = focusSid; stepFocus(d); if (focusSid !== before) { ovDir = d; refreshOverlay(); } }
+let ovSwipe = null, ovWheel = 0, ovWheelT = 0;
 for (const el of [$("#fFull .fullimg"), $("#pStage")]) {
-  el.addEventListener("pointerdown", e => { ovSwipe = { x: e.clientX, y: e.clientY, id: e.pointerId }; });
-  el.addEventListener("pointerup", e => {
-    if (!ovSwipe || ovSwipe.id !== e.pointerId) return;
-    const dx = e.clientX - ovSwipe.x, dy = e.clientY - ovSwipe.y; ovSwipe = null;
-    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) navOverlay(dx < 0 ? 1 : -1);
-    else if (Math.abs(dx) < 8 && Math.abs(dy) < 8) { el.closest(".fover").classList.toggle("bare"); if (ovKind === "phone") requestAnimationFrame(fitPhone); }
+  el.addEventListener("dragstart", e => e.preventDefault());   /* a mouse drag swipes; it doesn't pick up the picture */
+  el.addEventListener("pointerdown", e => {
+    if (e.target.closest("button")) return;   /* the round buttons do their own thing */
+    ovSwipe = { x: e.clientX, y: e.clientY, id: e.pointerId, img: ovImg(), moved: false };
+    try { el.setPointerCapture(e.pointerId); } catch (err) {}
   });
-  el.addEventListener("pointercancel", () => { ovSwipe = null; });
+  el.addEventListener("pointermove", e => {   /* the slide follows the finger (with some give at the first and last slide) */
+    const w = ovSwipe; if (!w || w.id !== e.pointerId || !w.img) return;
+    const dx = e.clientX - w.x, dy = e.clientY - w.y;
+    if (!w.moved && (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy))) return;
+    w.moved = true;
+    const o = order(), at = o.indexOf(focusSid), edge = (dx > 0 && at <= 0) || (dx < 0 && at >= o.length - 1);
+    w.img.style.transition = "none"; w.img.style.transform = `translateX(${edge ? dx * 0.25 : dx}px)`;
+  });
+  el.addEventListener("pointerup", e => {
+    const w = ovSwipe; if (!w || w.id !== e.pointerId) return;
+    const dx = e.clientX - w.x, dy = e.clientY - w.y; ovSwipe = null;
+    const back = () => { if (w.img) { w.img.style.transition = "transform .2s ease-out"; w.img.style.transform = ""; } };
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.3) { const before = focusSid; navOverlay(dx < 0 ? 1 : -1); if (focusSid === before) back(); }
+    else if (Math.abs(dx) < 8 && Math.abs(dy) < 8) {
+      back();
+      const r = el.getBoundingClientRect(), fx = (e.clientX - r.left) / r.width;
+      if (ovKind === "full" && fx < 0.2) navOverlay(-1);   /* full screen: tap the left or right edge for the previous or next slide */
+      else if (ovKind === "full" && fx > 0.8) navOverlay(1);
+      else { el.closest(".fover").classList.toggle("bare"); if (ovKind === "phone") requestAnimationFrame(fitPhone); }
+    } else back();
+  });
+  el.addEventListener("pointercancel", () => { if (ovSwipe && ovSwipe.img) { ovSwipe.img.style.transform = ""; } ovSwipe = null; });
+  el.addEventListener("wheel", e => {   /* a sideways two-finger trackpad swipe */
+    if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+    e.preventDefault(); if (Date.now() < ovWheelT) return;
+    ovWheel += e.deltaX; if (Math.abs(ovWheel) > 60) { navOverlay(ovWheel > 0 ? 1 : -1); ovWheel = 0; ovWheelT = Date.now() + 450; }
+  }, { passive: false });
 }
 /* the phone preview: a 390 × 844 screen with the app's usual buttons drawn on top (plain outlines, no app logos), scaled to fit */
 const PHI = {
@@ -5106,7 +5211,19 @@ const PHI = {
   share: '<path d="M14 5l7 7-7 7v-4c-5 0-8 1.5-11 5 1-6 4-10 11-11z"/>',
   inbox: '<path d="M4 6h16v12H4z"/><path d="M4 13h5l1 2h4l1-2h5"/>',
   cross: '<path d="M12 6v12M6 12h12"/>',
-  friends: '<circle cx="9" cy="9" r="3"/><path d="M3 19c.8-3 3.2-4.5 6-4.5s5.2 1.5 6 4.5"/><circle cx="17" cy="8" r="2.4"/><path d="M16.5 13.5c2.3.2 4 1.6 4.5 4"/>'
+  friends: '<circle cx="9" cy="9" r="3"/><path d="M3 19c.8-3 3.2-4.5 6-4.5s5.2 1.5 6 4.5"/><circle cx="17" cy="8" r="2.4"/><path d="M16.5 13.5c2.3.2 4 1.6 4.5 4"/>',
+  chev: '<path d="M7 10l5 5 5-5"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  grid: '<rect x="4" y="4" width="4.5" height="4.5" rx="1"/><rect x="9.75" y="4" width="4.5" height="4.5" rx="1"/><rect x="15.5" y="4" width="4.5" height="4.5" rx="1"/><rect x="4" y="9.75" width="4.5" height="4.5" rx="1"/><rect x="9.75" y="9.75" width="4.5" height="4.5" rx="1"/><rect x="15.5" y="9.75" width="4.5" height="4.5" rx="1"/><rect x="4" y="15.5" width="4.5" height="4.5" rx="1"/><rect x="9.75" y="15.5" width="4.5" height="4.5" rx="1"/><rect x="15.5" y="15.5" width="4.5" height="4.5" rx="1"/>',
+  repost: '<path d="M7 7h10l-3-3M17 17H7l3 3"/><path d="M17 7v5M7 17v-5"/>',
+  tag: '<rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="12" cy="10" r="2.8"/><path d="M7.5 18c1-2.2 2.6-3.3 4.5-3.3s3.5 1.1 4.5 3.3"/>',
+  eye: '<path d="M2.5 12S6 6 12 6s9.5 6 9.5 6-3.5 6-9.5 6S2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.6"/>',
+  playo: '<path d="M7 5v14l11-7z"/>',
+  stack: '<rect x="3" y="7" width="13" height="13" rx="2"/><path d="M8 4h11a2 2 0 0 1 2 2v11" fill="none" stroke="#fff" stroke-width="2"/>',
+  pin: '<path d="M14.5 3.5l6 6-2.6.9-3.6 3.6.6 4.4-1.7 1.7-3.6-3.6L5 21l-.5-.5 4.5-4.6-3.6-3.6L7 10.6l4.4.6L15 7.6z"/>',
+  lock: '<rect x="5" y="10.5" width="14" height="10" rx="2.5"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>',
+  adduser: '<circle cx="10" cy="8.5" r="3.5"/><path d="M3.5 20c1-3.6 3.6-5.4 6.5-5.4s5.5 1.8 6.5 5.4"/><path d="M19 8v6M16 11h6"/>',
+  bag: '<path d="M5 8h14l-1 12H6z"/><path d="M9 8a3 3 0 0 1 6 0"/>'
 };
 const phi = (k, sz = 26, cls = "") => `<svg viewBox="0 0 24 24" width="${sz}" height="${sz}"${cls ? ` class="${cls}"` : ""} aria-hidden="true">${PHI[k]}</svg>`;
 const PSIG = `<svg viewBox="0 0 18 12" width="18" height="12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg><svg viewBox="0 0 27 12" width="27" height="12"><rect x=".5" y=".5" width="23" height="11" rx="3" fill="none" stroke="#fff" stroke-opacity=".5"/><rect x="2" y="2" width="20" height="8" rx="1.8"/><rect x="24.5" y="4" width="1.6" height="4" rx=".8" fill-opacity=".5"/></svg>`;
@@ -5133,6 +5250,52 @@ function ttScreen(x, handle, caption) {
     <div class="tcap"><b>@${esc(handle)}</b><p>${esc(caption)}</p></div>${phoneDots(x, "tdots")}
     <div class="pnav">${phi("home")}${phi("friends")}<span class="tplus">${phi("cross", 22)}</span>${phi("inbox")}${phi("user")}</div>`;
 }
+/* the profile grid: this slide as the post's thumbnail, a 3:4 tile among your other posts (photos from your library stand in for
+   them), after three pinned posts or first. The profile itself is placeholder chrome; only the handle is yours. */
+const GRID_A = 0.75;
+function gridCut(g) { const a = g.w / g.h; return { cutX: a > GRID_A + 1e-3 ? Math.round((g.w - g.h * GRID_A) / 2) : 0, cutY: a < GRID_A - 1e-3 ? Math.round((g.h - g.w / GRID_A) / 2) : 0 }; }
+function gridTiles(app) {
+  const used = new Set(order().flatMap(sid => ["img", "img2"].map(k => S.slides[sid][k] && S.slides[sid][k].asset).filter(Boolean)));
+  const pool = ownPhotos().filter(([, p]) => !used.has(p.asset)).sort((a, b) => (b[1].addedAt || 0) - (a[1].addedAt || 0));
+  const others = (pool.length >= 8 ? pool : ownPhotos()).slice(0, 14), at = S.ppin ? 3 : 0, n = 12, out = [];
+  const views = i => (((i + 3) * 7919) % 8700 + 260).toLocaleString("en-US");
+  let k = 0;
+  for (let i = 0; i < n; i++) {
+    if (i === at) { out.push(`<div class="gtile gnew">${ovURL ? `<img src="${ovURL}" alt="This post">` : ""}${app === "ig" ? `<span class="gico">${phi("stack", 20, "fillw")}</span>` : ""}<span class="gviews">${phi(app === "ig" ? "eye" : "playo", 15)}0</span></div>`); continue; }
+    const ph = others.length ? others[k++ % others.length][1] : null, pin = S.ppin && i < 3;
+    out.push(`<div class="gtile">${ph ? `<img loading="lazy" src="${esc(srcOf(ph))}" alt="">` : ""}${pin ? (app === "ig" ? `<span class="gico">${phi("pin", 20, "fillw")}</span>` : `<span class="gpin">Pinned</span>`) : ""}<span class="gviews">${phi(app === "ig" ? "eye" : "playo", 15)}${views(i)}</span></div>`);
+  }
+  return `<div class="ggrid">${out.join("")}</div>`;
+}
+function igGrid(handle) {
+  const hl = [...new Set([...S.photos.values()].map(p => String(p.folder || "").split("/")[0]).filter(f => f && f !== REF_FOLDER))].slice(0, 4);
+  const hlPics = ownPhotos().slice(0, 4).map(([, p]) => srcOf(p));
+  return `<div class="gbar"><b>${esc(handle)}</b>${phi("chev", 16)}<span class="grow"></span>${phi("plus")}${phi("menu")}</div>
+    <div class="gprof"><span class="gav"></span><div class="gstat"><b>128</b><small>posts</small></div><div class="gstat"><b>2,431</b><small>followers</small></div><div class="gstat"><b>312</b><small>following</small></div></div>
+    <div class="gbio"><b>${esc(handle)}</b><i></i><i class="s"></i></div>
+    <div class="gbtns"><span>Edit profile</span><span>Share profile</span></div>
+    <div class="ghl"><span><i class="add">${phi("cross", 26)}</i><small>New</small></span>${hl.map((f, i) => `<span><i>${hlPics[i] ? `<img src="${esc(hlPics[i])}" alt="">` : ""}</i><small>${esc(f)}</small></span>`).join("")}</div>
+    <div class="gtabs">${phi("grid", 26)}${phi("play", 26)}${phi("repost", 26)}${phi("tag", 26)}</div>
+    <div class="gwrap ig">${gridTiles("ig")}</div>
+    <div class="pnav">${phi("home")}${phi("play")}${phi("send")}${phi("search")}${phi("user")}</div>`;
+}
+function ttGrid(handle) {
+  return `<div class="gbar tt">${phi("adduser", 26)}<span class="grow"></span>${phi("share", 24)}${phi("menu", 26)}</div>
+    <div class="tprof"><span class="gav"></span><b>${esc(handle)}</b><small>@${esc(handle)}</small>
+      <div class="tstat"><span><b>312</b><small>Following</small></span><span><b>2,431</b><small>Followers</small></span><span><b>24.8K</b><small>Likes</small></span></div>
+      <span class="tedit">Edit profile</span><i></i></div>
+    <div class="gtabs tt">${phi("grid", 26)}${phi("lock", 24)}${phi("repost", 24)}${phi("save", 24)}${phi("heart", 24)}</div>
+    <div class="gwrap tt">${gridTiles("tt")}</div>
+    <div class="pnav">${phi("home")}${phi("bag")}<span class="tplus">${phi("cross", 22)}</span>${phi("inbox")}${phi("user")}</div>`;
+}
+function gridNote() {
+  const g = geoOf(focusSid), x = numOf(focusSid), c = gridCut(g), app = S.papp === "tt" ? "TikTok" : "Instagram";
+  const cut = c.cutX ? `${c.cutX} px is cut at the left and at the right` : c.cutY ? `${c.cutY} px is cut at the top and at the bottom` : "nothing is cut";
+  const near = [...new Set(Object.entries(S.ftboxes || {}).filter(([, b]) => c.cutY ? b.y0 < c.cutY + 24 || b.y1 > g.h - c.cutY - 24 : c.cutX ? b.x0 < c.cutX + 24 || b.x1 > g.w - c.cutX - 24 : false)
+    .map(([k]) => k.startsWith("post.") ? "the header" : k === "text.section" || k === "text.foot" ? "the footer" : "some text"))];
+  const first = x.n === 1 && x.v === 1 ? "" : S.papp === "tt" ? " This is how this slide would look as the cover (pick it when you post)." : " Instagram uses the first slide; this shows how this one would look there.";
+  return `${app}'s profile grid shows posts as 3:4 tiles: for this ${g.key} slide ${cut}${near.length ? ` (${near.join(" and ")} ${near.length > 1 ? "sit" : "sits"} in that strip)` : ""}.${first} Small text is hard to read at tile size.` + (TOUCH() ? " Swipe for the next slide." : " Arrow keys or swipe for the next slide.");
+}
 function phoneNote() {
   const how = TOUCH() ? " Swipe for the next slide; tap to hide the controls." : " Arrow keys for the next slide; click the phone to hide the controls.", g = geoOf(focusSid);
   if (S.papp === "tt") return (g.key === "9:16" ? "TikTok shows this 9:16 slide full screen." : `TikTok fits this ${g.key} slide to the screen width.`) + " Its buttons sit over the right edge and the caption over the bottom." + how;
@@ -5146,14 +5309,17 @@ function phoneNote() {
 }
 function renderPhone() {
   if (ovKind !== "phone" || !focusSid) return;
-  const x = numOf(focusSid), handle = String(S.post.handle || "").replace(/^@/, "") || "yourhandle", caption = plainText(S.post.title);
+  const x = numOf(focusSid), handle = String(S.post.handle || "").replace(/^@/, "").toLowerCase() || "yourhandle"   /* the apps show handles in lowercase */, caption = plainText(S.post.title);
   $$("#fPhone [data-papp]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.papp === S.papp)));
   $$("#fPhone [data-pshape]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.pshape === S.pshape)));
-  $("#pShape").hidden = S.papp !== "ig";
+  $$("#fPhone [data-pview]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.pview === S.pview)));
+  $$("#fPhone [data-ppin]").forEach(b => b.setAttribute("aria-pressed", String((b.dataset.ppin === "1") === S.ppin)));
+  const grid = S.pview === "grid";
+  $("#pShape").hidden = S.papp !== "ig" || grid; $("#pPin").hidden = !grid;
   const scr = $("#pScreen");
-  scr.className = "pscreen " + S.papp;
-  scr.innerHTML = `<div class="pisland"></div><div class="pstatus"><span>9:41</span><span class="psig">${PSIG}</span></div>` + (S.papp === "tt" ? ttScreen(x, handle, caption) : igScreen(x, handle, caption)) + `<i class="phome"></i>`;
-  $("#pNote").textContent = phoneNote();
+  scr.className = "pscreen " + S.papp + (grid ? " grid" : "");
+  scr.innerHTML = `<div class="pisland"></div><div class="pstatus"><span>9:41</span><span class="psig">${PSIG}</span></div>` + (grid ? (S.papp === "tt" ? ttGrid(handle) : igGrid(handle)) : S.papp === "tt" ? ttScreen(x, handle, caption) : igScreen(x, handle, caption)) + `<i class="phome"></i>`;
+  $("#pNote").textContent = grid ? gridNote() : phoneNote();
   fitPhone();
 }
 function fitPhone() {
