@@ -209,11 +209,18 @@ html.modal-open,html.modal-open body{overflow:hidden}
 .fpanel .btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .fpanel.one{max-height:none}
 .fone{display:grid;gap:8px}
-.fone .lbl{margin:0}
-.fone .actions{align-items:center}
+.fone .lbl{margin:0 0 4px}
+.fhead{display:flex;align-items:center;gap:8px;min-height:34px}
+.fhead b{font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:#d9d2ce}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fgrid .ff{min-width:0}
+.fgrid .ff.wide{grid-column:1/-1}
+.fone .ff.cur .lbl{color:#f3eeeb}
 .fone textarea.ctl{min-height:56px}
 /* typing on a touch screen: a band of the slide around the text being edited on top, its box right under it, both above the keyboard */
-#focusDlg.typing .ftools,#focusDlg.typing .fhint,#focusDlg.typing .rail,#focusDlg.typing .hrail,#focusDlg.typing .fdel,#focusDlg.typing .fbar{display:none}
+#focusDlg.typing .ftools,#focusDlg.typing .fhint,#focusDlg.typing .rail,#focusDlg.typing .hrail,#focusDlg.typing .fdel,#focusDlg.typing .fbar,
+#focusDlg.typing .dlg-h,#focusDlg.typing .fone .actions,#focusDlg.typing .fone .ff:not(.cur){display:none}
+#focusDlg.typing .fgrid{grid-template-columns:1fr}
 #focusDlg.typing .fwrap{flex:0 0 var(--loupeH,200px);place-items:start center}
 #focusDlg.typing .fpanel.text{max-height:var(--panelMax,40vh)}
 #focusDlg .menu{background:#1c1918;border-color:#3a3432;top:42px}
@@ -298,6 +305,23 @@ html.modal-open,html.modal-open body{overflow:hidden}
   .tbtn{flex-direction:column;gap:3px;min-height:52px;padding:5px 2px;font-size:11.5px}
 }
 @media (min-width:761px){.fhint .short{display:none}}
+/* wide screens (and computer windows from 820 px): the open panel sits beside the slide, so the slide stays big */
+@media (min-width:1000px),(min-width:820px) and (pointer:fine){
+  #focusDlg.withpanel[open]{width:min(1180px,calc(100vw - 24px))}
+  #focusDlg.withpanel .focus-b{display:grid;grid-template-columns:minmax(0,1fr) 360px;grid-template-rows:minmax(0,1fr) auto auto;column-gap:16px;row-gap:8px}
+  #focusDlg.withpanel .fwrap{grid-column:1;grid-row:1}
+  #focusDlg.withpanel .fpanel{grid-column:2;grid-row:1 / span 3;align-self:start;max-height:100%;overflow:auto}
+  #focusDlg.withpanel .fpanel.text{max-height:100%}
+  #focusDlg.withpanel .ftools{grid-column:1;grid-row:2}
+  #focusDlg.withpanel .fhint{grid-column:1;grid-row:3}
+  #focusDlg.withpanel .fchips{flex-wrap:wrap}
+}
+/* swiping to the next slide */
+@keyframes fin-l{from{transform:translateX(40px);opacity:.3}to{transform:none;opacity:1}}
+@keyframes fin-r{from{transform:translateX(-40px);opacity:.3}to{transform:none;opacity:1}}
+#focusCv.in-l{animation:fin-l .2s ease-out}
+#focusCv.in-r{animation:fin-r .2s ease-out}
+@media (prefers-reduced-motion:reduce){#focusCv.in-l,#focusCv.in-r{animation:none}}
 /* Instagram-style size rail on the left edge, for the selected sticker */
 .rail{position:absolute;left:6px;top:14%;bottom:20%;width:40px;cursor:ns-resize;touch-action:none;outline:none}
 .rail[hidden]{display:none}
@@ -545,6 +569,10 @@ function geoFor(post, s) { const key = ratioKey(post, s), [a, b] = RATIOS[key], 
 let W = 1800, H = 2400, FOOT_Y = H - 157, LAND = false, CX0 = M, CX1 = W - M;
 function setGeo(g) { W = g.w; H = g.h; LAND = g.land; FOOT_Y = H - 157; CX0 = M; CX1 = W - M; }
 const COLW = 1800;   /* landscape: the text column is as wide as a portrait slide */
+/* Text blocks the user dragged in the large view: layout.move = {title|tip|a|b|caption: [dx, dy]} in slide pixels, on top of the
+   auto layout (Auto-fit clears it). Rows don't move freely: dragging one reorders the table. ROWDRAG is the row being dragged. */
+const moveOf = (L, k) => { const m = L && L.move && L.move[k]; return Array.isArray(m) ? [clamp(+m[0] || 0, -W, W), clamp(+m[1] || 0, -H, H)] : [0, 0]; };
+let ROWDRAG = null;   /* {s, i, dy}: draw row i of slide s dy pixels off its place */
 function setCol(side) { CX0 = side === "right" ? W - COLW + M : M; CX1 = CX0 + COLW - 2 * M; }
 const FONT = '"Nimbus Sans","Helvetica Neue",Helvetica,Arial,sans-serif';
 let CAPR = 0.729;
@@ -1193,7 +1221,7 @@ function renderSpecs(ctx, post, s, idx, total, d) {
     if (d.pos === "top") {
       if (d.scrimTop) shade(ctx, 0, d.blockEnd + 320, d.scrimTop, "top");
       if (d.scrimFoot) shade(ctx, H - 640, H, d.scrimFoot, "bottom");
-      if (d.tip.mode === "corner" && d.tip.scrim) spot(ctx, d.tip.side === "right" ? CX1 - d.tip.w / 2 : CX0 + d.tip.w / 2, d.tip.top + d.tip.g.h / 2, d.tip.w * 0.95, d.tip.scrim);
+      if (d.tip.mode === "corner" && d.tip.scrim) { const tm = moveOf(s.layout, "tip"); spot(ctx, (d.tip.side === "right" ? CX1 - d.tip.w / 2 : CX0 + d.tip.w / 2) + tm[0], d.tip.top + d.tip.g.h / 2 + tm[1], d.tip.w * 0.95, d.tip.scrim); }
     } else {
       if (d.scrimBot) shade(ctx, d.tableTop - 380, H, d.scrimBot, "bottom");
       else if (footScrim(d.A)) shade(ctx, H - 640, H, footScrim(d.A), "bottom");
@@ -1202,10 +1230,13 @@ function renderSpecs(ctx, post, s, idx, total, d) {
   }
   drawHeader(ctx, post);
   let y = d.tableTop;
+  const live = ROWDRAG && ROWDRAG.s === s ? ROWDRAG : null, tm = moveOf(s.layout, "tip");
+  d.rowBoxes = [];
   rule(ctx, y);
-  d.rows.forEach((g, i) => { drawRow(ctx, g, y, rowFields(`text.rows.${i}.`)); y += g.h; rule(ctx, y); });
-  if (d.tip.mode === "inline") drawTip(ctx, d.tipIn, CX0, y + 64, "left", false);
-  else if (d.tip.mode === "corner") drawTip(ctx, d.tip.g, d.tip.side === "right" ? CX1 : CX0, d.tip.top, d.tip.side, true);
+  d.rows.forEach((g, i) => { d.rowBoxes.push({ y0: y, y1: y + g.h }); if (!live || live.i !== i) drawRow(ctx, g, y, rowFields(`text.rows.${i}.`)); y += g.h; rule(ctx, y); });
+  if (live && d.rows[live.i]) drawRow(ctx, d.rows[live.i], d.rowBoxes[live.i].y0 + live.dy, rowFields(`text.rows.${live.i}.`));
+  if (d.tip.mode === "inline") drawTip(ctx, d.tipIn, CX0 + tm[0], y + 64 + tm[1], "left", false);
+  else if (d.tip.mode === "corner") drawTip(ctx, d.tip.g, (d.tip.side === "right" ? CX1 : CX0) + tm[0], d.tip.top + tm[1], d.tip.side, true);
   CX0 = M; CX1 = W - M;
   drawFooter(ctx, post, t, idx, total);
 }
@@ -1242,9 +1273,10 @@ function designTitle(ctx, post, s) {
   const A = s.overlay ? null : analyze(s.img, split ? W - COLW : W, H);
   const hasText = m.hasSmall || m.hasSub || b.lines.length > 0, cx = (CX0 + CX1) / 2;
   const yFor = p => p === "top" ? 499 : p === "middle" ? Math.round(H / 2 - m.h / 2) : Math.round(H - 370 - m.h);
+  const mv = moveOf(L, "title");
   if (split) {
     const pos = L.pos && L.pos !== "auto" ? L.pos : "middle", us = userScrim(L);
-    return { kind: "title", b, m, A, pos, y: yFor(pos), scrim: 0, split, cx, cx0: CX0, cx1: CX1,
+    return { kind: "title", b, m, A, pos, y: yFor(pos) + mv[1], scrim: 0, split, cx: cx + mv[0], cx0: CX0, cx1: CX1,
       panel: L.panel === "black" ? "#0e0b0a" : L.panel === "red" ? "#e02d12" : (A ? A.darkTone() : "#0e0b0a"),
       scrimFoot: us ?? (A ? footFor(A.stats(M, H - 230, W - COLW - M, H - 90)) : 0),
       note: `<b>Solid panel</b> on the ${split} with the title, photo beside it` };
@@ -1259,9 +1291,10 @@ function designTitle(ctx, post, s) {
     if (!pick && (okZone(st) || !A)) pick = { p, y, st };
   }
   pick = pick || best;
-  const us = userScrim(L);
-  const scrim = !hasText ? 0 : us ?? (s.overlay ? 0.3 : scrimFor(pick.st));
-  return { kind: "title", b, m, A, pos: pick.p, y: pick.y, scrim, cx, cx0: CX0, cx1: CX1, scrimFoot: us ?? (s.overlay ? 0.3 : footScrim(A)),
+  const us = userScrim(L), ty = pick.y + mv[1], tx = cx + mv[0];
+  const st = mv[0] || mv[1] ? (A ? A.stats(tx - m.bw / 2 - 40, ty - 50, tx + m.bw / 2 + 40, ty + m.h + 50) : DARK) : pick.st;   /* moved: judge the spot it's in now */
+  const scrim = !hasText ? 0 : us ?? (s.overlay ? 0.3 : scrimFor(st));
+  return { kind: "title", b, m, A, pos: pick.p, y: ty, scrim, cx: tx, cx0: CX0, cx1: CX1, scrimFoot: us ?? (s.overlay ? 0.3 : footScrim(A)),
     note: !hasText ? "Photo only, plus the footer" : `Title <b>${pick.p === "top" ? "at the top" : pick.p === "middle" ? "in the middle" : "at the bottom"}</b>${scrim > 0 ? " · darkened behind it" : ""}` };
 }
 function renderTitle(ctx, post, s, idx, total, d) {
@@ -1328,8 +1361,9 @@ function renderBAWide(ctx, post, s, idx, total, d) {
   if (d.sh) shade(ctx, 0, 520, d.sh, "top");
   ctx.fillStyle = "#000"; ctx.fillRect(hw - 3, 0, 6, H);
   drawHeader(ctx, post);
-  CX0 = M; CX1 = hw - M; drawRow(ctx, d.ga, d.top, { label: "text.aLabel", note: "text.aNote", value: "text.aValue" });
-  CX0 = hw + M; CX1 = W - M; drawRow(ctx, d.gb, d.top, { label: "text.bLabel", note: "text.bNote", value: "text.bValue" });
+  const am = moveOf(s.layout, "a"), bm = moveOf(s.layout, "b");
+  CX0 = M + am[0]; CX1 = hw - M + am[0]; drawRow(ctx, d.ga, d.top + am[1], { label: "text.aLabel", note: "text.aNote", value: "text.aValue" });
+  CX0 = hw + M + bm[0]; CX1 = W - M + bm[0]; drawRow(ctx, d.gb, d.top + bm[1], { label: "text.bLabel", note: "text.bNote", value: "text.bValue" });
   CX0 = M; CX1 = W - M;
   drawFooter(ctx, post, t, idx, total);
 }
@@ -1344,8 +1378,10 @@ function renderBA(ctx, post, s, idx, total, d) {
   if (d.sf) shade(ctx, H - 640, H, d.sf, "bottom");
   ctx.fillStyle = "#000"; ctx.fillRect(0, half - 3, W, 6);
   drawHeader(ctx, post);
-  drawRow(ctx, d.ga, d.aTop - 46, { label: "text.aLabel", note: "text.aNote", value: "text.aValue" });
-  drawRow(ctx, d.gb, d.bTop, { label: "text.bLabel", note: "text.bNote", value: "text.bValue" });
+  const am = moveOf(s.layout, "a"), bm = moveOf(s.layout, "b");
+  CX0 = M + am[0]; CX1 = W - M + am[0]; drawRow(ctx, d.ga, d.aTop - 46 + am[1], { label: "text.aLabel", note: "text.aNote", value: "text.aValue" });
+  CX0 = M + bm[0]; CX1 = W - M + bm[0]; drawRow(ctx, d.gb, d.bTop + bm[1], { label: "text.bLabel", note: "text.bNote", value: "text.bValue" });
+  CX0 = M; CX1 = W - M;
   drawFooter(ctx, post, t, idx, total);
 }
 
@@ -1361,9 +1397,9 @@ function designPhoto(ctx, post, s) {
   for (const p of order) { const y = yFor(p), st = A ? A.stats(M - 30, y - 60, M + 960, y + h + 40) : DARK, sc = zoneScore(st);
     if (!best || sc < best.sc) best = { p, y, st, sc }; if (!pick && (okZone(st) || !A)) pick = { p, y, st }; }
   pick = pick || best;
-  const us = userScrim(L);
-  const ov = s.overlay ? 0.3 : null;
-  return { kind: "photo", lines, h, hasCap, A, y: pick.y, pos: pick.p, scrim: hasCap ? (us ?? ov ?? scrimFor(pick.st)) : 0, scrimFoot: us ?? ov ?? footScrim(A), scrimHead: us ?? ov ?? headScrim(A),
+  const us = userScrim(L), cm = moveOf(L, "caption");
+  const ov = s.overlay ? 0.3 : null, st = cm[0] || cm[1] ? (A ? A.stats(M - 30 + cm[0], pick.y + cm[1] - 60, M + 960 + cm[0], pick.y + cm[1] + h + 40) : DARK) : pick.st;
+  return { kind: "photo", lines, h, hasCap, A, y: pick.y + cm[1], x: M + cm[0], pos: pick.p, scrim: hasCap ? (us ?? ov ?? scrimFor(st)) : 0, scrimFoot: us ?? ov ?? footScrim(A), scrimHead: us ?? ov ?? headScrim(A),
     note: hasCap ? `Caption <b>${pick.p}</b>` : "Photo only" };
 }
 function renderPhotoSlide(ctx, post, s, idx, total, d) {
@@ -1374,8 +1410,8 @@ function renderPhotoSlide(ctx, post, s, idx, total, d) {
   if (d.scrimFoot) shade(ctx, H - 640, H, d.scrimFoot, "bottom");
   drawHeader(ctx, post);
   let y = d.y;
-  TF = "text.label"; if (t.label) { txt(ctx, up(t.label), M, y, { size: 41, weight: 700, track: -0.05 }); y += capH(41) + 30; }
-  TF = "text.note"; d.lines.forEach((ln, i) => txt(ctx, ln, M, y + i * LH, { size: 37, weight: 400, track: -0.035, alpha: 0.85 }));
+  TF = "text.label"; if (t.label) { txt(ctx, up(t.label), d.x ?? M, y, { size: 41, weight: 700, track: -0.05 }); y += capH(41) + 30; }
+  TF = "text.note"; d.lines.forEach((ln, i) => txt(ctx, ln, d.x ?? M, y + i * LH, { size: 37, weight: 400, track: -0.035, alpha: 0.85 }));
   TF = null;
   drawFooter(ctx, post, t, idx, total);
 }
@@ -2166,9 +2202,12 @@ fcv.addEventListener("pointerdown", e => {
   const p = frameXY(fcv, e, geoOf(focusSid)); fpts.set(e.pointerId, p);
   if (fpts.size === 1) {
     const st = stickerAt(s, S.focusBoxes, p[0], p[1]), tf = st ? null : textAt(p[0], p[1]);
+    const grp = !st && tf && moveGroup(s, tf), grab = !!grp && !!S.ftsel && moveGroup(s, S.ftsel) === grp;   /* already selected: a drag moves it */
     fg = null; fgRem = false;
     S.fsel = st ? st.id : null; S.ftsel = tf;
     if (st) fDragFrom(st, p, [e.clientX, e.clientY]);
+    else if (grab) fg = textGrab(s, grp, tf, p, e);
+    else if (e.pointerType !== "mouse") fg = { mode: "swipe", c0: [e.clientX, e.clientY], t0: Date.now() };
     if (S.fpanel === "text" && S.ftfield) {
       const nf = st ? (st.kind === "text" ? "layer:" + st.id : null) : tf;
       if (!nf) { closeTextEditor(true); return; }   /* tapped away from the text: done with it */
@@ -2189,6 +2228,12 @@ fcv.addEventListener("pointermove", e => {
   const p = frameXY(fcv, e, geoOf(focusSid)); fpts.set(e.pointerId, p);
   if (!fg) return;
   const st = fg.st;
+  if (fg.mode === "swipe") return;   /* decided when the finger lifts */
+  if (fg.mode === "tmove") {
+    if (fpts.size !== 1 || (!fg.moved && Math.hypot(e.clientX - fg.c0[0], e.clientY - fg.c0[1]) < 6)) return;
+    if (!fg.moved) { fRemember(); fg.moved = true; }
+    moveText(fg, p); return;
+  }
   if (fg.mode === "drag" && fpts.size === 1) {
     if (!fg.dragged && Math.hypot(e.clientX - fg.c0[0], e.clientY - fg.c0[1]) < 6) return;
     fRemember(); fg.dragged = fg.moved = true;
@@ -2213,6 +2258,16 @@ function fUp(e) {
   const st = fg.st, sid = focusSid, tr = $("#fTrash");
   if (fpts.size === 1 && fg.mode === "pinch") { fDragFrom(st, [...fpts.values()][0], null); return; }   /* one finger lifted: keep dragging with the other */
   if (fpts.size) return;
+  if (fg.mode === "swipe") {
+    const dx = e.clientX - fg.c0[0], dy = e.clientY - fg.c0[1], quick = Date.now() - fg.t0 < 900; fg = null;
+    if (e.type === "pointerup" && quick && Math.abs(dx) > 60 && Math.abs(dx) > 1.5 * Math.abs(dy)) swipeTo(dx < 0 ? 1 : -1);
+    return;
+  }
+  if (fg.mode === "tmove") {
+    const moved = fg.moved, rows = fg.grp.startsWith("rows."); fg = null; fgRem = false; ROWDRAG = null;
+    if (moved) { saveSlide(sid); if (rows) renderBoard(new Set([sid])); if (S.fpanel === "text") renderFPanel(); }
+    drawFocus(); return;
+  }
   const bin = fg.mode === "drag" && fg.dragged && e.type === "pointerup" && tr.classList.contains("hot");
   tr.hidden = true; tr.classList.remove("hot");
   const moved = fg.moved; fg = null; fgRem = false;
@@ -2222,6 +2277,65 @@ function fUp(e) {
 }
 fcv.addEventListener("pointerup", fUp);
 fcv.addEventListener("pointercancel", fUp);
+/* computer: double-click text to edit it; a sideways two-finger trackpad swipe changes slides */
+fcv.addEventListener("dblclick", e => {
+  const s = S.slides[focusSid]; if (!s) return;
+  const p = frameXY(fcv, e, geoOf(focusSid)), st = stickerAt(s, S.focusBoxes, p[0], p[1]), tf = st ? null : textAt(p[0], p[1]);
+  if ((st && st.kind === "text") || tf) { S.fsel = st ? st.id : null; S.ftsel = tf; openTextEditor(); }
+});
+let padX = 0, padT = 0;
+fcv.addEventListener("wheel", e => {
+  if (e.ctrlKey || e.metaKey || Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
+  e.preventDefault();
+  if (Date.now() - padT < 450) return;
+  padX += e.deltaX; if (Math.abs(padX) > 60) { padT = Date.now(); swipeTo(padX > 0 ? 1 : -1); padX = 0; }
+}, { passive: false });
+/* a mouse shows what a click would do: grab a sticker, move the selected text, select other text */
+fcv.addEventListener("pointermove", e => {
+  if (e.pointerType !== "mouse" || fpts.size) return;
+  const s = S.slides[focusSid]; if (!s) return;
+  const p = frameXY(fcv, e, geoOf(focusSid)), st = stickerAt(s, S.focusBoxes, p[0], p[1]), tf = st ? null : textAt(p[0], p[1]), grp = tf && moveGroup(s, tf);
+  fcv.style.cursor = st ? "grab" : !tf ? "" : grp && S.ftsel && moveGroup(s, S.ftsel) === grp ? (grp.startsWith("rows.") ? "ns-resize" : "move") : "pointer";
+});
+/* Moving text in the large view. The title, the tip, a before / after label and a photo's caption move freely (their parts move
+   together; the shade behind them follows). A settings row moves up or down and drops into its new place in the table. The header
+   and footer stay put: they're the same on every slide. */
+function moveGroup(s, f) {
+  if (!f || !s) return null;
+  let m = f.match(/^text\.rows\.(\d+)\./); if (m) return "rows." + m[1];
+  if (s.type === "specs" && (f === "text.tipK" || f === "text.tip")) return "tip";
+  if ((s.type === "cover" || s.type === "save") && /^text\.(left|right|title|big|sub)$/.test(f)) return "title";
+  m = s.type === "beforeafter" && f.match(/^text\.([ab])(Label|Note|Value)$/); if (m) return m[1];
+  if (s.type === "photo" && (f === "text.label" || f === "text.note")) return "caption";
+  return null;
+}
+function textGrab(s, grp, tf, p, e) {
+  const g = { mode: "tmove", grp, field: tf, p0: p, c0: [e.clientX, e.clientY], moved: false };
+  if (grp.startsWith("rows.")) { const i = +grp.slice(5), b = (S.frows || [])[i]; g.row = i; g.cy0 = b ? (b.y0 + b.y1) / 2 : p[1]; }
+  else g.base = ((s.layout || {}).move || {})[grp] || [0, 0];
+  return g;
+}
+function moveText(fg, p) {
+  const s = S.slides[focusSid], dx = p[0] - fg.p0[0], dy = p[1] - fg.p0[1];
+  if (fg.row != null) {   /* a row: follow the finger, and swap places once it's over another row */
+    const rows = s.text.rows, at = fg.cy0 + dy, boxes = S.frows || [];
+    let to = fg.row;
+    boxes.forEach((b, j) => { if (at >= b.y0 && at <= b.y1) to = j; });
+    if (at < (boxes[0] || {}).y0) to = 0; if (boxes.length && at > boxes[boxes.length - 1].y1) to = boxes.length - 1;
+    if (to !== fg.row && rows[fg.row]) { const [r] = rows.splice(fg.row, 1); rows.splice(to, 0, r); fg.row = to; S.ftsel = String(S.ftsel || "").replace(/^text\.rows\.\d+/, "text.rows." + to); }
+    const b = boxes[fg.row];
+    ROWDRAG = { s, i: fg.row, dy: b ? Math.round(at - (b.y0 + b.y1) / 2) : 0 };
+  } else {
+    const nx = fg.base[0] + dx;
+    s.layout = s.layout || {}; s.layout.move = { ...(s.layout.move || {}), [fg.grp]: [Math.round(Math.abs(nx) < 18 ? 0 : nx), Math.round(fg.base[1] + dy)] };   /* snaps back to center */
+  }
+  scheduleDraw(focusSid);
+}
+/* swipe left or right on the slide (touch) for the next or previous one */
+function swipeTo(d) {
+  const before = focusSid; stepFocus(d); if (focusSid === before) return;
+  fcv.classList.remove("in-l", "in-r"); void fcv.offsetWidth; fcv.classList.add(d > 0 ? "in-l" : "in-r");
+}
 /* trackpad pinch (and ctrl + wheel) resizes the selected sticker */
 fcv.addEventListener("wheel", e => {
   const st = selSticker(); if (!st || !(e.ctrlKey || e.metaKey)) return;
@@ -2318,6 +2432,7 @@ function renderFPanel() {
   $("#fTextBtn").setAttribute("aria-pressed", String(S.fpanel === "text"));
   if (S.fpanel === "text" && s && S.ftfield && !fieldPath(s, S.ftfield)) S.ftfield = null;
   el.hidden = !S.fpanel || !s; el.classList.toggle("text", S.fpanel === "text"); el.classList.toggle("one", S.fpanel === "text" && !!S.ftfield);
+  $("#focusDlg").classList.toggle("withpanel", !!S.fpanel && !!s);
   if (!S.fpanel || !s) return;
   if (S.fpanel === "text") { el.innerHTML = textPanelHTML(s); return; }
   const slots = TEMPLATES[s.type].slots.filter(k => s[k]);
@@ -2396,8 +2511,36 @@ function ffInput(s, path, label) {
     ? `<textarea class="ctl" id="${ffId(path)}" data-ff="${path}" rows="2">${esc(v.value)}</textarea>`
     : `<input class="ctl" id="${ffId(path)}" data-ff="${path}" value="${esc(v.value)}" enterkeyhint="done" autocomplete="off">`);
 }
+/* the editor shows the whole block the text belongs to; the box for the text you picked is the current one */
+function editorRefs(s, ref) {
+  if (ref.startsWith("layer:")) return [ref];
+  const grp = moveGroup(s, ref);
+  if (grp && grp.startsWith("rows.")) return ["label", "value", "note"].map(k => `text.rows.${grp.slice(5)}.${k}`);
+  if (grp === "tip") return ["text.tipK", "text.tip"];
+  if (grp === "title") return (s.type === "cover" ? ["left", "right", "title", "sub"] : ["left", "right", "big", "sub"]).map(k => "text." + k);
+  if (grp === "a" || grp === "b") return ["Value", "Label", "Note"].map(k => `text.${grp}${k}`);
+  if (grp === "caption") return ["text.label", "text.note"];
+  if (HEAD_FIELDS[ref]) return ["post.series", "post.subject"];
+  if (ref === "text.section" || ref === "text.foot") return ["text.section", "text.foot"];
+  return [ref];
+}
+function editorTitle(s, ref) {
+  if (ref.startsWith("layer:")) return "Extra text";
+  const grp = moveGroup(s, ref);
+  if (grp && grp.startsWith("rows.")) return `Row ${+grp.slice(5) + 1}`;
+  return grp ? { title: "Title", tip: "Tip", a: "Before", b: "After", caption: "Caption" }[grp] : HEAD_FIELDS[ref] ? "Header (every slide)" : "Footer";
+}
+const NARROW = /^(text\.rows\.\d+\.(label|value)|text\.(left|right|section|foot|[ab](Value|Label))|post\.\w+)$/;
 function textPanelHTML(s) {
-  if (S.ftfield) return `<div class="fone">${ffInput(s, fieldPath(s, S.ftfield))}<div class="actions"><button type="button" class="btn sm" data-fact="dup">${DUP_I}Duplicate</button><button type="button" class="btn sm" data-fact="all">All text</button><span class="grow"></span><button type="button" class="btn primary sm" data-fact="done">Done</button></div></div>`;
+  if (S.ftfield) {
+    const short = { label: "Label", value: "Big value", note: "Why (small text)" };
+    const cell = r => { const path = fieldPath(s, r), m = path.match(/^text\.rows\.\d+\.(\w+)$/), st = r.startsWith("layer:") && s.stickers.find(t => t.id === r.slice(6)), i = st ? s.stickers.indexOf(st) : -1;
+      return `<div class="ff${r === S.ftfield ? " cur" : ""}${NARROW.test(path) ? "" : " wide"}" data-ref="${esc(r)}">${ffInput(s, path, m ? short[m[1]] : null)}</div>`
+        + (st ? `<div class="ff wide"><div class="rowhead"><select class="ctl" id="ff-stickers-${i}-w" data-ff="stickers.${i}.w" aria-label="Weight" style="width:auto"><option value="700"${+st.w === 400 ? "" : " selected"}>Bold</option><option value="400"${+st.w === 400 ? " selected" : ""}>Regular</option></select>${alignSel(`ff-stickers-${i}-al`, `data-ff="stickers.${i}.al" aria-label="Align" style="width:auto"`, st.al)}<span class="grow"></span></div></div>` : ""); };
+    return `<div class="fone"><div class="fhead"><b>${esc(editorTitle(s, S.ftfield))}</b><span class="grow"></span><button type="button" class="btn primary sm" data-fact="done">Done</button></div>
+      <div class="fgrid">${editorRefs(s, S.ftfield).filter(r => fieldPath(s, r)).map(cell).join("")}</div>
+      <div class="actions"><button type="button" class="btn sm" data-fact="dup">${DUP_I}Duplicate</button><button type="button" class="btn sm" data-fact="all">All text</button></div></div>`;
+  }
   const t = s.text || {}, out = [`<h4>This slide</h4>`];
   for (const d of FIELDS[s.type]) {
     if (d !== "ROWS") { out.push(`<div>${ffInput(s, "text." + d[0])}</div>`); continue; }
@@ -2432,15 +2575,25 @@ function closeTextEditor(keepSel) {
   if (!keepSel) { S.ftsel = null; const st = selSticker(); if (st && st.kind === "text") S.fsel = null; }
   renderFPanel(); drawFocus();
 }
-/* the editor moves to other text: same kind of box, so it's swapped in place and the keyboard stays up */
-function switchEditor(nf) {
-  const s = S.slides[focusSid], path = fieldPath(s, nf), el = $("#fPanel .fone [data-ff]"); if (!path) return;
-  const v = fieldInfo(s, path), typing = !!el && document.activeElement === el;
-  S.ftfield = nf;
-  if (!typing || (v.kind === "area") !== (el.tagName === "TEXTAREA")) { renderFPanel(); return; }
-  el.dataset.ff = path; el.id = ffId(path); el.value = v.value;
-  const lb = $("#fPanel .fone .lbl"); if (lb) { lb.textContent = v.label; lb.htmlFor = el.id; }
+const TOUCH = () => matchMedia("(pointer: coarse)").matches;   /* a touch screen, so an on-screen keyboard */
+function focusCur() {
+  const el = $("#fPanel .fone .ff.cur [data-ff]"); if (!el) return;
+  el.focus({ preventScroll: true });
   try { const n = el.value.length; el.setSelectionRange(n, n); } catch (e) {}
+}
+function markCur(cell) { $$("#fPanel .fone .ff[data-ref]").forEach(x => x.classList.toggle("cur", x === cell)); }
+/* the editor moves to other text: in the same block it just moves to that box; another block gets its own editor. While typing the
+   new box takes the focus before the old one goes, so the keyboard stays up. On a computer the box always gets the focus. */
+function switchEditor(nf) {
+  const s = S.slides[focusSid], el = $("#fPanel"); if (!fieldPath(s, nf)) return;
+  const typing = el.contains(document.activeElement), cell = $$("#fPanel .fone .ff[data-ref]").find(x => x.dataset.ref === nf);
+  S.ftfield = nf;
+  if (cell) { markCur(cell); if (typing || !TOUCH()) focusCur(); layoutTyping(); return; }
+  if (!typing) { renderFPanel(); if (!TOUCH()) focusCur(); return; }
+  const old = [...el.childNodes];
+  el.insertAdjacentHTML("beforeend", textPanelHTML(s));
+  const now = el.lastElementChild.querySelector(".ff.cur [data-ff]"); if (now) { now.focus({ preventScroll: true }); try { now.setSelectionRange(now.value.length, now.value.length); } catch (e) {} }
+  old.forEach(n => n.remove());
   layoutTyping();
 }
 function onFact(b) {
@@ -2464,7 +2617,7 @@ function onFact(b) {
 $("#fPanel").addEventListener("keydown", e => {
   if (e.key !== "Enter" || e.target.tagName !== "INPUT" || !e.target.dataset.ff) return;
   e.preventDefault();
-  e.target.blur();   /* the keyboard's done key: back to the editor, keyboard down */
+  if (S.ftfield && !TOUCH()) closeTextEditor(); else e.target.blur();   /* computer: Enter is Done; phone: the done key puts the keyboard away */
 });
 /* the dashed box around the selected text, and its Edit / Duplicate bar (under the text, or over it near the bottom) */
 let barKey = "";
@@ -2500,6 +2653,7 @@ $("#fBar").addEventListener("click", e => {
 function openTextEditor() {
   const ref = selRef(); if (!ref) return;
   S.fpanel = "text"; S.ftfield = ref; renderFPanel(); drawFocus();
+  if (!TOUCH()) focusCur();   /* a computer has its own keyboard: go straight to the box */
 }
 /* Duplicate: a settings row is copied as a new row under it (a slide holds up to 4); a text layer is copied as is; any other text
    becomes extra text with the same size and weight, just under the original. The copy is selected, ready to drag or edit. */
@@ -2981,6 +3135,8 @@ function cleanLayout(raw, prev) {
   const ok = { pos: ["auto", "top", "middle", "bottom"], style: ["auto", "overlay", "panel"], tip: ["auto", "left", "right", "inline"], panel: ["auto", "black", "red"] }, out = {};
   for (const [k, vals] of Object.entries(ok)) if (vals.includes(raw[k])) out[k] = raw[k];
   if (raw.scrim === "auto" || (typeof raw.scrim === "number" && raw.scrim >= 0 && raw.scrim <= 0.9)) out.scrim = raw.scrim;
+  if (raw.side === "left" || raw.side === "right") out.side = raw.side; else if (prev && prev.side) out.side = prev.side;
+  if (prev && prev.move) out.move = prev.move;   /* blocks the user dragged stay where they put them */
   return out;
 }
 const HEX = /^#[0-9a-f]{6}$/i;
@@ -3109,23 +3265,27 @@ function drawFocus() {
   if (S.fpanel === "text" && S.ftfield && !S.ftfield.startsWith("layer:") && !S.fsel) S.ftsel = S.ftfield;   /* the editor's text stays outlined */
   if (S.ftsel && !fieldPath(s, S.ftsel)) S.ftsel = null;
   const d = renderSlide(cv, S.post, s, x.n, x.total, sc, false, S.fsel || S.hilite);
-  S.focusBoxes = d.boxes || []; S.ftboxes = d.tboxes || {};
+  S.focusBoxes = d.boxes || []; S.ftboxes = d.tboxes || {}; S.frows = d.rowBoxes || [];
   const tb = typing ? typingBox() : null, full = g.h * css;   /* typing: scroll the band so the text being edited is in the middle */
   $("#fStage").style.transform = typing ? `translateY(${-Math.round(clamp((tb ? (tb.y0 + tb.y1) / 2 * css : full / 2) - box.height / 2, 0, Math.max(0, full - box.height)))}px)` : "";
   $("#focusTitle").textContent = `${pad2(x.n)}/${pad2(x.total)}${x.of > 1 ? ` · V${x.v}` : ""} ${slideName(s)}${RATIOS[s.ratio] && s.ratio !== ratioKey(S.post) ? " · " + s.ratio : ""}`;
+  const touch = TOUCH(), grp = S.ftsel && moveGroup(s, S.ftsel), row = grp && grp.startsWith("rows."), H2 = (l, sh) => `<span class="long">${l}</span><span class="short">${sh || l}</span>`;
   $("#fHint").innerHTML = S.fpanel === "text" && S.ftfield
-    ? `<span class="long">The slide changes as you type. Tap other text on the slide to edit that instead.</span><span class="short">Tap other text to edit that instead.</span>`
+    ? (touch ? H2("Tap a box to type; the slide changes as you go. Tap other text on the slide to edit that instead.", "Tap a box to type. Tap other text to edit that.") : H2("Type in the boxes; the slide changes as you go. Click other text to edit that. Enter or Done when you've finished."))
     : S.ftsel
-    ? `<span class="long">Edit changes this text right here. Duplicate adds a copy to this slide, under Edit text.</span><span class="short">Edit it here, or Duplicate it.</span>`
-    : (s.stickers || []).length
-    ? `<span class="long">Tap a sticker or any text to select it. Drag a sticker to move it, pinch to resize, twist to rotate. Drop it on the bin to delete it.</span><span class="short">Tap text or a sticker. Drag, pinch, twist. Bin deletes.</span>`
-    : `<span class="long">Tap any text to edit or duplicate it. Sticker adds one; Edit photo adjusts the photo right here.</span><span class="short">Tap any text to edit it.</span>`;
+    ? (!grp ? H2("The header and footer stay in place on every slide. Edit changes their words.", "Header and footer stay put. Edit changes them.")
+      : row ? H2(`Drag the row up or down to put it somewhere else in the table. Edit or Duplicate it ${touch ? "below" : "from the bar"}.`, "Drag the row up or down to reorder.")
+      : H2(`Drag it to move it. Edit or Duplicate it ${touch ? "below" : "from the bar"}; Auto-fit in Layout puts it back.`, "Drag it to move it. Edit or Duplicate below."))
+    : touch
+    ? ((s.stickers || []).length ? H2("Tap text or a sticker to select it. Drag, pinch or twist a sticker; drop it on the bin to delete it. Swipe for the next slide.", "Tap text or a sticker. Swipe for the next slide.")
+      : H2("Tap any text to select it, then drag it, edit it or duplicate it. Swipe for the next slide.", "Tap text to select it. Swipe for the next slide."))
+    : H2((s.stickers || []).length ? "Click text or a sticker to select it. Drag to move, Ctrl + scroll to resize, the slider on top to turn. Arrow keys change slides." : "Click any text to select it, then drag it, edit it or duplicate it. Arrow keys change slides.");
   updateFocusUI();
 }
 function stepFocus(d) {
   const o = order(), i = o.indexOf(focusSid), j = clamp(i + d, 0, o.length - 1);
   if (j === i) return;
-  focusSid = o[j]; S.fsel = null; S.ftsel = null;
+  focusSid = o[j]; S.fsel = null; S.ftsel = null; ROWDRAG = null; fg = null;
   if (S.ftfield) { S.ftfield = null; S.fpanel = false; }   /* the small editor was for the other slide's text */
   renderFPanel(); drawFocus();
 }
@@ -3146,16 +3306,23 @@ function layoutTyping() {
   const kb = on && !!vv && vv.height < innerHeight - 80;
   dlg.style.height = kb ? vv.height + "px" : ""; dlg.style.top = kb ? vv.offsetTop + "px" : "";
   if (on) {
-    const vis = kb ? vv.height : Math.round(innerHeight * 0.54);
-    dlg.style.setProperty("--panelMax", Math.round(vis * 0.45) + "px");
-    dlg.style.setProperty("--loupeH", Math.max(110, Math.round(vis - $("#focusDlg .dlg-h").offsetHeight - panel.offsetHeight - 30)) + "px");
+    /* inside the Claude app the page can't see the keyboard: an iPhone's is about 291 pt tall (216 on small phones), and the page
+       runs to the bottom of the screen, so the box goes just above that line */
+    const big = Math.min(screen.width || 0, screen.height || 0) >= 700, tall = (screen.height || innerHeight) >= 780;   /* iPad, Face ID iPhone, small iPhone */
+    const vis = kb ? vv.height : Math.max(220, innerHeight - (big ? 370 : tall ? 291 : 216));
+    dlg.style.setProperty("--panelMax", Math.round(vis * 0.5) + "px");
+    dlg.style.setProperty("--loupeH", Math.max(110, Math.round(vis - panel.offsetHeight - 20)) + "px");
     const pr = panel.getBoundingClientRect(), er = el.getBoundingClientRect();
     if (er.top < pr.top || er.bottom > pr.bottom) panel.scrollTop += er.top - pr.top - 8;
   }
   if (on || was) drawFocus();
 }
 if (window.visualViewport) { visualViewport.addEventListener("resize", layoutTyping); visualViewport.addEventListener("scroll", layoutTyping); }
-$("#fPanel").addEventListener("focusin", () => setTimeout(layoutTyping, 30));
+$("#fPanel").addEventListener("focusin", e => {
+  const cell = e.target.closest && e.target.closest(".fone .ff[data-ref]");
+  if (cell && cell.dataset.ref !== S.ftfield) { S.ftfield = cell.dataset.ref; markCur(cell); drawFocus(); }   /* typing in another box of the block */
+  setTimeout(layoutTyping, 30);
+});
 $("#fPanel").addEventListener("focusout", () => setTimeout(layoutTyping, 30));
 document.addEventListener("keydown", e => {
   if (!$("#focusDlg").open || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
@@ -3363,7 +3530,7 @@ function ttScreen(x, handle, caption) {
     <div class="pnav">${phi("home")}${phi("friends")}<span class="tplus">${phi("cross", 22)}</span>${phi("inbox")}${phi("user")}</div>`;
 }
 function phoneNote() {
-  const how = " Swipe for the next slide; tap to hide the controls.", g = geoOf(focusSid);
+  const how = TOUCH() ? " Swipe for the next slide; tap to hide the controls." : " Arrow keys for the next slide; click the phone to hide the controls.", g = geoOf(focusSid);
   if (S.papp === "tt") return (g.key === "9:16" ? "TikTok shows this 9:16 slide full screen." : `TikTok fits this ${g.key} slide to the screen width.`) + " Its buttons sit over the right edge and the caption over the bottom." + how;
   const f = igFeed(g);
   if (!f.cutX && !f.cutY) return `This ${g.key} slide fits Instagram's feed as it is; nothing is cut.` + how;
