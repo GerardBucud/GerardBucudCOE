@@ -23,6 +23,8 @@
 @font-face{font-family:"Nimbus Sans";src:url("fonts/NimbusSans-Bold.otf") format("opentype");font-weight:700;font-style:normal;font-display:swap}
 @font-face{font-family:"Nimbus Sans";src:url("fonts/NimbusSans-Italic.otf") format("opentype");font-weight:400;font-style:italic;font-display:swap}
 @font-face{font-family:"Nimbus Sans";src:url("fonts/NimbusSans-BoldItalic.otf") format("opentype");font-weight:700;font-style:italic;font-display:swap}
+@font-face{font-family:"Anton";src:url("fonts/Anton-Regular.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"League Gothic";src:url("fonts/LeagueGothic.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}
 
 *,*::before,*::after{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--ui);
@@ -542,6 +544,22 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .sw:hover{box-shadow:0 0 0 2px var(--accent)}
 /* reference images: shown once Claude can look at images here */
 .refb{display:none}
+.capb{display:none}html.cancap .capb{display:inline-flex}
+#capDlg .dlg-b{max-height:min(80vh,920px);display:grid;gap:14px}
+.capposts{display:flex;gap:6px;flex-wrap:wrap}
+.capposts button,.capstyles button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer}
+.capposts button[aria-pressed="true"],.capstyles button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+.capposts i{font-style:normal;margin-left:6px}
+.capstyles{display:flex;gap:6px;flex-wrap:wrap}
+.caprow{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:12px}
+@media (max-width:600px){.caprow{grid-template-columns:1fr}}
+.capcard{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:8px;background:var(--surface)}
+.capcard.kept{border-color:var(--accent)}
+.caph{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.caph b{font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+.capcard pre{margin:0;white-space:pre-wrap;font:inherit;font-size:14px;line-height:1.45}
+.captext{min-height:120px;font-size:14px;line-height:1.45}
+.captags{display:flex;gap:6px;flex-wrap:wrap}.captags span{font-size:12.5px;color:var(--accent);background:var(--sunken);border-radius:999px;padding:3px 9px}
+#capRes{display:grid;gap:12px}
 html.canref .refb{display:inline-flex}
 .refb img{width:22px;height:22px;object-fit:cover;border-radius:4px;margin-left:-4px}
 .refsel{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px;min-height:40px}
@@ -674,6 +692,7 @@ details.gsec[open]{padding-bottom:14px}
   <label class="ratiobox" hidden><span>Ratio</span><select id="ratioSel" class="ctl" title="The size of this post's slides. A slide can have its own in the large view's download menu."></select></label>
   <div class="more"><button id="newPost" class="btn ghost sm" hidden aria-expanded="false">New post</button></div>
   <button id="refPost" class="btn ghost sm refb" title="Make a new carousel patterned after posts you like">References</button>
+  <button id="capPost" class="btn ghost sm capb" title="Hooky captions with hashtags for your carousels">Captions</button>
   <span class="grow"></span>
   <span id="pill" class="pill" data-s="local"><i></i><span>Loading</span></span>
   <button id="applyAll" class="btn accent" hidden disabled>Apply comments</button>
@@ -707,6 +726,23 @@ details.gsec[open]{padding-bottom:14px}
       <label class="check"><input type="checkbox" id="refOwn"><span>These are my own photos<small>Claude puts them on the slides. Leave it off for other creators' posts: Claude then picks photos from your library, or leaves the spot for you.</small></span></label>
       <div class="actions"><button class="btn primary" id="refGo" disabled>Make the carousel</button><button class="btn ghost sm" id="refStop" hidden>Stop</button><span class="hint" id="refStatus" role="status"></span></div>
     </div></div>
+</dialog>
+
+<dialog id="capDlg" aria-labelledby="capTitle">
+  <div class="dlg-h"><h3 id="capTitle">Captions</h3><span class="grow"></span>
+    <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="dlg-b">
+    <div><span class="lbl">Carousel</span><div class="capposts" id="capPosts" role="group" aria-label="Carousel"></div></div>
+    <div class="caprow">
+      <div><span class="lbl">For</span><div class="seg" role="group" aria-label="App"><button type="button" data-capapp="ig" aria-pressed="true">Instagram</button><button type="button" data-capapp="tt" aria-pressed="false">TikTok</button></div></div>
+      <div><label class="lbl" for="capKw">Comment keyword (ManyChat)</label><input class="ctl" id="capKw" placeholder="SETTINGS" autocomplete="off"></div>
+    </div>
+    <div><span class="lbl">Styles</span><div class="capstyles" id="capStyles" role="group" aria-label="Styles"></div></div>
+    <div><label class="lbl" for="capNote">Anything to add? (optional)</label><textarea class="ctl" id="capNote" rows="2" placeholder="e.g. it's for beginners, mention it works for night walks too"></textarea></div>
+    <div class="actions"><button type="button" class="btn primary" id="capGo">Write five captions</button><span class="hint" id="capStatus" role="status"></span></div>
+    <div id="capSaved"></div>
+    <div id="capRes"></div>
+  </div>
 </dialog>
 
 <dialog id="stickDlg" aria-labelledby="stickTitle">
@@ -870,6 +906,19 @@ let ROWDRAG = null;   /* {s, i, dy}: draw row i of slide s dy pixels off its pla
 function setCol(side) { CX0 = side === "right" ? W - COLW + M : M; CX1 = CX0 + COLW - 2 * M; }
 const FONT = '"Nimbus Sans","Helvetica Neue",Helvetica,Arial,sans-serif';
 let CAPR = 0.729;
+/* Big-text fonts: the slide's display text (the cover and Save for Later titles, the big setting values, before / after words) can be
+   set in a tall condensed font, per post (post.font) or per slide (slide.font), and a text layer per layer (sticker.font). Everything
+   else stays Nimbus Sans. Tall fonts have one weight (bold markers don't thicken them), their own tracking, and a title in one fills the
+   width like a poster. cap is the cap height per pixel of size (measured once the font loads). */
+const FAMS = {
+  anton: { label: "Anton (tall, heavy)", css: '"Anton","Impact","Arial Narrow",sans-serif', cap: 0.859, trk: 0.005, tall: true },
+  league: { label: "League Gothic (tall, classic)", css: '"League Gothic","Arial Narrow",sans-serif', cap: 0.735, trk: 0.01, tall: true }
+};
+let FK = null;   /* the family being measured or drawn: null = Nimbus Sans */
+const inFam = (k, fn) => { const was = FK; FK = FAMS[k] ? k : null; try { return fn(); } finally { FK = was; } };
+let DISP = null;   /* this slide's big-text font, while it renders */
+const famOf = (post, s) => s && s.font === "nimbus" ? null : FAMS[s && s.font] ? s.font : FAMS[post && post.font] ? post.font : null;   /* "nimbus" on a slide: Nimbus Sans even if the post uses a tall font */
+const trk = t => FK ? FAMS[FK].trk : t;
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -879,7 +928,7 @@ const pad2 = n => String(n).padStart(2, "0");
 const up = s => String(s ?? "").toUpperCase();
 const slug = s => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "slide";
 const fill = (s, post) => String(s ?? "").replace(/\{handle\}/gi, (post && post.handle) || "");
-const capH = size => CAPR * size;
+const capH = size => (FK ? FAMS[FK].cap : CAPR) * size;
 const ICON = {
   left: '<svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg>',
   right: '<svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>',
@@ -909,10 +958,11 @@ const TEXT_KEYS = {
 };
 
 /* ---------- text engine (canvas, tracked, kerned) ---------- */
-const font = (size, weight, it) => `${it ? "italic " : ""}${weight} ${size}px ${FONT}`;
+const font = (size, weight, it) => FK ? `${it ? "italic " : ""}400 ${size}px ${FAMS[FK].css}` : `${it ? "italic " : ""}${weight} ${size}px ${FONT}`;
 const posCache = new Map();
 function measureW(ctx, s, size, weight, track, it) {
   if (!s) return 0;
+  track = trk(track);
   ctx.font = font(size, weight, it);
   const n = Array.from(s).length;
   let extra = 0;
@@ -920,7 +970,8 @@ function measureW(ctx, s, size, weight, track, it) {
   return ctx.measureText(s).width + (n - 1) * track * size + extra;
 }
 function positions(ctx, s, size, weight, track, it) {
-  const key = size + "|" + weight + "|" + track + "|" + (it ? "i|" : "") + s;
+  track = trk(track);
+  const key = (FK || "") + "|" + size + "|" + weight + "|" + track + "|" + (it ? "i|" : "") + s;
   let p = posCache.get(key);
   if (p) return p;
   ctx.font = font(size, weight, it);
@@ -969,7 +1020,7 @@ function balance(lines) {
   return lines.map(ln => { const s = carry.join("") + ln; carry = marksOpen(s); return s + [...carry].reverse().join(""); });
 }
 function richW(ctx, str, size, baseW, track) {
-  const segs = parseRich(str, baseW);
+  const segs = parseRich(str, baseW); track = trk(track);
   let w = 0;
   segs.forEach((sg, i) => { w += measureW(ctx, sg.t, size, sg.w, track, sg.it) + (i ? track * size : 0); });
   return w;
@@ -984,13 +1035,14 @@ let INK = "#ffffff", HL = null;
 let UNDER = null;
 function flushUnder(ctx) {
   const u = UNDER; UNDER = null; if (!u) return;
-  const tf = TF, tx = TXF; TF = null; TXF = null;
+  const tf = TF, tx = TXF, fk = FK; TF = null; TXF = null; FK = null;
   u.boxes.push(...drawStickers(ctx, u.post, { stickers: u.list }, u.hilite));
-  TF = tf; TXF = tx;
+  TF = tf; TXF = tx; FK = fk;
 }
 function txt(ctx, str, x, capTop, o) {
   if (UNDER) flushUnder(ctx);
-  const size = o.size, track = o.track ?? -0.05, baseW = o.weight ?? 700;
+  if (o.fam !== undefined && (FAMS[o.fam] ? o.fam : null) !== FK) return inFam(o.fam, () => txt(ctx, str, x, capTop, { ...o, fam: undefined }));
+  const size = o.size, track = trk(o.track ?? -0.05), baseW = o.weight ?? 700;
   str = String(str ?? "");
   if (!str) return 0;
   const segs = parseRich(str, baseW);
@@ -1027,7 +1079,7 @@ function txt(ctx, str, x, capTop, o) {
     const b = TB[TF] || (TB[TF] = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity, size: 0, w: baseW, lines: [], al: o.align || "left" });
     const f = TXF ? (v, a) => a + (v - a) * TXF.k : v => v, ax = TXF && TXF.ax, ay = TXF && TXF.ay, sz = TXF ? size * TXF.k : size;
     b.lines.push(str); b.x0 = Math.min(b.x0, f(x0, ax)); b.x1 = Math.max(b.x1, f(x0 + total, ax)); b.y0 = Math.min(b.y0, f(capTop, ay)); b.y1 = Math.max(b.y1, f(capTop + capH(size), ay));
-    if (sz > b.size) { b.size = sz; b.w = baseW; b.tr = track; }
+    if (sz > b.size) { b.size = sz; b.w = baseW; b.tr = track; if (FK) b.fam = FK; else delete b.fam; }
   }
   return total;
 }
@@ -1453,12 +1505,13 @@ function drawStickers(ctx, post, s, hiliteId) {
       txt(ctx, label, x, -capH(fs) / 2, { size: fs, weight: 700, track: -0.05, color: fg });
     } else if (P.type === "text") {
       const wt = +st.w === 400 ? 400 : 700, lines = balance(up(fillR(st.label ?? P.text, post)).split(/\n/).map(x => x.trim())).filter(x => plainText(x).trim()), lh = size * 1.06;
-      bh = capH(size) + Math.max(0, lines.length - 1) * lh;
+      const fk = FAMS[st.font] ? st.font : null;   /* a text layer's own font (Nimbus Sans unless set) */
+      bh = inFam(fk, () => capH(size)) + Math.max(0, lines.length - 1) * lh;
       ctx.shadowColor = "rgba(0,0,0,.3)"; ctx.shadowBlur = size * 0.12;
       const tr = Number.isFinite(+st.tr) ? clamp(+st.tr, -0.15, 0.1) : -0.05, al = st.al === "left" || st.al === "right" ? st.al : "center";
-      bw = Math.max(size, ...lines.map(l => richW(ctx, l, size, wt, tr)));
+      bw = Math.max(size, ...lines.map(l => inFam(fk, () => richW(ctx, l, size, wt, tr))));
       const ax = al === "left" ? -bw / 2 : al === "right" ? bw / 2 : 0;   /* lines line up inside the box; the box stays centered on x, y */
-      lines.forEach((l, i) => txt(ctx, l, ax, -bh / 2 + i * lh, { size, weight: wt, track: tr, align: al, color: st.color || INK }));
+      lines.forEach((l, i) => txt(ctx, l, ax, -bh / 2 + i * lh, { size, weight: wt, track: tr, align: al, color: st.color || INK, fam: fk }));
     } else if (P.type === "custom") {   /* size is its longer side */
       const ar = clamp(+st.ar || 1, 0.05, 20);
       bw = ar >= 1 ? size : size * ar; bh = ar >= 1 ? size / ar : size;
@@ -1490,20 +1543,21 @@ function drawStickers(ctx, post, s, hiliteId) {
 /* ---------- spec rows ---------- */
 function rowGeo(ctx, row, maxNote = 660) {
   const v = up(row.value || ""), label = up(row.label || "");
-  let vs = 210, vw = v ? richW(ctx, v, vs, 700, -0.08) : 0;
+  const vw0 = (z) => inFam(DISP, () => richW(ctx, v, z, 700, -0.08));
+  let vs = DISP ? 290 : 210, vw = v ? vw0(vs) : 0;
   const maxV = CX1 - CX0 - 380 - 60;
-  if (vw > maxV) { vs = Math.max(96, Math.floor(vs * maxV / vw)); vw = richW(ctx, v, vs, 700, -0.08); }
+  if (vw > maxV) { vs = Math.max(96, Math.floor(vs * maxV / vw)); vw = vw0(vs); }
   const noteMax = Math.min(maxNote, CX1 - CX0 - vw - 60);
   const lines = wrap(ctx, up(row.note || ""), noteMax, 37, 400, -0.035);
   const leftH = (label ? capH(41) : 0) + (lines.length ? (label ? 33 : 0) + capH(37) + (lines.length - 1) * LH : 0);
-  return { v, vs, vw, label, lines, h: 46 + Math.max(v ? capH(vs) : 0, leftH) + 50 };
+  return { v, vs, vw, label, lines, h: 46 + Math.max(v ? inFam(DISP, () => capH(vs)) : 0, leftH) + 50 };
 }
 function drawRow(ctx, g, top, f) {   /* f: the fields behind the row's label, note and value, for text boxes */
   const ct = top + 46;
   TF = f && f.label; if (g.label) txt(ctx, g.label, CX0, ct, { size: 41, weight: 700, track: -0.05 });
   const nt = ct + (g.label ? capH(41) + 33 : 0);
   TF = f && f.note; g.lines.forEach((ln, i) => txt(ctx, ln, CX0, nt + i * LH, { size: 37, weight: 400, track: -0.035, alpha: 0.82 }));
-  TF = f && f.value; if (g.v) txt(ctx, g.v, CX1, ct, { size: g.vs, weight: 700, track: -0.08, align: "right" });
+  TF = f && f.value; if (g.v) txt(ctx, g.v, CX1, ct, { size: g.vs, weight: 700, track: -0.08, align: "right", fam: DISP });
   TF = null;
 }
 const rowFields = pre => ({ label: pre + "label", note: pre + "note", value: pre + "value" });
@@ -1649,24 +1703,30 @@ function renderSpecs(ctx, post, s, idx, total, d) {
 /* cover + save share one centered title block */
 function titleBlock(ctx, post, s) {
   const t = s.text || {}, room = CX1 - CX0;
+  const F = FAMS[DISP];
+  /* a tall font fills the width like a poster: the size that makes the longest line span the text column, but no taller than about
+     a third of the slide (a quarter for Save for Later, which has more lines); the small words above and under it grow along */
+  const fit = (lns, base, w8, maxCap) => {
+    if (!F) { let z = base; for (const ln of lns) { const w = richW(ctx, ln, z, w8, -0.10); if (w > room) z = Math.min(z, Math.floor(z * room / w)); } return z; }
+    const w100 = Math.max(1, ...lns.map(ln => inFam(DISP, () => richW(ctx, ln, 100, w8, -0.10))));
+    return Math.max(60, Math.floor(Math.min(100 * room / w100, maxCap / F.cap)));
+  };
+  const deco = bs => F ? { small: clamp(Math.round(bs * 0.12), 40, 92), sub: clamp(Math.round(bs * 0.13), 42, 100) } : null;
   if (s.type === "cover") {
     const big = t.title ? [up(fillR(t.title, post))] : [];
-    let bs = 156;
-    const w0 = big.length ? richW(ctx, big[0], bs, 700, -0.10) : 0;
-    if (w0 > room) bs = Math.floor(bs * room / w0);
-    return { lines: big, bs, baseW: 700, small: 40, sub: 42, subW: 700, gap1: 30, gap2: 35, lead: 0 };
+    const bs = big.length ? fit(big, 156, 700, H * 0.3) : 156, d = deco(bs);
+    return { lines: big, bs, baseW: 700, small: d ? d.small : 40, sub: d ? d.sub : 42, subW: 700, gap1: d ? Math.round(d.small * 0.7) : 30, gap2: d ? Math.round(d.sub * 0.8) : 35, lead: F ? 0.04 : 0 };
   }
   const lines = balance(up(fillR(t.big, post)).split(/\n+/).map(x => x.trim())).filter(x => plainText(x).trim());
-  let bs = 210;
-  for (const ln of lines) { const w = richW(ctx, ln, bs, 400, -0.10); if (w > room) bs = Math.min(bs, Math.floor(bs * room / w)); }
-  return { lines, bs, baseW: 400, small: 40, sub: 46, subW: 400, gap1: 34, gap2: 44, lead: 0.2 };
+  const bs = lines.length ? fit(lines, 210, 400, H * (lines.length > 1 ? 0.2 : 0.26)) : 210, d = deco(bs);
+  return { lines, bs, baseW: 400, small: d ? d.small : 40, sub: d ? d.sub : 46, subW: 400, gap1: d ? Math.round(d.small * 0.75) : 34, gap2: d ? Math.round(d.sub * 0.85) : 44, lead: F ? 0.06 : 0.2 };
 }
 function blockMetrics(ctx, post, s, b) {
   const t = s.text || {};
-  const widths = b.lines.map(ln => richW(ctx, ln, b.bs, b.baseW, -0.10));
+  const widths = b.lines.map(ln => inFam(DISP, () => richW(ctx, ln, b.bs, b.baseW, -0.10)));
   const bw = Math.max(0, ...widths);
   const hasSmall = !!(t.left || t.right), hasSub = !!t.sub;
-  const bigH = b.lines.length * capH(b.bs) + Math.max(0, b.lines.length - 1) * b.lead * b.bs;
+  const bigH = b.lines.length * inFam(DISP, () => capH(b.bs)) + Math.max(0, b.lines.length - 1) * b.lead * b.bs;
   const h = (hasSmall ? capH(b.small) + b.gap1 : 0) + bigH + (hasSub ? b.gap2 + capH(b.sub) : 0);
   return { widths, bw, h, hasSmall, hasSub, bigH };
 }
@@ -1723,7 +1783,7 @@ function renderTitle(ctx, post, s, idx, total, d) {
     y += capH(b.small) + b.gap1;
   }
   TF = s.type === "cover" ? "text.title" : "text.big";
-  b.lines.forEach((ln, i) => { txt(ctx, ln, cx, y, { size: b.bs, weight: b.baseW, track: -0.10, align: "center" }); y += capH(b.bs) + (i < b.lines.length - 1 ? b.lead * b.bs : 0); });
+  b.lines.forEach((ln, i) => { txt(ctx, ln, cx, y, { size: b.bs, weight: b.baseW, track: -0.10, align: "center", fam: DISP }); y += inFam(DISP, () => capH(b.bs)) + (i < b.lines.length - 1 ? b.lead * b.bs : 0); });
   TF = "text.sub"; if (m.hasSub) txt(ctx, up(fillR(t.sub, post)), cx, y + b.gap2, { size: b.sub, weight: s.type === "cover" ? 700 : 400, track: -0.05, align: "center" });
   TF = null; TXF = null;
   drawFooter(ctx, post, t, idx, total);
@@ -1841,7 +1901,7 @@ function renderSlide(cv, post, s, idx, total, scale, forExport, hiliteId) {
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
   OVERLAY = !!s.overlay; WHOLE = !!s.whole; RENDER_SCALE = forExport ? 1 : scale; TB = {}; TF = null;
-  BG = bgOf(s); HL = HEXCOL.test(s.hl) ? s.hl : null;
+  BG = bgOf(s); HL = HEXCOL.test(s.hl) ? s.hl : null; DISP = famOf(post, s);
   INK = s.ink === "black" ? "#111111" : s.ink === "white" ? "#ffffff" : BG ? inkOn(BG.c2 ? mixHex(BG.c1, BG.c2) : BG.c1) : "#ffffff";   /* auto: dark text on a light background */
   if (OVERLAY) { if (!forExport) checker(ctx); } else if (BG) paintBg(ctx, 0, 0, W, H); else { ctx.fillStyle = "#100c0b"; ctx.fillRect(0, 0, W, H); }
   const d = design(ctx, post, s);
@@ -1856,7 +1916,7 @@ function renderSlide(cv, post, s, idx, total, scale, forExport, hiliteId) {
   if (UNDER) flushUnder(ctx);   /* a slide with no text */
   d.boxes = ub.concat(drawStickers(ctx, post, { stickers: all.filter(t => !t.under) }, forExport ? null : hiliteId));
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  OVERLAY = false; WHOLE = false; BG = null; HL = null; INK = "#ffffff";
+  OVERLAY = false; WHOLE = false; BG = null; HL = null; INK = "#ffffff"; DISP = null;
   return d;
 }
 
@@ -2017,10 +2077,13 @@ function layerHTML(sid, s) {
   const ls = (s.stickers || []).map((st, i) => [st, i]).filter(([st]) => st.kind === "text");
   return `<div class="rowhead" style="margin-top:4px"><span>Extra text${ls.length ? ` (${ls.length})` : ""}</span></div>`
     + ls.map(([st, i], n) => `<div class="rowbox"><div class="rowhead"><span>Text ${n + 1}</span><button class="btn ghost sm" data-act="delsticker" data-i="${i}">Remove</button></div>
-      <div><label class="lbl" for="${sid}-tl${i}">Text (**bold**, Enter = new line)</label><textarea class="ctl" id="${sid}-tl${i}" data-f="stickers.${i}.label">${esc(st.label ?? "")}</textarea></div></div>`).join("")
+      <div><label class="lbl" for="${sid}-tl${i}">Text (**bold**, Enter = new line)</label><textarea class="ctl" id="${sid}-tl${i}" data-f="stickers.${i}.label">${esc(st.label ?? "")}</textarea></div>
+      <div><label class="lbl" for="${sid}-tlf${i}">Font</label>${fontSel(`${sid}-tlf${i}`, `data-f="stickers.${i}.font"`, st.font)}</div></div>`).join("")
     + `<button class="btn sm" data-act="addtext" style="justify-self:start">Add text</button><p class="hint" style="margin:0">Extra text sits on top of the slide. Move, resize or turn it in the large view, or in Stickers.</p>`;
 }
 const alignSel = (id, attr, v) => `<select class="ctl" id="${id}" ${attr}>${[["left", "Left"], ["center", "Center"], ["right", "Right"]].map(([k, l]) => `<option value="${k}"${(v || "center") === k ? " selected" : ""}>${l}</option>`).join("")}</select>`;
+const FONT_OPTS = [["", "Nimbus Sans"], ...Object.entries(FAMS).map(([k, f]) => [k, f.label])];
+const fontSel = (id, attr, v, first) => `<select class="ctl" id="${id}" ${attr}>${(first ? [first, ...FONT_OPTS.slice(1)] : FONT_OPTS).map(([k, l]) => `<option value="${k}"${(v || "") === k ? " selected" : ""}>${l}</option>`).join("")}</select>`;
 const newStickerId = () => "k" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
 function addTextLayer(sid, label, extra) {
   const s = S.slides[sid]; if (!s) return null;
@@ -2076,6 +2139,8 @@ function setBgMode(sid, mode) {
 }
 function layoutHTML(sid, s) {
   const L = s.layout || {}, parts = [`<div class="autonote"></div>`, `<button class="btn sm" data-act="autofit" style="justify-self:start">Auto-fit text to the photo</button>`, `<div class="bgbox">${bgHTML(sid, s)}</div>`];
+  const pf = FAMS[S.post && S.post.font] ? FAMS[S.post.font].label : "Nimbus Sans";
+  parts.push(`<div><label class="lbl" for="${sid}-font">Big text font (titles and big numbers)</label>${fontSel(`${sid}-font`, 'data-f="font"', s.font, ["", `The post's (${pf})`]).replace('</select>', `<option value="nimbus"${s.font === "nimbus" ? " selected" : ""}>Nimbus Sans</option></select>`)}</div>`);
   parts.push(`<label class="check"><input type="checkbox" id="${sid}-overlay" data-f="overlay" data-bool${s.overlay ? " checked" : ""}><span>Text-only overlay (transparent PNG)<small>Leaves the photo out so you can lay the text over a video in Edits or CapCut.</small></span></label>`);
   parts.push(`<label class="check"><input type="checkbox" id="${sid}-whole" data-f="whole" data-bool${s.whole ? " checked" : ""}><span>Show the whole photo<small>No cropping: the photo fits inside the slide and a blurred copy fills the rest. Good for a photo with text in it, like a finished cover, in another ratio.</small></span></label>`);
   if (geoOf(sid).land && s.type !== "beforeafter" && s.type !== "photo") parts.push(`<div class="two">${sel(sid, "layout.side", "Text side (wide slides)", [["auto", "Auto"], ["left", "Left"], ["right", "Right"]], L.side)}${s.type === "specs" ? "" : sel(sid, "layout.panel", "Panel color", [["auto", "From the photo"], ["black", "Black"], ["red", "Cover red"]], L.panel)}</div>`);
@@ -2191,6 +2256,7 @@ function renderMain() {
         <div><label class="lbl" for="m-series">Header, left</label><input class="ctl" id="m-series" data-m="series"></div>
         <div><label class="lbl" for="m-subject">Header, right</label><input class="ctl" id="m-subject" data-m="subject"></div>
         <div><label class="lbl" for="m-handle">Your handle</label><input class="ctl" id="m-handle" data-m="handle"></div>
+        <div><label class="lbl" for="m-font">Big text font</label>${fontSel("m-font", 'data-m="font"', S.post && S.post.font)}</div>
       </div>
       <div class="actions" style="padding-bottom:10px"><button class="btn ghost sm danger" id="delPost">Delete this post</button></div></details>
     <div class="boardtools"><button class="btn ghost sm" id="foldAll">Fold all slides</button><span class="hint">Tap the arrow on a slide to fold or open just that one. Drag a folded slide by its ⋮⋮ grip to move it.</span></div>
@@ -2278,6 +2344,7 @@ document.addEventListener("input", e => {
   else if (el.dataset && el.dataset.m && S.post) {
     S.post[el.dataset.m] = el.value; saveMeta();
     if (el.dataset.m === "title") $("#postTitle").textContent = el.value || "Untitled post";
+    if (el.dataset.m === "font") { if (!el.value) delete S.post.font; renderBoard(new Set(order())); }
     if (el.dataset.m === "overall") updateApplyAll();
     else if (el.dataset.m !== "title") scheduleDraw();
   } else if (el.id === "photoName" || el.id === "photoDesc" || el.id === "photoTags") {
@@ -2596,7 +2663,7 @@ function stickerHTML(sid, s) {
     const opts = STICKER_COLORS.map(([v, l]) => `<option value="${v}"${cur === v ? " selected" : ""}>${l}</option>`).join("") + (STICKER_COLORS.some(([v]) => v === cur) ? "" : `<option value="${esc(cur)}" selected>Custom</option>`);
     const color = `<div><label class="lbl" for="${sid}-st${i}-c">${pill ? "Button color" : "Color"}</label><select class="ctl" id="${sid}-st${i}-c" data-f="stickers.${i}.${pill ? "bg" : "color"}">${opts}</select></div>`;
     const extra = pill ? `<div><label class="lbl" for="${sid}-st${i}-l">Text</label><input class="ctl" id="${sid}-st${i}-l" data-f="stickers.${i}.label" value="${esc(st.label ?? P.text)}"></div>`
-      : isText ? `<div><label class="lbl" for="${sid}-st${i}-w">Weight</label><select class="ctl" id="${sid}-st${i}-w" data-f="stickers.${i}.w"><option value="700"${+st.w === 400 ? "" : " selected"}>Bold</option><option value="400"${+st.w === 400 ? " selected" : ""}>Regular</option></select></div><div><label class="lbl" for="${sid}-st${i}-al">Align</label>${alignSel(`${sid}-st${i}-al`, `data-f="stickers.${i}.al"`, st.al)}</div>`
+      : isText ? `<div><label class="lbl" for="${sid}-st${i}-f">Font</label>${fontSel(`${sid}-st${i}-f`, `data-f="stickers.${i}.font"`, st.font)}</div><div><label class="lbl" for="${sid}-st${i}-w">Weight</label><select class="ctl" id="${sid}-st${i}-w" data-f="stickers.${i}.w"><option value="700"${+st.w === 400 ? "" : " selected"}>Bold</option><option value="400"${+st.w === 400 ? " selected" : ""}>Regular</option></select></div><div><label class="lbl" for="${sid}-st${i}-al">Align</label>${alignSel(`${sid}-st${i}-al`, `data-f="stickers.${i}.al"`, st.al)}</div>`
       : `<label class="check" style="align-self:end;min-height:40px;align-items:center"><input type="checkbox" id="${sid}-st${i}-s" data-f="stickers.${i}.solid" data-bool${(P.type === "row" ? st.solid !== false : st.solid) ? " checked" : ""}><span>${P.type === "row" ? "Filled bookmark" : "Filled"}</span></label>`;
     return `<div class="rowbox"><div class="rowhead"><span>${esc(P.label)}</span><button class="btn ghost sm" data-act="delsticker" data-i="${i}">Remove</button></div>
       <div class="two">${rng(sid, `stickers.${i}.x`, "Left / right", 0, 1, 0.005, st.x ?? 0.5, "pct")}${rng(sid, `stickers.${i}.y`, "Up / down", 0, 1, 0.005, st.y ?? 0.8, "pct")}</div>
@@ -4159,7 +4226,7 @@ function duplicateText(ref) {
     const b = (S.ftboxes || {})[path]; if (!b) { toast("Type some text first"); return; }
     const lines = b.lines.length > 1 ? b.lines : [String(fieldInfo(s, path).value)];
     const size = Math.round(clamp(b.size, 30, 600)), hh = capH(size) + (lines.length - 1) * size * 1.06;
-    const c = addTextLayer(sid, lines.join("\n"), { x: clamp((b.x0 + b.x1) / 2 / W, 0.03, 0.97), y: clamp(freeSpot(b, b.x1 - b.x0, hh) / H, 0.03, 0.97), size, w: b.w === 400 ? 400 : 700, tr: b.tr ?? -0.05, al: b.al || "left" });
+    const c = addTextLayer(sid, lines.join("\n"), { x: clamp((b.x0 + b.x1) / 2 / W, 0.03, 0.97), y: clamp(freeSpot(b, b.x1 - b.x0, hh) / H, 0.03, 0.97), size, w: b.w === 400 ? 400 : 700, tr: b.tr ?? -0.05, al: b.al || "left", ...(b.fam ? { font: b.fam } : {}) });
     S.fsel = c.id; S.ftsel = null; copy = "layer:" + c.id;
     msg = m ? "This slide has 4 rows already, so the copy is extra text. Drag it where you want it" : "Copy added as extra text, under Edit text. Drag it where you want it";
   }
@@ -4817,7 +4884,112 @@ async function referenceSlide(sid, pid) {
     if (!e || e.code !== "cancelled") toast(e && e.code === "image_rejected" ? "That image can’t be sent to Claude. Try a JPG or PNG" : SAMPLE_ERR[e && e.code] || "Couldn’t reach Claude. Try again.");
   } finally { S.applyCtl = null; S.busy.clear(); delete S.busyMsg[sid]; refreshApplySlot(sid); updateApplyAll(); }
 }
-function setCanRef() { document.documentElement.classList.toggle("canref", !!(S.sample && S.imgLimits) && !S.readOnly && !S.tagOff); }
+function setCanRef() { document.documentElement.classList.toggle("canref", !!(S.sample && S.imgLimits) && !S.readOnly && !S.tagOff); document.documentElement.classList.toggle("cancap", !!S.sample && !S.readOnly); }
+/* ---------- Captions: hooky captions with hashtags for any carousel on the board, written by Claude from that post's slides ----------
+   Pick the post, the app (Instagram or TikTok), the styles you want and the comment keyword (it's read from the post's keyword
+   sticker, else SETTINGS; ManyChat needs it exact). Claude writes five, each with its hashtags; copy one, or keep it on the post
+   (post.caption and post.hashtags), where the phone preview shows it too. */
+S.capPid = null; S.capApp = "ig"; S.capStyles = new Set(["mix"]); S.capOut = null; S.capBusy = false;
+const CAP_STYLES = [["mix", "Mix it up"], ["punchy", "Short and punchy"], ["story", "Story"], ["mistakes", "Mistakes to avoid"], ["save", "Save this"], ["pov", "POV / relatable"], ["question", "Question"]];
+async function capSlides(pid) {   /* the post's slides in order, from the board (other posts are read once) */
+  const p = S.posts.find(x => x.id === pid), meta = pid === S.pid ? S.post : p && p.data;
+  let slides = {};
+  if (pid === S.pid) slides = S.slides;
+  else if (S.local) slides = clone((window.__LOCAL_STATE__.slides || {})[pid] || {});
+  else { const snap = await S.db.collection(`posts/${pid}/slides`).get(); for (const d of snap.docs) { const v = d.data(); if (v) slides[d.id] = v; } }
+  return { meta: meta || {}, slides, order: orderOf(meta, slides) };
+}
+function capKeyword(slides) {
+  for (const s of Object.values(slides)) for (const st of s.stickers || []) if (st.kind === "keyword") { const m = String(st.label ?? STICKERS.keyword.text).match(/[“"']([^”"']+)[”"']/); if (m) return plainText(m[1]).trim().toUpperCase(); }
+  return "SETTINGS";
+}
+function capOutline(c) {   /* the slides as plain text, for Claude */
+  return c.order.map((sid, i) => {
+    const s = c.slides[sid], t = s.text || {}, bits = [];
+    for (const k of TEXT_KEYS[s.type] || []) if (t[k]) bits.push(`${k}: ${plainText(fill(t[k], c.meta))}`);
+    (t.rows || []).forEach(r => bits.push(`row: ${plainText(r.label)} = ${plainText(r.value)} (${plainText(r.note)})`));
+    (s.stickers || []).forEach(st => { if (st.kind === "text" || STICKERS[st.kind] && STICKERS[st.kind].type === "pill") bits.push(`sticker: ${plainText(fill(st.label ?? STICKERS[st.kind].text, c.meta))}`); });
+    return `${pad2(i + 1)}${s.alt ? " (another version of the slide before)" : ""} ${TEMPLATES[s.type].label}: ${bits.join(" | ")}`;
+  }).join("\n");
+}
+const CAP_RULES = `You write social media captions for a creator's carousel post. The creator makes cinematic photo and video content and shares the camera settings they use; the brand is bold, red and orange, friendly and direct.
+
+Rules:
+- Use only what the slides say: the creator's own settings, numbers, names and spellings. Never invent a setting, a number or a fact.
+- The first line is the hook and must work on its own (only about 125 characters show before "more"): a strong claim, a relatable problem, a mistake, curiosity or a POV.
+- Then a few short lines with the value from the slides (line breaks between them, a few fitting emojis, not on every line).
+- Then the call to action, exactly: Comment "{KW}" ... for the free PDF guide (the creator's ManyChat sends it to everyone who comments that word, so the word must be exactly {KW}, in caps, in quotes). A save or share nudge may follow.
+- Hashtags go in their own list, not in the caption: {NH} per caption, specific to the gear and topic in the slides, mixing a few big tags with niche ones; no banned or spammy tags; written like #OsmoNano (no spaces).
+- {APP}
+- Write each caption in a different style.`;
+async function capGenerate() {
+  const pid = S.capPid, st = $("#capStatus"); if (!S.sample || S.capBusy || !pid) return;
+  S.capBusy = true; S.capOut = null; renderCaptions(); st.textContent = "Claude is writing your captions…";
+  try {
+    const c = await capSlides(pid), kw = ($("#capKw").value.trim() || capKeyword(c.slides)).toUpperCase().replace(/["“”]/g, "");
+    const styles = S.capStyles.has("mix") ? "five different styles you choose (for example punchy, story, mistakes to avoid, save this, POV)" : [...S.capStyles].map(k => (CAP_STYLES.find(x => x[0] === k) || [k, k])[1]).join(", ") + " (repeat or vary them to make five)";
+    const app = S.capApp === "tt" ? "This is for TikTok: keep each caption short (under 300 characters including the call to action), punchy, lowercase-friendly; 4 to 6 hashtags." : "This is for Instagram: captions can run 4 to 10 short lines; 8 to 12 hashtags.";
+    const prompt = [CAP_RULES.replaceAll("{KW}", kw).replace("{NH}", S.capApp === "tt" ? "4 to 6" : "8 to 12").replace("{APP}", app),
+      `POST: ${c.meta.title || ""}\nHANDLE: ${c.meta.handle || ""}\nHEADER: ${c.meta.series || ""} / ${c.meta.subject || ""}\nSLIDES:\n${capOutline(c)}`,
+      $("#capNote").value.trim() ? `THE CREATOR'S NOTES: ${$("#capNote").value.trim().slice(0, 600)}` : "",
+      `Styles: ${styles}.`,
+      `Reply with only JSON: {"captions":[{"style":"<2 or 3 words>","caption":"<the caption, with \\n line breaks, ending with the call to action>","hashtags":["#…"]}],"firstComment":"<a short comment to pin under the post that repeats the call to action>"} with exactly 5 captions.`].filter(Boolean).join("\n\n");
+    const r = await S.sample.json(prompt, { modelTier: "default", cache: false });
+    const caps = (r && Array.isArray(r.captions) ? r.captions : []).slice(0, 6).map(x => ({ style: String(x.style || "").slice(0, 40), caption: String(x.caption || "").slice(0, 2200).trim(),
+      hashtags: (Array.isArray(x.hashtags) ? x.hashtags : []).map(h => "#" + String(h).replace(/^#+/, "").replace(/[^\p{L}\p{N}_]/gu, "")).filter(h => h.length > 1).slice(0, 15) })).filter(x => x.caption);
+    if (!caps.length) { st.textContent = "Claude's reply couldn't be used. Try again."; return; }
+    if (S.capPid !== pid) return;
+    S.capOut = { pid, kw, caps, first: String((r && r.firstComment) || "").slice(0, 300) };
+    st.textContent = `Five captions with "${kw}" as the comment keyword. Edit any of them, then copy it or keep it on the post.`;
+  } catch (e) { st.textContent = e && e.code === "cancelled" ? "" : SAMPLE_ERR[e && e.code] || "Couldn’t reach Claude. Try again."; }
+  finally { S.capBusy = false; renderCaptions(); }
+}
+function capMeta(pid) { return pid === S.pid ? S.post : (S.posts.find(x => x.id === pid) || {}).data; }
+function capSave(pid, caption, hashtags) {
+  const m = capMeta(pid); if (!m) return;
+  m.caption = caption; m.hashtags = hashtags;
+  if (pid === S.pid) saveMeta(); else queueSave(`posts/${pid}`, () => m);
+  renderCaptions(); toast("Caption kept on the post. The phone preview shows it too");
+}
+async function capCopy(text) {
+  try { await navigator.clipboard.writeText(text); toast("Copied"); }
+  catch (e) { const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); toast("Copied"); } catch (er) { toast("Couldn't copy: select the text and copy it"); } ta.remove(); }
+}
+const capFull = (caption, tags) => caption + (tags && tags.length ? "\n\n" + tags.join(" ") : "");
+function openCaptions() {
+  if (!S.sample) { toast("Claude isn't available here"); return; }
+  S.capPid = S.capPid && S.posts.some(p => p.id === S.capPid) ? S.capPid : S.pid; S.capOut = S.capOut && S.capOut.pid === S.capPid ? S.capOut : null;
+  $("#capKw").value = ""; $("#capStatus").textContent = "";
+  renderCaptions(); $("#capDlg").showModal();
+  capSlides(S.capPid).then(c => { if (!$("#capKw").value) $("#capKw").placeholder = capKeyword(c.slides); }, () => {});
+}
+function renderCaptions() {
+  const posts = [...S.posts].sort((a, b) => (b.data.updatedAt || 0) - (a.data.updatedAt || 0));
+  $("#capPosts").innerHTML = posts.map(p => { const m = capMeta(p.id) || p.data; return `<button type="button" data-cappost="${esc(p.id)}" aria-pressed="${p.id === S.capPid}">${esc(m.title || p.id)}${m.caption ? '<i title="Has a caption">✓</i>' : ""}</button>`; }).join("");
+  $$("#capDlg [data-capapp]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.capapp === S.capApp)));
+  $("#capStyles").innerHTML = CAP_STYLES.map(([k, l]) => `<button type="button" data-capstyle="${k}" aria-pressed="${S.capStyles.has(k)}">${l}</button>`).join("");
+  const m = capMeta(S.capPid) || {};
+  $("#capSaved").innerHTML = m.caption ? `<div class="capcard kept"><div class="caph"><b>Kept on this post</b><span class="grow"></span><button type="button" class="btn sm" data-capcopy="saved">Copy</button></div><pre>${esc(capFull(m.caption, m.hashtags))}</pre></div>` : "";
+  $("#capGo").disabled = S.capBusy; $("#capGo").textContent = S.capBusy ? "Writing…" : S.capOut ? "Write five more" : "Write five captions";
+  const o = S.capOut && S.capOut.pid === S.capPid ? S.capOut : null;
+  $("#capRes").innerHTML = o ? o.caps.map((c, i) => `<div class="capcard"><div class="caph"><b>${esc(c.style || "Caption " + (i + 1))}</b><span class="grow"></span><button type="button" class="btn ghost sm" data-capkeep="${i}">Keep on post</button><button type="button" class="btn sm" data-capcopy="${i}">Copy</button></div>
+      <textarea class="ctl captext" data-capedit="${i}" rows="${Math.min(12, c.caption.split("\n").length + 1)}" aria-label="Caption ${i + 1}">${esc(c.caption)}</textarea>
+      <div class="captags">${c.hashtags.map(h => `<span>${esc(h)}</span>`).join("")}</div><small class="hint">${c.caption.length} characters${c.caption.split("\n")[0].length > 125 ? " · the first line runs past what shows before “more”" : ""}</small></div>`).join("")
+      + (o.first ? `<div class="capcard"><div class="caph"><b>Comment to pin</b><span class="grow"></span><button type="button" class="btn sm" data-capcopy="first">Copy</button></div><pre>${esc(o.first)}</pre></div>` : "") : "";
+}
+$("#capDlg").addEventListener("click", e => {
+  const t = e.target, o = S.capOut;
+  const pp = t.closest("[data-cappost]"); if (pp) { S.capPid = pp.dataset.cappost; S.capOut = null; $("#capKw").value = ""; $("#capStatus").textContent = ""; renderCaptions(); capSlides(S.capPid).then(c => { $("#capKw").placeholder = capKeyword(c.slides); }, () => {}); return; }
+  const ap = t.closest("[data-capapp]"); if (ap) { S.capApp = ap.dataset.capapp; renderCaptions(); return; }
+  const sb = t.closest("[data-capstyle]");
+  if (sb) { const k = sb.dataset.capstyle; if (k === "mix") S.capStyles = new Set(["mix"]); else { S.capStyles.delete("mix"); if (S.capStyles.has(k)) S.capStyles.delete(k); else S.capStyles.add(k); if (!S.capStyles.size) S.capStyles.add("mix"); } renderCaptions(); return; }
+  if (t.closest("#capGo")) return capGenerate();
+  const cp = t.closest("[data-capcopy]");
+  if (cp) { const k = cp.dataset.capcopy, m = capMeta(S.capPid) || {}; capCopy(k === "saved" ? capFull(m.caption, m.hashtags) : k === "first" ? o.first : capFull(o.caps[+k].caption, o.caps[+k].hashtags)); return; }
+  const kp = t.closest("[data-capkeep]"); if (kp && o) { const c = o.caps[+kp.dataset.capkeep]; capSave(o.pid, c.caption, c.hashtags); }
+});
+$("#capDlg").addEventListener("input", e => { const i = e.target.dataset && e.target.dataset.capedit; if (i != null && S.capOut) S.capOut.caps[+i].caption = e.target.value; });
+$("#capPost").addEventListener("click", openCaptions);
 /* the top bar's References: a new carousel patterned after several posts */
 S.refSel = []; S.refFolder = "*"; S.refQuery = ""; S.genCtl = null;
 const refMax = () => clamp((S.imgLimits && S.imgLimits.maxCount) || 1, 1, 10);
@@ -5420,7 +5592,7 @@ function phoneNote() {
 }
 function renderPhone() {
   if (ovKind !== "phone" || !focusSid) return;
-  const x = numOf(focusSid), handle = String(S.post.handle || "").replace(/^@/, "").toLowerCase() || "yourhandle"   /* the apps show handles in lowercase */, caption = plainText(S.post.title);
+  const x = numOf(focusSid), handle = String(S.post.handle || "").replace(/^@/, "").toLowerCase() || "yourhandle"   /* the apps show handles in lowercase */, caption = S.post.caption ? (S.post.caption.split("\n")[0].slice(0, 90) + (S.post.caption.length > 90 || S.post.caption.includes("\n") ? "… more" : "")) : plainText(S.post.title);
   $$("#fPhone [data-papp]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.papp === S.papp)));
   $$("#fPhone [data-pshape]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.pshape === S.pshape)));
   $$("#fPhone [data-pview]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.pview === S.pview)));
@@ -5921,6 +6093,8 @@ addEventListener("resize", queueBar);
 async function boot() {
   try { await Promise.allSettled([`700 40px`, `400 40px`, `italic 700 40px`, `italic 400 40px`].map(f => document.fonts.load(`${f} "Nimbus Sans"`))); } catch (e) {}
   try { const c = document.createElement("canvas").getContext("2d"); c.font = font(1000, 700); const m = c.measureText("H"); if (m.actualBoundingBoxAscent > 500) CAPR = m.actualBoundingBoxAscent / 1000; } catch (e) {}
+  try { await Promise.allSettled([document.fonts.load('400 40px "Anton"'), document.fonts.load('400 40px "League Gothic"')]); } catch (e) {}
+  for (const k of Object.keys(FAMS)) try { const c = document.createElement("canvas").getContext("2d"); inFam(k, () => { c.font = font(1000, 400); }); const m = c.measureText("H"); if (m.actualBoundingBoxAscent > 500) FAMS[k].cap = m.actualBoundingBoxAscent / 1000; } catch (e) {}
   if (window.__LOCAL_STATE__) {
     const L = window.__LOCAL_STATE__;
     S.local = true; S.posts = clone(L.posts || []); S.sample = window.__FAKE_SAMPLE__ || null;

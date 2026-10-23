@@ -8,7 +8,8 @@
 //   --assets  the post's photos (and custom sticker images), each file named <asset id>.<ext> (what Artifact read with path=<asset id> saves)
 //   --fonts   folder with NimbusSans-Regular.otf, NimbusSans-Bold.otf, NimbusSans-Italic.otf and NimbusSans-BoldItalic.otf, plus NimbusSans-Regular.ttf and
 //             NimbusSans-Bold.ttf for --pdf (default: /usr/share/fonts/opentype/urw-base35, which has the .otf only).
-//             All six are published on the board under fonts/.
+//             All six are published on the board under fonts/. The tall big-text fonts (Anton-Regular.ttf, LeagueGothic.ttf) come from
+//             this skill's fonts/ folder when --fonts doesn't have them.
 //   --pdf     make the PDF guide instead of PNGs
 //   --libs    folder holding pdf-lib.min.js (pdf-lib 1.17.1) and fontkit.umd.min.js (@pdf-lib/fontkit 1.1.1), needed for --pdf.
 //             The page pins both by hash, so they must be exactly these versions:
@@ -45,7 +46,7 @@ const srv = http.createServer((q, r) => {
   const u = decodeURIComponent(q.url.split("?")[0]);
   let f = null;
   if (u === "/" || u === "/index.html") { r.writeHead(200, { "content-type": "text/html" }); return r.end(page); }
-  if (u.startsWith("/fonts/")) f = path.join(fontsDir, path.basename(u));
+  if (u.startsWith("/fonts/")) { f = path.join(fontsDir, path.basename(u)); if (!fs.existsSync(f)) f = path.join(__dirname, "..", "fonts", path.basename(u)); }   /* the tall big-text fonts (Anton, League Gothic) ship with the skill */
   if (u.startsWith("/asset/")) f = assetFiles[path.basename(u)];
   if (!f || !fs.existsSync(f)) { r.writeHead(404); return r.end(); }
   r.writeHead(200, { "content-type": types[path.extname(f).toLowerCase()] || "application/octet-stream" });
