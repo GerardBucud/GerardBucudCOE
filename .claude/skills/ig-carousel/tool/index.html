@@ -88,6 +88,13 @@ h1.title{font-size:clamp(26px,4vw,40px);line-height:1.02;letter-spacing:-.05em;t
 .num .ver{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--accent-ink);background:var(--accent);border-radius:999px;padding:3px 8px;margin-left:8px;vertical-align:4px}
 .kind{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
 .card-tools{margin-left:auto;display:flex;gap:6px}
+.grip{display:none;place-items:center;width:28px;height:36px;margin-right:-4px;border-radius:8px;color:var(--muted);cursor:grab;touch-action:none;flex:0 0 auto}
+.grip svg{width:20px;height:20px;fill:currentColor}
+.grip:hover,.grip:focus-visible{background:var(--sunken);color:var(--ink)}
+.card.folded .grip{display:grid}
+.card.folded [data-act="left"],.card.folded [data-act="right"]{display:none}
+.card.dragging{opacity:.6;box-shadow:0 8px 24px rgba(0,0,0,.25);position:relative;z-index:5}
+body.reordering,body.reordering *{cursor:grabbing!important;user-select:none}
 .card-h{min-width:0}.card-h .kind{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.card-h .num,.card-h .icon,.card-h .rbadge{flex:0 0 auto}
 @media (max-width:440px){.card-h{gap:6px}.card-tools{gap:4px}.card-tools .icon{width:32px;height:32px}}
 .icon{width:36px;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--surface);cursor:pointer;display:grid;place-items:center;padding:0}
@@ -2104,7 +2111,7 @@ function cardHTML(sid) {
   const g = geoOf(sid), cw = 600, ch = Math.round(cw * g.h / g.w), th = Math.min(102, Math.round(68 * g.h / g.w)), tw = Math.round(th * g.w / g.h);
   const own = RATIOS[s.ratio] && s.ratio !== ratioKey(S.post) ? `<span class="rbadge" title="This slide has its own ratio">${esc(s.ratio)}</span>` : "";
   return `<article class="card${S.folded.has(sid) ? " folded" : ""}" id="card-${sid}" data-sid="${sid}" data-st="${st}" data-geo="${g.key}${own ? "+" : ""}">
-    <header class="card-h"><button class="icon fold" data-act="fold" aria-expanded="${!S.folded.has(sid)}" aria-label="${S.folded.has(sid) ? "Open" : "Fold"} this slide">${ICON.down}</button><canvas class="thumb" width="${tw}" height="${th}" style="width:${tw / 2}px;height:${th / 2}px" data-act="fold" aria-hidden="true"></canvas><span class="num"></span><span class="kind">${esc(TEMPLATES[s.type].label)}</span>${own}
+    <header class="card-h"><span class="grip" tabindex="0" role="button" aria-label="Drag to move this slide (or press the up and down arrows)" title="Drag to move">${GRIP_I}</span><button class="icon fold" data-act="fold" aria-expanded="${!S.folded.has(sid)}" aria-label="${S.folded.has(sid) ? "Open" : "Fold"} this slide">${ICON.down}</button><canvas class="thumb" width="${tw}" height="${th}" style="width:${tw / 2}px;height:${th / 2}px" data-act="fold" aria-hidden="true"></canvas><span class="num"></span><span class="kind">${esc(TEMPLATES[s.type].label)}</span>${own}
       <div class="card-tools"><button class="icon" data-act="left" aria-label="Move earlier">${ICON.left}</button><button class="icon" data-act="right" aria-label="Move later">${ICON.right}</button>
       <div class="more"><button class="icon" data-act="cpv" aria-label="Preview" title="Preview" aria-expanded="false">${EYE_I}</button></div><div class="more"><button class="icon" data-act="cdl" aria-label="Download" title="Download" aria-expanded="false">${DL_I}</button></div>
       <div class="more"><button class="icon" data-act="menu" aria-label="More actions" aria-expanded="false">${ICON.more}</button></div></div></header>
@@ -2186,7 +2193,7 @@ function renderMain() {
         <div><label class="lbl" for="m-handle">Your handle</label><input class="ctl" id="m-handle" data-m="handle"></div>
       </div>
       <div class="actions" style="padding-bottom:10px"><button class="btn ghost sm danger" id="delPost">Delete this post</button></div></details>
-    <div class="boardtools"><button class="btn ghost sm" id="foldAll">Fold all slides</button><span class="hint">Tap the arrow on a slide to fold or open just that one.</span></div>
+    <div class="boardtools"><button class="btn ghost sm" id="foldAll">Fold all slides</button><span class="hint">Tap the arrow on a slide to fold or open just that one. Drag a folded slide by its ⋮⋮ grip to move it.</span></div>
     <section class="board" id="board" aria-label="Slides"></section>
     <div class="actions" style="padding-bottom:26px"><label class="lbl sr" for="addType">Slide type</label>
       <select class="ctl" id="addType" style="width:auto">${Object.entries(TEMPLATES).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join("")}</select>
@@ -2328,7 +2335,7 @@ document.addEventListener("click", e => {
   const lb = t.closest("[data-lib]");
   if (lb) return libAction(lb.dataset.lib, lb);
   const hd = t.closest(".card-h");   /* the card's header row (number, kind, thumbnail) folds and opens it too */
-  if (hd && !t.closest("button,.card-tools,.more,input,select")) { const sid = hd.closest(".card").dataset.sid; setFold(sid, !S.folded.has(sid)); saveFolds(); return; }
+  if (hd && !t.closest("button,.card-tools,.more,input,select,.grip")) { const sid = hd.closest(".card").dataset.sid; setFold(sid, !S.folded.has(sid)); saveFolds(); return; }
   const b = t.closest("[data-act],[data-close],[data-newpost],#dlAll,#applyAll,#addSlide,#copyAll,#newPost,#fPrev,#fNext,#delPost,#notesClose,#overallOk,#newFolderBtn,#folderCancel,#tagBtn,#foldAll");
   if (!b) { if (!t.closest(".more")) closeMenus(); return; }
   if (b.id === "foldAll") { const o = order(), all = o.every(id => S.folded.has(id)); o.forEach(id => setFold(id, !all)); saveFolds(); return; }
@@ -2405,6 +2412,71 @@ function toggleNewMenu(btn) {
   btn.after(m); btn.setAttribute("aria-expanded", "true");
 }
 /* A slide moves together with its versions. A version moves inside its group; moving it to the front makes it the main one. */
+/* Folded cards are a list you reorder by dragging the grip (mouse or finger). A slide moves with its versions; a version moves only
+   among the versions of its slide (the first of them is the main one). The cards move as you drag; the new order is saved on drop.
+   With the grip focused, the up and down arrow keys move the slide too. */
+const GRIP_I = `<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>`;
+let rd = null;
+function reorderCards() { return $$("#board .card").map(c => c.dataset.sid); }
+document.addEventListener("pointerdown", e => {
+  const gp = e.target.closest && e.target.closest(".grip"); if (!gp || e.button > 0) return;
+  const card = gp.closest(".card"), sid = card.dataset.sid, gs = groups(), g = gs.find(x => x.includes(sid)); if (!g) return;
+  e.preventDefault(); closeMenus();
+  try { gp.setPointerCapture(e.pointerId); } catch (err) {}
+  const version = g.indexOf(sid) > 0;
+  rd = { pid: e.pointerId, sid, gp, y0: e.clientY, x0: e.clientX, moved: false, version, group: g, move: version ? [sid] : g, before: order().join(","), cy: e.clientY, cx: e.clientX, scroll: 0 };
+});
+document.addEventListener("pointermove", e => {
+  if (!rd || e.pointerId !== rd.pid) return;
+  rd.cx = e.clientX; rd.cy = e.clientY;
+  if (!rd.moved) {
+    if (Math.hypot(e.clientX - rd.x0, e.clientY - rd.y0) < 5) return;
+    rd.moved = true; document.body.classList.add("reordering");
+    rd.move.forEach(id => { const c = document.getElementById("card-" + id); if (c) c.classList.add("dragging"); });
+    rd.tick = setInterval(() => {   /* near the top or bottom of the screen, the page scrolls along */
+      const edge = 70, v = rd.cy < edge ? -Math.ceil((edge - rd.cy) / 4) : rd.cy > innerHeight - edge ? Math.ceil((rd.cy - innerHeight + edge) / 4) : 0;
+      if (v) { scrollBy(0, v); dragTo(rd.cx, rd.cy); }
+    }, 16);
+  }
+  dragTo(e.clientX, e.clientY);
+});
+function dragTo(x, y) {
+  const moving = new Set(rd.move), all = $$("#board .card"), rest = all.filter(c => !moving.has(c.dataset.sid));
+  const els = rd.move.map(id => document.getElementById("card-" + id)).filter(Boolean); if (!rest.length || !els.length) return;
+  let best = null, bd = Infinity;
+  for (const c of rest) { const r = c.getBoundingClientRect(), d = Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2)); if (d < bd) { bd = d; best = c; } }
+  const r = best.getBoundingClientRect(), dy = y - (r.top + r.height / 2), after = Math.abs(dy) > r.height / 4 ? dy > 0 : x > r.left + r.width / 2;
+  const o = rest.map(c => c.dataset.sid);   /* the order without the cards being moved */
+  let at = o.indexOf(best.dataset.sid) + (after ? 1 : 0);
+  if (rd.version) {   /* stay among this slide's versions, after the main one */
+    const ids = rd.group.filter(id => !moving.has(id)); at = clamp(at, o.indexOf(ids[0]) + 1, o.indexOf(ids[ids.length - 1]) + 1);
+  } else {   /* land between slides, never inside another slide's versions */
+    const g = groups().find(gg => gg.includes(best.dataset.sid)).filter(id => !moving.has(id)); at = after ? o.indexOf(g[g.length - 1]) + 1 : o.indexOf(g[0]);
+  }
+  if (all.indexOf(els[0]) === at) return;   /* already there */
+  if (at < rest.length) rest[at].before(...els); else rest[rest.length - 1].after(...els);
+}
+function endReorder(e, cancel) {
+  if (!rd || (e && e.pointerId !== rd.pid)) return;
+  const r = rd; rd = null; clearInterval(r.tick);
+  document.body.classList.remove("reordering"); $$(".card.dragging").forEach(c => c.classList.remove("dragging"));
+  if (!r.moved) return;
+  const next = reorderCards();
+  if (cancel || next.join(",") === r.before) { renderBoard(); return; }
+  const g = r.group;
+  S.post.order = next; saveMeta(); renderBoard(); renderLibrary();
+  const x = numOf(r.sid); toast(r.version ? `Version moved: now V${x.v}` : `Slide moved to ${pad2(x.n)}${g.length > 1 ? `, with its ${g.length - 1 === 1 ? "version" : (g.length - 1) + " versions"}` : ""}`);
+  S.suppressClick = Date.now();
+}
+document.addEventListener("pointerup", e => endReorder(e));
+document.addEventListener("pointercancel", e => endReorder(e, true));
+document.addEventListener("keydown", e => {
+  if (rd && e.key === "Escape") { const r = rd; endReorder({ pointerId: r.pid }, true); return; }
+  const gp = e.target.closest && e.target.closest(".grip"); if (!gp) return;
+  const d = { ArrowUp: -1, ArrowLeft: -1, ArrowDown: 1, ArrowRight: 1 }[e.key]; if (!d) return;
+  e.preventDefault(); const sid = gp.closest(".card").dataset.sid; move(sid, d);
+  const ng = document.querySelector(`#card-${sid} .grip`); if (ng) ng.focus();
+});
 function move(sid, dir) {
   const gs = groups(), gi = gs.findIndex(g => g.includes(sid)), g = gs[gi], k = g.indexOf(sid);
   if (k > 0) {
@@ -5384,7 +5456,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { S, MK, applyWithClaude, drawFocus, updateFocusUI, selSticker, cleanStickers, xfBox, gesturing, layerList };   /* sticker tools, for tests */
+window.__t = { S, order, MK, applyWithClaude, drawFocus, updateFocusUI, selSticker, cleanStickers, xfBox, gesturing, layerList };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
