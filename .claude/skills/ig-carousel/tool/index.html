@@ -498,6 +498,34 @@ html.canref .refb{display:inline-flex}
 .refopts .actions{align-items:center}
 .refopts .hint{margin:0;font-size:13px;color:var(--muted)}
 #refDlg .dlg-b{max-height:min(78vh,900px)}
+.minename{width:100%;border:1px solid transparent;background:none;color:var(--ink);font:inherit;font-size:12px;text-align:center;padding:3px 4px;border-radius:6px;margin-top:4px}
+.minename:hover,.minename:focus{border-color:var(--line);background:var(--surface)}
+.minetools{display:flex;justify-content:center;gap:4px;margin-top:2px}
+.minetools button{width:30px;height:28px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;display:grid;place-items:center;cursor:pointer;padding:0}
+.minetools svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.rowfoot{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.farr{position:absolute;z-index:4;min-width:220px;background:#1c1918;border:1px solid #3a3432;border-radius:10px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.5);line-height:1.3}
+.farr[hidden]{display:none}
+.farr p{margin:2px 8px 6px;font-size:12px;color:#b9b1ad}
+.farr button{display:flex;width:100%;justify-content:space-between;gap:16px;align-items:center;border:0;background:none;color:#f3eeeb;font:inherit;font-size:14px;padding:9px 10px;border-radius:6px;cursor:pointer;text-align:left;min-height:40px}
+.farr button:hover:not(:disabled){background:#2e2927}.farr button:disabled{opacity:.4;cursor:default}
+.farr kbd,.qbox kbd{font:inherit;font-size:11px;color:#b9b1ad;border:1px solid #3a3432;border-radius:4px;padding:1px 5px}
+.qdlg{max-width:min(720px,calc(100vw - 24px));margin-top:10vh;background:#1c1918;color:#f3eeeb;border-color:#3a3432}
+.qdlg::backdrop{background:rgba(0,0,0,.55)}
+.qbox{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid #3a3432}
+.qbox svg{width:20px;height:20px;stroke:#b9b1ad;fill:none;stroke-width:2;flex:none}
+.qbox input{flex:1;min-width:0;border:0;background:none;color:inherit;font:inherit;font-size:17px;outline:none}
+.qres{max-height:min(56vh,520px);overflow:auto;padding:4px 14px 10px}
+.qres h4{margin:12px 0 8px;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:#b9b1ad}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.qgrid button{border:2px solid transparent;background:#2b2626;border-radius:10px;padding:6px;display:grid;gap:4px;cursor:pointer;color:#f3eeeb;font-size:12px;text-align:center}
+.qgrid button:hover,.qgrid button[aria-selected=true]{border-color:#e02d12}
+.qgrid img,.qgrid canvas,.qgrid .qmine{width:100%;height:64px;object-fit:cover;border-radius:6px;display:block}
+.qgrid .qmine svg,.qgrid .qmine img{width:100%;height:64px;object-fit:contain;color:#fff;display:block}
+.qgrid canvas{object-fit:contain}
+.qgrid span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qfoot{margin:0;padding:8px 14px 12px;font-size:12px;color:#b9b1ad;border-top:1px solid #3a3432}
+@media (pointer:coarse){.qfoot{display:none}.qbox kbd{display:none}}
 .mineh{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.mineh h4,.mineh2{margin:0;font-size:14px}
 .mineh2{margin:18px 0 10px}
 #mineBox{border-bottom:1px solid var(--line);padding-bottom:14px}
@@ -651,10 +679,11 @@ details.gsec[open]{padding-bottom:14px}
             <p class="hint" id="mkStatus" role="status"></p>
             <div id="mkVecOpts"><label class="lbl" for="mkThr">Threshold</label><input type="range" id="mkThr" min="0" max="255" value="128">
               <div class="mkrow"><label class="check"><input type="checkbox" id="mkInv"><span>Invert</span></label><label class="check"><input type="checkbox" id="mkSmooth" checked><span>Smooth</span></label></div>
-              <div class="mkenh" id="mkEnh"><label class="lbl" for="mkEnhNote">Clean it up with Claude</label>
-                <textarea class="ctl" id="mkEnhNote" rows="2" placeholder="Optional notes, e.g. remove the stray lines under the cloud, keep the star's points sharp"></textarea>
-                <div class="mkrow"><button type="button" class="btn sm enh" id="mkEnhGo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>Enhance</button><button type="button" class="btn ghost sm" id="mkEnhUndo" hidden>Back to the trace</button></div></div></div>
+</div>
             <div id="mkCutOpts" hidden><label class="lbl" for="mkTol">Remove the background around it</label><input type="range" id="mkTol" min="0" max="100" value="40"><p class="hint">0 keeps the whole box. Works best on a plain background.</p></div>
+              <div class="mkenh" id="mkEnh"><label class="lbl" for="mkEnhNote">Clean it up with Claude (as a one-color vector)</label>
+                <textarea class="ctl" id="mkEnhNote" rows="2" placeholder="Optional notes, e.g. remove the stray lines under the cloud, keep the star's points sharp"></textarea>
+                <div class="mkrow"><button type="button" class="btn sm enh" id="mkEnhGo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>Enhance</button><button type="button" class="btn ghost sm" id="mkEnhUndo" hidden>Back to the trace</button></div></div>
           </div>
         </div>
       </div>
@@ -668,14 +697,21 @@ details.gsec[open]{padding-bottom:14px}
     </div>
     <div class="mkfoot">
       <div><label class="lbl" for="mkName">Name</label><input class="ctl" id="mkName" maxlength="40" placeholder="Sticker"></div>
-      <label class="check"><input type="checkbox" id="mkSave"><span>Save to My stickers<small>to use it again on other slides</small></span></label>
-      <span class="grow"></span><button type="button" class="btn primary" id="mkAdd" disabled>Add to the slide</button>
+      <label class="check" id="mkSaveRow"><input type="checkbox" id="mkSave"><span><span id="mkSaveTxt">Save to My stickers</span><small>to use it again on other slides</small></span></label>
+      <span class="grow"></span><button type="button" class="btn ghost" id="mkAddNew" hidden>Save as a new sticker</button><button type="button" class="btn primary" id="mkAdd" disabled>Add to the slide</button>
     </div>
   </div>
 </dialog>
 
+<dialog id="qDlg" class="qdlg" aria-label="Add a sticker or photo">
+  <div class="qbox"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg><input id="qIn" type="search" role="combobox" aria-controls="qRes" aria-expanded="true" placeholder="Search your stickers and photos" autocomplete="off" spellcheck="false"><kbd>Esc</kbd></div>
+  <div class="qres" id="qRes" role="listbox" aria-label="Results"></div>
+  <p class="qfoot">↑ ↓ to pick · Enter adds it to the slide · photos go on as an image layer you can move, resize or send behind the text</p>
+</dialog>
+
 <dialog id="focusDlg" aria-labelledby="focusTitle">
   <div class="dlg-h"><h3 id="focusTitle" tabindex="-1" autofocus>Slide</h3><span class="grow"></span>
+    <button class="icon" id="fFind" aria-label="Add a sticker or photo (Ctrl+Space)" title="Add a sticker or photo (Ctrl+Space)"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
     <div class="more"><button class="icon" id="fDl" aria-label="Download or preview this slide" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></button></div>
     <button class="icon" id="fPrev" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
     <button class="icon" id="fNext" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
@@ -686,6 +722,7 @@ details.gsec[open]{padding-bottom:14px}
       <div class="rail" id="fRail" role="slider" tabindex="0" aria-label="Sticker size" aria-orientation="vertical" aria-valuemin="40" aria-valuemax="600" hidden><i></i><b></b></div>
       <div class="tsel" id="fTsel" hidden></div>
       <div class="fbar" id="fBar" role="toolbar" aria-label="Selected text" hidden></div>
+      <div class="farr" id="fArr" role="menu" aria-label="Layer order" hidden></div>
       <button type="button" class="fdel" id="fDel" aria-label="Delete this sticker" hidden><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
       <div class="xf" id="fXf" hidden><i data-xh="nw"></i><i data-xh="ne"></i><i data-xh="sw"></i><i data-xh="se"></i><b class="xrot" data-xh="rot" title="Drag to turn" aria-label="Turn"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4h-4"/></svg></b></div>
       <div class="ftrash" id="fTrash" aria-hidden="true" hidden><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></div></div>
@@ -883,7 +920,16 @@ let TF = null, TB = null;
 /* the slide's text color (white, or near-black on a light background) and its highlight box color (null: the text's own color) */
 let INK = "#ffffff", HL = null;
 /* draw text with its cap top at capTop; returns drawn width */
+/* Stickers with under: true sit behind the slide's text: drawn just before the first text (after the photo, shades and panels) */
+let UNDER = null;
+function flushUnder(ctx) {
+  const u = UNDER; UNDER = null; if (!u) return;
+  const tf = TF, tx = TXF; TF = null; TXF = null;
+  u.boxes.push(...drawStickers(ctx, u.post, { stickers: u.list }, u.hilite));
+  TF = tf; TXF = tx;
+}
 function txt(ctx, str, x, capTop, o) {
+  if (UNDER) flushUnder(ctx);
   const size = o.size, track = o.track ?? -0.05, baseW = o.weight ?? 700;
   str = String(str ?? "");
   if (!str) return 0;
@@ -1739,13 +1785,16 @@ function renderSlide(cv, post, s, idx, total, scale, forExport, hiliteId) {
   INK = s.ink === "black" ? "#111111" : s.ink === "white" ? "#ffffff" : BG ? inkOn(BG.c2 ? mixHex(BG.c1, BG.c2) : BG.c1) : "#ffffff";   /* auto: dark text on a light background */
   if (OVERLAY) { if (!forExport) checker(ctx); } else if (BG) paintBg(ctx, 0, 0, W, H); else { ctx.fillStyle = "#100c0b"; ctx.fillRect(0, 0, W, H); }
   const d = design(ctx, post, s);
+  const all = (s.stickers || []).filter(Boolean), under = all.filter(t => t.under), ub = [];
+  UNDER = under.length ? { post, list: under, hilite: forExport ? null : hiliteId, boxes: ub } : null;
   if (OVERLAY) d.note = (d.note || "") + " · <b>transparent PNG</b>";
   if (s.type === "specs") renderSpecs(ctx, post, s, idx, total, d);
   else if (s.type === "cover" || s.type === "save") renderTitle(ctx, post, s, idx, total, d);
   else if (s.type === "beforeafter") renderBA(ctx, post, s, idx, total, d);
   else renderPhotoSlide(ctx, post, s, idx, total, d);
   d.tboxes = TB; TB = null; TF = null; d.geo = geo; CX0 = M; CX1 = W - M;
-  d.boxes = drawStickers(ctx, post, s, forExport ? null : hiliteId);
+  if (UNDER) flushUnder(ctx);   /* a slide with no text */
+  d.boxes = ub.concat(drawStickers(ctx, post, { stickers: all.filter(t => !t.under) }, forExport ? null : hiliteId));
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   OVERLAY = false; WHOLE = false; BG = null; HL = null; INK = "#ffffff";
   return d;
@@ -2274,6 +2323,8 @@ document.addEventListener("click", e => {
   else if (act === "addsticker") openStickers(sid);
   else if (act === "addtext") { addTextLayer(sid); renderBoard(new Set([sid])); const c = document.getElementById("card-" + sid), d = c && c.querySelector("details.txt"); if (d) d.open = true; toast("Text added. Move it in the large view"); }
   else if (act === "savemine") saveToMine(sid, (s.stickers || [])[+b.dataset.i]);
+  else if (act === "mkedit") { const st = (s.stickers || [])[+b.dataset.i]; if (st) openMaker(sid, "photo", { sid, id: st.id }); }
+  else if (act === "dupsticker") { const st = (s.stickers || [])[+b.dataset.i]; if (st) dupSticker(sid, st.id); }
   else if (act === "delsticker") { const st = (s.stickers || [])[+b.dataset.i]; if (st) removeSticker(sid, st.id); }
   else if (act === "resetadj") { if (s[b.dataset.slot]) { remember(sid); delete s[b.dataset.slot].adj; saveSlide(sid); renderBoard(new Set([sid])); } }
   else if (act === "adjall") copyEditsToAll(sid, b.dataset.slot);
@@ -2424,7 +2475,7 @@ function stickerHTML(sid, s) {
       <div class="two">${rng(sid, `stickers.${i}.x`, "Left / right", 0, 1, 0.005, st.x ?? 0.5, "pct")}${rng(sid, `stickers.${i}.y`, "Up / down", 0, 1, 0.005, st.y ?? 0.8, "pct")}</div>
       ${isText ? `<div><label class="lbl" for="${sid}-st${i}-t">Text (**bold**, Enter = new line)</label><textarea class="ctl" id="${sid}-st${i}-t" data-f="stickers.${i}.label">${esc(st.label ?? P.text)}</textarea></div>` : ""}
       <div class="two">${rng(sid, `stickers.${i}.size`, isText ? "Text size" : "Size", 40, 600, 2, st.size || P.size, "px")}${rng(sid, `stickers.${i}.rot`, "Rotate", -180, 180, 1, st.rot || 0, "deg")}</div>
-      <div class="two">${color}${extra}</div></div>`;
+      <div class="two">${color}${extra}</div>${rowFoot(sid, i, st)}</div>`;
   }).join("");
   return `${list}<button class="btn sm" data-act="addsticker">Add sticker</button><p class="hint" style="margin:0">Drag a sticker on the slide to move it. On a phone, tap the slide to open it large: there you can drag, pinch to resize, twist to rotate, and drop a sticker on the bin to delete it.</p>`;
 }
@@ -2433,10 +2484,14 @@ function customHTML(sid, st, i) {
   const cur = String(st.color || "#ffffff").toLowerCase();
   const color = st.vec ? `<div><label class="lbl" for="${sid}-st${i}-c">Color</label><select class="ctl" id="${sid}-st${i}-c" data-f="stickers.${i}.color">${STICKER_COLORS.map(([v, l]) => `<option value="${v}"${cur === v ? " selected" : ""}>${l}</option>`).join("")}${STICKER_COLORS.some(([v]) => v === cur) ? "" : `<option value="${esc(cur)}" selected>Custom</option>`}</select></div>` : "";
   const inPool = st.pool && S.mine.has(st.pool);
-  return `<div class="rowbox"><div class="rowhead"><span>${esc(st.name || "Your sticker")}</span>${inPool ? "" : `<button class="btn ghost sm" data-act="savemine" data-i="${i}">Save to My stickers</button>`}<button class="btn ghost sm" data-act="delsticker" data-i="${i}">Remove</button></div>
+  return `<div class="rowbox"><div class="rowhead"><span>${esc(st.name || "Your sticker")}</span><button class="btn ghost sm" data-act="mkedit" data-i="${i}">Edit</button>${inPool ? "" : `<button class="btn ghost sm" data-act="savemine" data-i="${i}">Save to My stickers</button>`}<button class="btn ghost sm" data-act="delsticker" data-i="${i}">Remove</button></div>
+      <div><label class="lbl" for="${sid}-st${i}-n">Name</label><input class="ctl" id="${sid}-st${i}-n" data-f="stickers.${i}.name" maxlength="40" value="${esc(st.name || "")}"></div>
       <div class="two">${rng(sid, `stickers.${i}.x`, "Left / right", 0, 1, 0.005, st.x ?? 0.5, "pct")}${rng(sid, `stickers.${i}.y`, "Up / down", 0, 1, 0.005, st.y ?? 0.8, "pct")}</div>
       <div class="two">${rng(sid, `stickers.${i}.size`, "Size", 40, 1800, 2, st.size || 420, "px")}${rng(sid, `stickers.${i}.rot`, "Rotate", -180, 180, 1, st.rot || 0, "deg")}</div>
-      ${color ? `<div class="two">${color}<label class="check" style="align-self:end;min-height:40px;align-items:center"><input type="checkbox" id="${sid}-st${i}-sh" data-f="stickers.${i}.shadow" data-bool${st.shadow ? " checked" : ""}><span>Shadow</span></label></div>` : `<label class="check"><input type="checkbox" id="${sid}-st${i}-sh" data-f="stickers.${i}.shadow" data-bool${st.shadow ? " checked" : ""}><span>Shadow</span></label>`}</div>`;
+      ${color ? `<div class="two">${color}<label class="check" style="align-self:end;min-height:40px;align-items:center"><input type="checkbox" id="${sid}-st${i}-sh" data-f="stickers.${i}.shadow" data-bool${st.shadow ? " checked" : ""}><span>Shadow</span></label></div>` : `<label class="check"><input type="checkbox" id="${sid}-st${i}-sh" data-f="stickers.${i}.shadow" data-bool${st.shadow ? " checked" : ""}><span>Shadow</span></label>`}${rowFoot(sid, i, st)}</div>`;
+}
+function rowFoot(sid, i, st) {
+  return `<div class="rowfoot"><label class="check"><input type="checkbox" id="${sid}-st${i}-u" data-f="stickers.${i}.under" data-bool${st.under ? " checked" : ""}><span>Behind the text</span></label><button class="btn ghost sm" data-act="dupsticker" data-i="${i}">Duplicate</button></div>`;
 }
 /* after a drag or pinch, put the sticker's new numbers into its sliders */
 function syncStickerControls(sid, st) {
@@ -2476,18 +2531,98 @@ function previewSticker(cv, kind) {
 }
 $("#stickGrid").addEventListener("click", e => {
   const b = e.target.closest("[data-stick]"); if (!b || !stickFor) return;
-  const s = S.slides[stickFor]; if (!s) return;
-  const kind = b.dataset.stick, P = STICKERS[kind];
-  remember(stickFor); s.stickers = s.stickers || [];
-  const y = clamp(0.8 - 0.07 * s.stickers.length, 0.2, 0.8);
-  s.stickers.push({ id: "k" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), kind, x: 0.5, y, size: P.size, rot: 0, ...(kind === "bookmark" ? { solid: true } : {}) });
-  saveSlide(stickFor); $("#stickDlg").close();
-  renderBoard(new Set([stickFor]));
-  const c2 = document.getElementById("card-" + stickFor), stk = c2 && c2.querySelector("details.stk");
-  if (stk) stk.open = true;
-  if (focusSid === stickFor) { S.fsel = s.stickers[s.stickers.length - 1].id; drawFocus(); }
-  toast(`${P.label} added. Drag it where you want it`);
+  $("#stickDlg").close(); addBuiltin(stickFor, b.dataset.stick);
 });
+function addBuiltin(sid, kind) {
+  const s = S.slides[sid], P = STICKERS[kind]; if (!s || !P) return;
+  remember(sid); s.stickers = s.stickers || [];
+  const y = clamp(0.8 - 0.07 * s.stickers.length, 0.2, 0.8);
+  s.stickers.push({ id: newStickerId(), kind, x: 0.5, y, size: P.size, rot: 0, ...(kind === "bookmark" ? { solid: true } : {}) });
+  saveSlide(sid);
+  renderBoard(new Set([sid]));
+  const c2 = document.getElementById("card-" + sid), stk = c2 && c2.querySelector("details.stk");
+  if (stk) stk.open = true;
+  if (focusSid === sid) { S.fsel = s.stickers[s.stickers.length - 1].id; S.ftsel = null; drawFocus(); }
+  toast(`${P.label} added. Drag it where you want it`);
+}
+/* ---------- quick add (Ctrl/Cmd+Space, or the search button in the large view): search My stickers, the stickers and the photo
+   library, and put the pick on the slide. A photo goes on as one of your own stickers (an image layer), selected, ready to move,
+   resize, or send behind the text with Arrange. */
+let qItems = [], qSel = 0;
+function openQuick() {
+  if (!focusSid) return;
+  $("#qIn").value = ""; qSel = 0; renderQuick(); $("#qDlg").showModal(); $("#qIn").focus();
+}
+function renderQuick() {
+  const q = $("#qIn").value.trim(), words = q.toLowerCase().split(/\s+/).filter(Boolean), hit = str => words.every(w => str.toLowerCase().includes(w));
+  const mine = [...S.mine.entries()].sort((a, b) => (b[1].addedAt || 0) - (a[1].addedAt || 0)).filter(([, d]) => hit(`${d.name} my sticker`)).map(([id, d]) => ({ t: "mine", id, name: d.name, d }));
+  const built = Object.entries(STICKERS).filter(([k, P]) => P.type !== "custom" && hit(`${P.label} ${k} sticker`)).map(([k, P]) => ({ t: "stick", id: k, name: P.label }));
+  const ph = q ? photosIn("*").filter(([, p]) => matches(p, q)) : [...S.photos.entries()].sort((a, b) => (b[1].addedAt || 0) - (a[1].addedAt || 0));
+  const photos = ph.slice(0, 40).map(([id, p]) => ({ t: "photo", id, name: p.name, p }));
+  qItems = [...mine, ...built, ...photos]; qSel = clamp(qSel, 0, Math.max(0, qItems.length - 1));
+  let n = 0;
+  const sec = (title, list, tile) => list.length ? `<h4>${title}</h4><div class="qgrid">${list.map(it => { const i = n++; return `<button type="button" role="option" id="q${i}" data-q="${i}" aria-selected="${i === qSel}" title="${esc(it.name)}">${tile(it)}<span>${esc(it.name)}</span></button>`; }).join("")}</div>` : "";
+  $("#qRes").innerHTML = sec("My stickers", mine, it => `<i class="qmine">${minePreview(it.d)}</i>`) + sec("Stickers", built, () => `<canvas width="150" height="90" aria-hidden="true"></canvas>`)
+    + sec(q ? "Photos" : "Recent photos", photos, it => `<img loading="lazy" src="${esc(srcOf(it.p))}" alt="">`) || `<p class="hint">Nothing matches “${esc(q)}”.</p>`;
+  $$("#qRes [data-q] canvas").forEach(cv => previewSticker(cv, qItems[+cv.parentNode.dataset.q].id));
+  $("#qIn").setAttribute("aria-activedescendant", qItems.length ? "q" + qSel : "");
+}
+function quickAdd(i) {
+  const it = qItems[i], sid = focusSid; if (!it || !sid) return;
+  $("#qDlg").close();
+  if (it.t === "stick") return addBuiltin(sid, it.id);
+  if (it.t === "mine") { addCustom(sid, it.d, it.id); toast(`${it.d.name} added. Drag it where you want it`); return; }
+  const p = it.p, st = addCustom(sid, { name: p.name, ar: p.w && p.h ? p.w / p.h : 1, src: p.asset ? { asset: p.asset } : { file: p.file } }, null, 900);
+  if (st) toast("Photo added on top. Arrange can put it behind the text");
+}
+$("#qIn").addEventListener("input", () => { qSel = 0; renderQuick(); });
+$("#qIn").addEventListener("keydown", e => {
+  const d = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
+  if (d && (e.key.startsWith("ArrowU") || e.key.startsWith("ArrowD") || !e.target.value)) {
+    e.preventDefault(); qSel = clamp(qSel + d, 0, Math.max(0, qItems.length - 1));
+    $$("#qRes [data-q]").forEach(b => b.setAttribute("aria-selected", String(+b.dataset.q === qSel)));
+    const b = $("#q" + qSel); if (b) b.scrollIntoView({ block: "nearest" }); $("#qIn").setAttribute("aria-activedescendant", "q" + qSel);
+  } else if (e.key === "Enter") { e.preventDefault(); quickAdd(qSel); }
+});
+$("#qRes").addEventListener("click", e => { const b = e.target.closest("[data-q]"); if (b) quickAdd(+b.dataset.q); });
+$("#qDlg").addEventListener("click", e => { if (e.target === $("#qDlg")) $("#qDlg").close(); });   /* a click outside the box */
+$("#fFind").addEventListener("click", () => { dropTextSel(true); openQuick(); });
+/* ---------- layer order: stickers draw in list order, on top of the slide's text, except those set behind the text (under: true),
+   which draw first, behind it. Arrange moves one through that combined order: [behind ones…, the text, the rest…]. */
+const LAYER_I = `<svg viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>`;
+function layerList(s) { const a = s.stickers || []; return [...a.filter(t => t.under).map(t => t.id), "|", ...a.filter(t => !t.under).map(t => t.id)]; }
+function layerInfo(s, id) {
+  const L = layerList(s), i = L.indexOf(id), t = L.indexOf("|");
+  return { i, n: L.length, top: i === L.length - 1, bottom: i === 0, under: i < t, pos: i < t ? i + 1 : i, of: L.length - 1 };
+}
+function arrange(sid, id, how) {
+  const s = S.slides[sid]; if (!s) return;
+  const L = layerList(s), i = L.indexOf(id); if (i < 0) return;
+  const j = how === "front" ? L.length - 1 : how === "back" ? 0 : how === "fwd" ? Math.min(L.length - 1, i + 1) : Math.max(0, i - 1);
+  if (j === i) { toast(how === "front" || how === "fwd" ? "It's on top already" : "It's at the back already"); return; }
+  remember(sid); L.splice(i, 1); L.splice(j, 0, id);
+  const t = L.indexOf("|"), byId = new Map(s.stickers.map(x => [x.id, x]));
+  s.stickers = L.filter(x => x !== "|").map(x => byId.get(x));
+  s.stickers.forEach(x => { if (L.indexOf(x.id) < t) x.under = true; else delete x.under; });
+  saveSlide(sid); renderBoard(new Set([sid]));
+  if (focusSid === sid) { drawFocus(); renderArr(); }
+  const inf = layerInfo(s, id);
+  toast(inf.under ? `Behind the text${inf.bottom ? ", at the very back" : ""}` : inf.top ? "In front of everything" : `Layer ${inf.pos} of ${inf.of}, in front of the text`);
+}
+const copyName = n => { const m = String(n || "Sticker").match(/^(.*?)(?: (\d+))?$/); return `${m[1]} ${m[2] ? +m[2] + 1 : 2}`.slice(0, 40); };
+/* Duplicate (Ctrl/Cmd+D): the copy goes just above the original, a little down and right, and is selected. A copy of one of your
+   own stickers is its own version: not tied to My stickers, so editing or enhancing it leaves the original alone. */
+function dupSticker(sid, id) {
+  const s = S.slides[sid], i = ((s && s.stickers) || []).findIndex(t => t.id === id); if (i < 0) return;
+  if (s.stickers[i].kind === "text") { duplicateText("layer:" + id); return; }
+  remember(sid);
+  const c = clone(s.stickers[i]); c.id = newStickerId(); c.x = clamp((c.x ?? 0.5) + 0.04, 0, 1); c.y = clamp((c.y ?? 0.5) + 0.04, 0, 1);
+  if (c.kind === "custom") { delete c.pool; c.name = copyName(c.name); }
+  s.stickers.splice(i + 1, 0, c);
+  saveSlide(sid); renderBoard(new Set([sid]));
+  if (focusSid === sid) { S.fsel = c.id; S.ftsel = null; drawFocus(); }
+  toast(c.kind === "custom" ? `Duplicated as “${c.name}”, its own version` : `${(STICKERS[c.kind] || {}).label || "Sticker"} duplicated`);
+}
 /* ---------- your own stickers: uploads, cut-outs and traces from photos, and stickers Claude draws ----------
    A custom sticker on a slide carries all it needs ({kind: "custom", name, ar, src | vec}: an image, or vector paths that take the
    sticker's color), so it keeps working even if it's taken out of My stickers. My stickers (db "stickers/{id}") is the pool to add
@@ -2523,11 +2658,11 @@ function addMine(def) {
   return id;
 }
 /* put a custom sticker on a slide (selected, so it can be dragged right away) */
-function addCustom(sid, def, poolId) {
+function addCustom(sid, def, poolId, size = 420) {
   const s = S.slides[sid]; if (!s) return null;
   remember(sid); s.stickers = s.stickers || [];
   const st = { id: newStickerId(), kind: "custom", name: String(def.name || "Sticker").slice(0, 40), ar: clamp(+def.ar || 1, 0.05, 20), ...(def.vec ? { vec: clone(def.vec) } : { src: clone(def.src) }),
-    ...(poolId ? { pool: poolId } : {}), x: 0.5, y: clamp(0.5 + 0.06 * (s.stickers.length % 4), 0.2, 0.8), size: 420, rot: 0 };
+    ...(poolId ? { pool: poolId } : {}), x: 0.5, y: clamp(0.5 + 0.06 * (s.stickers.length % 4), 0.2, 0.8), size, rot: 0 };
   s.stickers.push(st); saveSlide(sid);
   renderBoard(new Set([sid]));
   const c = document.getElementById("card-" + sid), stk = c && c.querySelector("details.stk"); if (stk) stk.open = true;
@@ -2548,7 +2683,7 @@ function renderMine() {
   box.innerHTML = `<div class="mineh"><h4>My stickers</h4><span class="grow"></span>
     ${S.assets || S.local ? `<label class="btn sm">Upload PNG or SVG<input type="file" id="stkUpload" accept="image/png,image/svg+xml,image/webp" class="sr"></label>` : ""}
     <button type="button" class="btn sm" data-mk="photo">From a photo…</button>${S.sample ? `<button type="button" class="btn sm" data-mk="gen">Ask Claude to draw one…</button>` : ""}</div>
-    ${items.length ? `<div class="minegrid">${items.map(([id, d]) => `<div class="minecell"><button type="button" class="mine" data-mine="${esc(id)}" title="${esc(d.name)}">${minePreview(d)}<span>${esc(d.name)}</span></button><button type="button" class="minedel" data-minedel="${esc(id)}" aria-label="Remove ${esc(d.name)} from My stickers">×</button></div>`).join("")}</div>`
+    ${items.length ? `<div class="minegrid">${items.map(([id, d]) => `<div class="minecell"><button type="button" class="mine" data-mine="${esc(id)}" title="Add ${esc(d.name)} to the slide">${minePreview(d)}</button><input class="minename" data-minename="${esc(id)}" value="${esc(d.name)}" maxlength="40" aria-label="Name"><div class="minetools"><button type="button" data-mineedit="${esc(id)}" title="Edit or enhance">${PEN_I}<span class="sr">Edit ${esc(d.name)}</span></button><button type="button" data-minedup="${esc(id)}" title="Duplicate">${DUP_I}<span class="sr">Duplicate ${esc(d.name)}</span></button></div><button type="button" class="minedel" data-minedel="${esc(id)}" aria-label="Remove ${esc(d.name)} from My stickers">×</button></div>`).join("")}</div>`
       : `<p class="hint" style="margin:0">Your own stickers go here: upload a PNG or SVG, cut one out of a photo (or trace it as a vector you can recolor), or ask Claude to draw one. Saving one here is optional.</p>`}`;
 }
 async function uploadSticker(f) {
@@ -2567,6 +2702,14 @@ $("#stickDlg").addEventListener("click", e => {
   if (del) { const id = del.dataset.minedel, d = S.mine.get(id); S.mine.delete(id); removeDoc(mineDocPath(id)); renderMine(); toast(`“${d ? d.name : "Sticker"}” removed from My stickers. Slides that use it keep it`); }
   else if (m && stickFor) { const d = S.mine.get(m.dataset.mine); if (!d) return; $("#stickDlg").close(); addCustom(stickFor, d, m.dataset.mine); toast(`${d.name} added. Drag it where you want it`); }
   else if (mk && stickFor) { $("#stickDlg").close(); openMaker(stickFor, mk.dataset.mk); }
+  else if (t.closest("[data-mineedit]") && stickFor) { const id = t.closest("[data-mineedit]").dataset.mineedit; if (!S.mine.has(id)) return; $("#stickDlg").close(); openMaker(stickFor, "photo", { pool: id }); }
+  else if (t.closest("[data-minedup]")) { const d = S.mine.get(t.closest("[data-minedup]").dataset.minedup); if (d) { addMine({ ...d, name: copyName(d.name) }); toast(`Duplicated as “${copyName(d.name)}”`); } }
+});
+$("#stickDlg").addEventListener("change", e => {   /* rename in My stickers (slides keep the name they were added with) */
+  const el = e.target.closest("[data-minename]"); if (!el) return;
+  const d = S.mine.get(el.dataset.minename), v = el.value.trim().slice(0, 40); if (!d) return;
+  if (!v) { el.value = d.name; return; }
+  d.name = v; saveMine(el.dataset.minename);
 });
 $("#stickDlg").addEventListener("change", e => { if (e.target.id === "stkUpload") { const f = e.target.files[0]; e.target.value = ""; uploadSticker(f); } });
 
@@ -2574,11 +2717,48 @@ $("#stickDlg").addEventListener("change", e => { if (e.target.id === "stkUpload"
    From a photo: drag a box on it (or describe the part and Claude finds it), then either cut it out (the background around it, the
    color at the box's edges, turns see-through) or trace it as a one-color vector (light or dark parts by a threshold) that takes the
    sticker's color. Ask Claude: describe a sticker and Claude draws it as vector paths. */
-const MK = { sid: null, tab: "photo", img: null, name: "", crop: null, mode: "vec", tol: 40, thr: null, inv: false, smooth: true, out: null, gen: null, busy: false, pick: "" };
-function openMaker(sid, tab) {
-  Object.assign(MK, { sid, tab: tab === "gen" ? "gen" : "photo", img: null, crop: null, out: null, gen: null, busy: false, thr: null, inv: false });
-  $("#mkName").value = ""; $("#mkSave").checked = false; $("#mkStatus").textContent = ""; $("#mkGenStatus").textContent = "";
+const MK = { sid: null, tab: "photo", img: null, name: "", crop: null, mode: "vec", tol: 40, thr: null, inv: false, smooth: true, out: null, gen: null, busy: false, pick: "", edit: null };
+/* edit: {sid, id} = a sticker on a slide, {pool: id} = one in My stickers; the maker then starts from that sticker */
+function openMaker(sid, tab, edit) {
+  Object.assign(MK, { sid, tab: tab === "gen" ? "gen" : "photo", img: null, crop: null, out: null, gen: null, busy: false, thr: null, inv: false, edit: edit || null });
+  $("#mkName").value = ""; $("#mkSave").checked = false; $("#mkStatus").textContent = ""; $("#mkGenStatus").textContent = ""; $("#mkEnhNote").value = "";
+  const d = editDef(), linked = d && MK.edit.id && d.pool && S.mine.has(d.pool);
+  $("#mkTitle").textContent = d ? `Edit “${d.name || "Sticker"}”` : "Make a sticker";
+  $("#mkAdd").textContent = d ? (MK.edit.pool ? "Update in My stickers" : "Update sticker") : "Add to the slide";
+  $("#mkAddNew").hidden = !d;
+  $("#mkSaveRow").hidden = !!(d && MK.edit.pool);
+  $("#mkSaveTxt").textContent = linked ? "Also update it in My stickers" : "Save to My stickers"; $("#mkSave").checked = !!linked;
   renderMaker(); $("#mkDlg").showModal(); drawMkOut();
+  if (d) loadEdit(d);
+}
+function editDef() {
+  const e = MK.edit; if (!e) return null;
+  if (e.pool) return S.mine.get(e.pool) || null;
+  const s = S.slides[e.sid]; return (s && (s.stickers || []).find(t => t.id === e.id && t.kind === "custom")) || null;
+}
+/* the sticker to edit, as the maker's picture: a vector drawn white on dark (its trace as it is), an image as it is */
+function loadEdit(d) {
+  $("#mkName").value = d.name || "Sticker"; MK.name = d.name || "Sticker";
+  const im = new Image();
+  if (d.vec) {
+    const ar = d.vec.vb[0] / d.vec.vb[1], L = 900, bw = ar >= 1 ? L : L * ar, bh = ar >= 1 ? L / ar : L, pad = 60, c = document.createElement("canvas");
+    c.width = Math.round(bw + 2 * pad); c.height = Math.round(bh + 2 * pad);
+    const x = c.getContext("2d"); x.fillStyle = "#20242c"; x.fillRect(0, 0, c.width, c.height); x.translate(c.width / 2, c.height / 2); drawCustom(x, { vec: d.vec, color: "#ffffff" }, bw, bh);
+    im.onload = () => { if (MK.edit && editDef() === d) { MK.img = im; MK.crop = null; MK.mode = "vec"; MK.out = { kind: "vec", vec: clone(d.vec), ar, shapes: d.vec.paths.length, size: d.vec.paths.reduce((n, p) => n + p.d.length, 0), original: true }; renderMaker(); drawMkOut(); } };
+    im.src = c.toDataURL("image/png");
+  } else {
+    im.onload = () => {
+      let src = im;
+      if (Math.max(im.naturalWidth, im.naturalHeight) < 700) {   /* small (or an SVG): draw it bigger so a trace has detail */
+        const k = 1000 / Math.max(im.naturalWidth || 1, im.naturalHeight || 1), c = document.createElement("canvas"); c.width = Math.round((im.naturalWidth || 1) * k); c.height = Math.round((im.naturalHeight || 1) * k);
+        c.getContext("2d").drawImage(im, 0, 0, c.width, c.height); src = new Image(); src.onload = () => go(src); src.src = c.toDataURL("image/png"); return;
+      }
+      go(src);
+    };
+    const go = img => { MK.img = img; MK.crop = null; MK.mode = "cut"; MK.tol = 0; $("#mkTol").value = 0; renderMaker(); mkProcess(); if (MK.out) MK.out.original = true; drawMkOut(); };
+    im.onerror = () => { $("#mkStatus").textContent = "This sticker's picture didn't load."; };
+    im.src = srcOf(d.src);
+  }
 }
 function renderMaker() {
   $$("#mkDlg [data-mktab]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mktab === MK.tab)));
@@ -2593,7 +2773,7 @@ function renderMaker() {
       $$("#mkDlg [data-mkmode]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mkmode === MK.mode)));
       $("#mkFindRow").hidden = !(S.sample && S.imgLimits && !S.tagOff);
       $("#mkVecOpts").hidden = MK.mode !== "vec"; $("#mkCutOpts").hidden = MK.mode !== "cut";
-      $("#mkEnh").hidden = !S.sample; $("#mkEnhGo").disabled = MK.busy || !(MK.out && MK.out.kind === "vec"); $("#mkEnhUndo").hidden = !(MK.out && MK.out.prev);
+      $("#mkEnh").hidden = !S.sample; $("#mkEnhGo").disabled = MK.busy || !MK.out; $("#mkEnhUndo").hidden = !(MK.out && MK.out.prev);
       drawMkStage();
     }
   }
@@ -2617,6 +2797,7 @@ $("#mkDlg").addEventListener("click", e => {
   else if (t.closest("#mkEnhGo")) mkEnhance();
   else if (t.closest("#mkEnhUndo")) { if (MK.out && MK.out.prev) { MK.out = MK.out.prev; drawMkOut(); renderMaker(); } }
   else if (t.closest("#mkGenGo")) mkGenerate();
+  else if (t.closest("#mkAddNew")) mkAdd(true);
   else if (t.closest("#mkAdd")) mkAdd();
 });
 $("#mkDlg").addEventListener("input", e => {
@@ -2673,16 +2854,17 @@ function borderColor(d, w, h) {   /* the median color around the box's edge */
   return [med(rs), med(gs), med(bs)];
 }
 function cutSticker(x, img, w, h) {
-  const d = img.data, n = w * h, a = new Uint8Array(n).fill(255);
-  if (MK.tol > 0) {   /* flood from the edges through pixels close to the edge color: those turn see-through */
-    const [br, bg, bb] = borderColor(d, w, h), thr = MK.tol * 2.2, near = i => Math.hypot(d[i * 4] - br, d[i * 4 + 1] - bg, d[i * 4 + 2] - bb) < thr;
-    const q = new Int32Array(n); let qh = 0, qt = 0;
-    const push = i => { if (a[i] && near(i)) { a[i] = 0; q[qt++] = i; } };
+  const d = img.data, n = w * h, a = new Uint8Array(n);
+  for (let i = 0; i < n; i++) a[i] = d[i * 4 + 3];   /* a PNG's own see-through parts stay see-through */
+  if (MK.tol > 0) {   /* flood from the edges through pixels close to the edge color (or already see-through): those turn see-through */
+    const [br, bg, bb] = borderColor(d, w, h), thr = MK.tol * 2.2, near = i => d[i * 4 + 3] < 16 || Math.hypot(d[i * 4] - br, d[i * 4 + 1] - bg, d[i * 4 + 2] - bb) < thr;
+    const q = new Int32Array(n), seen = new Uint8Array(n); let qh = 0, qt = 0;
+    const push = i => { if (!seen[i] && near(i)) { seen[i] = 1; a[i] = 0; q[qt++] = i; } };
     for (let xx = 0; xx < w; xx++) { push(xx); push((h - 1) * w + xx); }
     for (let yy = 0; yy < h; yy++) { push(yy * w); push(yy * w + w - 1); }
     while (qh < qt) { const i = q[qh++], xx = i % w; if (xx > 0) push(i - 1); if (xx < w - 1) push(i + 1); if (i >= w) push(i - w); if (i < n - w) push(i + w); }
     const s = new Uint8Array(a);   /* soften the edge by a pixel */
-    for (let yy = 1; yy < h - 1; yy++) for (let xx = 1; xx < w - 1; xx++) { const i = yy * w + xx; let t = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) t += s[i + dy * w + dx]; a[i] = Math.round(t / 9); }
+    for (let yy = 1; yy < h - 1; yy++) for (let xx = 1; xx < w - 1; xx++) { const i = yy * w + xx; if (!seen[i] && s[i] === 255 && s[i - 1] && s[i + 1] && s[i - w] && s[i + w]) continue; let t = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) t += s[i + dy * w + dx]; a[i] = Math.min(s[i] || 255, Math.round(t / 9)); }
   }
   let x0 = w, y0 = h, x1 = -1, y1 = -1;
   for (let i = 0; i < n; i++) { d[i * 4 + 3] = a[i]; if (a[i] > 16) { const xx = i % w, yy = (i / w) | 0; if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; } }
@@ -2706,12 +2888,22 @@ function traceSticker(d, w, h) {
     let t = 0, c = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) { const xx = x + dx, yy = y + dy; if (xx >= 0 && yy >= 0 && xx < w && yy < h) { t += lum[yy * w + xx]; c++; } }
     bl[y * w + x] = Math.round(t / c);
   }
+  let clear = 0; for (let i = 0; i < n; i++) if (d[i * 4 + 3] < 128) clear++;
+  if (clear > n * 0.02) {   /* a cut-out or PNG sticker: its shape is where it isn't see-through */
+    const m = new Uint8Array(n); for (let i = 0; i < n; i++) m[i] = d[i * 4 + 3] >= 128 ? 1 : 0;
+    if (MK.thr != null) { for (let i = 0; i < n; i++) if (m[i] && ((bl[i] > MK.thr) === MK.inv)) m[i] = 0; }   /* threshold moved: keep the light parts (Invert: the dark) */
+    else if (MK.inv) { for (let i = 0; i < n; i++) m[i] = 1 - m[i]; }
+    return loopsToVec(m, w, h);
+  }
   const thr = MK.thr ?? otsu(bl);
   let edge = 0, en = 0; for (let x = 0; x < w; x++) { edge += bl[x] + bl[(h - 1) * w + x]; en += 2; } for (let y = 0; y < h; y++) { edge += bl[y * w] + bl[y * w + w - 1]; en += 2; }
   const light = (edge / en < thr) !== MK.inv;   /* a dark surround: the shape is the light part */
   const m = new Uint8Array(n); for (let i = 0; i < n; i++) m[i] = light ? (bl[i] > thr ? 1 : 0) : (bl[i] <= thr ? 1 : 0);
   if (MK.thr == null) { const r = $("#mkThr"); if (r) r.value = thr; }
-  const minArea = Math.max(6, n * 0.00008), loops = [];
+  return loopsToVec(m, w, h);
+}
+function loopsToVec(m, w, h) {
+  const n = w * h, minArea = Math.max(6, n * 0.00008), loops = [];
   for (const lp of traceLoops(m, w, h)) { const s = simplify(lp, 0.75); if (s.length >= 3 && Math.abs(areaOf(s)) >= minArea) loops.push(s); }
   if (!loops.length) return null;
   loops.sort((a, b) => Math.abs(areaOf(b)) - Math.abs(areaOf(a))); loops.length = Math.min(loops.length, 600);
@@ -2791,7 +2983,8 @@ function drawMkOut() {
   if (r.kind === "cut") x.drawImage(r.canvas, -bw / 2, -bh / 2, bw, bh);
   else drawCustom(x, { vec: r.vec, color: "#ffffff" }, bw, bh);
   x.restore();
-  if (MK.tab === "photo" && !r.enhanced) st.textContent = r.kind === "vec" ? `${r.shapes} shape${r.shapes === 1 ? "" : "s"}${r.size > 150000 ? ". Too detailed to keep: draw a tighter box or move the threshold" : ""}. It takes the sticker's color (white to start).` : "The see-through parts show as a checkerboard.";
+  if (MK.tab === "photo" && r.original) st.textContent = r.kind === "vec" ? "Your sticker as it is. Enhance to clean it up, or drag a box or move the threshold to trace it again." : "Your sticker as it is. Enhance turns it into a clean one-color vector; Vector traces it.";
+  else if (MK.tab === "photo" && !r.enhanced) st.textContent = r.kind === "vec" ? `${r.shapes} shape${r.shapes === 1 ? "" : "s"}${r.size > 150000 ? ". Too detailed to keep: draw a tighter box or move the threshold" : ""}. It takes the sticker's color (white to start).` : "The see-through parts show as a checkerboard.";
 }
 async function imgJpeg(im, max) {
   const k = Math.min(1, max / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement("canvas");
@@ -2828,6 +3021,7 @@ function cropJpeg(max) {
   return new Promise(r => c.toBlob(r, "image/jpeg", 0.88));
 }
 async function mkEnhance() {
+  if (MK.out && MK.out.kind !== "vec" && !MK.busy) { MK.mode = "vec"; MK.thr = null; mkProcess(); }   /* a cut-out or image: Claude cleans up its trace, as a vector */
   const r = MK.out, st = $("#mkStatus"); if (!r || r.kind !== "vec" || !S.sample || MK.busy) return;
   const base = r.prev || r, vb = base.vec.vb, note = $("#mkEnhNote").value.trim().slice(0, 400);
   let d = base.vec.paths.map(p => p.d).join("");
@@ -2860,7 +3054,7 @@ async function mkGenerate() {
   } catch (e) { st.textContent = e && e.code === "cancelled" ? "" : SAMPLE_ERR[e && e.code] || "Couldn’t reach Claude. Try again."; }
   finally { MK.busy = false; renderMaker(); drawMkOut(); }
 }
-async function mkAdd() {
+async function mkAdd(asNew) {
   const r = MK.tab === "photo" ? MK.out : MK.gen, sid = MK.sid; if (!r || MK.busy) return;
   const name = $("#mkName").value.trim().slice(0, 40) || MK.name || "Sticker";
   let def;
@@ -2878,10 +3072,35 @@ async function mkAdd() {
     } catch (e) { toast("The cut-out couldn't be saved. Try again"); MK.busy = false; renderMaker(); return; }
     MK.busy = false;
   }
-  const poolId = $("#mkSave").checked ? addMine(def) : null;
+  const was = editDef();
+  if (was && MK.edit.pool && asNew) { $("#mkDlg").close(); addMine(def); toast(`“${def.name}” saved to My stickers as a new sticker`); return; }
+  if (was && !asNew) { $("#mkDlg").close(); updateSticker(was, def, $("#mkSave").checked); return; }
+  const poolId = $("#mkSave").checked && !(was && MK.edit.pool) ? addMine(def) : null;
   $("#mkDlg").close();
   addCustom(sid, def, poolId);
   toast(poolId ? `${name} added, and saved to My stickers` : `${name} added. To keep it for later, select it and Save to My stickers`);
+}
+/* Update sticker: the edited sticker gets the new picture and name, keeping where it is, its size, turn and color. In My stickers,
+   the slides of this post that use it follow. On a slide, a sticker tied to My stickers updates it there too if that's ticked (else
+   it becomes its own version). */
+function setDef(st, def) { st.name = def.name; st.ar = def.ar; delete st.vec; delete st.src; if (def.vec) st.vec = clone(def.vec); else st.src = clone(def.src); }
+function updateSticker(was, def, alsoPool) {
+  const e = MK.edit;
+  if (e.pool) {
+    const d = S.mine.get(e.pool); if (!d) return;
+    setDef(d, def); saveMine(e.pool); renderMine();
+    let n = 0;
+    for (const sid of order()) { const s = S.slides[sid], hit = (s.stickers || []).filter(t => t.kind === "custom" && t.pool === e.pool); if (!hit.length) continue; remember(sid); hit.forEach(t => setDef(t, def)); n += hit.length; saveSlide(sid); renderBoard(new Set([sid])); }
+    toast(`“${def.name}” updated in My stickers${n ? `, and on ${n === 1 ? "the slide" : n + " stickers"} in this post that use${n === 1 ? "s" : ""} it` : ""}`);
+    return;
+  }
+  const s = S.slides[e.sid], st = s && (s.stickers || []).find(t => t.id === e.id); if (!st) return;
+  remember(e.sid); setDef(st, def);
+  if (st.pool && S.mine.has(st.pool)) { if (alsoPool) { setDef(S.mine.get(st.pool), def); saveMine(st.pool); } else delete st.pool; }
+  else if (alsoPool) st.pool = addMine(def);
+  saveSlide(e.sid); renderBoard(new Set([e.sid]));
+  if (focusSid === e.sid) { S.fsel = st.id; drawFocus(); }
+  toast(`“${def.name}” updated`);
 }
 function copyEditsToAll(sid, slot) {
   const a = clone((S.slides[sid][slot] || {}).adj || {});
@@ -2959,12 +3178,14 @@ function fPinchFrom(st) {
 function fDragFrom(st, p, client) { const g = geoOf(focusSid); fg = { mode: "drag", st, g, moved: !!(fg && fg.moved), ox: p[0] - (st.x ?? 0.5) * g.w, oy: p[1] - (st.y ?? 0.5) * g.h, c0: client, dragged: !client }; }
 fcv.addEventListener("pointerdown", e => {
   const s = S.slides[focusSid]; if (!s) return;
-  e.preventDefault();
+  e.preventDefault(); hideArr();
   if (liteOn()) return liteDown(e);
   try { fcv.setPointerCapture(e.pointerId); } catch (err) {}
   const p = frameXY(fcv, e, geoOf(focusSid)); fpts.set(e.pointerId, p);
   if (fpts.size === 1) {
-    const st = inXf(p) || stickerAt(s, S.focusBoxes, p[0], p[1]), tf = st ? null : textAt(p[0], p[1]);
+    let st = inXf(p) || stickerAt(s, S.focusBoxes, p[0], p[1]);
+    if (st && st.under && st.id !== S.fsel && textAt(p[0], p[1])) st = null;   /* text in front of a sticker that's behind it wins */
+    const tf = st ? null : textAt(p[0], p[1]);
     const grp = !st && tf && moveGroup(s, tf), grab = !!grp && !!S.ftsel && moveGroup(s, S.ftsel) === grp;   /* already selected: a drag moves it */
     fg = null; fgRem = false;
     S.fsel = st ? st.id : null; S.ftsel = tf;
@@ -3724,7 +3945,7 @@ const selRef = () => { const st = selSticker(); return st ? (st.kind === "text" 
 function updateTextUI() {
   const tsel = $("#fTsel"), bar = $("#fBar"), st = focusSid && selSticker(), k = focusSid ? fcv.clientWidth / geoOf(focusSid).w : 0;
   const layer = st && st.kind === "text" ? st : null;
-  if (st && st.kind === "custom") { customBar(st); tsel.hidden = true; return; }
+  if (st) { stickerBar(st); tsel.hidden = true; return; }
   const box = layer ? (S.focusBoxes || []).find(b => b.id === layer.id) : st ? null : (S.ftboxes || {})[S.ftsel];
   if (!box || !k || (fg && fg.moved) || railDrag || rotDrag) { tsel.hidden = bar.hidden = true; return; }
   const pad = 6, sw = fcv.clientWidth, sh = fcv.clientHeight;
@@ -3745,11 +3966,15 @@ function updateTextUI() {
   bar.style.left = clamp((at.x0 + at.x1) / 2 * k, bw / 2 + 4, Math.max(bw / 2 + 4, sw - bw / 2 - 4)) + "px";
   bar.style.top = clamp(y, 4, Math.max(4, sh - bh - 4)) + "px";
 }
-/* a selected sticker of your own that isn't in My stickers yet gets a Save to My stickers button under it */
-function customBar(st) {
+/* the bar under a selected sticker: Edit (text, or your own sticker in the maker), Duplicate, Arrange (layer order), and Save to
+   My stickers for one of your own that isn't there yet */
+function stickerBar(st) {
   const bar = $("#fBar"), box = (S.focusBoxes || []).find(b => b.id === st.id), k = fcv.clientWidth / geoOf(focusSid).w;
-  if (!box || !k || (st.pool && S.mine.has(st.pool)) || liteOn() || (fg && fg.moved) || railDrag || rotDrag) { bar.hidden = true; return; }
-  if (barKey !== "mine") { barKey = "mine"; bar.innerHTML = `<button type="button" data-fbar="savemine">${STAR_I}Save to My stickers</button>`; }
+  if (!box || !k || liteOn() || (fg && fg.moved) || railDrag || rotDrag || xg || (S.fpanel === "text" && S.ftfield === "layer:" + st.id)) { bar.hidden = true; hideArr(); return; }
+  const custom = st.kind === "custom", text = st.kind === "text", save = custom && !(st.pool && S.mine.has(st.pool)), key = `st:${st.kind}:${save}`;
+  const btn = (a, ic, l, t) => `<button type="button" data-fbar="${a}"${t ? ` title="${t}"` : ""}>${ic}${l}</button>`;
+  if (barKey !== key) { barKey = key; bar.innerHTML = (text ? btn("edit", PEN_I, "Edit") : custom ? btn("mkedit", PEN_I, "Edit", "Edit or enhance this sticker") : "") + btn(text ? "dup" : "dupst", DUP_I, "Duplicate", "Duplicate (Ctrl+D)") + btn("arr", LAYER_I, "Arrange", "Layer order") + (save ? btn("savemine", STAR_I, "Save", "Save to My stickers") : ""); }
+  if (S.arrOpen && S.arrOpen !== st.id) hideArr();
   bar.hidden = false;
   const bw = bar.offsetWidth, bh = bar.offsetHeight, sw = fcv.clientWidth, sh = fcv.clientHeight;
   placeXf();   /* below the frame's turn handle, or above the frame */
@@ -3757,10 +3982,31 @@ function customBar(st) {
   let y = bot + 6; if (y + bh > sh - 4) y = top - 10 - bh;
   bar.style.left = clamp((box.x0 + box.x1) / 2 * k, bw / 2 + 4, Math.max(bw / 2 + 4, sw - bw / 2 - 4)) + "px";
   bar.style.top = clamp(y, 4, Math.max(4, sh - bh - 4)) + "px";
+  if (S.arrOpen === st.id) placeArr();
 }
+/* Arrange: a small menu under the bar */
+function hideArr() { S.arrOpen = null; $("#fArr").hidden = true; }
+function renderArr() {
+  const el = $("#fArr"), s = S.slides[focusSid], st = selSticker(); if (!S.arrOpen || !s || !st) { hideArr(); return; }
+  const inf = layerInfo(s, st.id), kb = !TOUCH(), it = (a, l, sc, off) => `<button type="button" role="menuitem" data-arr="${a}"${off ? " disabled" : ""}><span>${l}</span>${kb ? `<kbd>${sc}</kbd>` : ""}</button>`;
+  el.innerHTML = `<p>${inf.under ? "Behind the text" : "In front of the text"} · layer ${inf.i + 1 - (inf.under ? 0 : 1)} of ${inf.of}</p>`
+    + it("front", "Bring to front", "Ctrl+Shift+]", inf.top) + it("fwd", inf.under && inf.i === layerList(s).indexOf("|") - 1 ? "Bring in front of the text" : "Bring forward", "Ctrl+]", inf.top)
+    + it("back1", !inf.under && inf.i === layerList(s).indexOf("|") + 1 ? "Send behind the text" : "Send backward", "Ctrl+[", inf.bottom) + it("back", "Send to back", "Ctrl+Shift+[", inf.bottom);
+  el.hidden = false; placeArr();
+}
+function placeArr() {
+  const el = $("#fArr"), bar = $("#fBar"); if (el.hidden || bar.hidden) return;
+  const sw = fcv.clientWidth, sh = fcv.clientHeight, w = el.offsetWidth, h = el.offsetHeight, bl = bar.offsetLeft, bt = bar.offsetTop, bh = bar.offsetHeight;
+  el.style.left = clamp(bl - w / 2, 4, Math.max(4, sw - w - 4)) + "px";   /* the bar's left is its centre (it's shifted back by half its width) */
+  el.style.top = (bt + bh + 6 + h <= sh - 4 ? bt + bh + 6 : Math.max(4, bt - 6 - h)) + "px";
+}
+$("#fArr").addEventListener("click", e => { const b = e.target.closest("[data-arr]"); const st = selSticker(); if (b && st) arrange(focusSid, st.id, b.dataset.arr); });
 $("#fBar").addEventListener("click", e => {
   const b = e.target.closest("[data-fbar]"); if (!b || !focusSid) return;
   if (b.dataset.fbar === "savemine") { saveToMine(focusSid, selSticker()); updateTextUI(); return; }
+  if (b.dataset.fbar === "dupst") { const st = selSticker(); if (st) dupSticker(focusSid, st.id); return; }
+  if (b.dataset.fbar === "arr") { const st = selSticker(); if (!st) return; if (S.arrOpen === st.id) hideArr(); else { S.arrOpen = st.id; renderArr(); } return; }
+  if (b.dataset.fbar === "mkedit") { const st = selSticker(); if (st) openMaker(focusSid, "photo", { sid: focusSid, id: st.id }); return; }
   if (b.dataset.fbar === "edit") openTextEditor();
   else if (b.dataset.fbar === "dup") duplicateText(selRef());
   else deleteRowSel();
@@ -4201,7 +4447,7 @@ Stickers are icons and buttons drawn on top of a slide. "stickers" is the slide'
 - kind: bookmark, heart, comment, share, bell, like, arrow (icons); follow, subscribe, save, keyword, handle (pill buttons showing a label); actions (an Instagram-style row of heart, comment and share with a bookmark on the right); text (free text on top of the slide: label is the text, **word** for bold, a line break for a new line; size is the font size in px, 40 to 300; w is 700 for bold or 400 for regular; al is left, center or right, how its lines line up (center if missing); tr is letter spacing, -0.15 to 0.1, default -0.05).
 - x and y: the sticker's centre as a fraction of the slide's width and height (0 to 1). The header sits near y 0.06 and the footer near y 0.95; keep stickers clear of text and of the main subject.
 - size: pixels on the slide, which is 1800 px across when it's portrait (icons 120 to 240, buttons 80 to 110 tall). rot: degrees (-180 to 180). color: hex (icons default #FFFFFF; for buttons it is the text color). solid: true fills an icon. label: button text in UPPERCASE. bg: the button's hex color.
-A sticker with kind "custom" is one of the creator's own (an image or drawing): keep it in the list with its name to keep it; you may change its x, y, size (up to 1800), rot and color, but never add a new custom sticker.
+Stickers draw in list order on top of the slide's text; under: true puts one behind the text (over the photo). A sticker with kind "custom" is one of the creator's own (an image or drawing): keep it in the list with its name to keep it; you may change its x, y, size (up to 1800), rot and color, but never add a new custom sticker.
 Return "stickers": "keep" unless a comment asks to add, move or remove a sticker; then return the slide's complete new list.
 
 Photo edits are the slider settings on a slide's photo. "edits" is {exposure, contrast, whites, blacks, saturation, vibrance, grain, sharpen} for the photo ("edits2" for the after photo of a beforeafter slide): whole numbers from -100 to 100 (grain and sharpen 0 to 100); 0 or missing means unchanged. A light touch is 10 to 25, a clear change 30 to 50. There is no white balance, temperature or tint control; if a comment asks for one, say so in notes.
@@ -4238,7 +4484,7 @@ const ownPhotos = () => [...S.photos.entries()].filter(([, p]) => !isRefPhoto(p)
 function slideItem(sid, withComment) {   /* a slide as Claude reads it */
   const s = S.slides[sid];
   return { id: sid, type: s.type, text: s.text, layout: s.layout || {}, photo: (s.img && s.img.asset) || null, photo2: (s.img2 && s.img2.asset) || null, edits: (s.img && s.img.adj) || {}, edits2: (s.img2 && s.img2.adj) || {},
-    overlay: !!s.overlay, bg: s.bg || null, ink: s.ink || "auto", hl: s.hl || null, stickers: (s.stickers || []).map(({ id, ...rest }) => rest.kind === "custom" ? { kind: "custom", name: rest.name, x: rest.x, y: rest.y, size: rest.size, rot: rest.rot || 0, ...(rest.vec && rest.color ? { color: rest.color } : {}) } : rest), ...(withComment ? { comment: s.comment || "" } : {}) };
+    overlay: !!s.overlay, bg: s.bg || null, ink: s.ink || "auto", hl: s.hl || null, stickers: (s.stickers || []).map(({ id, ...rest }) => rest.kind === "custom" ? { kind: "custom", name: rest.name, x: rest.x, y: rest.y, size: rest.size, rot: rest.rot || 0, ...(rest.vec && rest.color ? { color: rest.color } : {}), ...(rest.under ? { under: true } : {}) } : rest), ...(withComment ? { comment: s.comment || "" } : {}) };
 }
 function buildPrompt(targets, overall) {
   const o = order();
@@ -4284,11 +4530,13 @@ function cleanStickers(raw, prev) {
       used.add(was);
       const out = { ...clone(was), x: clamp(num(x.x, was.x), 0, 1), y: clamp(num(x.y, was.y), 0, 1), size: clamp(num(x.size, was.size), 40, 1800), rot: clamp(num(x.rot, was.rot || 0), -180, 180) };
       if (was.vec && HEX.test(x.color)) out.color = x.color;
+      if (x.under === true) out.under = true; else delete out.under;
       return out;
     }
     const out = { id: "k" + Math.random().toString(36).slice(2, 9), kind: x.kind, x: clamp(num(x.x, 0.5), 0, 1), y: clamp(num(x.y, 0.8), 0, 1), size: clamp(num(x.size, P.size), 40, 600), rot: clamp(num(x.rot, 0), -180, 180) };
     if (HEX.test(x.color)) out.color = x.color;
     if (x.solid === true || x.solid === false) out.solid = x.solid;
+    if (x.under === true) out.under = true;
     if (P.type === "pill") { if (x.label != null) out.label = String(x.label).slice(0, 40); if (HEX.test(x.bg)) out.bg = x.bg; }
     if (P.type === "text") { out.label = String(x.label ?? P.text).slice(0, 160); out.w = +x.w === 400 ? 400 : 700; if (x.tr != null && Number.isFinite(+x.tr)) out.tr = clamp(+x.tr, -0.15, 0.1); if (x.al === "left" || x.al === "right") out.al = x.al; }
     return out;
@@ -4565,7 +4813,7 @@ function openFocus(sid) {
   document.documentElement.classList.add("modal-open");
   renderFPanel(); drawFocus();
 }
-$("#focusDlg").addEventListener("close", () => { closeOverlays(); focusSid = null; S.fsel = null; S.ftsel = null; S.ftfield = null; fpts.clear(); fg = null; xg = null; lpts.clear(); lg = null; $("#fTrash").hidden = true; hideBubble(); layoutLite(); document.documentElement.classList.remove("modal-open"); });
+$("#focusDlg").addEventListener("close", () => { closeOverlays(); focusSid = null; S.fsel = null; S.ftsel = null; hideArr(); S.ftfield = null; fpts.clear(); fg = null; xg = null; lpts.clear(); lg = null; $("#fTrash").hidden = true; hideBubble(); layoutLite(); document.documentElement.classList.remove("modal-open"); });
 /* Esc closes a preview first, then the text editor, then the large view */
 $("#focusDlg").addEventListener("cancel", e => {
   if (closeOverlays()) e.preventDefault();
@@ -4595,7 +4843,7 @@ function drawFocus() {
     : touch
     ? ((s.stickers || []).length ? H2("Tap text or a sticker to select it. Drag, pinch or twist a sticker; drop it on the bin to delete it. Swipe for the next slide.", "Tap text or a sticker. Swipe for the next slide.")
       : H2("Tap any text to select it, then drag it, edit it or duplicate it. Swipe for the next slide.", "Tap text to select it. Swipe for the next slide."))
-    : H2((s.stickers || []).length ? "Click text or a sticker to select it. Drag to move, a corner to resize, the round handle to turn. Arrow keys change slides." : "Click any text to select it, then drag it, edit it or duplicate it. Arrow keys change slides.");
+    : H2((s.stickers || []).length ? "Click text or a sticker to select it. Drag to move, a corner to resize, the round handle to turn. Ctrl+Space adds a sticker or photo, Ctrl+D duplicates, Ctrl+[ ] change the layer order." : "Click any text to select it, then drag it, edit it or duplicate it. Ctrl+Space adds a sticker or photo; arrow keys change slides.");
   updateFocusUI();
 }
 /* the round arrows at the slide's left and right edges: previous and next slide (on touch screens a swipe does it too) */
@@ -4674,7 +4922,13 @@ $("#fKb").addEventListener("click", e => {
   else stepHistory(focusSid, k === "undo");
 });
 document.addEventListener("keydown", e => {
-  if (!$("#focusDlg").open || $("#mkDlg").open || $("#stickDlg").open || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+  if (!$("#focusDlg").open || $("#mkDlg").open || $("#stickDlg").open || $("#qDlg").open) return;
+  const mod0 = e.metaKey || e.ctrlKey;
+  if (mod0 && e.code === "Space") { e.preventDefault(); openQuick(); return; }   /* works while typing too */
+  if (mod0 && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "d") e.preventDefault();   /* not the browser's bookmark */
+  if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+  if (mod0 && !e.altKey && e.key.toLowerCase() === "d") { const st = selSticker(); if (st) dupSticker(focusSid, st.id); else if (S.ftsel) duplicateText(selRef()); else toast("Select a sticker or some text to duplicate it"); return; }
+  if (mod0 && (e.code === "BracketRight" || e.code === "BracketLeft")) { e.preventDefault(); const st = selSticker(); if (st) arrange(focusSid, st.id, e.code === "BracketRight" ? (e.shiftKey ? "front" : "fwd") : (e.shiftKey ? "back" : "back1")); return; }
   if (ovKind) { if (e.key === "ArrowLeft") navOverlay(-1); else if (e.key === "ArrowRight") navOverlay(1); return; }
   const mod = e.metaKey || e.ctrlKey, k = e.key.toLowerCase();
   if (mod && k === "z") { e.preventDefault(); stepHistory(focusSid, !e.shiftKey); return; }
@@ -4925,7 +5179,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { S, MK, applyWithClaude, drawFocus, updateFocusUI, selSticker, cleanStickers, xfBox, gesturing };   /* sticker tools, for tests */
+window.__t = { S, MK, applyWithClaude, drawFocus, updateFocusUI, selSticker, cleanStickers, xfBox, gesturing, layerList };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
