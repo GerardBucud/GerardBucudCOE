@@ -578,6 +578,9 @@ html.canref .refb{display:inline-flex}
 .minetools{display:flex;justify-content:center;gap:4px;margin-top:2px}
 .minetools button{width:30px;height:28px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:6px;display:grid;place-items:center;cursor:pointer;padding:0}
 .minetools svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.gearpic{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.gearpic .actions{flex:1}
+.gthumb{width:64px;height:64px;border-radius:8px;background:#1c1918;display:grid;place-items:center;overflow:hidden;color:#fff;flex:0 0 auto}
+.gthumb img,.gthumb svg{width:100%;height:100%;object-fit:contain}.gthumb span{font-size:10px;color:#a8a09c;text-align:center;font-style:normal}
 .rowfoot{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .farr{position:absolute;z-index:4;min-width:220px;background:#1c1918;border:1px solid #3a3432;border-radius:10px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.5);line-height:1.3}
 .farr[hidden]{display:none}
@@ -894,7 +897,7 @@ function geoFor(post, s) { const key = ratioKey(post, s), [a, b] = RATIOS[key], 
 let W = 1800, H = 2400, FOOT_Y = H - 157, LAND = false, CX0 = M, CX1 = W - M;
 function setGeo(g) { W = g.w; H = g.h; LAND = g.land; FOOT_Y = H - 157; CX0 = M; CX1 = W - M; }
 const COLW = 1800;   /* landscape: the text column is as wide as a portrait slide */
-/* Text blocks the user dragged in the large view: layout.move = {title|tip|a|b|caption: [dx, dy]} in slide pixels, on top of the
+/* Text blocks the user dragged in the large view: layout.move = {title|tip|a|b|caption|gtitle: [dx, dy]} in slide pixels, on top of the
    auto layout (Auto-fit clears it). Rows don't move freely: dragging one reorders the table. ROWDRAG is the row being dragged. */
 const moveOf = (L, k) => { const m = L && L.move && L.move[k]; return Array.isArray(m) ? [clamp(+m[0] || 0, -W, W), clamp(+m[1] || 0, -H, H)] : [0, 0]; };
 /* ...and resized with the large view's corner handles: layout.scale = {title|tip|a|b|caption: k} (0.5 to 2.5), around the block's
@@ -942,19 +945,21 @@ const TEMPLATES = {
   specs: { label: "Settings", slots: ["img"], text: { section: "SETTINGS", foot: "SAVE FOR LATER", rows: [{ label: "SETTING", value: "VALUE", note: "WHY IT MATTERS" }], tipK: "", tip: "" } },
   beforeafter: { label: "Before / after", slots: ["img", "img2"], text: { aValue: "BEFORE", aLabel: "D-LOG M", aNote: "STRAIGHT OUT OF CAMERA. FLAT ON PURPOSE", bValue: "AFTER", bLabel: "GRADED", bNote: "THE SAME CLIP AFTER THE COLOR GRADE", section: "BEFORE / AFTER", foot: "SAVE FOR LATER" } },
   save: { label: "Save for later", slots: ["img"], text: { left: "DON’T LOSE", right: "THESE", big: "**SAVE** FOR **LATER**", sub: "FOLLOW **{handle}**", section: "CAMERA SETUP", foot: "{handle}" } },
-  photo: { label: "Photo", slots: ["img"], text: { label: "", note: "", section: "", foot: "SAVE FOR LATER" } }
+  photo: { label: "Photo", slots: ["img"], text: { label: "", note: "", section: "", foot: "SAVE FOR LATER" } },
+  gear: { label: "Gear breakdown", slots: ["img"], text: { num: "01", title: "LIGHTING – __STEP ONE__", items: [{ name: "KEY LIGHT", note: "" }, { name: "SOFTBOX", note: "" }], tipK: "", tip: "", section: "GEAR", foot: "SAVE FOR LATER" } }
 };
 const FIELDS = {
   cover: [["left", "Small word, left"], ["right", "Small word, right"], ["title", "Title (wrap words in **…** for bold)"], ["sub", "Under the title"], ["section", "Footer, middle"], ["foot", "Footer, right"]],
   specs: [["section", "Footer, middle"], ["foot", "Footer, right"], "ROWS", ["tipK", "Tip heading"], ["tip", "Tip text", "area"]],
   beforeafter: [["aValue", "Top half, big word"], ["aLabel", "Top half, label"], ["aNote", "Top half, note", "area"], ["bValue", "Bottom half, big word"], ["bLabel", "Bottom half, label"], ["bNote", "Bottom half, note", "area"], ["section", "Footer, middle"], ["foot", "Footer, right"]],
   save: [["left", "Small word, left"], ["right", "Small word, right"], ["big", "Big text (**bold**, Enter = new line)", "area"], ["sub", "Under the big text ({handle} = your handle)"], ["section", "Footer, middle"], ["foot", "Footer, right"]],
-  photo: [["label", "Caption heading"], ["note", "Caption text", "area"], ["section", "Footer, middle"], ["foot", "Footer, right"]]
+  photo: [["label", "Caption heading"], ["note", "Caption text", "area"], ["section", "Footer, middle"], ["foot", "Footer, right"]],
+  gear: [["num", "Step number (small, above the heading)"], ["title", "Heading (__italic__ for the accent words)"], "ITEMS", ["tipK", "Tip heading (optional, e.g. MUST HAVE)"], ["tip", "Tip text (optional)", "area"], ["section", "Footer, middle"], ["foot", "Footer, right"]]
 };
 const TEXT_KEYS = {
   cover: ["left", "right", "title", "sub", "section", "foot"], specs: ["section", "foot", "tipK", "tip"],
   beforeafter: ["aValue", "aLabel", "aNote", "bValue", "bLabel", "bNote", "section", "foot"],
-  save: ["left", "right", "big", "sub", "section", "foot"], photo: ["label", "note", "section", "foot"]
+  save: ["left", "right", "big", "sub", "section", "foot"], photo: ["label", "note", "section", "foot"], gear: ["num", "title", "tipK", "tip", "section", "foot"]
 };
 
 /* ---------- text engine (canvas, tracked, kerned) ---------- */
@@ -1395,16 +1400,16 @@ function spot(ctx, cx, cy, r, a) {
 }
 
 /* ---------- shared pieces ---------- */
-function drawHeader(ctx, post) {
-  TF = "post.series"; txt(ctx, up(post.series), M, 150, { size: 41, weight: 700, track: -0.05 });
-  TF = "post.subject"; txt(ctx, up(post.subject), W - M, 150, { size: 41, weight: 400, track: -0.05, align: "right", alpha: 0.8 });
+function drawHeader(ctx, post, x0 = M, x1 = W - M) {
+  TF = "post.series"; txt(ctx, up(post.series), x0, 150, { size: 41, weight: 700, track: -0.05 });
+  TF = "post.subject"; txt(ctx, up(post.subject), x1, 150, { size: 41, weight: 400, track: -0.05, align: "right", alpha: 0.8 });
   TF = null;
 }
-function drawFooter(ctx, post, t, idx, total) {
+function drawFooter(ctx, post, t, idx, total, x0 = M, x1 = W - M) {
   const o = { size: 43, weight: 700, track: -0.05 };
-  TF = null; txt(ctx, `${pad2(idx)}/${pad2(total)}`, M, FOOT_Y, o);
-  TF = "text.section"; txt(ctx, up(fillR(t.section, post)), W / 2, FOOT_Y, { ...o, align: "center" });
-  TF = "text.foot"; txt(ctx, up(fillR(t.foot, post)), W - M, FOOT_Y, { ...o, align: "right" });
+  TF = null; txt(ctx, `${pad2(idx)}/${pad2(total)}`, x0, FOOT_Y, o);
+  TF = "text.section"; txt(ctx, up(fillR(t.section, post)), (x0 + x1) / 2, FOOT_Y, { ...o, align: "center" });
+  TF = "text.foot"; txt(ctx, up(fillR(t.foot, post)), x1, FOOT_Y, { ...o, align: "right" });
   TF = null;
 }
 const footFor = s => s.p90 <= 105 ? 0 : clamp(1 - 78 / s.p90, 0.15, 0.8);
@@ -1884,7 +1889,96 @@ function renderPhotoSlide(ctx, post, s, idx, total, d) {
   drawFooter(ctx, post, t, idx, total);
 }
 
+/* ---------- gear breakdown: the shot on top (or on the left of a wide slide), then a numbered heading, the gear used (up to 4, each
+   with its picture and name) and an optional tip, on a solid panel. text.items = [{name, note, img?: {asset|file}, vec?}]: a gear
+   picture is a library photo or cut-out (img, drawn whole) or vector paths (vec, drawn in the text color). layout.panel picks the
+   panel (black, red or light), layout.split how much of the slide the photo takes (0.3 to 0.7). */
+const GEAR_PANELS = { black: "#0e0b0a", red: "#e02d12", light: "#f2ede6" };
+let EXPORTING = false;
+function designGear(ctx, post, s) {
+  const t = s.text || {}, L = s.layout || {}, items = (Array.isArray(t.items) ? t.items : []).slice(0, 4);
+  const split = clamp(+L.split || 0.5, 0.3, 0.7), panel = GEAR_PANELS[L.panel] || GEAR_PANELS.black;
+  const photo = LAND ? { x: 0, y: 0, w: Math.round(W * split), h: H } : { x: 0, y: 0, w: W, h: Math.round(H * split) };
+  const box = LAND ? { x: photo.w, y: 0, w: W - photo.w, h: H } : { x: 0, y: photo.h, w: W, h: H - photo.h };
+  const A = s.overlay ? null : analyze(s.img, photo.w, photo.h), us = userScrim(L);
+  return { kind: "gear", items, photo, box, panel, A, scrimHead: us ?? headScrim(A), note: `Gear breakdown: the shot ${LAND ? "on the left" : "on top"}, ${items.length} piece${items.length === 1 ? "" : "s"} of gear below` };
+}
+function gearPic(ctx, it, cx, top, bw, bh) {   /* one gear picture, fitted into bw × bh, centred on cx */
+  if (it.vec && it.vec.vb) {
+    const ar = it.vec.vb[0] / it.vec.vb[1], w = Math.min(bw, bh * ar), h = w / ar;
+    ctx.save(); ctx.translate(cx, top + bh / 2); drawCustom(ctx, { vec: it.vec, color: INK }, w, h); ctx.restore(); return;
+  }
+  const img = it.img && getImg(it.img);
+  if (img) {
+    const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height, k = Math.min(bw / iw, bh / ih), w = iw * k, h = ih * k;
+    ctx.save(); ctx.imageSmoothingQuality = "high"; ctx.drawImage(img, cx - w / 2, top + (bh - h) / 2, w, h); ctx.restore(); return;
+  }
+  if (EXPORTING) return;
+  const sz = Math.min(bw, bh) * 0.8;   /* no picture yet: a dashed spot on screen only */
+  ctx.save(); ctx.globalAlpha = 0.35; ctx.strokeStyle = INK; ctx.lineWidth = 4; ctx.setLineDash([16, 12]);
+  ctx.strokeRect(cx - sz / 2, top + (bh - sz) / 2, sz, sz); ctx.restore();
+  txt(ctx, "ADD A PICTURE", cx, top + bh / 2 - capH(26) / 2, { size: 26, weight: 700, track: 0, align: "center", alpha: 0.45 });
+}
+function renderGear(ctx, post, s, idx, total, d) {
+  const t = s.text || {}, b = d.box, L = s.layout || {}, items = d.items, n = items.length;
+  drawPhoto(ctx, s.img, d.photo.x, d.photo.y, d.photo.w, d.photo.h, "ADD THE SHOT");
+  if (d.scrimHead) shade(ctx, 0, 520, d.scrimHead, "top", d.photo.x, d.photo.x + d.photo.w);
+  drawHeader(ctx, post, M, d.photo.x + d.photo.w - (LAND ? 110 : M));
+  if (!OVERLAY) { if (BG) paintBg(ctx, b.x, b.y, b.w, b.h); else { ctx.fillStyle = d.panel; ctx.fillRect(b.x, b.y, b.w, b.h); } }
+  const ink0 = INK;
+  INK = s.ink === "white" ? "#ffffff" : s.ink === "black" ? "#111111" : BG ? INK : inkOn(d.panel);
+  const accent = d.panel === GEAR_PANELS.red && !BG ? INK : "#e02d12";
+  const padX = LAND ? 120 : M, x0 = b.x + padX, x1 = b.x + b.w - padX, cx = (x0 + x1) / 2, innerW = x1 - x0, mv = moveOf(L, "gtitle");
+  /* heading: the step number in red, the heading under it (Nimbus Sans, or the post's big-text font) */
+  let y = b.y + (LAND ? 330 : 150);
+  const ts0 = LAND ? 96 : 112, ttl = up(fillR(t.title, post));
+  let ts = ts0;
+  const lines = () => inFam(DISP, () => wrap(ctx, ttl, innerW, ts, 700, -0.05));
+  let tl = lines(); while (tl.length > 2 && ts > 64) { ts -= 6; tl = lines(); }
+  const headH = (t.num ? capH(46) + 34 : 0) + (tl.length ? tl.length * inFam(DISP, () => capH(ts)) + (tl.length - 1) * ts * 0.22 : 0);
+  withScale(L, "gtitle", cx + mv[0], y + mv[1], () => {
+    let hy = y + mv[1];
+    TF = "text.num"; if (t.num) { txt(ctx, up(t.num), cx + mv[0], hy, { size: 46, weight: 700, track: -0.02, align: "center", color: accent }); hy += capH(46) + 34; }
+    TF = "text.title"; tl.forEach((ln, i) => { txt(ctx, ln, cx + mv[0], hy, { size: ts, weight: 700, track: -0.05, align: "center", fam: DISP }); hy += inFam(DISP, () => capH(ts)) + ts * 0.22; });
+    TF = null;
+  });
+  y += headH * scaleOf(L, "gtitle") + (LAND ? 120 : 100);
+  /* the tip sits just above the footer */
+  const tm = moveOf(L, "tip"), tipLines = t.tip ? wrap(ctx, up(fillR(t.tip, post)), innerW, 34, 400, -0.035).slice(0, 3) : [];
+  const tipH = (t.tipK ? capH(38) : 0) + (tipLines.length ? (t.tipK ? 22 : 0) + capH(34) + (tipLines.length - 1) * 42 : 0);
+  const bottom = FOOT_Y - 110 - (tipH ? tipH + 80 : 0);
+  /* the gear: one row on a tall slide (two rows of two on a wide one) */
+  if (n) {
+    const cols = LAND ? Math.min(n, 2) : n, rows = Math.ceil(n / cols), cw = innerW / cols, ch = Math.max(120, (bottom - y) / rows);
+    const lay = items.map(it => {
+      const nm = wrap(ctx, up(fillR(it.name, post)), cw - 36, 36, 700, -0.04).slice(0, 2), nt = it.note ? wrap(ctx, up(fillR(it.note, post)), cw - 36, 28, 400, -0.03).slice(0, 2) : [];
+      return { nm, nt, textH: (nm.length ? capH(36) + (nm.length - 1) * 44 : 0) + (nt.length ? 18 + capH(28) + (nt.length - 1) * 36 : 0) };
+    });
+    items.forEach((it, i) => {
+      const r = Math.floor(i / cols), c = i % cols, inRow = Math.min(cols, n - r * cols), ox = (cols - inRow) * cw / 2;
+      const ccx = x0 + ox + c * cw + cw / 2, top = y + r * ch, { nm, nt } = lay[i];
+      const textH = Math.max(...lay.slice(r * cols, r * cols + inRow).map(l => l.textH));   /* a row shares one picture box and one name line */
+      const ph = Math.max(60, Math.min(cw * (n >= 4 ? 0.86 : 0.74), ch - textH - 56)), pw = cw * (n >= 4 ? 0.9 : 0.8);
+      const gtop = top + Math.max(0, (ch - (ph + 44 + textH)) / 2);
+      gearPic(ctx, it, ccx, gtop, pw, ph);
+      let ty = gtop + ph + 44;
+      TF = `text.items.${i}.name`; nm.forEach((ln, k) => txt(ctx, ln, ccx, ty + k * 44, { size: 36, weight: 700, track: -0.04, align: "center" }));
+      ty += nm.length ? capH(36) + (nm.length - 1) * 44 + 18 : 0;
+      TF = `text.items.${i}.note`; nt.forEach((ln, k) => txt(ctx, ln, ccx, ty + k * 36, { size: 28, weight: 400, track: -0.03, align: "center", alpha: 0.7 }));
+      TF = null;
+    });
+  }
+  if (tipH) withScale(L, "tip", cx + tm[0], bottom + 80 + tm[1], () => {
+    let ty = bottom + 80 + tm[1];
+    TF = "text.tipK"; if (t.tipK) { txt(ctx, up(fillR(t.tipK, post)), cx + tm[0], ty, { size: 38, weight: 700, track: -0.04, align: "center", color: accent }); ty += capH(38) + 22; }
+    TF = "text.tip"; tipLines.forEach((ln, k) => txt(ctx, ln, cx + tm[0], ty + k * 42, { size: 34, weight: 400, track: -0.035, align: "center", alpha: 0.85 }));
+    TF = null;
+  });
+  drawFooter(ctx, post, t, idx, total, LAND ? x0 : M, LAND ? x1 : W - M);
+  INK = ink0;
+}
 function design(ctx, post, s) {
+  if (s.type === "gear") return designGear(ctx, post, s);
   if (s.type === "specs") return designSpecs(ctx, post, s);
   if (s.type === "cover" || s.type === "save") return designTitle(ctx, post, s);
   if (s.type === "beforeafter") return designBA(ctx, post, s);
@@ -1900,7 +1994,7 @@ function renderSlide(cv, post, s, idx, total, scale, forExport, hiliteId) {
   const ctx = cv.getContext("2d");
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
-  OVERLAY = !!s.overlay; WHOLE = !!s.whole; RENDER_SCALE = forExport ? 1 : scale; TB = {}; TF = null;
+  OVERLAY = !!s.overlay; WHOLE = !!s.whole; RENDER_SCALE = forExport ? 1 : scale; TB = {}; TF = null; EXPORTING = !!forExport;
   BG = bgOf(s); HL = HEXCOL.test(s.hl) ? s.hl : null; DISP = famOf(post, s);
   INK = s.ink === "black" ? "#111111" : s.ink === "white" ? "#ffffff" : BG ? inkOn(BG.c2 ? mixHex(BG.c1, BG.c2) : BG.c1) : "#ffffff";   /* auto: dark text on a light background */
   if (OVERLAY) { if (!forExport) checker(ctx); } else if (BG) paintBg(ctx, 0, 0, W, H); else { ctx.fillStyle = "#100c0b"; ctx.fillRect(0, 0, W, H); }
@@ -1911,12 +2005,13 @@ function renderSlide(cv, post, s, idx, total, scale, forExport, hiliteId) {
   if (s.type === "specs") renderSpecs(ctx, post, s, idx, total, d);
   else if (s.type === "cover" || s.type === "save") renderTitle(ctx, post, s, idx, total, d);
   else if (s.type === "beforeafter") renderBA(ctx, post, s, idx, total, d);
+  else if (s.type === "gear") renderGear(ctx, post, s, idx, total, d);
   else renderPhotoSlide(ctx, post, s, idx, total, d);
   d.tboxes = TB; TB = null; TF = null; d.geo = geo; CX0 = M; CX1 = W - M;
   if (UNDER) flushUnder(ctx);   /* a slide with no text */
   d.boxes = ub.concat(drawStickers(ctx, post, { stickers: all.filter(t => !t.under) }, forExport ? null : hiliteId));
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  OVERLAY = false; WHOLE = false; BG = null; HL = null; INK = "#ffffff"; DISP = null;
+  OVERLAY = false; WHOLE = false; BG = null; HL = null; INK = "#ffffff"; DISP = null; EXPORTING = false;
   return d;
 }
 
@@ -2046,7 +2141,7 @@ function upscaleWarning(s, d) {
   return "";
 }
 onImageReady = src => {
-  for (const [sid, s] of Object.entries(S.slides)) if (["img", "img2"].some(k => srcOf(s[k]) === src) || (s.stickers || []).some(t => t.src && srcOf(t.src) === src)) scheduleDraw(sid);
+  for (const [sid, s] of Object.entries(S.slides)) if (["img", "img2"].some(k => srcOf(s[k]) === src) || (s.stickers || []).some(t => t.src && srcOf(t.src) === src) || ((s.text || {}).items || []).some(t => t && t.img && srcOf(t.img) === src)) scheduleDraw(sid);
   if (focusSid) drawFocus();
 };
 
@@ -2065,6 +2160,7 @@ function fieldHTML(sid, s) {
       if ((t.rows || []).length < 4) parts.push(`<button class="btn sm" data-act="addrow">Add a row</button>`);
       continue;
     }
+    if (f === "ITEMS") { parts.push(gearHTML(sid, s)); continue; }
     const [k, label, kind] = f;
     parts.push(kind === "area"
       ? `<div><label class="lbl" for="${id(k)}">${esc(label)}</label><textarea class="ctl" id="${id(k)}" data-f="text.${k}">${esc(t[k])}</textarea></div>`
@@ -2072,6 +2168,47 @@ function fieldHTML(sid, s) {
   }
   return parts.join("");
 }
+/* the gear on a gear breakdown slide: name, a short note, and its picture (a photo from the library, one of My stickers, a
+   cut-out made from a photo, or a drawing by Claude) */
+const gearThumb = it => it.vec ? minePreview({ vec: it.vec }) : it.img ? `<img src="${esc(srcOf(it.img))}" alt="">` : `<span>No picture</span>`;
+function gearHTML(sid, s) {
+  const items = (s.text || {}).items || [], id = k => `${sid}-${k}`;
+  return items.map((it, i) => `<div class="rowbox"><div class="rowhead"><span>Gear ${i + 1}</span><button class="btn ghost sm" data-act="delgear" data-i="${i}" aria-label="Remove gear ${i + 1}">Remove</button></div>
+      <div class="two"><div><label class="lbl" for="${id("g" + i + "n")}">Name</label><input class="ctl" id="${id("g" + i + "n")}" data-f="text.items.${i}.name" value="${esc(it.name)}"></div>
+      <div><label class="lbl" for="${id("g" + i + "t")}">Note (optional)</label><input class="ctl" id="${id("g" + i + "t")}" data-f="text.items.${i}.note" value="${esc(it.note)}" placeholder="e.g. KEY LIGHT"></div></div>
+      <div class="gearpic"><i class="gthumb">${gearThumb(it)}</i><div class="actions"><button class="btn sm" data-act="gearphoto" data-i="${i}">Photo</button><button class="btn sm" data-act="gearmine" data-i="${i}">My stickers or cut-out</button>${S.sample ? `<button class="btn sm" data-act="geardraw" data-i="${i}">Claude draws it</button>` : ""}${it.img || it.vec ? `<button class="btn ghost sm" data-act="gearnoimg" data-i="${i}">Remove picture</button>` : ""}</div></div></div>`).join("")
+    + `<div class="actions">${items.length < 4 ? `<button class="btn sm" data-act="addgear">Add gear</button>` : ""}${S.sample && items.some(it => !it.img && !it.vec) ? `<button class="btn sm" data-act="geardrawall">Draw the missing pictures</button>` : ""}</div>
+    <p class="hint" style="margin:0">Up to 4 pieces of gear. For the cleanest look, cut the product out of a photo (My stickers or cut-out, then From a photo), or let Claude draw it as a simple outline in the slide's text color.</p>`;
+}
+const GEAR_DRAW = `Draw this piece of camera or creator gear as a clean product icon for an Instagram carousel: {DESC}
+
+Draw the object itself, seen from the front or three-quarters, as recognizable as possible from its outline and main parts (a body, a lens, a dish, a handle, buttons), with solid shapes and a few cut-out details (holes stay holes); no text, no logos, no background, no shadow.
+Reply with only JSON: {"viewBox":[<width>,<height>],"paths":[{"d":"<SVG path data: M L H V C S Q T A Z commands and numbers only>","fill":"currentColor"}]}
+Every fill is "currentColor" (the slide's text color); fill rule is even-odd. At most 24 paths, numbers with at most 1 decimal, all inside the viewBox; use [100,100] unless the object is clearly wide or tall.`;
+/* a gear picture from My stickers when one has the same name, else Claude draws it */
+async function drawGear(sid, i, quiet) {
+  const s = S.slides[sid], it = s && ((s.text || {}).items || [])[i]; if (!it || !S.sample) return false;
+  const name = plainText(it.name).trim(), key = name.toLowerCase();
+  const mine = [...S.mine.values()].find(d => key && String(d.name || "").toLowerCase() === key);
+  if (mine) { remember(sid); setGearPic(it, mine); saveSlide(sid); renderBoard(new Set([sid])); return true; }
+  S.busy.add("gear:" + sid + ":" + i); if (!quiet) toast(`Claude is drawing ${name || "it"}…`);
+  try {
+    const r = await S.sample.json(GEAR_DRAW.replace("{DESC}", `${name || "camera gear"}${it.note ? ` (${plainText(it.note)})` : ""}`.slice(0, 300)), { modelTier: "default", cache: false });
+    const vec = cleanVec(r); if (!vec) { if (!quiet) toast("Claude's drawing couldn't be used. Try again"); return false; }
+    const cur = S.slides[sid] && S.slides[sid].text.items[i]; if (!cur || plainText(cur.name).trim() !== name) return false;   /* the item changed meanwhile */
+    remember(sid); delete cur.img; cur.vec = vec; saveSlide(sid); renderBoard(new Set([sid]));
+    return true;
+  } catch (e) { if (!quiet) toast(SAMPLE_ERR[e && e.code] || "Couldn’t reach Claude. Try again"); return false; }
+  finally { S.busy.delete("gear:" + sid + ":" + i); }
+}
+async function drawAllGear(sids) {
+  const todo = []; for (const sid of sids) ((S.slides[sid] || {}).text || {}).items?.forEach((it, i) => { if (!it.img && !it.vec && plainText(it.name).trim()) todo.push([sid, i]); });
+  if (!todo.length) return;
+  let ok = 0; toast(`Drawing ${todo.length} gear picture${todo.length === 1 ? "" : "s"} with Claude…`);
+  for (const [sid, i] of todo) if (await drawGear(sid, i, true)) ok++;
+  toast(ok ? `${ok} gear picture${ok === 1 ? "" : "s"} drawn. Swap any for a photo or a cut-out` : "Claude couldn't draw the gear this time. Try Draw the missing pictures again");
+}
+function setGearPic(it, def) { delete it.img; delete it.vec; if (def.vec) it.vec = clone(def.vec); else if (def.src) it.img = clone(def.src); else if (def.asset || def.file) it.img = def.asset ? { asset: def.asset } : { file: def.file }; }
 /* extra text layers (free text on top of the slide), listed under Edit text */
 function layerHTML(sid, s) {
   const ls = (s.stickers || []).map((st, i) => [st, i]).filter(([st]) => st.kind === "text");
@@ -2143,8 +2280,10 @@ function layoutHTML(sid, s) {
   parts.push(`<div><label class="lbl" for="${sid}-font">Big text font (titles and big numbers)</label>${fontSel(`${sid}-font`, 'data-f="font"', s.font, ["", `The post's (${pf})`]).replace('</select>', `<option value="nimbus"${s.font === "nimbus" ? " selected" : ""}>Nimbus Sans</option></select>`)}</div>`);
   parts.push(`<label class="check"><input type="checkbox" id="${sid}-overlay" data-f="overlay" data-bool${s.overlay ? " checked" : ""}><span>Text-only overlay (transparent PNG)<small>Leaves the photo out so you can lay the text over a video in Edits or CapCut.</small></span></label>`);
   parts.push(`<label class="check"><input type="checkbox" id="${sid}-whole" data-f="whole" data-bool${s.whole ? " checked" : ""}><span>Show the whole photo<small>No cropping: the photo fits inside the slide and a blurred copy fills the rest. Good for a photo with text in it, like a finished cover, in another ratio.</small></span></label>`);
-  if (geoOf(sid).land && s.type !== "beforeafter" && s.type !== "photo") parts.push(`<div class="two">${sel(sid, "layout.side", "Text side (wide slides)", [["auto", "Auto"], ["left", "Left"], ["right", "Right"]], L.side)}${s.type === "specs" ? "" : sel(sid, "layout.panel", "Panel color", [["auto", "From the photo"], ["black", "Black"], ["red", "Cover red"]], L.panel)}</div>`);
-  if (s.type === "specs") {
+  if (geoOf(sid).land && s.type !== "beforeafter" && s.type !== "photo" && s.type !== "gear") parts.push(`<div class="two">${sel(sid, "layout.side", "Text side (wide slides)", [["auto", "Auto"], ["left", "Left"], ["right", "Right"]], L.side)}${s.type === "specs" ? "" : sel(sid, "layout.panel", "Panel color", [["auto", "From the photo"], ["black", "Black"], ["red", "Cover red"]], L.panel)}</div>`);
+  if (s.type === "gear") {
+    parts.push(`<div class="two">${sel(sid, "layout.panel", "Panel color", [["auto", "Black"], ["red", "Cover red"], ["light", "Light"]], L.panel)}${rng(sid, "layout.split", geoOf(sid).land ? "Photo width" : "Photo height", 0.3, 0.7, 0.01, L.split ?? 0.5, "pct")}</div>`);
+  } else if (s.type === "specs") {
     parts.push(`<div class="two">${sel(sid, "layout.style", "Text style", [["auto", "Auto"], ["overlay", "Over the photo"], ["panel", "Solid panel"]], L.style)}${sel(sid, "layout.pos", "Text position", [["auto", "Auto"], ["top", "Top"], ["bottom", "Bottom"]], L.pos)}</div>`);
     parts.push(`<div class="two">${sel(sid, "layout.tip", "Tip placement", [["auto", "Auto"], ["right", "Bottom right"], ["left", "Bottom left"], ["inline", "Under the table"]], L.tip)}${sel(sid, "layout.panel", "Panel color", [["auto", "From the photo"], ["black", "Black"], ["red", "Cover red"]], L.panel)}</div>`);
   } else if (s.type !== "beforeafter") {
@@ -2437,6 +2576,13 @@ document.addEventListener("click", e => {
     const chip = card.querySelector(".rev .chip"); if (chip) { chip.dataset.v = s.status; chip.textContent = statusLabel(s.status); }
   }
   else if (act === "left" || act === "right") move(sid, act === "left" ? -1 : 1);
+  else if (act === "addgear") { remember(sid); s.text.items = s.text.items || []; if (s.text.items.length < 4) s.text.items.push({ name: "GEAR", note: "" }); saveSlide(sid); renderBoard(new Set([sid])); }
+  else if (act === "delgear") { remember(sid); s.text.items.splice(+b.dataset.i, 1); saveSlide(sid); renderBoard(new Set([sid])); }
+  else if (act === "gearnoimg") { const it = s.text.items[+b.dataset.i]; if (it) { remember(sid); delete it.img; delete it.vec; saveSlide(sid); renderBoard(new Set([sid])); } }
+  else if (act === "gearphoto") openPicker(sid, "gear:" + b.dataset.i);
+  else if (act === "gearmine") { S.gearPick = { sid, i: +b.dataset.i }; openStickers(sid); }
+  else if (act === "geardraw") drawGear(sid, +b.dataset.i);
+  else if (act === "geardrawall") drawAllGear([sid]);
   else if (act === "addrow") { remember(sid); s.text.rows = s.text.rows || []; s.text.rows.push({ label: "SETTING", value: "VALUE", note: "" }); saveSlide(sid); renderBoard(new Set([sid])); }
   else if (act === "delrow") { remember(sid); s.text.rows.splice(+b.dataset.i, 1); saveSlide(sid); renderBoard(new Set([sid])); }
   else if (act === "menu") toggleMenu(b, sid);
@@ -2706,6 +2852,8 @@ function removeSticker(sid, id) {
 let stickFor = null;
 function openStickers(sid) {
   stickFor = sid;
+  const gear = !!(S.gearPick && S.gearPick.sid === sid);   /* picking a gear picture: My stickers only */
+  $("#stickTitle").textContent = gear ? "Gear picture" : "Add a sticker"; $("#stickGrid").hidden = gear; $("#stickDlg .mineh2").hidden = gear;
   const grid = $("#stickGrid");
   renderMine();
   grid.innerHTML = Object.entries(STICKERS).filter(([, P]) => P.type !== "custom").map(([k, P]) => `<button type="button" data-stick="${k}"><canvas width="300" height="180" aria-hidden="true"></canvas><span>${esc(P.label)}</span></button>`).join("");
@@ -2888,14 +3036,15 @@ async function uploadSticker(f) {
   catch (e) { toast(`${f.name} wasn't added: ${{ too_large: "it's too big", unsupported_type: "that file type isn't supported", quota_or_state: "the board's storage is full" }[e && e.code] || "the upload failed"}`); return; }
   const [w, h] = await imageSize(srcOf(src)), def = { name: f.name.replace(/\.[^.]+$/, "").slice(0, 40) || "Sticker", ar: w && h ? w / h : 1, src };
   const id = addMine(def);
-  $("#stickDlg").close(); addCustom(sid, def, id);
+  const g = S.gearPick; $("#stickDlg").close(); S.gearPick = g; if (gearDone(def)) return;
+  addCustom(sid, def, id);
   toast("Sticker added, and saved to My stickers. Drag it where you want it");
 }
 $("#stickDlg").addEventListener("click", e => {
   const t = e.target, m = t.closest("[data-mine]"), del = t.closest("[data-minedel]"), mk = t.closest("[data-mk]");
   if (del) { const id = del.dataset.minedel, d = S.mine.get(id); S.mine.delete(id); removeDoc(mineDocPath(id)); renderMine(); toast(`“${d ? d.name : "Sticker"}” removed from My stickers. Slides that use it keep it`); }
-  else if (m && stickFor) { const d = S.mine.get(m.dataset.mine); if (!d) return; $("#stickDlg").close(); addCustom(stickFor, d, m.dataset.mine); toast(`${d.name} added. Drag it where you want it`); }
-  else if (mk && stickFor) { $("#stickDlg").close(); openMaker(stickFor, mk.dataset.mk); }
+  else if (m && stickFor) { const d = S.mine.get(m.dataset.mine); if (!d) return; $("#stickDlg").close(); if (gearDone(d)) return; addCustom(stickFor, d, m.dataset.mine); toast(`${d.name} added. Drag it where you want it`); }
+  else if (mk && stickFor) { const g = S.gearPick; $("#stickDlg").close(); openMaker(stickFor, mk.dataset.mk); MK.gear = g; S.gearPick = g; }
   else if (t.closest("[data-mineedit]") && stickFor) { const id = t.closest("[data-mineedit]").dataset.mineedit; if (!S.mine.has(id)) return; $("#stickDlg").close(); openMaker(stickFor, "photo", { pool: id }); }
   else if (t.closest("[data-minedup]")) { const d = S.mine.get(t.closest("[data-minedup]").dataset.minedup); if (d) { addMine({ ...d, name: copyName(d.name) }); toast(`Duplicated as “${copyName(d.name)}”`); } }
 });
@@ -2905,6 +3054,14 @@ $("#stickDlg").addEventListener("change", e => {   /* rename in My stickers (sli
   if (!v) { el.value = d.name; return; }
   d.name = v; saveMine(el.dataset.minename);
 });
+$("#stickDlg").addEventListener("close", () => { if (!$("#mkDlg").open) S.gearPick = null; });
+/* the sticker dialog or maker was opened for a gear picture: the pick goes there instead of onto the slide */
+function gearDone(def) {
+  const g = S.gearPick; S.gearPick = null; if (!g) return false;
+  const s = S.slides[g.sid], it = s && s.text.items[g.i]; if (!it) return true;
+  remember(g.sid); setGearPic(it, def); saveSlide(g.sid); renderBoard(new Set([g.sid]));
+  toast(`${def.name || "Picture"} set as gear ${g.i + 1}`); return true;
+}
 $("#stickDlg").addEventListener("change", e => { if (e.target.id === "stkUpload") { const f = e.target.files[0]; e.target.value = ""; uploadSticker(f); } });
 
 /* ---------- the sticker maker ----------
@@ -2914,7 +3071,7 @@ $("#stickDlg").addEventListener("change", e => { if (e.target.id === "stkUpload"
 const MK = { sid: null, tab: "photo", img: null, name: "", crop: null, mode: "vec", tol: 40, thr: null, inv: false, smooth: true, out: null, gen: null, busy: false, pick: "", edit: null };
 /* edit: {sid, id} = a sticker on a slide, {pool: id} = one in My stickers; the maker then starts from that sticker */
 function openMaker(sid, tab, edit) {
-  Object.assign(MK, { sid, tab: tab === "gen" ? "gen" : "photo", img: null, crop: null, out: null, gen: null, busy: false, thr: null, inv: false, edit: edit || null });
+  Object.assign(MK, { sid, tab: tab === "gen" ? "gen" : "photo", img: null, crop: null, out: null, gen: null, busy: false, thr: null, inv: false, edit: edit || null, gear: null });
   $("#mkName").value = ""; $("#mkSave").checked = false; $("#mkStatus").textContent = ""; $("#mkGenStatus").textContent = ""; $("#mkEnhNote").value = "";
   const d = editDef(), linked = d && MK.edit.id && d.pool && S.mine.has(d.pool);
   $("#mkTitle").textContent = d ? `Edit “${d.name || "Sticker"}”` : "Make a sticker";
@@ -2979,6 +3136,7 @@ function loadMkImage(src, name) {
   im.onerror = () => toast("That photo didn't load");
   im.src = src;
 }
+$("#mkDlg").addEventListener("close", () => { if (MK.gear) { MK.gear = null; S.gearPick = null; } });
 $("#mkDlg").addEventListener("click", e => {
   const t = e.target, tab = t.closest("[data-mktab]"), pk = t.closest("[data-mkpick]"), mode = t.closest("[data-mkmode]"), pre = t.closest("[data-mkpre]");
   if (tab) { MK.tab = tab.dataset.mktab; renderMaker(); drawMkOut(); }
@@ -3271,6 +3429,7 @@ async function mkAdd(asNew) {
   if (was && !asNew) { $("#mkDlg").close(); updateSticker(was, def, $("#mkSave").checked); return; }
   const poolId = $("#mkSave").checked && !(was && MK.edit.pool) ? addMine(def) : null;
   $("#mkDlg").close();
+  if (MK.gear) { S.gearPick = MK.gear; MK.gear = null; if (gearDone(def)) return; }
   addCustom(sid, def, poolId);
   toast(poolId ? `${name} added, and saved to My stickers` : `${name} added. To keep it for later, select it and Save to My stickers`);
 }
@@ -3525,7 +3684,8 @@ fcv.addEventListener("pointermove", e => {
 function moveGroup(s, f) {
   if (!f || !s) return null;
   let m = f.match(/^text\.rows\.(\d+)\./); if (m) return "rows." + m[1];
-  if (s.type === "specs" && (f === "text.tipK" || f === "text.tip")) return "tip";
+  if ((s.type === "specs" || s.type === "gear") && (f === "text.tipK" || f === "text.tip")) return "tip";
+  if (s.type === "gear" && (f === "text.num" || f === "text.title")) return "gtitle";
   if ((s.type === "cover" || s.type === "save") && /^text\.(left|right|title|big|sub)$/.test(f)) return "title";
   m = s.type === "beforeafter" && f.match(/^text\.([ab])(Label|Note|Value)$/); if (m) return m[1];
   if (s.type === "photo" && (f === "text.label" || f === "text.note")) return "caption";
@@ -3807,12 +3967,16 @@ function fieldPath(s, f) {
   if (f.startsWith("layer:")) { const i = (s.stickers || []).findIndex(t => t.id === f.slice(6) && t.kind === "text"); return i < 0 ? null : `stickers.${i}.label`; }
   const m = f.match(/^text\.rows\.(\d+)\.(label|value|note)$/);
   if (m) return ((s.text || {}).rows || [])[+m[1]] ? f : null;
+  const g = f.match(/^text\.items\.(\d+)\.(name|note)$/);
+  if (g) return ((s.text || {}).items || [])[+g[1]] ? f : null;
   return (FIELDS[s.type] || []).some(d => Array.isArray(d) && "text." + d[0] === f) ? f : null;
 }
 function fieldInfo(s, path) {   /* label, current value, and "line" or "area" */
   if (HEAD_FIELDS[path]) return { label: HEAD_FIELDS[path], value: S.post[path.slice(5)] ?? "", kind: "line" };
   let m = path.match(/^text\.rows\.(\d+)\.(label|value|note)$/);
   if (m) return { label: `Row ${+m[1] + 1}, ${{ label: "label", value: "big value", note: "why (small text)" }[m[2]]}`, value: s.text.rows[+m[1]][m[2]] ?? "", kind: m[2] === "note" ? "area" : "line" };
+  m = path.match(/^text\.items\.(\d+)\.(name|note)$/);
+  if (m) return { label: `Gear ${+m[1] + 1}, ${m[2]}`, value: s.text.items[+m[1]][m[2]] ?? "", kind: "line" };
   m = path.match(/^stickers\.(\d+)\.label$/);
   if (m) return { label: `Extra text ${s.stickers.slice(0, +m[1] + 1).filter(t => t.kind === "text").length}`, value: s.stickers[+m[1]].label ?? "", kind: "area" };
   const k = path.slice(5), d = FIELDS[s.type].find(x => Array.isArray(x) && x[0] === k);
@@ -3971,6 +4135,8 @@ function editorRefs(s, ref) {
   if (grp === "title") return (s.type === "cover" ? ["left", "right", "title", "sub"] : ["left", "right", "big", "sub"]).map(k => "text." + k);
   if (grp === "a" || grp === "b") return ["Value", "Label", "Note"].map(k => `text.${grp}${k}`);
   if (grp === "caption") return ["text.label", "text.note"];
+  if (grp === "gtitle") return ["text.num", "text.title"];
+  const gm = ref.match(/^text\.items\.(\d+)\./); if (gm) return [`text.items.${gm[1]}.name`, `text.items.${gm[1]}.note`];
   if (HEAD_FIELDS[ref]) return ["post.series", "post.subject"];
   if (ref === "text.section" || ref === "text.foot") return ["text.section", "text.foot"];
   return [ref];
@@ -3998,6 +4164,10 @@ function textPanelHTML(s) {
   const out = [`<div class="lhead"><h4>This slide</h4><span class="grow"></span>${touch ? "" : fmtBarHTML()}</div>`];
   if (touch) out.push(`<p class="hint">Tap any text to edit it, with the slide above it.</p>`);
   for (const d of FIELDS[s.type]) {
+    if (d === "ITEMS") {
+      ((t.items || [])).forEach((it, i) => out.push(`<div class="rowbox"><div class="rowhead"><span>Gear ${i + 1}</span></div><div class="two"><div>${fld(`text.items.${i}.name`, "Name")}</div><div>${fld(`text.items.${i}.note`, "Note")}</div></div></div>`));
+      continue;
+    }
     if (d !== "ROWS") { out.push(`<div>${fld("text." + d[0])}</div>`); continue; }
     (t.rows || []).forEach((r, i) => out.push(`<div class="rowbox"><div class="rowhead"><span>Row ${i + 1}</span><button type="button" class="btn ghost sm" data-fact="delrow" data-i="${i}">Remove</button></div>
       <div class="two"><div>${fld(`text.rows.${i}.label`, "Label")}</div><div>${fld(`text.rows.${i}.value`, "Big value")}</div></div><div>${fld(`text.rows.${i}.note`, "Why (small text)")}</div></div>`));
@@ -4560,7 +4730,7 @@ let pickFor = null;
 function openPicker(sid, slot) {
   pickFor = { sid, slot };
   const s = S.slides[sid], ref = slot === "ref";
-  $("#pickTitle").textContent = ref ? "Reference image" : s.type === "beforeafter" ? (slot === "img" ? "Replace before photo" : "Replace after photo") : "Replace image";
+  $("#pickTitle").textContent = ref ? "Reference image" : slot.startsWith("gear:") ? "Gear picture" : s.type === "beforeafter" ? (slot === "img" ? "Replace before photo" : "Replace after photo") : "Replace image";
   $("#pickUploadLbl").hidden = !(S.assets || S.local);
   $("#pickUploadTxt").textContent = ref ? "Upload a reference" : "Upload new photo";
   $("#pickHint").textContent = ref ? "Pick a post you like (a screenshot works), from your library or a new upload. Claude matches this slide's layout, text styling and photo look to it and keeps your own words and photo. Tweak anything afterwards, or Undo. New uploads go to the References folder."
@@ -4584,6 +4754,7 @@ function usePhoto(id) {
   const { sid, slot } = pickFor, s = S.slides[sid];
   if (slot === "ref") { $("#pickDlg").close(); referenceSlide(sid, id); return; }
   const p = S.photos.get(id);
+  if (slot.startsWith("gear:")) { const it = s.text.items[+slot.slice(5)]; if (it) { remember(sid); setGearPic(it, p); saveSlide(sid); renderBoard(new Set([sid])); } $("#pickDlg").close(); toast("Gear picture set. A cut-out on a plain background looks cleanest"); return; }
   remember(sid);
   s[slot] = { ...(p.asset ? { asset: p.asset } : { file: p.file }), fx: 0.5, fy: 0.5, zoom: 1 };
   s.layout = {};
@@ -4631,9 +4802,11 @@ specs: section, foot, rows [{label, value, note}], tipK, tip
 beforeafter: aValue, aLabel, aNote, bValue, bLabel, bNote, section, foot
 save: left, right, big, sub, section, foot
 photo: label, note, section, foot
+gear: num, title, items [{name, note}], tipK, tip, section, foot
 (section is the footer's middle text, foot is the footer's right text.)
+A "gear" slide breaks one shot down into the gear behind it (a shot list with the gear used): its photo, at the top (on the left of a wide slide), shows the setup or the shot; num is the step number ("01"); title names the step or category, with the accent words in __italic__ ("LIGHTING – __STEP ONE__", "CAMERA __GEAR__", "S-LOG3 – REC 709 – __CUSTOM LUT__"); items are 1 to 4 pieces of gear, name = the product's name ("APUTURE QUICK DOME 90", "SONY A7 V", "35MM F1.4"), note = an optional 1 to 3 word role ("KEY LIGHT", "ND FILTER"); the picture of each item is set by the creator or drawn later ("picture": true when it has one); tipK / tip are an optional must-have tip ("MUST HAVE", one short sentence).
 
-Layout (change only when a comment asks about placement): pos top|middle|bottom, style overlay|panel (specs only), tip left|right|inline (specs only), panel black|red (specs only), scrim 0 to 0.9 (how much to darken behind text). "auto" puts everything back to auto-fit.
+Layout (change only when a comment asks about placement): pos top|middle|bottom, style overlay|panel (specs only), tip left|right|inline (specs only), panel black|red (specs), black|red|light (gear), split 0.3 to 0.7 (gear: how much of the slide the photo takes), scrim 0 to 0.9 (how much to darken behind text). "auto" puts everything back to auto-fit.
 
 Background (change only when a comment asks for it): "bg" is null (the slide shows its photo) or {c1, c2, dir, photo}: c1 alone is a plain color, c1 to c2 a gradient, dir down|right|diag|radial; colors as hex. Without "photo" it replaces the photo; with "photo": true the whole photo sits on it uncropped (the photo's fx, fy and zoom then place and size it). "ink" is the color of the slide's own text: auto (white, or near-black on a light background), white or black. "hl" is the color of the highlight boxes (hex), or null for the text's own color.
 
@@ -4680,7 +4853,8 @@ const isThumbPhoto = p => p && (p.folder === THUMB_FOLDER || String(p.folder || 
 const ownPhotos = () => [...S.photos.entries()].filter(([, p]) => !isRefPhoto(p) && !isThumbPhoto(p));
 function slideItem(sid, withComment) {   /* a slide as Claude reads it */
   const s = S.slides[sid];
-  return { id: sid, type: s.type, text: s.text, layout: s.layout || {}, photo: (s.img && s.img.asset) || null, photo2: (s.img2 && s.img2.asset) || null, edits: (s.img && s.img.adj) || {}, edits2: (s.img2 && s.img2.adj) || {},
+  const text = s.type === "gear" ? { ...s.text, items: ((s.text || {}).items || []).map(it => ({ name: it.name, note: it.note || "", picture: !!(it.img || it.vec) })) } : s.text;
+  return { id: sid, type: s.type, text, layout: s.layout || {}, photo: (s.img && s.img.asset) || null, photo2: (s.img2 && s.img2.asset) || null, edits: (s.img && s.img.adj) || {}, edits2: (s.img2 && s.img2.adj) || {},
     overlay: !!s.overlay, bg: s.bg || null, ink: s.ink || "auto", hl: s.hl || null, stickers: (s.stickers || []).map(({ id, ...rest }) => rest.kind === "custom" ? { kind: "custom", name: rest.name, x: rest.x, y: rest.y, size: rest.size, rot: rest.rot || 0, ...(rest.vec && rest.color ? { color: rest.color } : {}), ...(rest.under ? { under: true } : {}) } : rest), ...(withComment ? { comment: s.comment || "" } : {}) };
 }
 function buildPrompt(targets, overall) {
@@ -4699,6 +4873,15 @@ function cleanText(type, raw, prev) {
   const out = clone(prev || TEMPLATES[type].text);
   if (raw && typeof raw === "object") {
     for (const k of TEXT_KEYS[type]) if (raw[k] != null && typeof raw[k] !== "object") out[k] = String(raw[k]).slice(0, 400);
+    if (type === "gear" && Array.isArray(raw.items)) {   /* names and notes from Claude; each keeps its picture (matched by name, else by place) */
+      const prev0 = (prev && prev.items) || [], used = new Set(), key = v => plainText(v).trim().toLowerCase();
+      out.items = raw.items.slice(0, 4).filter(r => r && typeof r === "object").map((r, i) => {
+        const it = { name: String(r.name ?? "").slice(0, 60), note: String(r.note ?? "").slice(0, 80) };
+        let pv = prev0.find(x => !used.has(x) && key(x.name) === key(it.name)); if (!pv && prev0.length === raw.items.length) pv = prev0[i];
+        if (pv && !used.has(pv)) { used.add(pv); if (pv.img) it.img = clone(pv.img); if (pv.vec) it.vec = clone(pv.vec); }
+        return it;
+      });
+    }
     if (type === "specs" && Array.isArray(raw.rows)) out.rows = raw.rows.slice(0, 4).filter(r => r && typeof r === "object").map(r => ({ label: String(r.label ?? "").slice(0, 80), value: String(r.value ?? "").slice(0, 40), note: String(r.note ?? "").slice(0, 240) }));
   }
   return out;
@@ -4706,7 +4889,8 @@ function cleanText(type, raw, prev) {
 function cleanLayout(raw, prev) {
   if (raw === undefined || raw === "keep") return prev || {};
   if (raw === "auto" || raw === null || typeof raw !== "object") return raw === "auto" || raw === null ? {} : (prev || {});
-  const ok = { pos: ["auto", "top", "middle", "bottom"], style: ["auto", "overlay", "panel"], tip: ["auto", "left", "right", "inline"], panel: ["auto", "black", "red"] }, out = {};
+  const ok = { pos: ["auto", "top", "middle", "bottom"], style: ["auto", "overlay", "panel"], tip: ["auto", "left", "right", "inline"], panel: ["auto", "black", "red", "light"] }, out = {};
+  if (typeof raw.split === "number" && raw.split >= 0.3 && raw.split <= 0.7) out.split = raw.split;
   for (const [k, vals] of Object.entries(ok)) if (vals.includes(raw[k])) out[k] = raw[k];
   if (raw.scrim === "auto" || (typeof raw.scrim === "number" && raw.scrim >= 0 && raw.scrim <= 0.9)) out.scrim = raw.scrim;
   if (raw.side === "left" || raw.side === "right") out.side = raw.side; else if (prev && prev.side) out.side = prev.side;
@@ -5045,6 +5229,8 @@ Make it the creator's own, so nobody can call it a copy:
 - Use the creator's frame: the header (series on the left, subject on the right), the footer and the typeface come from the template.
 - Shift the details a little: colors toward the creator's palette (near-black, white, cover red #E02D12), the emphasis on different words, the order of small items. A few small, clear changes, not a different post.
 - Never invent camera settings, numbers or facts. Use the creator's note; where a slide needs a value you don't have, write a short placeholder like "YOUR ISO" and say so in notes.
+- The creator's brand is fixed: every word is set in the template's typeface (Nimbus Sans), in UPPERCASE; colors stay near-black, white, cover red #E02D12 and orange. Where a reference uses a serif, script or italic accent, put those words in __italic__ instead; never ask for another typeface.
+- When the references break a shot down into its gear (a setup photo, a numbered step heading, then product pictures with names, like "01 LIGHTING – STEP ONE"), use "gear" slides: one per step or category (lighting, camera, audio, editing / color…), in the references' order, and a cover and a save slide around them as the references do. Name the gear from the creator's note only; where the note doesn't say, write a placeholder like "YOUR KEY LIGHT" and say so in notes. Leave the gear pictures to the creator (the board draws them afterwards).
 {PHOTOS}`;
 function genPrompt(ids, note, own, ratio) {
   const photos = ownPhotos().filter(([id]) => !ids.includes(id)).slice(-200).map(([id, p]) => ({ id, name: p.name, shape: p.w > p.h ? "landscape" : p.w < p.h ? "portrait" : "square", ...(p.desc ? { desc: p.desc } : {}), ...(Array.isArray(p.tags) && p.tags.length ? { tags: p.tags } : {}) }));
@@ -5053,7 +5239,7 @@ function genPrompt(ids, note, own, ratio) {
     : `- Never put a reference image on a slide. For "photo", pick the creator's own photo from the library by id when one fits the slide (go by its description and tags), or null to leave the spot for the creator. A slide that works without a photo can use a plain or gradient background ("bg") instead.`;
   const fmt = `Reply with only this JSON object:
 {"title":"<a short post name>","series":"<header, left>","subject":"<header, right: what it's about>","slides":[{"type":"cover","ref":1,"text":{<the complete text object for the type>},"layout":"auto","photo":null,"photo2":null,"edits":{},"edits2":{},"bg":null,"ink":"auto","hl":null,"whole":false,"stickers":[],"summary":"<one sentence: what the slide takes from reference N, and what you changed to make it the creator's>"}],"notes":"<for the creator: what you adapted to their brand, and what they still need to fill in>"}
-3 to 10 slides, usually about one per reference image, in their order. "type" is cover, specs, beforeafter, save or photo. "ref" is the number of the reference image the slide is patterned after, or null. "photo" and "photo2" (the after photo of a beforeafter slide) are a library photo id${own ? `, "ref:N"` : ""} or null. "layout" is "auto" or an object of layout values; "edits" and "edits2" are photo edit values; "bg", "ink", "hl", "whole" and "stickers" as described above.`;
+3 to 14 slides, usually about one per reference image, in their order. "type" is cover, specs, beforeafter, save, photo or gear. "ref" is the number of the reference image the slide is patterned after, or null. "photo" and "photo2" (the after photo of a beforeafter slide) are a library photo id${own ? `, "ref:N"` : ""} or null. "layout" is "auto" or an object of layout values; "edits" and "edits2" are photo edit values; "bg", "ink", "hl", "whole" and "stickers" as described above.`;
   return [GEN_RULES.replace("{PHOTOS}", ph), `How the slides work:\n${COPY_STYLE}\n\n${TEMPLATE_DOC}`,
     `THE CREATOR: handle ${base.handle || "(none)"}; their header so far: ${base.series || "STEAL MY SETTINGS"} / ${base.subject || ""}; their carousels: ${titles.length ? titles.map(t => `"${t}"`).join(", ") : "(none yet)"}. The new post is ${ratio}.`,
     `THE CREATOR'S NOTE ABOUT THIS CAROUSEL: ${note || "(none: take the topic from the references and keep any facts general)"}`,
@@ -5078,7 +5264,7 @@ async function genFromRefs() {
   } finally { S.genCtl = null; $("#refStop").hidden = true; if ($("#refDlg").open) renderRefs(); }
 }
 function makePostFromRefs(res, ids, own, ratio) {
-  const items = (res && Array.isArray(res.slides) ? res.slides : []).filter(it => it && TEMPLATES[it.type]).slice(0, 12);
+  const items = (res && Array.isArray(res.slides) ? res.slides : []).filter(it => it && TEMPLATES[it.type]).slice(0, 14);
   if (!items.length) return 0;
   const base = S.post || {}, pid = "post-" + Date.now().toString(36), now = Date.now(), clip = (v, n) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, n);
   const meta = { title: clip(res.title, 80) || "Carousel from references", series: up(clip(res.series, 40) || base.series || "STEAL MY SETTINGS"), subject: up(clip(res.subject, 40)), handle: base.handle || "", ratio, order: [], overall: "", refs: ids.slice(), updatedAt: now };
@@ -5103,6 +5289,7 @@ function makePostFromRefs(res, ids, own, ratio) {
   }
   saveMeta(); renderBoard(new Set(Object.keys(S.slides))); renderMeta(); renderLibrary();
   S.notes = clip(res.notes, 700); renderNotes();
+  const gearSids = order().filter(sid => S.slides[sid].type === "gear"); if (gearSids.length) setTimeout(() => drawAllGear(gearSids), 800);   /* the gear pictures: from My stickers by name, else drawn by Claude */
   window.scrollTo({ top: 0 });
   return items.length;
 }
@@ -5242,7 +5429,7 @@ document.addEventListener("keydown", e => {
 
 /* ---------- export ---------- */
 function waitImages(s) {
-  const slots = [...(s.overlay ? [] : [s.img, s.img2]), ...(s.stickers || []).map(t => t.kind === "custom" && t.src)];
+  const slots = [...(s.overlay ? [] : [s.img, s.img2]), ...(s.stickers || []).map(t => t.kind === "custom" && t.src), ...((s.text || {}).items || []).map(t => t && t.img)];
   return Promise.all(slots.map(slot => new Promise(res => {
     const src = srcOf(slot || null); if (!src) return res();
     getImg(slot); const e = imgCache.get(src);
