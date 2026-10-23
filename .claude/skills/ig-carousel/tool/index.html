@@ -257,7 +257,7 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 /* LITEMV: the slide on top, the editor under it, and a row for the keyboard at the bottom (the toolbar shows there until it opens) */
 #focusDlg .fkb{display:none}
 #focusDlg.lite .dlg-h,#focusDlg.lite .ftools,#focusDlg.lite .fhint,#focusDlg.lite .rail,#focusDlg.lite .hrail,#focusDlg.lite .fdel,#focusDlg.lite .fbar,#focusDlg.lite .ftrash,
-#focusDlg.lite .fone .actions,#focusDlg.lite .fone .ff:not(.cur),#focusDlg.lite .fone.tabbed .ff .lbl{display:none}
+#focusDlg.lite .fone .actions,#focusDlg.lite .fone .ff:not(.cur):not(.lay),#focusDlg.lite .fone.tabbed .ff .lbl{display:none}
 #focusDlg.lite .focus-b{gap:4px;padding:6px 8px 0}
 #focusDlg.lite .fwrap{display:block;position:relative;flex:1 1 0;min-height:72px;border-radius:8px}
 #focusDlg.lite .fstage{position:absolute;left:0;top:0;transform-origin:0 0}
@@ -739,12 +739,16 @@ function positions(ctx, s, size, weight, track, it) {
    They can overlap. Text cut into lines (wrapped, or split at line breaks) is balanced so each line carries the styles open at its start. */
 const MARKS = [["**", "b"], ["__", "i"], ["++", "u"], ["==", "h"]];
 const MARK_RE = /\*\*|__|\+\+|==/g;
-const plainText = s => String(s ?? "").replace(MARK_RE, "");
+const plainText = s => String(s ?? "").replace(MARK_RE, "").replace(/\u200b/g, "");
+/* A zero-width space between two marker characters keeps them literal ("_\u200b_" draws "__"); the page writes one wherever typed
+   text would otherwise read as a marker. The handle gets the same, so @the__lens stays as it is. */
+const fillR = (s, post) => String(s ?? "").replace(/\{handle\}/gi, () => String((post && post.handle) || "").replace(/([*_+=])(?=\1)/g, "$1\u200b"));
 function parseRich(str, baseW) {
   const out = [], s = String(str), f = { b: 0, i: 0, u: 0, h: 0 };
   let t = "";
   const push = () => { if (t) out.push({ t, b: !!f.b, w: f.b ? 700 : baseW, it: !!f.i, u: !!f.u, h: !!f.h }); t = ""; };
   for (let i = 0; i < s.length;) {
+    if (s.charCodeAt(i) === 0x200b) { i++; continue; }
     const m = s.charCodeAt(i + 1) === s.charCodeAt(i) && MARKS.find(([k]) => s.startsWith(k, i));
     if (m) { push(); f[m[1]] ^= 1; i += 2; } else t += s[i++];
   }
@@ -1123,8 +1127,8 @@ function drawHeader(ctx, post) {
 function drawFooter(ctx, post, t, idx, total) {
   const o = { size: 43, weight: 700, track: -0.05 };
   TF = null; txt(ctx, `${pad2(idx)}/${pad2(total)}`, M, FOOT_Y, o);
-  TF = "text.section"; txt(ctx, up(fill(t.section, post)), W / 2, FOOT_Y, { ...o, align: "center" });
-  TF = "text.foot"; txt(ctx, up(fill(t.foot, post)), W - M, FOOT_Y, { ...o, align: "right" });
+  TF = "text.section"; txt(ctx, up(fillR(t.section, post)), W / 2, FOOT_Y, { ...o, align: "center" });
+  TF = "text.foot"; txt(ctx, up(fillR(t.foot, post)), W - M, FOOT_Y, { ...o, align: "right" });
   TF = null;
 }
 const footFor = s => s.p90 <= 105 ? 0 : clamp(1 - 78 / s.p90, 0.15, 0.8);
@@ -1189,7 +1193,7 @@ function drawStickers(ctx, post, s, hiliteId) {
     let bw = size, bh = size;
     ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot);
     if (P.type === "pill") {
-      const bg = st.bg || P.bg, fg = st.color || inkOn(bg), label = up(fill(st.label ?? P.text, post));
+      const bg = st.bg || P.bg, fg = st.color || inkOn(bg), label = up(fillR(st.label ?? P.text, post));
       const fs = size * 0.4, padX = size * 0.5, icon = P.icon, is = icon ? size * 0.46 : 0, gap = icon ? size * 0.2 : 0;
       const tw = richW(ctx, label, fs, 700, -0.05);
       bw = padX * 2 + is + gap + tw;
@@ -1199,7 +1203,7 @@ function drawStickers(ctx, post, s, hiliteId) {
       if (icon) { drawIcon(ctx, icon, x + is / 2, 0, is, fg, false); x += is + gap; }
       txt(ctx, label, x, -capH(fs) / 2, { size: fs, weight: 700, track: -0.05, color: fg });
     } else if (P.type === "text") {
-      const wt = +st.w === 400 ? 400 : 700, lines = balance(up(fill(st.label ?? P.text, post)).split(/\n/).map(x => x.trim())).filter(x => plainText(x).trim()), lh = size * 1.06;
+      const wt = +st.w === 400 ? 400 : 700, lines = balance(up(fillR(st.label ?? P.text, post)).split(/\n/).map(x => x.trim())).filter(x => plainText(x).trim()), lh = size * 1.06;
       bh = capH(size) + Math.max(0, lines.length - 1) * lh;
       ctx.shadowColor = "rgba(0,0,0,.3)"; ctx.shadowBlur = size * 0.12;
       const tr = Number.isFinite(+st.tr) ? clamp(+st.tr, -0.15, 0.1) : -0.05, al = st.al === "left" || st.al === "right" ? st.al : "center";
@@ -1270,7 +1274,7 @@ function designSpecs(ctx, post, s) {
     const pick = L.side === "left" || L.side === "right" ? L.side : null, colSt = sd => { setCol(sd); return A ? A.stats(CX0 - 30, 110, CX1 + 30, H - 200) : DARK; };
     const stL = colSt("left"), stR = colSt("right"), calm = zoneScore(stR) < zoneScore(stL) ? "right" : "left";
     const pi = A && getImg(s.img), narrow = !!pi && (pi.naturalWidth || pi.width) / (pi.naturalHeight || pi.height) < 0.9 * W / H;   /* a photo narrower than the slide gets cropped hard: give it its own side */
-    const style0 = L.style || "auto";
+    const style0 = BG ? "overlay" : L.style || "auto";   /* a plain or gradient background needs no panel */
     landMode = style0 === "panel" ? "panel" : style0 === "overlay" || !A ? "overlay" : (!narrow && okZone(calm === "right" ? stR : stL)) ? "overlay" : "panel";
     side = pick || (landMode === "overlay" ? calm : "left");
     setCol(side);
@@ -1283,7 +1287,7 @@ function designSpecs(ctx, post, s) {
   const stTop = A ? A.stats(CX0 - 30, 110, CX1 + 30, 232 + tableH + 40) : DARK;
   const botEnd = H - 270, botTop = Math.max(232, botEnd - tableH - inlineH);
   const stBot = A ? A.stats(CX0 - 30, botTop - 40, CX1 + 30, botEnd + 20) : DARK;
-  const style = L.style || "auto", pref = L.pos || "auto";
+  const style = BG ? "overlay" : L.style || "auto", pref = L.pos || "auto";
   let mode, pos;
   if (LAND) { mode = landMode; pos = pref === "bottom" ? "bottom" : "top"; }
   else if (style === "panel") { mode = "panel"; pos = pref === "bottom" ? "bottom" : "top"; }
@@ -1392,13 +1396,13 @@ function renderSpecs(ctx, post, s, idx, total, d) {
 function titleBlock(ctx, post, s) {
   const t = s.text || {}, room = CX1 - CX0;
   if (s.type === "cover") {
-    const big = t.title ? [up(fill(t.title, post))] : [];
+    const big = t.title ? [up(fillR(t.title, post))] : [];
     let bs = 156;
     const w0 = big.length ? richW(ctx, big[0], bs, 700, -0.10) : 0;
     if (w0 > room) bs = Math.floor(bs * room / w0);
     return { lines: big, bs, baseW: 700, small: 40, sub: 42, subW: 700, gap1: 30, gap2: 35, lead: 0 };
   }
-  const lines = balance(up(fill(t.big, post)).split(/\n+/).map(x => x.trim())).filter(x => plainText(x).trim());
+  const lines = balance(up(fillR(t.big, post)).split(/\n+/).map(x => x.trim())).filter(x => plainText(x).trim());
   let bs = 210;
   for (const ln of lines) { const w = richW(ctx, ln, bs, 400, -0.10); if (w > room) bs = Math.min(bs, Math.floor(bs * room / w)); }
   return { lines, bs, baseW: 400, small: 40, sub: 46, subW: 400, gap1: 34, gap2: 44, lead: 0.2 };
@@ -1414,7 +1418,7 @@ function blockMetrics(ctx, post, s, b) {
 }
 function designTitle(ctx, post, s) {
   const L = s.layout || {}, t0 = s.text || {};
-  const split = LAND && !s.overlay && L.style !== "overlay" && !!(t0.left || t0.right || t0.title || t0.big || t0.sub) ? (L.side === "right" ? "right" : "left") : null;
+  const split = LAND && !s.overlay && !BG && L.style !== "overlay" && !!(t0.left || t0.right || t0.title || t0.big || t0.sub) ? (L.side === "right" ? "right" : "left") : null;
   if (split) setCol(split);
   const b = titleBlock(ctx, post, s), m = blockMetrics(ctx, post, s, b);
   const A = s.overlay ? null : analyze(s.img, split ? W - COLW : W, H);
@@ -1459,13 +1463,13 @@ function renderTitle(ctx, post, s, idx, total, d) {
   const x0 = cx - m.bw / 2, x1 = cx + m.bw / 2;
   let y = d.y;
   if (m.hasSmall) {
-    TF = "text.left"; txt(ctx, up(fill(t.left, post)), x0, y, { size: b.small, weight: 700, track: -0.05 });
-    TF = "text.right"; txt(ctx, up(fill(t.right, post)), x1, y, { size: b.small, weight: 700, track: -0.05, align: "right" });
+    TF = "text.left"; txt(ctx, up(fillR(t.left, post)), x0, y, { size: b.small, weight: 700, track: -0.05 });
+    TF = "text.right"; txt(ctx, up(fillR(t.right, post)), x1, y, { size: b.small, weight: 700, track: -0.05, align: "right" });
     y += capH(b.small) + b.gap1;
   }
   TF = s.type === "cover" ? "text.title" : "text.big";
   b.lines.forEach((ln, i) => { txt(ctx, ln, cx, y, { size: b.bs, weight: b.baseW, track: -0.10, align: "center" }); y += capH(b.bs) + (i < b.lines.length - 1 ? b.lead * b.bs : 0); });
-  TF = "text.sub"; if (m.hasSub) txt(ctx, up(fill(t.sub, post)), cx, y + b.gap2, { size: b.sub, weight: s.type === "cover" ? 700 : 400, track: -0.05, align: "center" });
+  TF = "text.sub"; if (m.hasSub) txt(ctx, up(fillR(t.sub, post)), cx, y + b.gap2, { size: b.sub, weight: s.type === "cover" ? 700 : 400, track: -0.05, align: "center" });
   TF = null;
   drawFooter(ctx, post, t, idx, total);
 }
@@ -1674,7 +1678,7 @@ async function flush(path, getter) {
   if (S.writing.has(path)) { S.again.add(path); return; }
   S.writing.add(path); S.dirty.delete(path); setStatus();
   try { const data = clone(getter()); if (data) { data.updatedAt = Date.now(); await S.db.doc(path).set(data); } S.errors = 0; }
-  catch (e) { if (e && e.code === "invalid_argument") S.readOnly = true; else S.errors++; console.warn("save failed", path, e); }
+  catch (e) { if (e && e.code === "invalid_argument") { S.readOnly = true; setCanRef(); } else S.errors++; console.warn("save failed", path, e); }
   finally { S.writing.delete(path); if (S.again.delete(path)) flush(path, getter); setStatus(); }
 }
 const saveMeta = () => queueSave(metaPath(), () => S.post);
@@ -2693,7 +2697,7 @@ $("#fTextBtn").addEventListener("click", () => {
 $("#fPanel").addEventListener("click", e => {
   const b = e.target.closest("button"); if (!b) return;
   if (b.dataset.fact) onFact(b);
-  else if (b.dataset.fmt) applyFmt(b.dataset.fmt);
+  else if (b.dataset.fmt) applyFmt(b.dataset.fmt, true);
   else if (b.dataset.ftab) { switchEditor(b.dataset.ftab); drawFocus(); }
   else if (b.dataset.fedit) openEditorFor(b.dataset.fedit);
   else if (b.dataset.fslot) { S.fslot = b.dataset.fslot; renderFPanel(); }
@@ -2704,7 +2708,7 @@ $("#fPanel").addEventListener("input", e => {
   const el = e.target;
   if (el.dataset.ff) {
     /* text that came in with its own markup (the phone's Format menu, a dictation, an old browser's Enter): back to the box's own */
-    if (el.isContentEditable && !e.isComposing && el.querySelector("div,p,b,strong,i,em,u,ins,mark,font,[style]")) { const sel = selIn(el); setRich(el, richValue(el)); if (sel) setSel(el, sel[0], sel[1]); }
+    if (el.isContentEditable && !e.isComposing && el.querySelector("div,p,b,strong,i,em,u,ins,mark,font,[style]")) { const sel = selIn(el); setRich(el, toMarked(oneLine(el.dataset.ff, richChars(el, true)))); if (sel) setSel(el, sel[0], sel[1]); }
     return onFF(el);
   }
   if (e.target.id !== "fAdj") return;
@@ -2766,7 +2770,7 @@ function richHTML(v) {
   const h = parseRich(String(v ?? ""), 400).map(sg => { const c = [sg.b && "b", sg.it && "i", sg.u && "u", sg.h && "h"].filter(Boolean).join(" "), t = esc(sg.t).replace(/\n/g, "<br>"); return c ? `<span class="${c}">${t}</span>` : t; }).join("");
   return /\n$/.test(plainText(v)) ? h + "<br>" : h;   /* a line break at the very end only shows with a second one */
 }
-function richChars(el) {   /* the box's text, one entry per character, with its styles */
+function richChars(el, keepEnd) {   /* the box's text, one entry per character, with its styles (keepEnd: keep line breaks at the end) */
   const out = [];
   (function walk(n, f) {
     for (const c of n.childNodes) {
@@ -2783,24 +2787,26 @@ function richChars(el) {   /* the box's text, one entry per character, with its 
       }
     }
   })(el, { b: 0, i: 0, u: 0, h: 0 });
-  while (out.length && out[out.length - 1].c === "\n") out.pop();
+  if (!keepEnd) while (out.length && out[out.length - 1].c === "\n") out.pop();
   return out;
 }
 function toMarked(chars) {   /* characters with styles back to text with markers where a style starts or stops, nested (**==A==**) */
   const mk = Object.fromEntries(MARKS.map(([m, k]) => [k, m])), open = [];
   let out = "";
+  const put = t => { if (/[*_+=]/.test(t[0]) && out.endsWith(t[0])) out += "\u200b"; out += t; };   /* "*" + "**" would read as a marker: a zero-width space keeps them apart */
   for (const ch of chars) {
-    for (const k of [...open].reverse()) if (!ch[k]) { out += mk[k]; open.splice(open.indexOf(k), 1); }
-    for (const [, k] of MARKS) if (ch[k] && !open.includes(k)) { out += mk[k]; open.push(k); }
-    out += ch.c;
+    for (const k of [...open].reverse()) if (!ch[k]) { put(mk[k]); open.splice(open.indexOf(k), 1); }
+    for (const [, k] of MARKS) if (ch[k] && !open.includes(k)) { put(mk[k]); open.push(k); }
+    put(ch.c);
   }
-  return out + open.reverse().map(k => mk[k]).join("");
+  for (const k of open.reverse()) put(mk[k]);
+  return out;
 }
 const oneLine = (path, ch) => MULTI(path) ? ch : ch.map(c => c.c === "\n" ? { ...c, c: " " } : c);
 const richValue = el => toMarked(oneLine(el.dataset.ff, richChars(el)));
 const setRich = (el, v) => { el.innerHTML = richHTML(v); };
 const ffValue = el => el.isContentEditable ? richValue(el) : el.value;
-function plainLen(n) { let k = 0; for (const c of n.childNodes) k += c.nodeType === 3 ? c.data.length : c.nodeName === "BR" ? 1 : plainLen(c); return k; }
+const plainLen = n => richChars(n, true).length;   /* counted like richChars, block starts included */
 function selIn(el) {   /* the selection in box el as [start, end], or null */
   const sel = getSelection(); if (!sel || !sel.rangeCount) return null;
   const r = sel.getRangeAt(0); if (!el.contains(r.startContainer) || !el.contains(r.endContainer)) return null;
@@ -2830,9 +2836,8 @@ function curRich() {
   if (a && a.isContentEditable && p.contains(a)) return a;
   return $("#fPanel .fone .ff.cur [contenteditable]") || (lastRich && p.contains(lastRich) ? lastRich : null);
 }
-function fmtRange(el, ch) {   /* what the buttons act on: the selected words, else the whole text; spaces at either end don't count */
-  const snap = fmtSnap && fmtSnap.el === el && Date.now() - fmtSnap.t < 4000 ? fmtSnap.sel : null;
-  const sel = snap || (document.activeElement === el ? selIn(el) : null), part = !!sel && sel[1] > sel[0];
+function fmtRange(el, ch, snap) {   /* what the buttons act on: the selected words, else the whole text; spaces at either end don't count */
+  const sel = (snap && snap.el === el && Date.now() - snap.t < 4000 ? snap.sel : null) || (document.activeElement === el ? selIn(el) : null), part = !!sel && sel[1] > sel[0];
   let [a, z] = part ? [Math.min(sel[0], ch.length), Math.min(sel[1], ch.length)] : [0, ch.length];
   while (a < z && /\s/.test(ch[a].c)) a++;
   while (z > a && /\s/.test(ch[z - 1].c)) z--;
@@ -2853,12 +2858,13 @@ function updateFmtBar() {
   }
   bar.dataset.scope = r.part ? "part" : "all";
 }
-function applyFmt(k) {
+function applyFmt(k, fromButton) {
+  const snap = fromButton ? fmtSnap : null; fmtSnap = null;
   const s = S.slides[focusSid]; if (!s) return;
   if (k === "hc") return cycleHL();
   const el = curRich(); if (!el) return;
   if (k === "b" && baseWeight(s, el.dataset.ff) === 700) { toast("This text is bold already"); return; }
-  const ch = richChars(el), r = fmtRange(el, ch); fmtSnap = null;
+  const ch = richChars(el, true), r = fmtRange(el, ch, snap), head = !!HEAD_FIELDS[el.dataset.ff];
   if (r.z <= r.a) { toast("Type some text first"); return; }
   const on = ch.slice(r.a, r.z).every(c => /\s/.test(c.c) || c[k]);
   for (let i = r.a; i < r.z; i++) ch[i][k] = on ? 0 : 1;
@@ -2867,7 +2873,8 @@ function applyFmt(k) {
     if (document.activeElement !== el) el.focus({ preventScroll: true });
     if (r.part) setSel(el, r.sel[0], r.sel[1]); else setSel(el, r.sel[1]);
   }
-  remember(focusSid); onFF(el, true); updateFmtBar();   /* each style change is its own Undo step */
+  if (!head) remember(focusSid);   /* each style change is its own Undo step (the header isn't part of a slide's history) */
+  onFF(el, true); updateFmtBar();
 }
 function cycleHL() {
   const s = S.slides[focusSid], next = HL_COLORS[(HL_COLORS.indexOf(s.hl || null) + 1) % HL_COLORS.length];
@@ -3019,7 +3026,7 @@ $("#fPanel").addEventListener("keydown", e => {
   if (rich && mod && e.shiftKey && /^h$/i.test(e.key)) { e.preventDefault(); applyFmt("h"); return; }
   if (e.key !== "Enter" || e.isComposing) return;
   e.preventDefault();
-  if (rich && MULTI(el.dataset.ff) && !mod) { document.execCommand("insertLineBreak"); return; }
+  if (rich && MULTI(el.dataset.ff) && !mod) { lineBreak(); return; }
   if (S.ftfield && !TOUCH()) closeTextEditor(); else el.blur();
 });
 $("#fPanel").addEventListener("beforeinput", e => {
@@ -3027,25 +3034,32 @@ $("#fPanel").addEventListener("beforeinput", e => {
   const f = { formatBold: "b", formatItalic: "i", formatUnderline: "u" }[e.inputType];
   if (f) { e.preventDefault(); applyFmt(f); return; }   /* the phone's own Format menu does the same as the buttons */
   if (/^format/.test(e.inputType)) { e.preventDefault(); return; }   /* colors, fonts and the like don't reach the slide */
-  if (e.inputType === "historyUndo" || e.inputType === "historyRedo") { e.preventDefault(); stepHistory(focusSid, e.inputType === "historyUndo"); if (S.ftfield) focusCur(); return; }
+  if (e.inputType === "historyUndo" || e.inputType === "historyRedo") {
+    if (HEAD_FIELDS[el.dataset.ff]) return;   /* the header isn't part of the slide's history: the box's own undo */
+    e.preventDefault();
+    const path = el.dataset.ff; stepHistory(focusSid, e.inputType === "historyUndo");
+    const again = $(`#fPanel [data-ff="${CSS.escape(path)}"]`); if (again) { again.focus({ preventScroll: true }); try { setSel(again, plainLen(again)); } catch (err) {} }
+    return;
+  }
   if (e.inputType === "insertParagraph" || (e.inputType === "insertLineBreak" && !MULTI(el.dataset.ff))) {
     e.preventDefault();
-    if (MULTI(el.dataset.ff)) document.execCommand("insertLineBreak"); else el.blur();
+    if (MULTI(el.dataset.ff)) lineBreak(); else el.blur();
   }
 });
 $("#fPanel").addEventListener("paste", e => {   /* plain text only: styles come from the buttons */
   const el = e.target.closest && e.target.closest("[contenteditable][data-ff]"); if (!el) return;
   e.preventDefault();
-  let t = (e.clipboardData && e.clipboardData.getData("text/plain")) || "";
-  if (!MULTI(el.dataset.ff)) t = t.replace(/\s*\n+\s*/g, " ");
-  document.execCommand("insertText", false, t);
+  const t = ((e.clipboardData && e.clipboardData.getData("text/plain")) || "").replace(/\r\n?/g, "\n");
+  if (!MULTI(el.dataset.ff)) { document.execCommand("insertText", false, t.replace(/\s*\n+\s*/g, " ")); return; }
+  t.split("\n").forEach((ln, i) => { if (i) lineBreak(); if (ln) document.execCommand("insertText", false, ln); });
 });
+function lineBreak() { if (!document.execCommand("insertLineBreak")) document.execCommand("insertHTML", false, "<br>"); }
 $("#fPanel").addEventListener("drop", e => { if (e.target.closest && e.target.closest("[contenteditable]")) e.preventDefault(); });
 /* the style buttons and the box tabs keep the focus and the selection in the box */
 const keepFocus = e => {
   const b = e.target.closest && e.target.closest("[data-fmt],[data-ftab]"); if (!b) return;
   e.preventDefault();
-  const el = curRich(); if (el && b.dataset.fmt) fmtSnap = { el, sel: document.activeElement === el ? selIn(el) : null, t: Date.now() };
+  const el = curRich(); fmtSnap = el && b.dataset.fmt && b.dataset.fmt !== "hc" ? { el, sel: document.activeElement === el ? selIn(el) : null, t: Date.now() } : null;
 };
 $("#fPanel").addEventListener("pointerdown", keepFocus);
 $("#fPanel").addEventListener("mousedown", keepFocus);
@@ -3378,7 +3392,7 @@ async function tagPhotos(ids, manual) {
     if (manual || done) toast(`Claude tagged ${done} photo${done === 1 ? "" : "s"}. Search finds them by what's in them`);
   } catch (e) {
     const code = e && e.code;
-    if (["not_granted", "sampling_disabled", "images_unavailable", "not_declared", "capability_disabled", "capability_removed"].includes(code)) S.tagOff = true;
+    if (["not_granted", "sampling_disabled", "images_unavailable", "not_declared", "capability_disabled", "capability_removed"].includes(code)) { S.tagOff = true; setCanRef(); }
     if (code !== "cancelled") toast(code === "rate_limited" ? "Claude is busy. Tap Tag photos to try again later" : S.tagOff ? "Claude can’t look at photos here. You can type tags yourself: select a photo" : "Couldn’t tag the photos. Tap Tag photos to try again");
   } finally { S.tagBusy = false; renderTagUI(); }
 }
@@ -3446,7 +3460,7 @@ function openPicker(sid, slot) {
   $("#pickUploadTxt").textContent = ref ? "Upload a reference" : "Upload new photo";
   $("#pickHint").textContent = ref ? "Pick a post you like (a screenshot works), from your library or a new upload. Claude matches this slide's layout, text styling and photo look to it and keeps your own words and photo. Tweak anything afterwards, or Undo. New uploads go to the References folder."
     : (S.assets || S.local) ? "Pick a photo from your library or upload a new one. The text design re-fits to the photo you choose." : "Pick a photo from your library. Only editors of this board can upload new ones.";
-  if (ref && [...S.photos.values()].some(isRefPhoto)) S.pickFolder = REF_FOLDER;
+  if (ref && [...S.photos.values()].some(isRefPhoto)) S.pickFolder = REF_FOLDER; else if (!ref && S.pickFolder === REF_FOLDER) S.pickFolder = "*";
   S.pickQuery = ""; $("#pickSearch").value = "";
   renderPicker();
   $("#pickDlg").showModal();
@@ -3684,7 +3698,7 @@ async function applyWithClaude(commented, overall) {
   if (!S.sample || S.busy.size) return;
   const targets = overall ? order() : commented;
   if (!targets.length) return;
-  const ctl = new AbortController(); S.applyCtl = ctl;
+  const ctl = new AbortController(), pid = S.pid; S.applyCtl = ctl;
   commented.forEach(sid => S.busy.add(sid)); if (overall) targets.forEach(sid => S.busy.add(sid));
   S.busy.forEach(refreshApplySlot); updateApplyAll();
   try {
@@ -3693,6 +3707,7 @@ async function applyWithClaude(commented, overall) {
     const prompt = buildPrompt(targets, overall) + (refs.length ? `\n\nREFERENCE IMAGES: ${refs.map(([sid], i) => `image ${i + 1} is the reference post the creator picked for slide ${sid}`).join("; ")}. Those slides follow their reference's format and look; keep that unless a comment asks for a change, and use it when a comment mentions the reference.` : "");
     const res = await S.sample.json(prompt, { signal: ctl.signal, modelTier: "default", cache: false, ...(refs.length ? { images: refs.map(r => r[1]) } : {}) });
     S.busy.clear();
+    if (S.pid !== pid) { toast("You moved to another post, so Claude's changes weren't applied. Apply again on that post"); return; }
     const done = applyResult(res, targets, commented, overall);
     renderBoard(new Set([...done, ...targets])); renderMeta(); renderNotes(); renderLibrary();
     toast(done.length ? `Claude updated ${done.length} slide${done.length === 1 ? "" : "s"}. Check them, then Keep it or Undo` : "Claude didn’t change anything. See the note at the top");
@@ -3731,13 +3746,14 @@ function refPrompt(sid, withSlide) {
 async function referenceSlide(sid, pid) {
   const s = S.slides[sid], p = S.photos.get(pid); if (!s || !p || !S.sample) return;
   if (S.busy.size) { toast("Claude is busy with another slide. Try again in a moment"); return; }
-  const ctl = new AbortController(); S.applyCtl = ctl; S.busy.add(sid); S.busyMsg[sid] = "Claude is matching the reference…";
+  const ctl = new AbortController(), pid0 = S.pid; S.applyCtl = ctl; S.busy.add(sid); S.busyMsg[sid] = "Claude is matching the reference…";
   refreshApplySlot(sid); updateApplyAll();
   try {
     const imgs = [await photoJpeg(pid, 1400)];
     if (((S.imgLimits && S.imgLimits.maxCount) || 1) > 1) { const cur = await slideBlob(sid, "image/jpeg", 0.85); if (cur) imgs.push(cur); }
     const res = await S.sample.json(refPrompt(sid, imgs.length > 1), { images: imgs, signal: ctl.signal, modelTier: "default", cache: false });
     S.busy.clear();
+    if (S.pid !== pid0) { toast("You moved to another post, so the reference wasn't applied"); return; }
     const done = applyResult({ ...(res || {}), newSlides: [] }, [sid], [], "");
     if (done.includes(sid)) { S.slides[sid].ref = { photo: pid }; saveSlide(sid); }
     renderBoard(new Set([sid])); renderNotes(); renderLibrary();
@@ -3758,7 +3774,7 @@ function openRefs() {
   S.refFolder = [...S.photos.values()].some(isRefPhoto) ? REF_FOLDER : "*"; S.refQuery = ""; $("#refSearch").value = "";
   $("#refHint").textContent = `Pick up to ${refMax()} posts you like (screenshots work), from your library or new uploads (they go to the References folder). Claude makes a new carousel patterned after them and already makes it yours: your header and type, its own wording, colors leaning to your brand and a few small changes, so it isn't a copy. Comment on any slide afterwards to change more.`;
   $("#refUploadLbl").hidden = !(S.assets || S.local);
-  $("#refStatus").textContent = ""; renderRefs(); $("#refDlg").showModal();
+  $("#refOwn").checked = false; $("#refStatus").textContent = ""; renderRefs(); $("#refDlg").showModal();
 }
 function renderRefs() {
   const tree = folderTree(), q = S.refQuery.trim();
@@ -3820,11 +3836,14 @@ function genPrompt(ids, note, own, ratio) {
 }
 async function genFromRefs() {
   const ids = S.refSel.filter(id => S.photos.has(id)).slice(0, refMax()); if (!ids.length || !S.sample || S.genCtl) return;
+  if (S.busy.size) { $("#refStatus").textContent = "Claude is still working on this post. Try again when it's done."; return; }
   const note = $("#refNote").value.trim(), own = $("#refOwn").checked, ctl = new AbortController(); S.genCtl = ctl;
   $("#refGo").disabled = true; $("#refStop").hidden = false; $("#refStatus").textContent = "Claude is studying your references. This takes about a minute…";
   try {
     const blobs = []; for (const id of ids) blobs.push(await photoJpeg(id, 1400));
+    if (ctl.signal.aborted) throw { code: "cancelled" };
     const ratio = refRatio(ids), res = await S.sample.json(genPrompt(ids, note, own, ratio), { images: blobs, signal: ctl.signal, modelTier: "default", cache: false });
+    if (ctl.signal.aborted) throw { code: "cancelled" };
     const n = makePostFromRefs(res, ids, own, ratio);
     if (!n) { $("#refStatus").textContent = "Claude’s answer had no slides in it. Try again, or add a note about the carousel."; return; }
     S.genCtl = null; $("#refDlg").close(); S.refSel = []; $("#refNote").value = "";
@@ -3925,6 +3944,7 @@ const liteOn = () => !!focusSid && S.fpanel === "text" && !!S.ftfield && TOUCH()
 S.lz = 1; S.lp = [0, 0]; S.lcenter = false; S.lglide = false;
 function kbEstimate() {   /* an iPhone's keyboard is about 291 pt above the page's bottom edge in the app (216 on small phones), an iPad's 370 */
   const big = Math.min(screen.width || 0, screen.height || 0) >= 700, tall = (screen.height || innerHeight) >= 780;
+  if (!big && innerWidth > innerHeight) return Math.round(Math.min(200, innerHeight * 0.5));   /* a phone on its side */
   return big ? 370 : tall ? 291 : 216;
 }
 function layoutLite() {
@@ -3953,7 +3973,14 @@ function placeLite() {
   S.lp = [cw <= bw ? (bw - cw) / 2 : clamp(S.lp[0], bw - cw, 0), ch <= bh ? (bh - ch) / 2 : clamp(S.lp[1], bh - ch, 0)];
   st.style.transform = `translate(${Math.round(S.lp[0])}px,${Math.round(S.lp[1])}px)`;
 }
-const relayLite = () => { layoutLite(); if ($("#focusDlg").classList.contains("lite")) drawFocus(); };
+let liteKey = "";
+const relayLite = () => {
+  layoutLite();
+  const dlg = $("#focusDlg"), vv = window.visualViewport, k = dlg.classList.contains("lite") ? `${dlg.style.height}|${dlg.style.top}|${dlg.style.getPropertyValue("--kbH")}|${vv ? Math.round(vv.height) : 0}` : "";
+  if (k === liteKey) return;
+  if (k && liteKey) S.lcenter = true;   /* the band changed size: keep the text in view */
+  liteKey = k; if (k) drawFocus();
+};
 if (window.visualViewport) { visualViewport.addEventListener("resize", relayLite); visualViewport.addEventListener("scroll", relayLite); }
 $("#fPanel").addEventListener("focusin", e => {
   const cell = e.target.closest && e.target.closest(".fone .ff[data-ref]");
@@ -4219,6 +4246,7 @@ window.__debugDesign = i => { const sid = order()[i], x = numOf(sid), g = geoOf(
 window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.entries()], folders: S.folders, notes: S.notes });
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
+window.__busy = () => [...S.busy];
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
@@ -4460,8 +4488,8 @@ async function buildGuidePdf(onStep, rec) {   /* rec: optional array that gets e
   const line = (x0, y0, x1, y1) => { page.drawLine({ start: { x: x0, y: y0 }, end: { x: x1, y: y1 }, thickness: 0.6, color: C.rule }); if (rec) rec[rec.length - 1].push({ k: "l", x0, y0, x1, y1, w: 0.6, c: C.rule }); };
   const newPage = () => {
     page = doc.addPage([PW, PH]); if (rec) rec.push(Object.assign([], { pw: PW, ph: PH }));
-    draw(up(post.series), MX, PH - 30, B, 7.5, C.ink, -0.37);
-    const subj = up(post.subject); draw(subj, PW - MX - tw(subj, R, 7.5, -0.37), PH - 30, R, 7.5, C.muted, -0.37);
+    draw(plainText(up(post.series)), MX, PH - 30, B, 7.5, C.ink, -0.37);
+    const subj = plainText(up(post.subject)); draw(subj, PW - MX - tw(subj, R, 7.5, -0.37), PH - 30, R, 7.5, C.muted, -0.37);
     line(MX, PH - 38, PW - MX, PH - 38);
     const handle = up(post.handle || ""); draw(handle, MX, 28, B, 7.5, C.ink, -0.37);
     const pn = pad2(doc.getPageCount()); draw(pn, PW - MX - tw(pn, B, 7.5, -0.37), 28, B, 7.5, C.ink, -0.37);
@@ -4550,7 +4578,7 @@ async function buildGuidePdf(onStep, rec) {   /* rec: optional array that gets e
         const v = plainText(up(r.value || "")); draw(v, PW - MX - tw(v, B, 15, -0.75), y - 16, B, 15, C.ink, -0.75);
         y -= 22;
       }
-      if (t.tipK || t.tip) { ensure(26); rule(); y -= 11; para(`**${plainText(up(t.tipK || "Tip"))}** ${String(t.tip || "").replace(/__|\+\+|==/g, "")}`, 8.5, 12, C.muted); }
+      if (t.tipK || t.tip) { ensure(26); rule(); y -= 11; para(`**${plainText(up(t.tipK || "Tip"))}** ${String(t.tip || "").replace(/__|\+\+|==|\u200b/g, "")}`, 8.5, 12, C.muted); }
       y -= 6;
     }
   }
@@ -4681,7 +4709,7 @@ function queueBar() { if (!barQueued) { barQueued = true; requestAnimationFrame(
 addEventListener("scroll", queueBar, { passive: true });
 addEventListener("resize", queueBar);
 async function boot() {
-  try { await Promise.all([`700 40px`, `400 40px`, `italic 700 40px`, `italic 400 40px`].map(f => document.fonts.load(`${f} "Nimbus Sans"`))); } catch (e) {}
+  try { await Promise.allSettled([`700 40px`, `400 40px`, `italic 700 40px`, `italic 400 40px`].map(f => document.fonts.load(`${f} "Nimbus Sans"`))); } catch (e) {}
   try { const c = document.createElement("canvas").getContext("2d"); c.font = font(1000, 700); const m = c.measureText("H"); if (m.actualBoundingBoxAscent > 500) CAPR = m.actualBoundingBoxAscent / 1000; } catch (e) {}
   if (window.__LOCAL_STATE__) {
     const L = window.__LOCAL_STATE__;
