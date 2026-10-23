@@ -6,9 +6,9 @@
 //   --db      folder written by ArtifactData list/get with out_dir: holds posts/<pid>.json, posts/<pid>/slides/*.json
 //             and, for --pdf, posts/<pid>/guide/main.json
 //   --assets  the post's photos, each file named <asset id>.<ext> (what Artifact read with path=<asset id> saves)
-//   --fonts   folder with NimbusSans-Regular.otf and NimbusSans-Bold.otf, plus NimbusSans-Regular.ttf and
+//   --fonts   folder with NimbusSans-Regular.otf, NimbusSans-Bold.otf, NimbusSans-Italic.otf and NimbusSans-BoldItalic.otf, plus NimbusSans-Regular.ttf and
 //             NimbusSans-Bold.ttf for --pdf (default: /usr/share/fonts/opentype/urw-base35, which has the .otf only).
-//             All four are published on the board under fonts/.
+//             All six are published on the board under fonts/.
 //   --pdf     make the PDF guide instead of PNGs
 //   --libs    folder holding pdf-lib.min.js (pdf-lib 1.17.1) and fontkit.umd.min.js (@pdf-lib/fontkit 1.1.1), needed for --pdf.
 //             The page pins both by hash, so they must be exactly these versions:
