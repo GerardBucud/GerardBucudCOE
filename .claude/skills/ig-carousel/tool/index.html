@@ -398,12 +398,25 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .fdel svg{width:18px;height:18px}
 .fdel[hidden]{display:none}
 /* previous / next at the slide's left and right edges: they show on hover with a mouse, softly all the time on touch screens */
+.fwrap{position:relative}
 .fside{position:absolute;top:50%;width:42px;height:42px;margin-top:-21px;border-radius:50%;border:0;padding:0;background:rgba(12,10,10,.55);color:#fff;display:grid;place-items:center;cursor:pointer;opacity:0;transition:opacity .15s;z-index:2;box-shadow:0 1px 6px rgba(0,0,0,.35)}
 .fside svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.fside.l{left:8px}.fside.r{right:8px}
-.fstage:hover .fside,.fside:focus-visible{opacity:1}
+.fwrap:hover .fside,.fside:focus-visible,.fside.out{opacity:1}
+.fside.out{background:rgba(255,255,255,.1)}.fside.out:hover{background:rgba(255,255,255,.22)}
 .fside:hover{background:rgba(12,10,10,.8)}
-@media (pointer:coarse){.fside{opacity:.72;width:36px;height:36px;margin-top:-18px}.fside.l{left:4px}.fside.r{right:4px}}
+@media (pointer:coarse){.fside{opacity:.72;width:36px;height:36px;margin-top:-18px}.fside.out{opacity:1}}
+/* the selection frame: corner handles resize, the round handle under a sticker turns it */
+.xf{position:absolute;border:1.5px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.4),inset 0 0 0 1px rgba(0,0,0,.25);pointer-events:none;transform-origin:50% 50%;z-index:2}
+.xf[hidden]{display:none}
+.xf i{position:absolute;width:14px;height:14px;background:#fff;border:1.5px solid #e02d12;border-radius:3px;pointer-events:auto;touch-action:none;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.xf i[data-xh=nw]{left:-8px;top:-8px;cursor:nwse-resize}.xf i[data-xh=ne]{right:-8px;top:-8px;cursor:nesw-resize}
+.xf i[data-xh=sw]{left:-8px;bottom:-8px;cursor:nesw-resize}.xf i[data-xh=se]{right:-8px;bottom:-8px;cursor:nwse-resize}
+.xf::after{content:"";position:absolute;left:50%;bottom:-14px;width:1.5px;height:14px;background:#fff}
+.xf .xrot{position:absolute;left:50%;bottom:-44px;width:30px;height:30px;margin-left:-15px;border-radius:50%;background:#fff;color:#131111;display:grid;place-items:center;pointer-events:auto;touch-action:none;cursor:grab;box-shadow:0 1px 6px rgba(0,0,0,.45)}
+.xf .xrot svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.xf.text .xrot,.xf.text::after{display:none}
+@media (pointer:coarse){.xf i{width:22px;height:22px;border-radius:50%}.xf i[data-xh=nw]{left:-12px;top:-12px}.xf i[data-xh=ne]{right:-12px;top:-12px}.xf i[data-xh=sw]{left:-12px;bottom:-12px}.xf i[data-xh=se]{right:-12px;bottom:-12px}.xf .xrot{width:36px;height:36px;margin-left:-18px;bottom:-50px}.xf::after{height:16px;bottom:-16px}}
+#focusDlg.lite .xf{display:none}
 .fside[hidden],#focusDlg.lite .fside{display:none}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;z-index:20;max-width:calc(100vw - 32px);display:flex;align-items:center;gap:12px}
 .toast[hidden]{display:none}
@@ -506,6 +519,10 @@ html.canref .refb{display:inline-flex}
 #mkDlg #mkOut{display:block}
 #mkGenOut{width:100%;max-width:360px;height:auto;border-radius:8px;display:block;margin-top:10px}
 #mkDlg .dlg-b{max-height:min(86vh,1000px)}
+.mkenh{border-top:1px solid var(--line);margin-top:12px;padding-top:12px;display:grid;gap:8px}.mkenh .mkrow{margin:0}
+.btn.enh{background:linear-gradient(135deg,#e02d12,#ff7a3d);color:#fff;border-color:transparent;display:inline-flex;gap:6px;align-items:center}
+.btn.enh svg{width:16px;height:16px;fill:currentColor;stroke:none}
+.btn.enh:disabled{opacity:.6}
 @media (max-width:700px){.mkcols{grid-template-columns:1fr}.mkstage canvas{max-height:36vh}}
 .stickgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
 .stickgrid button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px;display:grid;gap:6px;cursor:pointer;font-size:13px;color:var(--ink);text-align:center}
@@ -633,7 +650,10 @@ details.gsec[open]{padding-bottom:14px}
             <canvas id="mkOut" width="360" height="240" aria-label="The sticker"></canvas>
             <p class="hint" id="mkStatus" role="status"></p>
             <div id="mkVecOpts"><label class="lbl" for="mkThr">Threshold</label><input type="range" id="mkThr" min="0" max="255" value="128">
-              <div class="mkrow"><label class="check"><input type="checkbox" id="mkInv"><span>Invert</span></label><label class="check"><input type="checkbox" id="mkSmooth" checked><span>Smooth</span></label></div></div>
+              <div class="mkrow"><label class="check"><input type="checkbox" id="mkInv"><span>Invert</span></label><label class="check"><input type="checkbox" id="mkSmooth" checked><span>Smooth</span></label></div>
+              <div class="mkenh" id="mkEnh"><label class="lbl" for="mkEnhNote">Clean it up with Claude</label>
+                <textarea class="ctl" id="mkEnhNote" rows="2" placeholder="Optional notes, e.g. remove the stray lines under the cloud, keep the star's points sharp"></textarea>
+                <div class="mkrow"><button type="button" class="btn sm enh" id="mkEnhGo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>Enhance</button><button type="button" class="btn ghost sm" id="mkEnhUndo" hidden>Back to the trace</button></div></div></div>
             <div id="mkCutOpts" hidden><label class="lbl" for="mkTol">Remove the background around it</label><input type="range" id="mkTol" min="0" max="100" value="40"><p class="hint">0 keeps the whole box. Works best on a plain background.</p></div>
           </div>
         </div>
@@ -667,9 +687,11 @@ details.gsec[open]{padding-bottom:14px}
       <div class="tsel" id="fTsel" hidden></div>
       <div class="fbar" id="fBar" role="toolbar" aria-label="Selected text" hidden></div>
       <button type="button" class="fdel" id="fDel" aria-label="Delete this sticker" hidden><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
+      <div class="xf" id="fXf" hidden><i data-xh="nw"></i><i data-xh="ne"></i><i data-xh="sw"></i><i data-xh="se"></i><b class="xrot" data-xh="rot" title="Drag to turn" aria-label="Turn"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4h-4"/></svg></b></div>
+      <div class="ftrash" id="fTrash" aria-hidden="true" hidden><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></div></div>
       <button type="button" class="fside l" id="fSideL" data-fside="-1" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
       <button type="button" class="fside r" id="fSideR" data-fside="1" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
-      <div class="ftrash" id="fTrash" aria-hidden="true" hidden><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></div></div></div>
+    </div>
     <div class="fpanel" id="fPanel" hidden></div>
     <div class="ftools">
       <button type="button" class="tbtn" id="fAdd"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="M12 8v8M8 12h8"/></svg>Sticker</button>
@@ -742,6 +764,11 @@ const COLW = 1800;   /* landscape: the text column is as wide as a portrait slid
 /* Text blocks the user dragged in the large view: layout.move = {title|tip|a|b|caption: [dx, dy]} in slide pixels, on top of the
    auto layout (Auto-fit clears it). Rows don't move freely: dragging one reorders the table. ROWDRAG is the row being dragged. */
 const moveOf = (L, k) => { const m = L && L.move && L.move[k]; return Array.isArray(m) ? [clamp(+m[0] || 0, -W, W), clamp(+m[1] || 0, -H, H)] : [0, 0]; };
+/* ...and resized with the large view's corner handles: layout.scale = {title|tip|a|b|caption: k} (0.5 to 2.5), around the block's
+   anchor (its top, on the side it's aligned to). While TXF is set, txt draws scaled around it and records its boxes scaled. */
+const scaleOf = (L, k) => { const v = L && L.scale && +L.scale[k]; return v > 0 ? clamp(v, 0.5, 2.5) : 1; };
+let TXF = null;
+const withScale = (L, k, ax, ay, fn) => { const sc = scaleOf(L, k); TXF = sc !== 1 ? { ax, ay, k: sc } : null; try { fn(); } finally { TXF = null; } };
 let ROWDRAG = null;   /* {s, i, dy}: draw row i of slide s dy pixels off its place */
 function setCol(side) { CX0 = side === "right" ? W - COLW + M : M; CX1 = CX0 + COLW - 2 * M; }
 const FONT = '"Nimbus Sans","Helvetica Neue",Helvetica,Arial,sans-serif';
@@ -868,6 +895,7 @@ function txt(ctx, str, x, capTop, o) {
   if (o.align === "right") x0 = x - total; else if (o.align === "center") x0 = x - total / 2;
   const ink = o.color || INK, box = HL || ink, xs = [];
   ctx.save();
+  if (TXF) { ctx.translate(TXF.ax, TXF.ay); ctx.scale(TXF.k, TXF.k); ctx.translate(-TXF.ax, -TXF.ay); }
   ctx.textBaseline = "alphabetic";
   const base = capTop + capH(size);
   let cx = x0;
@@ -891,8 +919,9 @@ function txt(ctx, str, x, capTop, o) {
   ctx.restore();
   if (TB && TF) {
     const b = TB[TF] || (TB[TF] = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity, size: 0, w: baseW, lines: [], al: o.align || "left" });
-    b.lines.push(str); b.x0 = Math.min(b.x0, x0); b.x1 = Math.max(b.x1, x0 + total); b.y0 = Math.min(b.y0, capTop); b.y1 = Math.max(b.y1, capTop + capH(size));
-    if (size > b.size) { b.size = size; b.w = baseW; b.tr = track; }
+    const f = TXF ? (v, a) => a + (v - a) * TXF.k : v => v, ax = TXF && TXF.ax, ay = TXF && TXF.ay, sz = TXF ? size * TXF.k : size;
+    b.lines.push(str); b.x0 = Math.min(b.x0, f(x0, ax)); b.x1 = Math.max(b.x1, f(x0 + total, ax)); b.y0 = Math.min(b.y0, f(capTop, ay)); b.y1 = Math.max(b.y1, f(capTop + capH(size), ay));
+    if (sz > b.size) { b.size = sz; b.w = baseW; b.tr = track; }
   }
   return total;
 }
@@ -1342,7 +1371,7 @@ function drawStickers(ctx, post, s, hiliteId) {
     }
     ctx.restore();
     const pad = 16, ca = Math.abs(Math.cos(rot)), sa = Math.abs(Math.sin(rot)), hw = (ca * bw + sa * bh) / 2, hh = (sa * bw + ca * bh) / 2; /* box around the turned sticker */
-    const box = { id: st.id, x0: cx - hw - pad, y0: cy - hh - pad, x1: cx + hw + pad, y1: cy + hh + pad };
+    const box = { id: st.id, x0: cx - hw - pad, y0: cy - hh - pad, x1: cx + hw + pad, y1: cy + hh + pad, cx, cy, w: bw, h: bh, rot: rot * 180 / Math.PI };   /* and the turned box itself, for the large view's handles */
     boxes.push(box);
     if (hiliteId && hiliteId === st.id) {
       ctx.save(); ctx.setLineDash([18, 12]); ctx.lineWidth = 4; ctx.strokeStyle = "rgba(255,255,255,.9)";
@@ -1377,7 +1406,7 @@ function tipGeo(ctx, t, w) {
   return { k, lines, w, h: (k ? capH(41) : 0) + (lines.length ? (k ? 26 : 0) + capH(37) + (lines.length - 1) * LH : 0) };
 }
 function drawTip(ctx, g, x, capTop, align, withRule) {
-  if (withRule) { const xl = align === "right" ? x - g.w : x; rule(ctx, capTop - 40, xl, xl + g.w); }
+  if (withRule) { const xl = align === "right" ? x - g.w : x, f = v => TXF ? TXF.ax + (v - TXF.ax) * TXF.k : v; rule(ctx, TXF ? TXF.ay + (capTop - 40 - TXF.ay) * TXF.k : capTop - 40, f(xl), f(xl + g.w)); }
   let y = capTop;
   TF = "text.tipK"; if (g.k) { txt(ctx, g.k, x, y, { size: 41, weight: 700, track: -0.05, align }); y += capH(41) + 26; }
   TF = "text.tip"; g.lines.forEach((ln, i) => txt(ctx, ln, x, y + i * LH, { size: 37, weight: 400, track: -0.035, align, alpha: 0.85 }));
@@ -1505,8 +1534,8 @@ function renderSpecs(ctx, post, s, idx, total, d) {
   rule(ctx, y);
   d.rows.forEach((g, i) => { d.rowBoxes.push({ y0: y, y1: y + g.h }); if (!live || live.i !== i) drawRow(ctx, g, y, rowFields(`text.rows.${i}.`)); y += g.h; rule(ctx, y); });
   if (live && d.rows[live.i]) drawRow(ctx, d.rows[live.i], d.rowBoxes[live.i].y0 + live.dy, rowFields(`text.rows.${live.i}.`));
-  if (d.tip.mode === "inline") drawTip(ctx, d.tipIn, CX0 + tm[0], y + 64 + tm[1], "left", false);
-  else if (d.tip.mode === "corner") drawTip(ctx, d.tip.g, (d.tip.side === "right" ? CX1 : CX0) + tm[0], d.tip.top + tm[1], d.tip.side, true);
+  if (d.tip.mode === "inline") withScale(s.layout, "tip", CX0 + tm[0], y + 64 + tm[1], () => drawTip(ctx, d.tipIn, CX0 + tm[0], y + 64 + tm[1], "left", false));
+  else if (d.tip.mode === "corner") { const tx = (d.tip.side === "right" ? CX1 : CX0) + tm[0]; withScale(s.layout, "tip", tx, d.tip.top + tm[1], () => drawTip(ctx, d.tip.g, tx, d.tip.top + tm[1], d.tip.side, true)); }
   CX0 = M; CX1 = W - M;
   drawFooter(ctx, post, t, idx, total);
 }
@@ -1581,6 +1610,7 @@ function renderTitle(ctx, post, s, idx, total, d) {
   }
   const x0 = cx - m.bw / 2, x1 = cx + m.bw / 2;
   let y = d.y;
+  TXF = scaleOf(s.layout, "title") !== 1 ? { ax: cx, ay: d.y + m.h / 2, k: scaleOf(s.layout, "title") } : null;
   if (m.hasSmall) {
     TF = "text.left"; txt(ctx, up(fillR(t.left, post)), x0, y, { size: b.small, weight: 700, track: -0.05 });
     TF = "text.right"; txt(ctx, up(fillR(t.right, post)), x1, y, { size: b.small, weight: 700, track: -0.05, align: "right" });
@@ -1589,7 +1619,7 @@ function renderTitle(ctx, post, s, idx, total, d) {
   TF = s.type === "cover" ? "text.title" : "text.big";
   b.lines.forEach((ln, i) => { txt(ctx, ln, cx, y, { size: b.bs, weight: b.baseW, track: -0.10, align: "center" }); y += capH(b.bs) + (i < b.lines.length - 1 ? b.lead * b.bs : 0); });
   TF = "text.sub"; if (m.hasSub) txt(ctx, up(fillR(t.sub, post)), cx, y + b.gap2, { size: b.sub, weight: s.type === "cover" ? 700 : 400, track: -0.05, align: "center" });
-  TF = null;
+  TF = null; TXF = null;
   drawFooter(ctx, post, t, idx, total);
 }
 
@@ -1632,8 +1662,8 @@ function renderBAWide(ctx, post, s, idx, total, d) {
   if (!BG) { ctx.fillStyle = "#000"; ctx.fillRect(hw - 3, 0, 6, H); }
   drawHeader(ctx, post);
   const am = moveOf(s.layout, "a"), bm = moveOf(s.layout, "b");
-  CX0 = M + am[0]; CX1 = hw - M + am[0]; drawRow(ctx, d.ga, d.top + am[1], { label: "text.aLabel", note: "text.aNote", value: "text.aValue" });
-  CX0 = hw + M + bm[0]; CX1 = W - M + bm[0]; drawRow(ctx, d.gb, d.top + bm[1], { label: "text.bLabel", note: "text.bNote", value: "text.bValue" });
+  CX0 = M + am[0]; CX1 = hw - M + am[0]; withScale(s.layout, "a", (CX0 + CX1) / 2, d.top + am[1], () => drawRow(ctx, d.ga, d.top + am[1], { label: "text.aLabel", note: "text.aNote", value: "text.aValue" }));
+  CX0 = hw + M + bm[0]; CX1 = W - M + bm[0]; withScale(s.layout, "b", (CX0 + CX1) / 2, d.top + bm[1], () => drawRow(ctx, d.gb, d.top + bm[1], { label: "text.bLabel", note: "text.bNote", value: "text.bValue" }));
   CX0 = M; CX1 = W - M;
   drawFooter(ctx, post, t, idx, total);
 }
@@ -1649,8 +1679,8 @@ function renderBA(ctx, post, s, idx, total, d) {
   if (!BG) { ctx.fillStyle = "#000"; ctx.fillRect(0, half - 3, W, 6); }
   drawHeader(ctx, post);
   const am = moveOf(s.layout, "a"), bm = moveOf(s.layout, "b");
-  CX0 = M + am[0]; CX1 = W - M + am[0]; drawRow(ctx, d.ga, d.aTop - 46 + am[1], { label: "text.aLabel", note: "text.aNote", value: "text.aValue" });
-  CX0 = M + bm[0]; CX1 = W - M + bm[0]; drawRow(ctx, d.gb, d.bTop + bm[1], { label: "text.bLabel", note: "text.bNote", value: "text.bValue" });
+  CX0 = M + am[0]; CX1 = W - M + am[0]; withScale(s.layout, "a", (CX0 + CX1) / 2, d.aTop - 46 + am[1], () => drawRow(ctx, d.ga, d.aTop - 46 + am[1], { label: "text.aLabel", note: "text.aNote", value: "text.aValue" }));
+  CX0 = M + bm[0]; CX1 = W - M + bm[0]; withScale(s.layout, "b", (CX0 + CX1) / 2, d.bTop + bm[1], () => drawRow(ctx, d.gb, d.bTop + bm[1], { label: "text.bLabel", note: "text.bNote", value: "text.bValue" }));
   CX0 = M; CX1 = W - M;
   drawFooter(ctx, post, t, idx, total);
 }
@@ -1680,9 +1710,11 @@ function renderPhotoSlide(ctx, post, s, idx, total, d) {
   if (d.scrimFoot) shade(ctx, H - 640, H, d.scrimFoot, "bottom");
   drawHeader(ctx, post);
   let y = d.y;
-  TF = "text.label"; if (t.label) { txt(ctx, up(t.label), d.x ?? M, y, { size: 41, weight: 700, track: -0.05 }); y += capH(41) + 30; }
-  TF = "text.note"; d.lines.forEach((ln, i) => txt(ctx, ln, d.x ?? M, y + i * LH, { size: 37, weight: 400, track: -0.035, alpha: 0.85 }));
-  TF = null;
+  withScale(s.layout, "caption", d.x ?? M, d.y, () => {
+    TF = "text.label"; if (t.label) { txt(ctx, up(t.label), d.x ?? M, y, { size: 41, weight: 700, track: -0.05 }); y += capH(41) + 30; }
+    TF = "text.note"; d.lines.forEach((ln, i) => txt(ctx, ln, d.x ?? M, y + i * LH, { size: 37, weight: 400, track: -0.035, alpha: 0.85 }));
+    TF = null;
+  });
   drawFooter(ctx, post, t, idx, total);
 }
 
@@ -1807,7 +1839,7 @@ const saveFolders = () => queueSave(LIB_PATH, () => ({ folders: S.folders }), 30
 async function removeDoc(path) { if (S.local || S.readOnly) return; try { await S.db.doc(path).delete(); } catch (e) { S.errors++; setStatus(); } }
 
 /* ---------- rendering scheduler ---------- */
-const pendingDraw = new Set();
+const pendingDraw = new Set(), cardLater = new Set();
 let drawQueued = false;
 function scheduleDraw(sid) { if (sid) pendingDraw.add(sid); else order().forEach(id => pendingDraw.add(id)); if (!drawQueued) { drawQueued = true; requestAnimationFrame(drawNow); } }
 function drawNow() {
@@ -1816,6 +1848,7 @@ function drawNow() {
   for (const sid of pendingDraw) {
     const card = document.getElementById("card-" + sid), s = S.slides[sid];
     if (!card || !s) continue;
+    if (sid === focusSid && gesturing(sid)) { cardLater.add(sid); continue; }   /* the card catches up when the gesture ends */
     const cv = card.querySelector(".frame canvas"), x = numOf(sid, nm);
     const d = renderSlide(cv, S.post, s, x.n, x.total, cv.width / geoOf(sid).w, false, S.hilite);
     const th = card.querySelector(".thumb");
@@ -1827,6 +1860,7 @@ function drawNow() {
     if (warn) warn.textContent = s.overlay ? "" : upscaleWarning(s, d);
   }
   pendingDraw.clear();
+  for (const sid of cardLater) if (!gesturing(sid)) { cardLater.delete(sid); pendingDraw.add(sid); if (!drawQueued) { drawQueued = true; requestAnimationFrame(drawNow); } }
   if (focusSid) drawFocus();
 }
 function upscaleWarning(s, d) {
@@ -2559,6 +2593,7 @@ function renderMaker() {
       $$("#mkDlg [data-mkmode]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.mkmode === MK.mode)));
       $("#mkFindRow").hidden = !(S.sample && S.imgLimits && !S.tagOff);
       $("#mkVecOpts").hidden = MK.mode !== "vec"; $("#mkCutOpts").hidden = MK.mode !== "cut";
+      $("#mkEnh").hidden = !S.sample; $("#mkEnhGo").disabled = MK.busy || !(MK.out && MK.out.kind === "vec"); $("#mkEnhUndo").hidden = !(MK.out && MK.out.prev);
       drawMkStage();
     }
   }
@@ -2579,6 +2614,8 @@ $("#mkDlg").addEventListener("click", e => {
   else if (t.closest("#mkBack")) { MK.img = null; MK.out = null; renderMaker(); }
   else if (t.closest("#mkWhole")) { MK.crop = null; drawMkStage(); mkProcess(); }
   else if (t.closest("#mkFindGo")) mkFind();
+  else if (t.closest("#mkEnhGo")) mkEnhance();
+  else if (t.closest("#mkEnhUndo")) { if (MK.out && MK.out.prev) { MK.out = MK.out.prev; drawMkOut(); renderMaker(); } }
   else if (t.closest("#mkGenGo")) mkGenerate();
   else if (t.closest("#mkAdd")) mkAdd();
 });
@@ -2754,7 +2791,7 @@ function drawMkOut() {
   if (r.kind === "cut") x.drawImage(r.canvas, -bw / 2, -bh / 2, bw, bh);
   else drawCustom(x, { vec: r.vec, color: "#ffffff" }, bw, bh);
   x.restore();
-  if (MK.tab === "photo") st.textContent = r.kind === "vec" ? `${r.shapes} shape${r.shapes === 1 ? "" : "s"}${r.size > 150000 ? ". Too detailed to keep: draw a tighter box or move the threshold" : ""}. It takes the sticker's color (white to start).` : "The see-through parts show as a checkerboard.";
+  if (MK.tab === "photo" && !r.enhanced) st.textContent = r.kind === "vec" ? `${r.shapes} shape${r.shapes === 1 ? "" : "s"}${r.size > 150000 ? ". Too detailed to keep: draw a tighter box or move the threshold" : ""}. It takes the sticker's color (white to start).` : "The see-through parts show as a checkerboard.";
 }
 async function imgJpeg(im, max) {
   const k = Math.min(1, max / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement("canvas");
@@ -2774,6 +2811,35 @@ async function mkFind() {   /* Claude draws the box */
     st.textContent = "Found it. Adjust the box by dragging a new one if it's off.";
     drawMkStage(); mkProcess();
   } catch (e) { st.textContent = e && e.code === "cancelled" ? "" : SAMPLE_ERR[e && e.code] || "Couldn’t reach Claude. Drag a box around it instead."; }
+  finally { MK.busy = false; renderMaker(); }
+}
+/* Enhance: Claude redraws the trace clean (same shape and place in the same viewBox), from the photo crop and the trace itself,
+   following the creator's notes. Back to the trace undoes it; moving a slider traces again. */
+const ENH_STICKER = `Clean up a sticker that was traced from a photo. Image 1 is the part of the photo it came from. The TRACE below is a one-color vector of it in a {W} by {H} viewBox, made by thresholding the photo, so it can have specks, rough or wobbly edges, stray lines and blobs where the photo was noisy or blurred.
+Redraw it as a clean, crisp sticker of the same subject: the same shapes, proportions and placement in the same viewBox, smooth curves, straight lines where the shape is straight, sharp points where it is pointed, and no specks or stray marks. Holes (like the inside of a ring) stay holes. Use the photo to tell what the shape is meant to be.{NOTE}
+Reply with only JSON: {"paths":[{"d":"<SVG path data: M L H V C S Q T A Z commands and numbers only>","fill":"currentColor"}]}. Every fill is "currentColor" (the creator picks the color); fill rule is even-odd. At most 20 paths, numbers with at most 1 decimal, everything inside the viewBox.
+
+TRACE:
+{D}`;
+function cropJpeg(max) {
+  const im = MK.img, iw = im.naturalWidth, ih = im.naturalHeight, [x0, y0, x1, y1] = MK.crop || [0, 0, iw, ih], cw = x1 - x0, ch = y1 - y0;
+  const k = Math.min(1, max / Math.max(cw, ch)), c = document.createElement("canvas"); c.width = Math.max(1, Math.round(cw * k)); c.height = Math.max(1, Math.round(ch * k));
+  c.getContext("2d").drawImage(im, x0, y0, cw, ch, 0, 0, c.width, c.height);
+  return new Promise(r => c.toBlob(r, "image/jpeg", 0.88));
+}
+async function mkEnhance() {
+  const r = MK.out, st = $("#mkStatus"); if (!r || r.kind !== "vec" || !S.sample || MK.busy) return;
+  const base = r.prev || r, vb = base.vec.vb, note = $("#mkEnhNote").value.trim().slice(0, 400);
+  let d = base.vec.paths.map(p => p.d).join("");
+  if (d.length > 60000) d = d.slice(0, 60000) + " …(cut short)";
+  MK.busy = true; st.textContent = "Claude is cleaning it up…"; renderMaker();
+  try {
+    const out = await S.sample.json(ENH_STICKER.replace("{W}", vb[0]).replace("{H}", vb[1]).replace("{NOTE}", note ? `\nThe creator's notes: ${note}` : "").replace("{D}", d), { images: [await cropJpeg(900)], modelTier: "default", cache: false });
+    const vec = cleanVec({ vb, paths: out && out.paths });
+    if (!vec || MK.out !== r) { if (MK.out === r) st.textContent = "Claude's version couldn't be used. Try again, or add a note on what to fix."; return; }
+    MK.out = { kind: "vec", vec, ar: vb[0] / vb[1], shapes: vec.paths.length, size: vec.paths.reduce((n, p) => n + p.d.length, 0), prev: base, enhanced: true };
+    drawMkOut(); st.textContent = "Cleaned up by Claude. Enhance again with another note, or go Back to the trace.";
+  } catch (e) { st.textContent = e && e.code === "cancelled" ? "" : SAMPLE_ERR[e && e.code] || "Couldn’t reach Claude. Try again."; }
   finally { MK.busy = false; renderMaker(); }
 }
 const GEN_STICKER = `Draw a sticker for an Instagram carousel as simple vector paths: {DESC}
@@ -2842,6 +2908,9 @@ const overEl = (el, e, pad = 14) => { if (!el || el.hidden) return false; const 
 const snapX = (nx, w) => Math.abs(nx - 0.5) * w < 18 ? 0.5 : nx;
 const sizeOf = st => +st.size || STICKERS[st.kind].size;
 
+/* a slide someone is dragging, pinching, turning or resizing right now: kept as it is on screen (a save coming back from the
+   board doesn't replace it mid-gesture, and in the large view the card waits until the gesture ends) */
+const gesturing = sid => (!!drag && drag.sid === sid && drag.moved) || (sid === focusSid && !!((fg && fg.mode !== "swipe") || xg || railDrag || rotDrag));
 /* cards: mouse only, so a finger on a card still scrolls the page */
 let drag = null;
 document.addEventListener("pointerdown", e => {
@@ -2858,7 +2927,7 @@ document.addEventListener("pointermove", e => {
   if (!drag || e.pointerId !== drag.pid) return;
   if (!drag.moved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 4) return;
   if (!drag.moved) remember(drag.sid);
-  const g = drag.g, [x, y] = frameXY(drag.cv, e, g);
+  const g = drag.g, [x, y] = frameXY(drag.cv, e, g), cur = ((S.slides[drag.sid] || {}).stickers || []).find(t => t.id === drag.st.id); if (cur) drag.st = cur;
   drag.st.x = clamp(snapX((x - drag.ox) / g.w, g.w), 0, 1); drag.st.y = clamp((y - drag.oy) / g.h, 0, 1); drag.moved = true;
   drag.trash.hidden = false; drag.trash.classList.toggle("hot", overEl(drag.trash, e));
   scheduleDraw(drag.sid);
@@ -2895,7 +2964,7 @@ fcv.addEventListener("pointerdown", e => {
   try { fcv.setPointerCapture(e.pointerId); } catch (err) {}
   const p = frameXY(fcv, e, geoOf(focusSid)); fpts.set(e.pointerId, p);
   if (fpts.size === 1) {
-    const st = stickerAt(s, S.focusBoxes, p[0], p[1]), tf = st ? null : textAt(p[0], p[1]);
+    const st = inXf(p) || stickerAt(s, S.focusBoxes, p[0], p[1]), tf = st ? null : textAt(p[0], p[1]);
     const grp = !st && tf && moveGroup(s, tf), grab = !!grp && !!S.ftsel && moveGroup(s, S.ftsel) === grp;   /* already selected: a drag moves it */
     fg = null; fgRem = false;
     S.fsel = st ? st.id : null; S.ftsel = tf;
@@ -2922,6 +2991,7 @@ fcv.addEventListener("pointermove", e => {
   if (!fpts.has(e.pointerId)) return;
   const p = frameXY(fcv, e, geoOf(focusSid)); fpts.set(e.pointerId, p);
   if (!fg) return;
+  if (fg.st) fg.st = ((S.slides[focusSid] || {}).stickers || []).find(t => t.id === fg.st.id) || fg.st;
   const st = fg.st;
   if (fg.mode === "swipe") return;   /* decided when the finger lifts */
   if (fg.mode === "tmove") {
@@ -2962,14 +3032,14 @@ function fUp(e) {
   if (fg.mode === "tmove") {
     const moved = fg.moved, rows = fg.grp.startsWith("rows."); fg = null; fgRem = false; ROWDRAG = null;
     if (moved) { saveSlide(sid); if (rows) renderBoard(new Set([sid])); if (S.fpanel === "text") renderFPanel(); }
-    drawFocus(); return;
+    scheduleDraw(sid); return;
   }
   const bin = fg.mode === "drag" && fg.dragged && e.type === "pointerup" && tr.classList.contains("hot");
   tr.hidden = true; tr.classList.remove("hot");
   const moved = fg.moved; fg = null; fgRem = false;
   if (bin) return binSticker(sid, st.id);
   if (moved) { saveSlide(sid); syncStickerControls(sid, st); }
-  drawFocus();
+  scheduleDraw(sid);
 }
 fcv.addEventListener("pointerup", fUp);
 fcv.addEventListener("pointercancel", fUp);
@@ -3099,7 +3169,7 @@ function railFrom(e) {
 }
 rail.addEventListener("pointerdown", e => { if (!selSticker()) return; e.preventDefault(); try { rail.setPointerCapture(e.pointerId); } catch (err) {} remember(focusSid); railDrag = true; bubbleHeld = true; railFrom(e); });
 rail.addEventListener("pointermove", e => { if (railDrag) railFrom(e); });
-function railEnd() { if (!railDrag) return; railDrag = false; const st = selSticker(); if (st) { saveSlide(focusSid); syncStickerControls(focusSid, st); } releaseBubble(); }
+function railEnd() { if (!railDrag) return; railDrag = false; const st = selSticker(); if (st) { saveSlide(focusSid); syncStickerControls(focusSid, st); } releaseBubble(); scheduleDraw(focusSid); }
 rail.addEventListener("pointerup", railEnd);
 rail.addEventListener("pointercancel", railEnd);
 rail.addEventListener("keydown", e => {
@@ -3142,7 +3212,7 @@ function rotFrom(e) {
 }
 rot.addEventListener("pointerdown", e => { if (!selSticker()) return; e.preventDefault(); try { rot.setPointerCapture(e.pointerId); } catch (err) {} remember(focusSid); rotDrag = true; bubbleHeld = true; rotFrom(e); });
 rot.addEventListener("pointermove", e => { if (rotDrag) rotFrom(e); });
-function rotEnd() { if (!rotDrag) return; rotDrag = false; const st = selSticker(); if (st) { saveSlide(focusSid); syncStickerControls(focusSid, st); } releaseBubble(); }
+function rotEnd() { if (!rotDrag) return; rotDrag = false; const st = selSticker(); if (st) { saveSlide(focusSid); syncStickerControls(focusSid, st); } releaseBubble(); scheduleDraw(focusSid); }
 rot.addEventListener("pointerup", rotEnd);
 rot.addEventListener("pointercancel", rotEnd);
 rot.addEventListener("dblclick", () => { const st = selSticker(); if (!st) return; remember(focusSid); st.rot = 0; saveSlide(focusSid); syncStickerControls(focusSid, st); scheduleDraw(focusSid); });
@@ -3154,16 +3224,93 @@ rot.addEventListener("keydown", e => {
   clearTimeout(rotKeyT); rotKeyT = setTimeout(() => { saveSlide(focusSid); syncStickerControls(focusSid, st); }, 400);
 });
 function updateFocusUI() {
-  const st = focusSid && selSticker(), del = $("#fDel"), busy = !!(fg && fg.moved);
+  const st = focusSid && selSticker(), del = $("#fDel"), busy = !!(fg && fg.moved) || !!xg;
   rail.hidden = rot.hidden = !st; del.hidden = !st || busy;
-  updateHistUI(); updateTextUI();
+  updateHistUI(); updateTextUI(); placeXf(); placeSides();
   if (!st) return;
   placeRail(st, false); placeRot(st, false);
   const box = (S.focusBoxes || []).find(b => b.id === st.id), k = fcv.clientWidth / geoOf(focusSid).w;
   if (!box || !k) { del.hidden = true; return; }
-  del.style.left = clamp(box.x1 * k - 18, 0, fcv.clientWidth - 36) + "px";
-  del.style.top = clamp(box.y0 * k - 18, 0, fcv.clientHeight - 36) + "px";
+  /* the bin sits off the frame's top-right corner, clear of the corner handle (top-left when the slide's edge is in the way) */
+  const fr = xf.hidden ? null : { l: xf.offsetLeft, t: xf.offsetTop, r: xf.offsetLeft + xf.offsetWidth, b: xf.offsetTop + xf.offsetHeight }, ext = st.rot ? Math.max(xf.offsetWidth, xf.offsetHeight) * 0.21 : 0;
+  const R0 = fr ? fr.r + ext : box.x1 * k, L0 = fr ? fr.l - ext : box.x0 * k, T0 = fr ? fr.t - ext : box.y0 * k;
+  del.style.left = (R0 + 46 <= fcv.clientWidth ? R0 + 8 : Math.max(0, L0 - 44)) + "px";
+  del.style.top = clamp(T0 - 40, 0, fcv.clientHeight - 36) + "px";
 }
+/* the round previous / next buttons: beside the slide when there's room, else on its edges (and out of the way while something
+   on the slide is selected, when the size and rotate controls are there) */
+function placeSides() {
+  const L = $("#fSideL"), R = $("#fSideR"), o = order(), at = o.indexOf(focusSid);
+  const wr = $("#fWrap").getBoundingClientRect(), cr = fcv.getBoundingClientRect(), gap = Math.min(cr.left - wr.left, wr.right - cr.right), out = gap >= 54;
+  const away = !out && !!(S.fsel || S.ftsel || S.ftfield);
+  L.hidden = at <= 0 || away; R.hidden = at < 0 || at >= o.length - 1 || away;
+  const y = cr.top - wr.top + cr.height / 2, bw = L.offsetWidth || R.offsetWidth || 42;
+  for (const [b, x] of [[L, out ? cr.left - wr.left - bw - 8 : cr.left - wr.left + 6], [R, out ? cr.right - wr.left + 8 : cr.right - wr.left - bw - 6]]) {
+    b.classList.toggle("out", out); b.style.left = Math.round(x) + "px"; b.style.top = Math.round(y) + "px";
+  }
+}
+/* the selection frame in the large view: corner handles resize the selected sticker (its size) or text block (layout.scale),
+   the round handle under a sticker turns it. Drags inside the frame still move it, as before. */
+const xf = $("#fXf"); let xg = null;
+function xfBox() {   /* the selected thing's box in slide pixels: {cx, cy, w, h, rot, sticker?, grp?} */
+  const s = S.slides[focusSid]; if (!s) return null;
+  const st = selSticker();
+  if (st) { const b = (S.focusBoxes || []).find(x => x.id === st.id); return b && b.w ? { cx: b.cx, cy: b.cy, w: b.w, h: b.h, rot: b.rot || 0, sticker: st.id } : null; }
+  const grp = S.ftsel && moveGroup(s, S.ftsel); if (!grp || grp.startsWith("rows.")) return null;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const [f, b] of Object.entries(S.ftboxes || {})) if (moveGroup(s, f) === grp && b.x1 > b.x0) { x0 = Math.min(x0, b.x0); y0 = Math.min(y0, b.y0); x1 = Math.max(x1, b.x1); y1 = Math.max(y1, b.y1); }
+  return x1 > x0 ? { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, w: x1 - x0, h: y1 - y0, rot: 0, grp } : null;
+}
+function placeXf() {
+  const b = focusSid && !liteOn() && !(fg && fg.moved && fg.mode === "tmove") ? xfBox() : null, k = focusSid ? fcv.clientWidth / geoOf(focusSid).w : 0;
+  if (!b || !k || (S.fpanel === "text" && S.ftfield && !b.sticker)) { xf.hidden = true; return; }
+  const pad = 8, mn = TOUCH() ? 88 : 44, w = Math.max(mn, b.w * k + 2 * pad), h = Math.max(mn, b.h * k + 2 * pad);   /* room to grab a small sticker between the handles */
+  xf.hidden = false; xf.classList.toggle("text", !b.sticker);
+  Object.assign(xf.style, { left: b.cx * k - w / 2 + "px", top: b.cy * k - h / 2 + "px", width: w + "px", height: h + "px", transform: b.rot ? `rotate(${b.rot}deg)` : "" });
+  if (!b.sticker) $("#fTsel").hidden = true;
+}
+/* a press inside the selected sticker's frame (which is bigger than a small sticker on a phone) grabs that sticker */
+function inXf(p) {
+  const st = selSticker(), b = st && !xf.hidden && xfBox(); if (!b || !b.sticker) return null;
+  const k = fcv.clientWidth / geoOf(focusSid).w, a = -(b.rot || 0) * Math.PI / 180, dx = p[0] - b.cx, dy = p[1] - b.cy;
+  const u = dx * Math.cos(a) - dy * Math.sin(a), v = dx * Math.sin(a) + dy * Math.cos(a);
+  return Math.abs(u) <= xf.offsetWidth / k / 2 && Math.abs(v) <= xf.offsetHeight / k / 2 ? st : null;
+}
+xf.addEventListener("pointerdown", e => {
+  const hd = e.target.closest("[data-xh]"), b = xfBox(); if (!hd || !b || !focusSid) return;
+  e.preventDefault(); e.stopPropagation(); try { hd.setPointerCapture(e.pointerId); } catch (err) {}
+  const r = fcv.getBoundingClientRect(), k = r.width / geoOf(focusSid).w, c = [r.left + b.cx * k, r.top + b.cy * k], s = S.slides[focusSid], st = selSticker();
+  remember(focusSid); bubbleHeld = true;
+  xg = { h: hd.dataset.xh, pid: e.pointerId, c, d0: Math.max(8, Math.hypot(e.clientX - c[0], e.clientY - c[1])), a0: Math.atan2(e.clientY - c[1], e.clientX - c[0]),
+    sticker: b.sticker, grp: b.grp, s0: st ? sizeOf(st) : scaleOf(s.layout, b.grp), r0: st ? +st.rot || 0 : 0 };
+  updateFocusUI();
+});
+xf.addEventListener("pointermove", e => {
+  if (!xg || e.pointerId !== xg.pid) return;
+  const s = S.slides[focusSid]; if (!s) return;
+  const st = xg.sticker && (s.stickers || []).find(t => t.id === xg.sticker), d = Math.hypot(e.clientX - xg.c[0], e.clientY - xg.c[1]);
+  let label;
+  if (xg.h === "rot") {
+    if (!st) return;
+    let v = xg.r0 + (Math.atan2(e.clientY - xg.c[1], e.clientX - xg.c[0]) - xg.a0) * 180 / Math.PI;
+    v = ((v % 360) + 540) % 360 - 180;
+    const snap = Math.round(v / 45) * 45; if (Math.abs(v - snap) < 4) v = snap === -180 ? 180 : snap;   /* clicks into 0°, 45°, 90°… */
+    st.rot = Math.round(v); label = st.rot + "°";
+  } else if (st) { st.size = Math.round(clamp(xg.s0 * d / xg.d0, 40, MAX_SIZE(st))); label = st.size + " px"; }
+  else { const v = clamp(xg.s0 * d / xg.d0, 0.5, 2.5), k = Math.abs(v - 1) < 0.03 ? 1 : +v.toFixed(3); s.layout = s.layout || {}; s.layout.scale = { ...(s.layout.scale || {}), [xg.grp]: k }; label = Math.round(k * 100) + "%"; }
+  bubbleAt($("#focusDlg"), e.clientX + 18, e.clientY - 18, label, "right");
+  scheduleDraw(focusSid);
+});
+function xfEnd(e) {
+  if (!xg || (e && e.pointerId !== xg.pid)) return;
+  const g = xg, sid = focusSid; xg = null; releaseBubble();
+  const s = S.slides[sid]; if (!s) return;
+  if (!g.sticker && s.layout && s.layout.scale && s.layout.scale[g.grp] === 1) { delete s.layout.scale[g.grp]; if (!Object.keys(s.layout.scale).length) delete s.layout.scale; }
+  saveSlide(sid);
+  const st = g.sticker && (s.stickers || []).find(t => t.id === g.sticker); if (st) syncStickerControls(sid, st);
+  scheduleDraw(sid);
+}
+xf.addEventListener("pointerup", xfEnd); xf.addEventListener("pointercancel", xfEnd);
 /* the panel under the slide in the large view: Edit photo (S.fpanel "photo") or Text ("text"); false when closed.
    Edit photo: pick an adjustment, move its slider (or type the value), see it on the big slide. */
 S.fpanel = false; S.fslot = "img"; S.fadj = "exposure";
@@ -3591,10 +3738,11 @@ function updateTextUI() {
     bar.innerHTML = `<button type="button" data-fbar="edit">${PEN_I}Edit</button><button type="button" data-fbar="dup">${DUP_I}${row ? "Duplicate row" : "Duplicate"}</button>${row ? `<button type="button" class="del" data-fbar="delrow">${TRASH}Delete row</button>` : ""}`;
   }
   bar.hidden = false;
+  const gb = layer ? null : xfBox(), at = gb ? { x0: gb.cx - gb.w / 2, x1: gb.cx + gb.w / 2, y0: gb.cy - gb.h / 2, y1: gb.cy + gb.h / 2 } : box, gp = gb ? pad + 10 : pad;   /* under the whole block when its frame shows */
   const bw = bar.offsetWidth, bh = bar.offsetHeight;
-  let y = box.y1 * k + pad + 8;
-  if (y + bh > sh - 4) y = box.y0 * k - pad - 8 - bh;
-  bar.style.left = clamp((box.x0 + box.x1) / 2 * k, bw / 2 + 4, Math.max(bw / 2 + 4, sw - bw / 2 - 4)) + "px";
+  let y = at.y1 * k + gp + 8;
+  if (y + bh > sh - 4) y = at.y0 * k - gp - 8 - bh;
+  bar.style.left = clamp((at.x0 + at.x1) / 2 * k, bw / 2 + 4, Math.max(bw / 2 + 4, sw - bw / 2 - 4)) + "px";
   bar.style.top = clamp(y, 4, Math.max(4, sh - bh - 4)) + "px";
 }
 /* a selected sticker of your own that isn't in My stickers yet gets a Save to My stickers button under it */
@@ -3604,7 +3752,9 @@ function customBar(st) {
   if (barKey !== "mine") { barKey = "mine"; bar.innerHTML = `<button type="button" data-fbar="savemine">${STAR_I}Save to My stickers</button>`; }
   bar.hidden = false;
   const bw = bar.offsetWidth, bh = bar.offsetHeight, sw = fcv.clientWidth, sh = fcv.clientHeight;
-  let y = box.y1 * k + 14; if (y + bh > sh - 4) y = box.y0 * k - 14 - bh;
+  placeXf();   /* below the frame's turn handle, or above the frame */
+  const ext = xf.hidden ? 0 : (st.rot ? Math.max(xf.offsetWidth, xf.offsetHeight) * 0.21 : 0), top = xf.hidden ? box.y0 * k : xf.offsetTop - ext, bot = xf.hidden ? box.y1 * k : xf.offsetTop + xf.offsetHeight + ext + 58;
+  let y = bot + 6; if (y + bh > sh - 4) y = top - 10 - bh;
   bar.style.left = clamp((box.x0 + box.x1) / 2 * k, bw / 2 + 4, Math.max(bw / 2 + 4, sw - bw / 2 - 4)) + "px";
   bar.style.top = clamp(y, 4, Math.max(4, sh - bh - 4)) + "px";
 }
@@ -4118,6 +4268,7 @@ function cleanLayout(raw, prev) {
   if (raw.scrim === "auto" || (typeof raw.scrim === "number" && raw.scrim >= 0 && raw.scrim <= 0.9)) out.scrim = raw.scrim;
   if (raw.side === "left" || raw.side === "right") out.side = raw.side; else if (prev && prev.side) out.side = prev.side;
   if (prev && prev.move) out.move = prev.move;   /* blocks the user dragged stay where they put them */
+  if (prev && prev.scale) out.scale = prev.scale;   /* ...and at the size they gave them */
   return out;
 }
 const HEX = /^#[0-9a-f]{6}$/i;
@@ -4414,7 +4565,7 @@ function openFocus(sid) {
   document.documentElement.classList.add("modal-open");
   renderFPanel(); drawFocus();
 }
-$("#focusDlg").addEventListener("close", () => { closeOverlays(); focusSid = null; S.fsel = null; S.ftsel = null; S.ftfield = null; fpts.clear(); fg = null; lpts.clear(); lg = null; $("#fTrash").hidden = true; hideBubble(); layoutLite(); document.documentElement.classList.remove("modal-open"); });
+$("#focusDlg").addEventListener("close", () => { closeOverlays(); focusSid = null; S.fsel = null; S.ftsel = null; S.ftfield = null; fpts.clear(); fg = null; xg = null; lpts.clear(); lg = null; $("#fTrash").hidden = true; hideBubble(); layoutLite(); document.documentElement.classList.remove("modal-open"); });
 /* Esc closes a preview first, then the text editor, then the large view */
 $("#focusDlg").addEventListener("cancel", e => {
   if (closeOverlays()) e.preventDefault();
@@ -4430,7 +4581,7 @@ function drawFocus() {
   if (S.fsel && !(s.stickers || []).some(t => t.id === S.fsel)) S.fsel = null;
   if (S.fpanel === "text" && S.ftfield && !S.ftfield.startsWith("layer:") && !S.fsel) S.ftsel = S.ftfield;   /* the editor's text stays outlined */
   if (S.ftsel && !fieldPath(s, S.ftsel)) S.ftsel = null;
-  const d = renderSlide(cv, S.post, s, x.n, x.total, sc, false, S.fsel || S.hilite);
+  const d = renderSlide(cv, S.post, s, x.n, x.total, sc, false, lite ? S.fsel || S.hilite : S.hilite);   /* the selection frame outlines a selected sticker */
   S.focusBoxes = d.boxes || []; S.ftboxes = d.tboxes || {}; S.frows = d.rowBoxes || [];
   if (lite) placeLite(); else $("#fStage").style.transform = "";
   $("#focusTitle").textContent = `${pad2(x.n)}/${pad2(x.total)}${x.of > 1 ? ` · V${x.v}` : ""} ${slideName(s)}${RATIOS[s.ratio] && s.ratio !== ratioKey(S.post) ? " · " + s.ratio : ""}`;
@@ -4440,16 +4591,15 @@ function drawFocus() {
     : S.ftsel
     ? (!grp ? H2("The header and footer stay in place on every slide. Edit changes their words.", "Header and footer stay put. Edit changes them.")
       : row ? H2(`Drag the row up or down to put it somewhere else in the table. Edit or Duplicate it ${touch ? "below" : "from the bar"}.`, "Drag the row up or down to reorder.")
-      : H2(`Drag it to move it. Edit or Duplicate it ${touch ? "below" : "from the bar"}; Auto-fit in Layout puts it back.`, "Drag it to move it. Edit or Duplicate below."))
+      : H2(`Drag it to move it, or a corner to resize it. Edit or Duplicate it ${touch ? "below" : "from the bar"}; Auto-fit in Layout puts it back.`, "Drag to move, a corner to resize."))
     : touch
     ? ((s.stickers || []).length ? H2("Tap text or a sticker to select it. Drag, pinch or twist a sticker; drop it on the bin to delete it. Swipe for the next slide.", "Tap text or a sticker. Swipe for the next slide.")
       : H2("Tap any text to select it, then drag it, edit it or duplicate it. Swipe for the next slide.", "Tap text to select it. Swipe for the next slide."))
-    : H2((s.stickers || []).length ? "Click text or a sticker to select it. Drag to move, Ctrl + scroll to resize, the slider on top to turn. Arrow keys change slides." : "Click any text to select it, then drag it, edit it or duplicate it. Arrow keys change slides.");
-  const o = order(), at = o.indexOf(focusSid); $("#fSideL").hidden = at <= 0; $("#fSideR").hidden = at >= o.length - 1;
+    : H2((s.stickers || []).length ? "Click text or a sticker to select it. Drag to move, a corner to resize, the round handle to turn. Arrow keys change slides." : "Click any text to select it, then drag it, edit it or duplicate it. Arrow keys change slides.");
   updateFocusUI();
 }
 /* the round arrows at the slide's left and right edges: previous and next slide (on touch screens a swipe does it too) */
-$("#fStage").addEventListener("click", e => { const b = e.target.closest("[data-fside]"); if (b) swipeTo(+b.dataset.fside); });
+$("#fWrap").addEventListener("click", e => { const b = e.target.closest("[data-fside]"); if (b) swipeTo(+b.dataset.fside); });
 function stepFocus(d) {
   const o = order(), i = o.indexOf(focusSid), j = clamp(i + d, 0, o.length - 1);
   if (j === i) return;
@@ -4775,7 +4925,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { S, MK, applyWithClaude, drawFocus, updateFocusUI, selSticker, cleanStickers };   /* sticker tools, for tests */
+window.__t = { S, MK, applyWithClaude, drawFocus, updateFocusUI, selSticker, cleanStickers, xfBox, gesturing };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
@@ -5183,7 +5333,7 @@ function selectPost(pid) {
     const seen = new Set(), changed = new Set();
     for (const d of snap.docs) {
       seen.add(d.id);
-      if (S.dirty.has(slidePath(d.id)) || S.writing.has(slidePath(d.id)) || S.busy.has(d.id)) continue;
+      if (S.dirty.has(slidePath(d.id)) || S.writing.has(slidePath(d.id)) || S.busy.has(d.id) || gesturing(d.id)) continue;   /* never swap a slide out from under a finger or the mouse */
       const data = d.data();
       if (!data || !TEMPLATES[data.type]) continue;
       if (!S.slides[d.id] || JSON.stringify(stripTs(S.slides[d.id])) !== JSON.stringify(stripTs(data))) { S.slides[d.id] = clone(data); changed.add(d.id); forget(d.id); }
