@@ -7270,6 +7270,11 @@ document.addEventListener("keydown", e => {
   if (!$("#focusDlg").open || $("#mkDlg").open || $("#stickDlg").open || $("#qDlg").open) return;
   const mod0 = e.metaKey || e.ctrlKey;
   if (mod0 && e.code === "Space") { e.preventDefault(); openQuick(); return; }   /* works while typing too */
+  if (mod0 && !e.altKey && e.key.toLowerCase() === "f") {   /* Ctrl/Cmd+F: phone preview; with Shift: full screen. Again: back */
+    e.preventDefault(); const want = e.shiftKey ? "full" : "phone";
+    if (ovKind === want) closeOverlays(); else { closeOverlays(); focusDownload(want); }
+    return;
+  }
   if (mod0 && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "d") e.preventDefault();   /* not the browser's bookmark */
   if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
   if (mod0 && !e.altKey && e.key.toLowerCase() === "d") { const st = selSticker(); if (st) dupSticker(focusSid, st.id); else if (S.ftsel) duplicateText(selRef()); else toast("Select a sticker or some text to duplicate it"); return; }
@@ -7362,7 +7367,7 @@ function dlMenuHTML(sid = focusSid, card = false) {
 }
 function pvMenuHTML(card = false) {
   const a = card ? 'data-act="dlk" data-k' : "data-fdl";
-  return `<button type="button" ${a}="phone">Phone preview<small>The post with Instagram or TikTok on top</small></button><button type="button" ${a}="grid">Profile grid preview<small>Its thumbnail on your Instagram or TikTok profile</small></button><button type="button" ${a}="full">Full screen<small>As big as this screen shows it</small></button>`;
+  return `<button type="button" ${a}="phone">Phone preview<small>The post with Instagram or TikTok on top${card ? "" : " · Ctrl+F"}</small></button><button type="button" ${a}="grid">Profile grid preview<small>Its thumbnail on your Instagram or TikTok profile</small></button><button type="button" ${a}="full">Full screen<small>As big as this screen shows it${card ? "" : " · Ctrl+Shift+F"}</small></button>`;
 }
 function openMenuUnder(btn, html, cls) {
   const open = btn.nextElementSibling;
