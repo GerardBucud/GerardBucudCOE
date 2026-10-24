@@ -2749,7 +2749,8 @@ function smartCut(im, crop) {
   const lab = new Int32Array(n).fill(-1), sizes = [];
   const comp = (want, i0, id) => { let size = 0; qh = qt = 0; q[qt++] = i0; lab[i0] = id; while (qh < qt) { const i = q[qh++], xx = i % w; size++; for (const j of [xx > 0 ? i - 1 : -1, xx < w - 1 ? i + 1 : -1, i >= w ? i - w : -1, i < n - w ? i + w : -1]) if (j >= 0 && lab[j] < 0 && bg[j] === want) { lab[j] = id; q[qt++] = j; } } return size; };
   for (let i = 0; i < n; i++) if (!bg[i] && lab[i] < 0) sizes.push(comp(0, i, sizes.length));
-  const big = Math.max(0, ...sizes), main = big / Math.max(1, sizes.reduce((s1, v) => s1 + v, 0));   /* one object, or scattered pieces of a busy scene */
+  const big = Math.max(0, ...sizes), fgAll = Math.max(1, sizes.reduce((s1, v) => s1 + v, 0)), main = big / fgAll;   /* one object, or scattered pieces of a busy scene */
+  const sig = sizes.filter(v => v >= fgAll * 0.03).length;   /* the pieces that matter: a kit of a few products on a plain background is fine */
   for (let i = 0; i < n; i++) if (!bg[i] && sizes[lab[i]] < Math.max(n * 0.002, big * 0.04)) bg[i] = 1;
   lab.fill(-1); const hole = [];
   for (let i = 0; i < n; i++) if (!bg[i] && dn[i] < t * 0.6 && lab[i] < 0) {   /* a region inside the object that matches the background */
@@ -2759,8 +2760,8 @@ function smartCut(im, crop) {
   }
   for (const pts of hole) for (const j of pts) bg[j] = 1;
   let fg = 0; for (let i = 0; i < n; i++) { a[i] = bg[i] ? 0 : 255; if (!bg[i]) fg++; }
-  const frac = fg / n, ok = keep.length > 0 && uniform >= 0.6 && main >= 0.5 && frac > 0.02 && frac < 0.96;
-  if (!ok) return { ok: false, raw: c, why: uniform < 0.6 || main < 0.5 ? "busy" : frac <= 0.02 ? "empty" : "full" };
+  const frac = fg / n, whole = main >= 0.5 || (sig <= 8 && frac >= 0.08), ok = keep.length > 0 && uniform >= 0.6 && whole && frac > 0.02 && frac < 0.96;
+  if (!ok) return { ok: false, raw: c, why: uniform < 0.6 || !whole ? "busy" : frac <= 0.02 ? "empty" : "full", dbg: { uniform: +uniform.toFixed(3), main: +main.toFixed(3), sig, frac: +frac.toFixed(3) } };
   /* soften the edge by a pixel */
   const s0 = new Uint8Array(a);
   for (let yy = 1; yy < h - 1; yy++) for (let xx = 1; xx < w - 1; xx++) { const i = yy * w + xx; if (s0[i - 1] === s0[i] && s0[i + 1] === s0[i] && s0[i - w] === s0[i] && s0[i + w] === s0[i]) continue; let tt = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) tt += s0[i + dy * w + dx]; a[i] = Math.round(tt / 9); }
