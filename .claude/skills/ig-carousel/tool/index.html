@@ -2479,11 +2479,12 @@ function texLayers(s) {
   return [{ id: "t0", name: "Texture", on: layer === "under" ? "bgphoto" : layer === "photo" ? "photo" : "all", fx }];
 }
 const texStack = s => texLayers(s).filter(l => !l.off).map(l => ({ on: TEX_ON.includes(l.on) ? l.on : "all", tx: texOf({ texture: l.fx }) })).filter(l => l.tx);
-const TEX_KEYS = ["grain", "scan", "duo", "split", "vhs", "film", "burn", "paper", "half", "dust", "vig"];
+const TEX_KEYS = ["grain", "scan", "duo", "split", "vhs", "film", "burn", "paper", "half", "dust", "vig", "glow"];
 function texOf(s) {
   const t = s && s.texture; if (!t || typeof t !== "object") return null;
   const o = { c1: HEXCOL.test(t.c1) ? t.c1 : "#1a0a06", c2: HEXCOL.test(t.c2) ? t.c2 : "#ff7a1a", s1: HEXCOL.test(t.s1) ? t.s1 : "#145a6e", s2: HEXCOL.test(t.s2) ? t.s2 : "#ff9a3c" }; let any = false;
   for (const k of TEX_KEYS) { o[k] = clamp(+t[k] || 0, 0, 1); if (o[k] > 0) any = true; }
+  o.gr = clamp(t.gr == null || t.gr === "" ? 0.4 : +t.gr, 0, 1); o.gt = clamp(t.gt == null || t.gt === "" ? 0.6 : +t.gt, 0, 1); o.gc = HEXCOL.test(t.gc) ? t.gc : null;   /* glow: size, from how bright, tint */
   return any ? o : null;
 }
 const seeded = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
@@ -2509,6 +2510,35 @@ function paperTile() {   /* soft blotches and fine fibers, gray around the middl
   x.lineWidth = 1;
   for (let i = 0; i < 900; i++) { const a = r() * Math.PI, len = 4 + r() * 18, px = r() * N, py = r() * N; x.strokeStyle = r() < 0.5 ? `rgba(255,255,255,${0.08 + r() * 0.12})` : `rgba(0,0,0,${0.06 + r() * 0.1})`; x.beginPath(); x.moveTo(px, py); x.lineTo(px + Math.cos(a) * len, py + Math.sin(a) * len); x.stroke(); }
   return (PAPER = c);
+}
+/* glow (bloom): the bright parts of src (brighter than gt), blurred by gr and added back with a screen blend; tinted gc if set. On a
+   transparent overlay the glow is drawn as its own color with its own see-through, so it shows over a video too. Worked at a small
+   size, so it's quick and the same on screen and in the export. */
+function bloom(ctx, src, tx) {
+  const cw = ctx.canvas.width, ch = ctx.canvas.height, q = Math.min(0.5, 560 / Math.max(cw, ch)), sw = Math.max(1, Math.round(cw * q)), sh = Math.max(1, Math.round(ch * q));
+  const a = document.createElement("canvas"); a.width = sw; a.height = sh;
+  const ax = a.getContext("2d", { willReadFrequently: true }); ax.imageSmoothingQuality = "high"; ax.drawImage(src, 0, 0, sw, sh);
+  const im = ax.getImageData(0, 0, sw, sh), p = im.data, t = tx.gt, n = Math.max(0.04, 1 - t), tint = tx.gc ? [parseInt(tx.gc.slice(1, 3), 16), parseInt(tx.gc.slice(3, 5), 16), parseInt(tx.gc.slice(5, 7), 16)] : null;
+  for (let i = 0; i < p.length; i += 4) {
+    const l = (0.2126 * p[i] + 0.7152 * p[i + 1] + 0.0722 * p[i + 2]) / 255, v = clamp((l - t) / n, 0, 1) * (p[i + 3] / 255);
+    const c = tint || [p[i], p[i + 1], p[i + 2]];
+    if (OVERLAY) { p[i] = c[0]; p[i + 1] = c[1]; p[i + 2] = c[2]; p[i + 3] = Math.round(255 * v); }
+    else { p[i] = c[0] * v; p[i + 1] = c[1] * v; p[i + 2] = c[2] * v; p[i + 3] = 255; }
+  }
+  ax.putImageData(im, 0, 0);
+  const r = Math.max(1, (0.008 + tx.gr * 0.07) * Math.max(sw, sh)), b = document.createElement("canvas"); b.width = sw; b.height = sh;
+  const bx = b.getContext("2d");
+  if ("filter" in bx) {   /* a wide soft halo and a tighter one */
+    bx.filter = `blur(${r.toFixed(1)}px)`; bx.drawImage(a, 0, 0);
+    bx.globalCompositeOperation = OVERLAY ? "source-over" : "lighter"; bx.globalAlpha = 0.6; bx.filter = `blur(${(r / 3).toFixed(1)}px)`; bx.drawImage(a, 0, 0); bx.filter = "none";
+  } else {   /* no canvas filter: blur by shrinking and growing back */
+    const k = Math.max(2, Math.round(r)), tw = Math.max(1, Math.round(sw / k)), th = Math.max(1, Math.round(sh / k)), tc = document.createElement("canvas"); tc.width = tw; tc.height = th;
+    const tcx = tc.getContext("2d"); tcx.imageSmoothingQuality = "high"; tcx.drawImage(a, 0, 0, tw, th); bx.imageSmoothingQuality = "high"; bx.drawImage(tc, 0, 0, sw, sh);
+  }
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingQuality = "high";
+  ctx.globalCompositeOperation = OVERLAY ? "source-over" : "screen";
+  for (let left = tx.glow * 1.6; left > 0.01; left -= 1) { ctx.globalAlpha = Math.min(1, left); ctx.drawImage(b, 0, 0, cw, ch); }   /* past 60%, a second pass for a strong bloom */
+  ctx.restore();
 }
 function applyTexture(ctx, cv, tx, scale) {
   const cw = cv.width, ch = cv.height; if (!cw || !ch) return;
@@ -2745,10 +2775,18 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
       return (masks[on] = m);
     };
     for (const L of stack) {   /* bottom to top: each texture works on the slide as the ones under it left it */
-      if (L.on === "all") { applyTexture(ctx, cv, L.tx, scale); continue; }
-      const tc = blank(), tx = tc.getContext("2d"); tx.drawImage(cv, 0, 0); applyTexture(tx, tc, L.tx, scale);
-      tx.globalCompositeOperation = "destination-in"; tx.drawImage(maskOf(L.on), 0, 0);
-      ctx.drawImage(tc, 0, 0);
+      const rest = TEX_KEYS.some(k => k !== "glow" && L.tx[k] > 0);
+      if (rest && L.on === "all") applyTexture(ctx, cv, L.tx, scale);
+      else if (rest) {
+        const tc = blank(), tx = tc.getContext("2d"); tx.drawImage(cv, 0, 0); applyTexture(tx, tc, L.tx, scale);
+        tx.globalCompositeOperation = "destination-in"; tx.drawImage(maskOf(L.on), 0, 0);
+        ctx.drawImage(tc, 0, 0);
+      }
+      if (L.tx.glow > 0) {   /* the glow comes from the chosen group's bright parts, and spreads past them */
+        let src = cv;
+        if (L.on !== "all") { src = blank(); const sx = src.getContext("2d"); sx.drawImage(cv, 0, 0); sx.globalCompositeOperation = "destination-in"; sx.drawImage(maskOf(L.on), 0, 0); }
+        bloom(ctx, src, L.tx);
+      }
     }
     ctx.restore();
   }
@@ -3316,17 +3354,19 @@ function onBdColor(el) {   /* Color swatch: the item becomes a color circle */
   const th = el.closest(".gearpic") && el.closest(".gearpic").querySelector(".gthumb"); if (th) th.innerHTML = bdThumb(it);
 }
 /* Texture: the effects, their presets, and the card's controls (the large view has the same in its Texture panel) */
-const TEX_LIST = [["grain", "Grain"], ["film", "Old film"], ["burn", "Film burn"], ["paper", "Paper"], ["half", "Halftone"], ["duo", "Duotone"], ["split", "Split tone"], ["scan", "TV lines"], ["vhs", "VHS"], ["dust", "Dust"], ["vig", "Vignette"]];
+const TEX_LIST = [["grain", "Grain"], ["film", "Old film"], ["burn", "Film burn"], ["paper", "Paper"], ["half", "Halftone"], ["duo", "Duotone"], ["split", "Split tone"], ["scan", "TV lines"], ["vhs", "VHS"], ["dust", "Dust"], ["vig", "Vignette"], ["glow", "Glow"]];
 const TEX_COLORS = { duo: [["c1", "Shadows", "#1a0a06"], ["c2", "Highlights", "#ff7a1a"]], split: [["s1", "Shadows", "#145a6e"], ["s2", "Highlights", "#ff9a3c"]] };
 const TEX_PRE = { film: ["Old film", { film: 0.7, grain: 0.3, dust: 0.3 }], burn: ["Film burn", { burn: 0.6, film: 0.3, grain: 0.25 }], paper: ["Paper", { paper: 0.7, grain: 0.15 }], half: ["Halftone", { half: 0.6 }],
   split: ["Split tone", { split: 0.7, grain: 0.15, s1: "#145a6e", s2: "#ff9a3c" }], duo: ["Duotone: brand", { duo: 0.85, grain: 0.2, c1: "#1a0a06", c2: "#ff7a1a" }], duo2: ["Duotone: cream", { duo: 1, grain: 0.15, c1: "#0e0b0a", c2: "#f2ede6" }],
+  glow: ["Soft glow", { glow: 0.55, gr: 0.4, gt: 0.55 }], tglow: ["Text glow", { glow: 0.75, gr: 0.3, gt: 0.5 }, "text"], pglow: ["Photo bloom", { glow: 0.7, gr: 0.55, gt: 0.45 }, "photo"],
+  dreamy: ["Dreamy", { glow: 0.5, gr: 0.75, gt: 0.35, grain: 0.15, vig: 0.2 }],
   grainy: ["Grain + dust", { grain: 0.35, dust: 0.25, vig: 0.3 }], tv: ["TV lines", { scan: 0.55, grain: 0.2, vig: 0.35 }], vhs: ["VHS", { vhs: 0.6, scan: 0.3, grain: 0.25 }] };
 /* Texture layers (slide.textures, see texLayers in the renderer): a list with the top layer first, as in Canva. Each layer has its
    effects (a preset's several, or one), what it applies to, an eye and a bin; drag its handle to reorder (arrow keys on the handle
    too); tap its name to edit its effects. Layers apply bottom to top, so split tone then TV lines differs from the other way round.
    The card and the large view's Texture panel show the same list. */
 const TEX_ON_L = [["all", "Everything"], ["bg", "Background"], ["photo", "Photos"], ["bgphoto", "Background + photos"], ["text", "Text"], ["sticker", "Stickers"]];
-const TEX_DEF = { grain: 0.35, film: 0.6, burn: 0.6, paper: 0.6, half: 0.5, duo: 0.85, split: 0.7, scan: 0.5, vhs: 0.5, dust: 0.35, vig: 0.4 };
+const TEX_DEF = { glow: 0.55, grain: 0.35, film: 0.6, burn: 0.6, paper: 0.6, half: 0.5, duo: 0.85, split: 0.7, scan: 0.5, vhs: 0.5, dust: 0.35, vig: 0.4 };
 const texColor = (T, k, def) => HEXCOL.test(T[k]) ? T[k] : def;
 const EYE_OFF_I = `<svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 5.6A10 10 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3.2 3.9M6.3 7.4A16.6 16.6 0 0 0 2.5 12S6 18.5 12 18.5a9.4 9.4 0 0 0 4.4-1.1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>`;
 S.txSel = {}; S.txFx = {}; S.txAdd = {};
@@ -3350,7 +3390,9 @@ function texLayersHTML(sid, s) {
       <div class="fchips" role="group" aria-label="Effects in this layer">${TEX_LIST.map(([k, l]) => `<button type="button" data-txfx="${k}" aria-pressed="${k === cur[0]}"${+fx[k] > 0 ? "" : ' class="zero"'}>${l}<i>${Math.round((+fx[k] || 0) * 100)}%</i></button>`).join("")}</div>
       <div class="frow"><input type="range" data-txr="${cur[0]}" aria-label="${cur[1]}" min="0" max="1" step="0.01" value="${v}" data-fmt="pct">
         <span class="numbox"><input type="number" class="num" data-txn="${cur[0]}" value="${Math.round(v * 100)}" min="0" max="100" step="1" aria-label="${cur[1]}, exact value"><span>%</span></span>
-        ${cols ? cols.map(([k, l, d]) => `<label class="ftexc" title="${l}"><input type="color" data-txc="${k}" value="${texColor(fx, k, d)}" aria-label="${cur[1]} ${l.toLowerCase()}"><span>${l}</span></label>`).join("") : ""}</div></div>`;
+        ${cols ? cols.map(([k, l, d]) => `<label class="ftexc" title="${l}"><input type="color" data-txc="${k}" value="${texColor(fx, k, d)}" aria-label="${cur[1]} ${l.toLowerCase()}"><span>${l}</span></label>`).join("") : ""}</div>
+      ${cur[0] === "glow" ? `<div class="frowsls">${[["gr", "Size", 0.4], ["gt", "Glows from (brightness)", 0.6]].map(([k, l, d]) => `<label class="frowsl"><span>${l}</span><input type="range" data-txp="${k}" min="0" max="1" step="0.01" value="${fx[k] ?? d}" data-fmt="pct" aria-label="Glow ${l.toLowerCase()}"></label>`).join("")}</div>
+        <div class="frow"><label class="ftexc" title="Tint"><input type="color" data-txc="gc" value="${texColor(fx, "gc", "#ffd9a0")}" aria-label="Glow tint"><span>Tint</span></label><button type="button" class="btn ghost sm" data-txgcoff aria-pressed="${!fx.gc}">${fx.gc ? "Use its own colors" : "Its own colors ✓"}</button></div>` : ""}</div>`;
   }
   const adder = add ? `<div class="txadd"><p class="txedh">${L.length ? "Add a layer on top" : "Pick a texture to start"}</p>
       <div class="fchips" role="group" aria-label="Presets">${Object.entries(TEX_PRE).map(([k, [l]]) => `<button type="button" data-txaddp="${k}">${l}</button>`).join("")}</div>
@@ -3374,15 +3416,16 @@ function txEdit(sid, key, fn) {   /* change the slide's layers (an older single 
 }
 function txRefresh(sid) { scheduleDraw(sid); if (focusSid === sid && S.fpanel === "tex") renderFPanel(); renderBoard(new Set([sid])); }
 document.addEventListener("click", e => {
-  const b = e.target.closest("[data-txpick],[data-txeye],[data-txdel],[data-txfx],[data-txaddt],[data-txaddp],[data-txadde],[data-txall],[data-txnone]"); if (!b) return;
+  const b = e.target.closest("[data-txpick],[data-txeye],[data-txdel],[data-txfx],[data-txaddt],[data-txaddp],[data-txadde],[data-txall],[data-txnone],[data-txgcoff]"); if (!b) return;
   const sid = texSid(b), s = sid && S.slides[sid]; if (!s) return;
-  const d = b.dataset, add = (name, fx) => { const id = txId(); txEdit(sid, null, L => L.push({ id, name, on: "all", fx })); S.txSel[sid] = id; S.txAdd[sid] = false; S.txFx[sid] = TEX_KEYS.find(k => +fx[k] > 0); };
+  const d = b.dataset, add = (name, fx, on) => { const id = txId(); txEdit(sid, null, L => L.push({ id, name, on: on || "all", fx })); S.txSel[sid] = id; S.txAdd[sid] = false; S.txFx[sid] = TEX_KEYS.find(k => +fx[k] > 0); };
   if (d.txpick) { S.txSel[sid] = d.txpick; S.txAdd[sid] = false; }
   else if (d.txeye) txEdit(sid, null, L => { const l = L.find(x => x.id === d.txeye); if (l) { if (l.off) delete l.off; else l.off = true; } });
   else if (d.txdel) txEdit(sid, null, L => { const j = L.findIndex(x => x.id === d.txdel); if (j >= 0) L.splice(j, 1); });
   else if (d.txfx) S.txFx[sid] = d.txfx;
   else if (b.hasAttribute("data-txaddt")) S.txAdd[sid] = !S.txAdd[sid];
-  else if (d.txaddp) add(TEX_PRE[d.txaddp][0], clone(TEX_PRE[d.txaddp][1]));
+  else if (d.txaddp) add(TEX_PRE[d.txaddp][0], clone(TEX_PRE[d.txaddp][1]), TEX_PRE[d.txaddp][2]);
+  else if (b.hasAttribute("data-txgcoff")) { const cur = txCur(sid, texLayers(s)); if (cur) txEdit(sid, null, L => { const l = L.find(x => x.id === cur.id); if (l) delete l.fx.gc; }); }
   else if (d.txadde) { const k = d.txadde, fx = { [k]: TEX_DEF[k] }; (TEX_COLORS[k] || []).forEach(([c, , def]) => { fx[c] = def; }); add(TEX_LIST.find(x => x[0] === k)[1], fx); }
   else if (b.hasAttribute("data-txnone")) txEdit(sid, null, L => { L.length = 0; });
   else if (b.hasAttribute("data-txall")) {
@@ -3394,13 +3437,14 @@ document.addEventListener("click", e => {
 });
 let txInT = 0;
 document.addEventListener("input", e => {
-  const el = e.target, d = el.dataset || {}; if (!(d.txr || d.txn || d.txc)) return;
+  const el = e.target, d = el.dataset || {}; if (!(d.txr || d.txn || d.txc || d.txp)) return;
   const sid = texSid(el), s = sid && S.slides[sid]; if (!s) return;
   const cur = txCur(sid, texLayers(s)); if (!cur) return;
-  const k = d.txr || d.txn || d.txc, v = d.txc ? el.value : d.txn ? clamp(+el.value / 100, 0, 1) : +el.value; if (!d.txc && !isFinite(v)) return;
+  const k = d.txr || d.txn || d.txc || d.txp, v = d.txc ? el.value : d.txn ? clamp(+el.value / 100, 0, 1) : +el.value; if (!d.txc && !isFinite(v)) return;
+  if (d.txp) showBubble(el);
   txEdit(sid, "tx." + cur.id + "." + k, L => { const l = L.find(x => x.id === cur.id); if (l) l.fx[k] = v; });
   const box = el.closest(".txbox");
-  if (box && !d.txc) {
+  if (box && !d.txc && !d.txp) {
     if (d.txr) { const n = box.querySelector(`[data-txn="${k}"]`); if (n) n.value = Math.round(v * 100); showBubble(el); } else { const r = box.querySelector(`[data-txr="${k}"]`); if (r) r.value = v; }
     const c = box.querySelector(`[data-txfx="${k}"]`); if (c) { c.querySelector("i").textContent = Math.round(v * 100) + "%"; c.classList.toggle("zero", !(v > 0)); }
   }
@@ -3413,7 +3457,7 @@ document.addEventListener("change", e => {
   const sid = texSid(el); if (!sid) return;
   txEdit(sid, null, L => { const l = L.find(x => x.id === el.dataset.txon); if (l) l.on = el.value; }); S.txSel[sid] = el.dataset.txon; txRefresh(sid);
 });
-document.addEventListener("change", e => { const d = e.target.dataset || {}; if (d.txr || d.txn) { hideBubble(); const sid = texSid(e.target); if (sid) txRefresh(sid); } });
+document.addEventListener("change", e => { const d = e.target.dataset || {}; if (d.txr || d.txn || d.txp || d.txc === "gc") { hideBubble(); const sid = texSid(e.target); if (sid) txRefresh(sid); } });
 /* reorder: drag a layer's handle (the row follows the finger), or arrow keys on it */
 let txDrag = null;
 document.addEventListener("pointerdown", e => {
