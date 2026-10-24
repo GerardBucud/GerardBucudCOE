@@ -607,7 +607,14 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .txi{width:32px;height:32px;display:grid;place-items:center;font-size:18px;border-radius:8px}.txi svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .txi[aria-pressed="false"]{opacity:.55}
 .txedh{margin:0;font-size:12px;opacity:.8}
-.txed,.txadd{display:grid;gap:8px}
+.txed{display:grid;gap:8px}
+.txaddsel{max-width:170px;min-height:32px;font-size:12.5px;padding:5px 8px}
+.txedrow{display:flex;align-items:center;gap:8px}.txedrow input[type=range]{flex:1 1 auto;min-width:60px}
+.txfxsel{max-width:150px;min-height:32px;font-size:12.5px;padding:5px 8px}
+@media (max-width:760px){
+  #focusDlg.pscroll .fwrap{flex:0 0 45%;min-height:0}
+  #focusDlg.pscroll .fpanel{flex:1 1 0;min-height:118px;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;align-content:start}
+}
 .fchips button.zero{opacity:.6}
 .card .txbox .fchips button{border-color:#d9d2ce;background:#fff;color:#2b2626}.card .txbox .fchips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
 .ftexl{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;color:#b9b0ac}
@@ -3369,14 +3376,15 @@ const TEX_ON_L = [["all", "Everything"], ["bg", "Background"], ["photo", "Photos
 const TEX_DEF = { glow: 0.55, grain: 0.35, film: 0.6, burn: 0.6, paper: 0.6, half: 0.5, duo: 0.85, split: 0.7, scan: 0.5, vhs: 0.5, dust: 0.35, vig: 0.4 };
 const texColor = (T, k, def) => HEXCOL.test(T[k]) ? T[k] : def;
 const EYE_OFF_I = `<svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 5.6A10 10 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3.2 3.9M6.3 7.4A16.6 16.6 0 0 0 2.5 12S6 18.5 12 18.5a9.4 9.4 0 0 0 4.4-1.1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>`;
-S.txSel = {}; S.txFx = {}; S.txAdd = {};
+S.txSel = {}; S.txFx = {};
+const txOpt = (l, v) => l + (+v > 0 ? ` · ${Math.round(v * 100)}%` : "");
 const fxName = fx => TEX_LIST.filter(([k]) => +fx[k] > 0).map(([, l]) => l).join(" + ") || "Empty";
 const fxSum = fx => TEX_LIST.filter(([k]) => +fx[k] > 0).map(([k, l]) => `${l} ${Math.round(fx[k] * 100)}%`).join(", ") || "no effect yet";
 let txN = 0; const txId = () => "t" + Date.now().toString(36) + (txN++).toString(36);
 const texSid = el => { const c = el.closest(".card"); return c ? c.dataset.sid : el.closest("#fPanel") ? focusSid : null; };
 const txCur = (sid, L) => L.find(l => l.id === S.txSel[sid]) || L[L.length - 1] || null;
 function texLayersHTML(sid, s) {
-  const L = texLayers(s), sel = txCur(sid, L), add = !!S.txAdd[sid] || !L.length;
+  const L = texLayers(s), sel = txCur(sid, L);
   const rows = L.slice().reverse().map(l => `<div class="txrow${sel && l.id === sel.id ? " on" : ""}${l.off ? " off" : ""}" data-txrow="${esc(l.id)}">
     <button type="button" class="txh" data-txh="${esc(l.id)}" title="Drag to reorder (or arrow keys)" aria-label="Reorder ${esc(l.name || fxName(l.fx || {}))}">${GRIP_I}</button>
     <button type="button" class="txname" data-txpick="${esc(l.id)}" aria-pressed="${!!sel && l.id === sel.id}"><b>${esc(l.name || fxName(l.fx || {}))}</b><span>${esc(fxSum(l.fx || {}))}</span></button>
@@ -3384,21 +3392,20 @@ function texLayersHTML(sid, s) {
     <button type="button" class="txi" data-txeye="${esc(l.id)}" aria-pressed="${!l.off}" title="${l.off ? "Show" : "Hide"}" aria-label="${l.off ? "Show" : "Hide"} this layer">${l.off ? EYE_OFF_I : EYE_I}</button>
     <button type="button" class="txi" data-txdel="${esc(l.id)}" title="Delete" aria-label="Delete this layer">×</button></div>`).join("");
   let ed = "";
-  if (sel && !add) {
+  if (sel) {
     const fx = sel.fx || {}, cur = TEX_LIST.find(x => x[0] === S.txFx[sid]) || TEX_LIST.find(x => +fx[x[0]] > 0) || TEX_LIST[0], v = +fx[cur[0]] || 0, cols = TEX_COLORS[cur[0]];
     ed = `<div class="txed"><p class="txedh">Effects in <b>${esc(sel.name || fxName(fx))}</b></p>
-      <div class="fchips" role="group" aria-label="Effects in this layer">${TEX_LIST.map(([k, l]) => `<button type="button" data-txfx="${k}" aria-pressed="${k === cur[0]}"${+fx[k] > 0 ? "" : ' class="zero"'}>${l}<i>${Math.round((+fx[k] || 0) * 100)}%</i></button>`).join("")}</div>
-      <div class="frow"><input type="range" data-txr="${cur[0]}" aria-label="${cur[1]}" min="0" max="1" step="0.01" value="${v}" data-fmt="pct">
+      <div class="frow txedrow"><select class="ctl txfxsel" data-txfxsel aria-label="Effect in this layer">${TEX_LIST.map(([k, l]) => `<option value="${k}"${k === cur[0] ? " selected" : ""}>${txOpt(l, fx[k])}</option>`).join("")}</select><input type="range" data-txr="${cur[0]}" aria-label="${cur[1]}" min="0" max="1" step="0.01" value="${v}" data-fmt="pct">
         <span class="numbox"><input type="number" class="num" data-txn="${cur[0]}" value="${Math.round(v * 100)}" min="0" max="100" step="1" aria-label="${cur[1]}, exact value"><span>%</span></span>
         ${cols ? cols.map(([k, l, d]) => `<label class="ftexc" title="${l}"><input type="color" data-txc="${k}" value="${texColor(fx, k, d)}" aria-label="${cur[1]} ${l.toLowerCase()}"><span>${l}</span></label>`).join("") : ""}</div>
       ${cur[0] === "glow" ? `<div class="frowsls">${[["gr", "Size", 0.4], ["gt", "Glows from (brightness)", 0.6]].map(([k, l, d]) => `<label class="frowsl"><span>${l}</span><input type="range" data-txp="${k}" min="0" max="1" step="0.01" value="${fx[k] ?? d}" data-fmt="pct" aria-label="Glow ${l.toLowerCase()}"></label>`).join("")}</div>
         <div class="frow"><label class="ftexc" title="Tint"><input type="color" data-txc="gc" value="${texColor(fx, "gc", "#ffd9a0")}" aria-label="Glow tint"><span>Tint</span></label><button type="button" class="btn ghost sm" data-txgcoff aria-pressed="${!fx.gc}">${fx.gc ? "Use its own colors" : "Its own colors ✓"}</button></div>` : ""}</div>`;
   }
-  const adder = add ? `<div class="txadd"><p class="txedh">${L.length ? "Add a layer on top" : "Pick a texture to start"}</p>
-      <div class="fchips" role="group" aria-label="Presets">${Object.entries(TEX_PRE).map(([k, [l]]) => `<button type="button" data-txaddp="${k}">${l}</button>`).join("")}</div>
-      <div class="fchips" role="group" aria-label="One effect">${TEX_LIST.map(([k, l]) => `<button type="button" data-txadde="${k}">${l}</button>`).join("")}</div></div>` : "";
-  return `<div class="txbox"><div class="txhead"><b>Texture layers</b><span class="hint">top applies last</span><span class="grow"></span>${L.length ? `<button type="button" class="btn sm" data-txaddt aria-pressed="${add}">${add ? "Cancel" : "+ Add"}</button>` : ""}</div>
-    ${L.length ? `<div class="txlist" role="list">${rows}</div>` : ""}${adder}${ed}
+  const adder = `<select class="ctl txaddsel" data-txaddsel aria-label="Add a texture layer"><option value="">+ Add texture…</option>
+      <optgroup label="Presets">${Object.entries(TEX_PRE).map(([k, [l]]) => `<option value="p:${k}">${l}</option>`).join("")}</optgroup>
+      <optgroup label="One effect">${TEX_LIST.map(([k, l]) => `<option value="e:${k}">${l}</option>`).join("")}</optgroup></select>`;
+  return `<div class="txbox"><div class="txhead"><b>Texture layers</b><span class="hint">top applies last</span><span class="grow"></span>${adder}</div>
+    ${L.length ? `<div class="txlist" role="list">${rows}</div>` : `<p class="hint" style="margin:0">No texture yet. Pick one from + Add texture: it goes on as a layer you can stack, reorder and point at the text, the photos or the background.</p>`}${ed}
     ${L.length ? `<div class="frow ftexb"><button type="button" class="btn ghost sm" data-txall>Use on every slide</button><button type="button" class="btn ghost sm" data-txnone>No texture</button></div>` : ""}</div>`;
 }
 function texHTML(sid, s) {
@@ -3416,17 +3423,13 @@ function txEdit(sid, key, fn) {   /* change the slide's layers (an older single 
 }
 function txRefresh(sid) { scheduleDraw(sid); if (focusSid === sid && S.fpanel === "tex") renderFPanel(); renderBoard(new Set([sid])); }
 document.addEventListener("click", e => {
-  const b = e.target.closest("[data-txpick],[data-txeye],[data-txdel],[data-txfx],[data-txaddt],[data-txaddp],[data-txadde],[data-txall],[data-txnone],[data-txgcoff]"); if (!b) return;
+  const b = e.target.closest("[data-txpick],[data-txeye],[data-txdel],[data-txall],[data-txnone],[data-txgcoff]"); if (!b) return;
   const sid = texSid(b), s = sid && S.slides[sid]; if (!s) return;
-  const d = b.dataset, add = (name, fx, on) => { const id = txId(); txEdit(sid, null, L => L.push({ id, name, on: on || "all", fx })); S.txSel[sid] = id; S.txAdd[sid] = false; S.txFx[sid] = TEX_KEYS.find(k => +fx[k] > 0); };
-  if (d.txpick) { S.txSel[sid] = d.txpick; S.txAdd[sid] = false; }
+  const d = b.dataset;
+  if (d.txpick) S.txSel[sid] = d.txpick;
   else if (d.txeye) txEdit(sid, null, L => { const l = L.find(x => x.id === d.txeye); if (l) { if (l.off) delete l.off; else l.off = true; } });
   else if (d.txdel) txEdit(sid, null, L => { const j = L.findIndex(x => x.id === d.txdel); if (j >= 0) L.splice(j, 1); });
-  else if (d.txfx) S.txFx[sid] = d.txfx;
-  else if (b.hasAttribute("data-txaddt")) S.txAdd[sid] = !S.txAdd[sid];
-  else if (d.txaddp) add(TEX_PRE[d.txaddp][0], clone(TEX_PRE[d.txaddp][1]), TEX_PRE[d.txaddp][2]);
   else if (b.hasAttribute("data-txgcoff")) { const cur = txCur(sid, texLayers(s)); if (cur) txEdit(sid, null, L => { const l = L.find(x => x.id === cur.id); if (l) delete l.fx.gc; }); }
-  else if (d.txadde) { const k = d.txadde, fx = { [k]: TEX_DEF[k] }; (TEX_COLORS[k] || []).forEach(([c, , def]) => { fx[c] = def; }); add(TEX_LIST.find(x => x[0] === k)[1], fx); }
   else if (b.hasAttribute("data-txnone")) txEdit(sid, null, L => { L.length = 0; });
   else if (b.hasAttribute("data-txall")) {
     const L = clone(texLayers(s)); let n = 0;
@@ -3446,11 +3449,23 @@ document.addEventListener("input", e => {
   const box = el.closest(".txbox");
   if (box && !d.txc && !d.txp) {
     if (d.txr) { const n = box.querySelector(`[data-txn="${k}"]`); if (n) n.value = Math.round(v * 100); showBubble(el); } else { const r = box.querySelector(`[data-txr="${k}"]`); if (r) r.value = v; }
-    const c = box.querySelector(`[data-txfx="${k}"]`); if (c) { c.querySelector("i").textContent = Math.round(v * 100) + "%"; c.classList.toggle("zero", !(v > 0)); }
+    const o = box.querySelector(`[data-txfxsel] option[value="${k}"]`); if (o) o.textContent = txOpt(TEX_LIST.find(x => x[0] === k)[1], v);
   }
   scheduleDraw(sid);
   clearTimeout(txInT); const inCard = !!el.closest(".card");   /* the other view catches up when the slider rests */
   txInT = setTimeout(() => { if (inCard) { if (focusSid === sid && S.fpanel === "tex") renderFPanel(); } else renderBoard(new Set([sid])); }, 450);
+});
+document.addEventListener("change", e => {   /* + Add texture (a preset or one effect, as a new layer on top), and the layer's effect to edit */
+  const el = e.target, d = el.dataset || {}; if (!("txaddsel" in d) && !("txfxsel" in d)) return;
+  const sid = texSid(el); if (!sid || !S.slides[sid]) return;
+  if ("txfxsel" in d) { S.txFx[sid] = el.value; txRefresh(sid); return; }
+  const [kind, k] = el.value.split(":"); if (!k) return;
+  let name, fx, on = "all";
+  if (kind === "p" && TEX_PRE[k]) { [name, fx, on = "all"] = [TEX_PRE[k][0], clone(TEX_PRE[k][1]), TEX_PRE[k][2]]; }
+  else if (kind === "e" && TEX_DEF[k] != null) { name = TEX_LIST.find(x => x[0] === k)[1]; fx = { [k]: TEX_DEF[k] }; (TEX_COLORS[k] || []).forEach(([c, , def]) => { fx[c] = def; }); }
+  else return;
+  const id = txId(); txEdit(sid, null, L => L.push({ id, name, on: on || "all", fx })); S.txSel[sid] = id; S.txFx[sid] = TEX_KEYS.find(x => +fx[x] > 0);
+  txRefresh(sid);
 });
 document.addEventListener("change", e => {
   const el = e.target; if (!el.dataset || !el.dataset.txon) return;
@@ -5521,13 +5536,14 @@ function renderFPanel() {
   $("#fTextBtn").setAttribute("aria-pressed", String(S.fpanel === "text"));
   if (S.fpanel === "text" && s && S.ftfield && !fieldPath(s, S.ftfield)) S.ftfield = null;
   el.hidden = !S.fpanel || !s; el.classList.toggle("text", S.fpanel === "text"); el.classList.toggle("one", S.fpanel === "text" && !!S.ftfield);
+  $("#focusDlg").classList.toggle("pscroll", !!s && ["tex", "frame", "row"].includes(S.fpanel));   /* phones: the slide keeps 45%, the panel scrolls */
   $("#focusDlg").classList.toggle("withpanel", !!S.fpanel && !!s);
   layoutLite();   /* touch: the edit mode's rows are in place before anything gets the focus */
   if (!S.fpanel || !s) return;
   if (S.fpanel === "text") { el.innerHTML = textPanelHTML(s); updateFmtBar(); return; }
   if (S.fpanel === "row") { el.innerHTML = rowPanelHTML(s); return; }
   if (S.fpanel === "frame") { el.innerHTML = framePanelHTML(s); const c = el.querySelector('[data-ffr][aria-pressed="true"]'); if (c) c.scrollIntoView({ block: "nearest", inline: "nearest" }); return; }
-  if (S.fpanel === "tex") { el.innerHTML = texPanelHTML(s); const c = el.querySelector('[data-txfx][aria-pressed="true"]'); if (c) c.scrollIntoView({ block: "nearest", inline: "nearest" }); return; }
+  if (S.fpanel === "tex") { el.innerHTML = texPanelHTML(s); return; }
   const slots = TEMPLATES[s.type].slots.filter(k => s[k]);
   const bgOnly = !!bgOf(s) && !bgOf(s).photo;
   if (s.overlay || !slots.length || bgOnly) { el.innerHTML = `<p class="hint">${s.overlay ? "This slide is a text-only overlay, so there's no photo to edit." : bgOnly ? "This slide shows a background instead of its photo. Pick Photo under Background in Layout and framing to edit the photo." : "Add a photo to this slide first, or give it a plain or gradient background in Layout and framing."}</p>`; return; }
@@ -5547,6 +5563,23 @@ $("#fTex").addEventListener("click", () => { dropTextSel(true); closeHist(); S.f
 /* the large view's Texture panel: presets, a chip per effect (with its amount), one slider for the chosen effect, and its two colors
    for duotone and split tone */
 let texCardT = 0;
+/* computers: the mouse wheel over a slider or its number box nudges the value (Shift: ten times as much); the page doesn't scroll */
+let wheelAcc = 0, wheelEl = null, wheelT = 0;
+document.addEventListener("wheel", e => {
+  const el = e.target; if (e.ctrlKey || !el || !el.matches || !el.matches('input[type="range"],input[type="number"]') || el.disabled || el.readOnly) return;
+  e.preventDefault();
+  if (wheelEl !== el) { wheelAcc = 0; wheelEl = el; }
+  wheelAcc += (Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? -e.deltaY : e.deltaX) * (e.deltaMode === 1 ? 33 : 1);
+  const notches = wheelAcc > 0 ? Math.floor(wheelAcc / 50) : Math.ceil(wheelAcc / 50); if (!notches) return;
+  wheelAcc -= notches * 50;
+  const min = el.min === "" ? -Infinity : +el.min, max = el.max === "" ? Infinity : +el.max, st = +el.step > 0 ? +el.step : 1;
+  const step = el.type === "range" && isFinite(max - min) ? Math.max(st, (max - min) / 100) : st, dec = (String(st).split(".")[1] || "").length;
+  const v = clamp(+el.value + notches * step * (e.shiftKey ? 10 : 1), min, max), nv = +(Math.round(v / st) * st).toFixed(dec);
+  if (nv === +el.value) return;
+  el.value = nv; el.dispatchEvent(new Event("input", { bubbles: true }));
+  if (el.type === "range") showBubble(el);
+  clearTimeout(wheelT); wheelT = setTimeout(() => { el.dispatchEvent(new Event("change", { bubbles: true })); hideBubble(); }, 450);
+}, { passive: false, capture: true });
 /* the large view's Frame panel: on a frame slide, its frame; on any other slide, a frame around its photo (slide.pframe), the
    text staying where it is */
 const thumbMemo = new Map();
@@ -5998,7 +6031,7 @@ function lineBreak() { if (!document.execCommand("insertLineBreak")) document.ex
 $("#fPanel").addEventListener("drop", e => { if (e.target.closest && e.target.closest("[contenteditable]")) e.preventDefault(); });
 /* the style buttons and the box tabs keep the focus and the selection in the box */
 const keepFocus = e => {
-  const b = e.target.closest && e.target.closest("[data-fmt],[data-ftab]"); if (!b) return;
+  const b = e.target.closest && e.target.closest("button[data-fmt],[data-ftab]"); if (!b) return;   /* the format buttons; a slider's data-fmt is only how its value reads */
   e.preventDefault();
   const el = curRich(); fmtSnap = el && b.dataset.fmt && b.dataset.fmt !== "hc" ? { el, sel: document.activeElement === el ? selIn(el) : null, t: Date.now() } : null;
 };
@@ -6320,7 +6353,7 @@ function renderSelTools() {
       <label class="sr" for="photoDesc">Description</label><input class="ctl wide" id="photoDesc" value="${esc(one.desc || "")}" maxlength="120" placeholder="Description" aria-label="Description">
       <label class="sr" for="photoTags">Tags</label><input class="ctl wide" id="photoTags" value="${esc((one.tags || []).join(", "))}" placeholder="Tags, separated by commas" aria-label="Tags, separated by commas">` : ""}
     ${look.length ? `<button type="button" class="btn ghost sm" data-lib="selsim">Select its ${look.length} look-alike${look.length === 1 ? "" : "s"}</button>` : ""}
-    <button type="button" class="btn sm" data-lib="toframes">Put in frames…</button><button type="button" class="btn ghost sm" data-lib="selall">Select all here</button><button type="button" class="btn ghost sm" data-lib="selnone">Clear</button>
+    <button type="button" class="btn sm" data-lib="dlphotos">${n > 1 ? `Download ${n}` : "Download"}</button><button type="button" class="btn sm" data-lib="toframes">Put in frames…</button><button type="button" class="btn ghost sm" data-lib="selall">Select all here</button><button type="button" class="btn ghost sm" data-lib="selnone">Clear</button>
     ${canDel ? `<button type="button" class="btn ghost sm danger" data-lib="delphotos">${n > 1 ? `Delete ${n} photos…` : "Delete photo…"}</button>` : ""}`;
 }
 function toggleTile(id, range) {
@@ -6505,6 +6538,7 @@ function submitFolderForm() {
 function libAction(a, btn) {
   if (a === "selall") { visiblePhotos().forEach(([id]) => S.selected.add(id)); renderLibrary(); }
   else if (a === "toframes") openFrames([...S.selected]);
+  else if (a === "dlphotos") downloadPhotos([...S.selected], btn);
   else if (a === "clearsearch") { S.libQuery = ""; const i = $("#libSearch"); if (i) i.value = ""; renderLibrary(); }
   else if (a === "delphotos") openDelete();
   else if (a === "selsim") { const id = [...S.selected][0]; (lookAlikes().get(id) || []).forEach(x => S.selected.add(x)); renderLibrary(); }
@@ -7274,6 +7308,27 @@ async function slideBlob(sid, type = "image/png", quality) {   /* full size, 180
   return blob;
 }
 const fileName = sid => { const x = numOf(sid), s = S.slides[sid], own = RATIOS[s.ratio] && s.ratio !== ratioKey(S.post) ? "-" + s.ratio.replace(":", "x") : ""; return `${pad2(x.n)}${x.of > 1 ? "-v" + x.v : ""}-${slug(slideName(s))}${own}${s.overlay ? "-overlay" : ""}.png`; };
+/* the library's Download: the photos as uploaded (one as it is, several in a zip), named after the photo */
+async function downloadPhotos(ids, btn) {
+  const list = ids.map(id => S.photos.get(id)).filter(p => p && srcOf(p)); if (!list.length) return;
+  const ext = t => ({ "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/heic": "heic", "image/gif": "gif", "image/svg+xml": "svg" })[t] || "jpg";
+  const base = p => String(p.name || "photo").replace(/[\\/:*?"<>|]+/g, "-").replace(/\.(jpe?g|png|webp|heic)$/i, "").slice(0, 80) || "photo";
+  const get = async p => { const r = await fetch(srcOf(p)); if (!r.ok) throw new Error("fetch " + r.status); return r.blob(); };
+  const label = btn && btn.textContent; if (btn) btn.disabled = true;
+  try {
+    if (list.length === 1) { const b = await get(list[0]); await offer(`${base(list[0])}.${ext(b.type)}`, b); return; }
+    if (!window.JSZip) { toast("ZIP isn't available here: select one photo at a time"); return; }
+    const zip = new window.JSZip(), used = new Set(); let n = 0, failed = 0;
+    for (const p of list) {
+      if (btn) btn.textContent = `Getting ${++n}/${list.length}`;
+      try { const b = await get(p); let f = `${base(p)}.${ext(b.type)}`, k = 2; while (used.has(f)) f = `${base(p)}-${k++}.${ext(b.type)}`; used.add(f); zip.file(f, b); } catch (e) { failed++; }
+    }
+    if (btn) btn.textContent = "Zipping…";
+    await offer(`photos-${list.length}.zip`, await zip.generateAsync({ type: "blob" }));
+    if (failed) toast(`${failed} photo${failed === 1 ? "" : "s"} couldn't be downloaded`);
+  } catch (e) { toast("That photo couldn't be downloaded"); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = label; } }
+}
 async function offer(filename, blob) {
   if (S.downloads) {
     try { await S.downloads.save({ filename, data: blob }); return true; }
