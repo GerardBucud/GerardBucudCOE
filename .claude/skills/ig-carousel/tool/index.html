@@ -505,6 +505,24 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .texbox summary{cursor:pointer;font-weight:600;font-size:14px}
 .texbox .texin{display:grid;gap:12px;margin-top:10px}
 .xf.nos i,.xf.nos b{display:none}
+.tbtn#fHist:not(.can):not(:disabled){background:#1c1918;border-color:#3a3432;color:#f3eeeb;font-weight:400}
+.ftools{position:relative}
+.fhistpop{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 8px);z-index:6;width:min(440px,calc(100% - 16px));background:#1c1918;border:1px solid #3a3432;border-radius:14px;padding:12px;box-shadow:0 10px 30px rgba(0,0,0,.55);display:grid;gap:10px;color:#f3eeeb}
+.fhistpop[hidden]{display:none}
+.fhistpop .hrow{display:flex;gap:8px}
+.fhistpop .hrow .tbtn{flex-direction:row;min-height:44px;max-width:none}
+.fhistpop .hnote{margin:0;font-size:12.5px;color:#b9b0ac}.fhistpop .hnote b{color:#f3eeeb;font-weight:600;margin-right:4px}
+.fhistpop .hlist{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x proximity}
+.fhistpop .hlist button{flex:0 0 auto;border:2px solid transparent;border-radius:8px;background:none;padding:0;color:#b9b0ac;font-size:11px;display:grid;gap:4px;justify-items:center;cursor:pointer;scroll-snap-align:start}
+.fhistpop .hlist button:hover{border-color:var(--accent)}
+.fhistpop .hlist .hnow{border-color:#f3eeeb;cursor:default;color:#f3eeeb}
+.fhistpop .hlist canvas{width:72px;height:auto;border-radius:6px;display:block;background:#0e0b0a}
+.fhistpop .hlist span{padding:0 2px 4px}
+.fhistpop .hint{margin:0;color:#b9b0ac;font-size:12.5px}
+.ftexb{justify-content:flex-start;gap:8px}
+.ftexc{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;color:#b9b0ac;cursor:pointer}
+.ftexc input{width:28px;height:28px;padding:0;border:1px solid #3a3432;border-radius:50%;background:none;cursor:pointer}
+.ftexc input::-webkit-color-swatch-wrapper{padding:0}.ftexc input::-webkit-color-swatch{border:0;border-radius:50%}
 .fbar svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .fdel{position:absolute;width:36px;height:36px;border-radius:50%;border:2px solid #fff;background:#e02d12;color:#fff;display:grid;place-items:center;padding:0;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .fdel svg{width:18px;height:18px}
@@ -920,9 +938,14 @@ details.gsec[open]{padding-bottom:14px}
     <div class="ftools">
       <button type="button" class="tbtn" id="fAdd"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="M12 8v8M8 12h8"/></svg>Sticker</button>
       <button type="button" class="tbtn" id="fTextBtn" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg>Text</button>
-      <button type="button" class="tbtn hist" id="fUndo" disabled><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>Undo</button>
-      <button type="button" class="tbtn hist" id="fRedo" disabled><svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>Redo</button>
+      <button type="button" class="tbtn hist" id="fHist" disabled aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4.5h4.5"/><path d="M12 7.5V12l3 2"/></svg>History</button>
+      <button type="button" class="tbtn" id="fTex" aria-pressed="false"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="8.5" cy="8.5" r="1"/><circle cx="13" cy="7.5" r="0.8"/><circle cx="16.5" cy="11" r="1.1"/><circle cx="9.5" cy="13.5" r="0.9"/><circle cx="14" cy="16" r="1"/><circle cx="7.5" cy="17" r="0.7"/></svg>Texture</button>
       <button type="button" class="tbtn" id="fEdit" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Edit photo</button>
+    <div class="fhistpop" id="fHistPop" role="dialog" aria-label="History" hidden>
+      <div class="hrow"><button type="button" class="tbtn hist" id="fUndo" disabled><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>Undo</button><button type="button" class="tbtn hist" id="fRedo" disabled><svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>Redo</button></div>
+      <p class="hnote"><b>Earlier versions</b> <span id="fHistNote"></span></p>
+      <div class="hlist" id="fHistList"></div>
+    </div>
     </div>
     <p class="fhint" id="fHint"></p>
     <div class="fkb" id="fKb"><p class="khint">Tap the box to type: the keyboard opens here. Select words to style just them; with nothing selected B, I, U and H style the whole text. Drag the slide to look around, pinch to zoom, tap other text to edit it.</p>
@@ -2293,11 +2316,12 @@ function renderBreakdown(ctx, post, s, idx, total, d) {
 }
 
 /* ---------- textures over the whole slide (slide.texture: each effect 0 to 1): grain, TV lines, duotone (dark to c1, light to c2),
-   VHS (color fringes and a few slipped bands), dust and scratches, vignette. Seeded, so the export matches what's on screen. ---------- */
-const TEX_KEYS = ["grain", "scan", "duo", "vhs", "dust", "vig"];
+   split tone (shadows toward s1, highlights toward s2), VHS (color fringes and a few slipped bands), old film (faded, warm, scratched),
+   paper (fibers and blotches), halftone (a dot screen), dust and scratches, vignette. Seeded, so the export matches the screen. ---------- */
+const TEX_KEYS = ["grain", "scan", "duo", "split", "vhs", "film", "paper", "half", "dust", "vig"];
 function texOf(s) {
   const t = s && s.texture; if (!t || typeof t !== "object") return null;
-  const o = { c1: HEXCOL.test(t.c1) ? t.c1 : "#1a0a06", c2: HEXCOL.test(t.c2) ? t.c2 : "#ff7a1a" }; let any = false;
+  const o = { c1: HEXCOL.test(t.c1) ? t.c1 : "#1a0a06", c2: HEXCOL.test(t.c2) ? t.c2 : "#ff7a1a", s1: HEXCOL.test(t.s1) ? t.s1 : "#145a6e", s2: HEXCOL.test(t.s2) ? t.s2 : "#ff9a3c" }; let any = false;
   for (const k of TEX_KEYS) { o[k] = clamp(+t[k] || 0, 0, 1); if (o[k] > 0) any = true; }
   return any ? o : null;
 }
@@ -2310,13 +2334,37 @@ function noiseTile() {
   for (let i = 0; i < 256 * 256; i++) { const v = Math.round(128 + (r() + r() + r() - 1.5) * 150); im.data[i * 4] = im.data[i * 4 + 1] = im.data[i * 4 + 2] = clamp(v, 0, 255); im.data[i * 4 + 3] = 255; }
   x.putImageData(im, 0, 0); return (NOISE = c);
 }
+let PAPER = null;
+function paperTile() {   /* soft blotches and fine fibers, gray around the middle (for an overlay blend) */
+  if (PAPER) return PAPER;
+  const N = 512, c = document.createElement("canvas"); c.width = c.height = N;
+  const x = c.getContext("2d"), r = seeded(9001), lo = document.createElement("canvas"); lo.width = lo.height = 24;
+  const lx = lo.getContext("2d"), li = lx.createImageData(24, 24);
+  for (let i = 0; i < 24 * 24; i++) { const v = Math.round(128 + (r() - 0.5) * 46); li.data[i * 4] = li.data[i * 4 + 1] = li.data[i * 4 + 2] = v; li.data[i * 4 + 3] = 255; }
+  lx.putImageData(li, 0, 0); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; x.drawImage(lo, 0, 0, N, N);
+  const im = x.getImageData(0, 0, N, N), d = im.data;
+  for (let i = 0; i < N * N; i++) { const v = (r() - 0.5) * 22; d[i * 4] += v; d[i * 4 + 1] += v; d[i * 4 + 2] += v; }
+  x.putImageData(im, 0, 0);
+  x.lineWidth = 1;
+  for (let i = 0; i < 900; i++) { const a = r() * Math.PI, len = 4 + r() * 18, px = r() * N, py = r() * N; x.strokeStyle = r() < 0.5 ? `rgba(255,255,255,${0.08 + r() * 0.12})` : `rgba(0,0,0,${0.06 + r() * 0.1})`; x.beginPath(); x.moveTo(px, py); x.lineTo(px + Math.cos(a) * len, py + Math.sin(a) * len); x.stroke(); }
+  return (PAPER = c);
+}
 function applyTexture(ctx, cv, tx, scale) {
   const cw = cv.width, ch = cv.height; if (!cw || !ch) return;
   let keep = null;
   if (OVERLAY) { keep = document.createElement("canvas"); keep.width = cw; keep.height = ch; keep.getContext("2d").drawImage(cv, 0, 0); }   /* see-through parts stay see-through */
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
-  if (tx.duo || tx.vhs) {
+  const film = tx.film || 0;
+  if (tx.duo || tx.vhs || tx.split || film) {
     const im = ctx.getImageData(0, 0, cw, ch), p = im.data;
+    if (film) {   /* old film: faded blacks, less color, a warm cast */
+      const lift = 26 * film, keep = 1 - 0.2 * film, des = 0.5 * film, warm = [16 * film, 5 * film, -16 * film];
+      for (let i = 0; i < p.length; i += 4) { const l = 0.2126 * p[i] + 0.7152 * p[i + 1] + 0.0722 * p[i + 2]; for (let c = 0; c < 3; c++) p[i + c] = lift + (p[i + c] + (l - p[i + c]) * des) * keep + warm[c]; }
+    }
+    if (tx.split) {   /* split tone: the shadows toward s1, the highlights toward s2 */
+      const a = parseInt(tx.s1.slice(1), 16), b = parseInt(tx.s2.slice(1), 16), A = [(a >> 16) - 128, ((a >> 8) & 255) - 128, (a & 255) - 128], B = [(b >> 16) - 128, ((b >> 8) & 255) - 128, (b & 255) - 128], k = tx.split * 0.6;
+      for (let i = 0; i < p.length; i += 4) { const l = (0.2126 * p[i] + 0.7152 * p[i + 1] + 0.0722 * p[i + 2]) / 255, ws = (1 - l) * (1 - l), wh = l * l; for (let c = 0; c < 3; c++) p[i + c] = p[i + c] + (A[c] * ws + B[c] * wh) * k; }
+    }
     if (tx.duo) {
       const a = parseInt(tx.c1.slice(1), 16), b = parseInt(tx.c2.slice(1), 16), A = [a >> 16, (a >> 8) & 255, a & 255], B = [b >> 16, (b >> 8) & 255, b & 255], k = tx.duo;
       for (let i = 0; i < p.length; i += 4) { const l = (0.2126 * p[i] + 0.7152 * p[i + 1] + 0.0722 * p[i + 2]) / 255; for (let c = 0; c < 3; c++) p[i + c] = p[i + c] + ((A[c] + (B[c] - A[c]) * l) - p[i + c]) * k; }
@@ -2332,30 +2380,55 @@ function applyTexture(ctx, cv, tx, scale) {
     }
     ctx.putImageData(im, 0, 0);
   }
-  if (tx.vig) {
+  const vig = Math.max(tx.vig, film * 0.4);
+  if (vig) {
     const g = ctx.createRadialGradient(cw / 2, ch / 2, Math.min(cw, ch) * 0.3, cw / 2, ch / 2, Math.hypot(cw, ch) / 2);
-    g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, `rgba(0,0,0,${0.75 * tx.vig})`); ctx.fillStyle = g; ctx.fillRect(0, 0, cw, ch);
+    g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, `rgba(0,0,0,${0.75 * vig})`); ctx.fillStyle = g; ctx.fillRect(0, 0, cw, ch);
+  }
+  if (tx.paper) {   /* paper: a cream cast, then its fibers and blotches */
+    ctx.globalCompositeOperation = "multiply"; ctx.globalAlpha = 0.45 * tx.paper; ctx.fillStyle = "#efe4cf"; ctx.fillRect(0, 0, cw, ch);
+    const pat = ctx.createPattern(paperTile(), "repeat"); if (pat.setTransform) pat.setTransform(new DOMMatrix().scale(Math.max(0.5, 1.6 * scale)));
+    ctx.globalCompositeOperation = "overlay"; ctx.globalAlpha = Math.min(1, tx.paper * 1.1); ctx.fillStyle = pat; ctx.fillRect(0, 0, cw, ch);
+    ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
+  }
+  if (tx.half) {   /* halftone: a dot screen (rows offset, so it reads at 45°), bigger dots where it's darker */
+    const cell = Math.max(3, 13 * scale), im = ctx.getImageData(0, 0, cw, ch).data, dots = document.createElement("canvas"); dots.width = cw; dots.height = ch;
+    const dx = dots.getContext("2d"); dx.fillStyle = "#fff"; dx.fillRect(0, 0, cw, ch); dx.fillStyle = "#000"; dx.beginPath();
+    for (let row = 0, y = cell / 2; y < ch + cell; y += cell * 0.866, row++) for (let x = (row % 2) * cell / 2; x < cw + cell; x += cell) {
+      const sx = Math.min(cw - 1, Math.max(0, Math.round(x))), sy = Math.min(ch - 1, Math.max(0, Math.round(y))), i = (sy * cw + sx) * 4;
+      const l = (0.2126 * im[i] + 0.7152 * im[i + 1] + 0.0722 * im[i + 2]) / 255, rr = cell * 0.55 * Math.sqrt(Math.max(0, 1 - l));
+      if (rr > 0.35) { dx.moveTo(x + rr, y); dx.arc(x, y, rr, 0, Math.PI * 2); }
+    }
+    dx.fill();
+    ctx.globalCompositeOperation = "multiply"; ctx.globalAlpha = Math.min(1, 0.7 * tx.half); ctx.drawImage(dots, 0, 0);
+    ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
   }
   if (tx.scan || tx.vhs) {
     const per = Math.max(2, 7 * scale), pc = document.createElement("canvas"); pc.width = 4; pc.height = Math.max(2, Math.round(per));
     const px = pc.getContext("2d"); px.fillStyle = "#000"; px.fillRect(0, 0, 4, Math.max(1, Math.round(pc.height / 2)));
     ctx.globalAlpha = Math.max(tx.scan, tx.vhs * 0.4) * 0.5; ctx.fillStyle = ctx.createPattern(pc, "repeat"); ctx.fillRect(0, 0, cw, ch); ctx.globalAlpha = 1;
   }
-  if (tx.grain) {
+  const grain = Math.max(tx.grain, film * 0.35);
+  if (grain) {
     const pat = ctx.createPattern(noiseTile(), "repeat"), gs = Math.max(0.6, 2.2 * scale);
     if (pat.setTransform) pat.setTransform(new DOMMatrix().scale(gs));
-    ctx.globalCompositeOperation = "overlay"; ctx.globalAlpha = Math.min(1, tx.grain * 0.9); ctx.fillStyle = pat; ctx.fillRect(0, 0, cw, ch);
+    ctx.globalCompositeOperation = "overlay"; ctx.globalAlpha = Math.min(1, grain * 0.9); ctx.fillStyle = pat; ctx.fillRect(0, 0, cw, ch);
     ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
   }
-  if (tx.dust) {
-    const r = seeded(4242), n = Math.round(160 * tx.dust), k = scale;
+  if (film) {   /* old film: long thin scratches down the frame */
+    const r = seeded(3131), k = scale;
+    for (let i = 0, m = 2 + Math.round(4 * film); i < m; i++) { const x = r() * cw; ctx.fillStyle = r() < 0.6 ? `rgba(255,255,255,${(0.18 + r() * 0.2) * film})` : `rgba(0,0,0,${(0.15 + r() * 0.2) * film})`; ctx.fillRect(x, 0, Math.max(0.6, (1 + r() * 1.5) * k), ch); }
+  }
+  const dust = Math.max(tx.dust, film * 0.5);
+  if (dust) {
+    const r = seeded(4242), n = Math.round(160 * dust), k = scale;
     for (let i = 0; i < n; i++) {
       const x = r() * cw, y = r() * ch, rad = (1 + r() * 3.5) * k * 1.4;
-      ctx.fillStyle = r() < 0.7 ? `rgba(255,255,255,${(0.25 + r() * 0.45) * tx.dust})` : `rgba(0,0,0,${(0.2 + r() * 0.4) * tx.dust})`;
+      ctx.fillStyle = r() < 0.7 ? `rgba(255,255,255,${(0.25 + r() * 0.45) * dust})` : `rgba(0,0,0,${(0.2 + r() * 0.4) * dust})`;
       ctx.beginPath(); ctx.arc(x, y, Math.max(0.5, rad), 0, Math.PI * 2); ctx.fill();
     }
-    ctx.strokeStyle = `rgba(255,255,255,${0.3 * tx.dust})`; ctx.lineWidth = Math.max(0.6, 1.6 * k);
-    for (let i = 0, m = Math.round(7 * tx.dust); i < m; i++) { const x = r() * cw, y = r() * ch, len = (200 + r() * 700) * k; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + (r() - 0.5) * 60 * k, y + len / 2, x + (r() - 0.5) * 40 * k, y + len); ctx.stroke(); }
+    ctx.strokeStyle = `rgba(255,255,255,${0.3 * dust})`; ctx.lineWidth = Math.max(0.6, 1.6 * k);
+    for (let i = 0, m = Math.round(7 * dust); i < m; i++) { const x = r() * cw, y = r() * ch, len = (200 + r() * 700) * k; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + (r() - 0.5) * 60 * k, y + len / 2, x + (r() - 0.5) * 40 * k, y + len); ctx.stroke(); }
   }
   if (keep) { ctx.globalCompositeOperation = "destination-in"; ctx.drawImage(keep, 0, 0); ctx.globalCompositeOperation = "source-over"; }
   ctx.restore();
@@ -2861,21 +2934,25 @@ function onBdColor(el) {   /* Color swatch: the item becomes a color circle */
   saveSlide(sid); scheduleDraw(sid);
   const th = el.closest(".gearpic") && el.closest(".gearpic").querySelector(".gthumb"); if (th) th.innerHTML = bdThumb(it);
 }
-/* Texture: presets */
-const TEX_PRE = { film: { grain: 0.35, dust: 0.25, vig: 0.3 }, tv: { scan: 0.55, grain: 0.2, vig: 0.35 }, vhs: { vhs: 0.6, scan: 0.3, grain: 0.25 }, duo: { duo: 0.85, grain: 0.2, c1: "#1a0a06", c2: "#ff7a1a" }, duo2: { duo: 1, grain: 0.15, c1: "#0e0b0a", c2: "#f2ede6" } };
+/* Texture: the effects, their presets, and the card's controls (the large view has the same in its Texture panel) */
+const TEX_LIST = [["grain", "Grain"], ["film", "Old film"], ["paper", "Paper"], ["half", "Halftone"], ["duo", "Duotone"], ["split", "Split tone"], ["scan", "TV lines"], ["vhs", "VHS"], ["dust", "Dust"], ["vig", "Vignette"]];
+const TEX_COLORS = { duo: [["c1", "Shadows", "#1a0a06"], ["c2", "Highlights", "#ff7a1a"]], split: [["s1", "Shadows", "#145a6e"], ["s2", "Highlights", "#ff9a3c"]] };
+const TEX_PRE = { film: ["Old film", { film: 0.7, grain: 0.3, dust: 0.3 }], paper: ["Paper", { paper: 0.7, grain: 0.15 }], half: ["Halftone", { half: 0.6 }],
+  split: ["Split tone", { split: 0.7, grain: 0.15, s1: "#145a6e", s2: "#ff9a3c" }], duo: ["Duotone: brand", { duo: 0.85, grain: 0.2, c1: "#1a0a06", c2: "#ff7a1a" }], duo2: ["Duotone: cream", { duo: 1, grain: 0.15, c1: "#0e0b0a", c2: "#f2ede6" }],
+  grainy: ["Grain + dust", { grain: 0.35, dust: 0.25, vig: 0.3 }], tv: ["TV lines", { scan: 0.55, grain: 0.2, vig: 0.35 }], vhs: ["VHS", { vhs: 0.6, scan: 0.3, grain: 0.25 }] };
+const texColor = (T, k, def) => HEXCOL.test(T[k]) ? T[k] : def;
 function texHTML(sid, s) {
-  const T = s.texture || {}, v = k => +T[k] || 0, on = TEX_KEYS.some(k => v(k) > 0);
+  const T = s.texture || {}, v = k => +T[k] || 0, on = TEX_KEYS.some(k => v(k) > 0), pairs = [];
+  for (let i = 0; i < TEX_LIST.length; i += 2) pairs.push(`<div class="two">${TEX_LIST.slice(i, i + 2).map(([k, l]) => rng(sid, "texture." + k, l, 0, 1, 0.01, v(k), "pct")).join("")}</div>`);
+  const colors = Object.entries(TEX_COLORS).map(([e, cs]) => `<div class="two">${cs.map(([k, l, d]) => `<div><label class="lbl" for="${sid}-t${k}">${e === "duo" ? "Duotone" : "Split tone"} ${l.toLowerCase()}</label><input type="color" class="ctl" id="${sid}-t${k}" data-f="texture.${k}" value="${texColor(T, k, d)}"></div>`).join("")}</div>`).join("");
   return `<details class="texbox"${on ? " open" : ""}><summary>Texture over the whole slide${on ? " (on)" : ""}</summary><div class="texin">
-    <div class="chips">${[["film", "Film"], ["tv", "TV lines"], ["vhs", "VHS"], ["duo", "Duotone: brand"], ["duo2", "Duotone: cream"]].map(([k, l]) => `<button type="button" data-act="texpre" data-p="${k}">${l}</button>`).join("")}</div>
-    <div class="two">${rng(sid, "texture.grain", "Grain", 0, 1, 0.01, v("grain"), "pct")}${rng(sid, "texture.scan", "TV lines", 0, 1, 0.01, v("scan"), "pct")}</div>
-    <div class="two">${rng(sid, "texture.vhs", "VHS", 0, 1, 0.01, v("vhs"), "pct")}${rng(sid, "texture.dust", "Dust and scratches", 0, 1, 0.01, v("dust"), "pct")}</div>
-    <div class="two">${rng(sid, "texture.vig", "Vignette", 0, 1, 0.01, v("vig"), "pct")}${rng(sid, "texture.duo", "Duotone", 0, 1, 0.01, v("duo"), "pct")}</div>
-    <div class="two"><div><label class="lbl" for="${sid}-tc1">Duotone shadows</label><input type="color" class="ctl" id="${sid}-tc1" data-f="texture.c1" value="${HEXCOL.test(T.c1) ? T.c1 : "#1a0a06"}"></div><div><label class="lbl" for="${sid}-tc2">Duotone highlights</label><input type="color" class="ctl" id="${sid}-tc2" data-f="texture.c2" value="${HEXCOL.test(T.c2) ? T.c2 : "#ff7a1a"}"></div></div>
+    <div class="chips">${Object.entries(TEX_PRE).map(([k, [l]]) => `<button type="button" data-act="texpre" data-p="${k}">${l}</button>`).join("")}</div>
+    ${pairs.join("")}${colors}
     <div class="actions"><button type="button" class="btn sm" data-act="texall">Use on every slide</button><button type="button" class="btn ghost sm" data-act="texnone">No texture</button></div>
-    <p class="hint" style="margin:0">On top of everything, stickers too, and in the PNGs and the PDF.</p></div></details>`;
+    <p class="hint" style="margin:0">On top of everything, stickers too, and in the PNGs and the PDF. The large view's Texture button has the same.</p></div></details>`;
 }
 function texAct(act, b, sid, s) {
-  if (act === "texpre") { remember(sid); s.texture = { ...TEX_PRE[b.dataset.p] }; saveSlide(sid); renderBoard(new Set([sid])); if (focusSid === sid) drawFocus(); return true; }
+  if (act === "texpre") { remember(sid); s.texture = { ...TEX_PRE[b.dataset.p][1] }; saveSlide(sid); renderBoard(new Set([sid])); if (focusSid === sid) drawFocus(); return true; }
   if (act === "texnone") { remember(sid); delete s.texture; saveSlide(sid); renderBoard(new Set([sid])); if (focusSid === sid) drawFocus(); return true; }
   if (act === "texall") { const tx = clone(s.texture || null); let n = 0; for (const id of order()) { if (id === sid) continue; const o = S.slides[id]; remember(id); if (tx) o.texture = clone(tx); else delete o.texture; saveSlide(id); n++; } renderBoard(); toast(tx ? `This texture is on all ${n + 1} slides` : "Textures off on every slide"); return true; }
   return false;
@@ -4626,11 +4703,38 @@ function dropTextSel(all) {
   drawFocus();
 }
 $("#fAdd").addEventListener("click", () => { if (focusSid) { dropTextSel(true); openStickers(focusSid); } });
-$("#fUndo").addEventListener("click", () => { if (focusSid) { dropTextSel(false); stepHistory(focusSid, true); } });
-$("#fRedo").addEventListener("click", () => { if (focusSid) { dropTextSel(false); stepHistory(focusSid, false); } });
+$("#fUndo").addEventListener("click", () => { if (focusSid) { dropTextSel(false); stepHistory(focusSid, true); renderHist(); } });
+$("#fRedo").addEventListener("click", () => { if (focusSid) { dropTextSel(false); stepHistory(focusSid, false); renderHist(); } });
+/* History: one button for Undo and Redo, in a popup with the slide's earlier versions (tap one to go back to it; Redo comes forward again) */
+const histPop = $("#fHistPop");
+function closeHist() { if (!histPop.hidden) { histPop.hidden = true; $("#fHist").setAttribute("aria-expanded", "false"); } }
+$("#fHist").addEventListener("click", e => {
+  e.stopPropagation(); if (!focusSid) return;
+  if (!histPop.hidden) { closeHist(); return; }
+  dropTextSel(false); histPop.hidden = false; $("#fHist").setAttribute("aria-expanded", "true"); renderHist();
+});
+function renderHist() {
+  if (histPop.hidden || !focusSid) return;
+  const h = HIST[focusSid], list = h ? h.u.slice(-12).reverse() : [], n = h ? h.u.length : 0, x = numOf(focusSid), g = geoOf(focusSid);
+  const box = $("#fHistList");
+  box.innerHTML = list.length ? `<button type="button" class="hnow" disabled><canvas width="96" height="${Math.round(96 * g.h / g.w)}"></canvas><span>Now</span></button>` + list.map((_, i) => `<button type="button" data-hback="${i + 1}" title="Go back ${i + 1} step${i ? "s" : ""}"><canvas width="96" height="${Math.round(96 * g.h / g.w)}"></canvas><span>${i + 1} step${i ? "s" : ""} back</span></button>`).join("")
+    : `<p class="hint">No changes yet on this slide. Each edit you make here or on its card is a step.</p>`;
+  const cvs = box.querySelectorAll("canvas"), states = [S.slides[focusSid], ...list];
+  cvs.forEach((cv, i) => { try { renderSlide(cv, S.post, states[i], x.n, x.total, cv.width / geoFor(S.post, states[i]).w); } catch (err) {} });
+  $("#fHistNote").textContent = n ? `${n} step${n === 1 ? "" : "s"} to undo${h && h.r.length ? `, ${h.r.length} to redo` : ""}` : h && h.r.length ? `${h.r.length} to redo` : "";
+}
+$("#fHistList").addEventListener("click", e => {
+  const b = e.target.closest("[data-hback]"); if (!b || !focusSid) return;
+  const sid = focusSid, h = HIST[sid], k = Math.min(+b.dataset.hback, h ? h.u.length : 0); if (!k) return;
+  for (let i = 0; i < k; i++) { h.r.push(clone(S.slides[sid])); S.slides[sid] = h.u.pop(); }   /* one jump, saved once */
+  h.key = ""; saveSlide(sid); renderBoard(new Set([sid])); renderLibrary(); updateHistUI(); if (focusSid === sid) { renderFPanel(); drawFocus(); }
+  renderHist(); toast(`Back ${k} step${k === 1 ? "" : "s"}. Redo brings ${k === 1 ? "it" : "them"} back`);
+});
+document.addEventListener("pointerdown", e => { if (!histPop.hidden && !e.target.closest("#fHistPop,#fHist")) closeHist(); }, true);
 function updateHistUI() {
   const h = focusSid && HIST[focusSid], nu = !(h && h.u.length), nr = !(h && h.r.length);
-  $("#fUndo").disabled = nu; $("#fRedo").disabled = nr;
+  $("#fUndo").disabled = nu; $("#fRedo").disabled = nr; $("#fHist").disabled = nu && nr; $("#fHist").classList.toggle("can", !nu);
+  if (nu && nr) closeHist();
   $$('#fKb [data-kb="undo"]').forEach(b => { b.disabled = nu; }); $$('#fKb [data-kb="redo"]').forEach(b => { b.disabled = nr; });
 }
 /* the rotate slider across the top of the slide (Instagram style): −180° to 180°, snaps to 0, double-tap resets */
@@ -4777,6 +4881,7 @@ S.fpanel = false; S.fslot = "img"; S.fadj = "exposure";
 function renderFPanel() {
   const el = $("#fPanel"), s = S.slides[focusSid];
   $("#fEdit").setAttribute("aria-pressed", String(S.fpanel === "photo"));
+  $("#fTex").setAttribute("aria-pressed", String(S.fpanel === "tex"));
   $("#fTextBtn").setAttribute("aria-pressed", String(S.fpanel === "text"));
   if (S.fpanel === "text" && s && S.ftfield && !fieldPath(s, S.ftfield)) S.ftfield = null;
   el.hidden = !S.fpanel || !s; el.classList.toggle("text", S.fpanel === "text"); el.classList.toggle("one", S.fpanel === "text" && !!S.ftfield);
@@ -4784,6 +4889,7 @@ function renderFPanel() {
   layoutLite();   /* touch: the edit mode's rows are in place before anything gets the focus */
   if (!S.fpanel || !s) return;
   if (S.fpanel === "text") { el.innerHTML = textPanelHTML(s); updateFmtBar(); return; }
+  if (S.fpanel === "tex") { el.innerHTML = texPanelHTML(s); const c = el.querySelector('[data-ftex][aria-pressed="true"]'); if (c) c.scrollIntoView({ block: "nearest", inline: "nearest" }); return; }
   const slots = TEMPLATES[s.type].slots.filter(k => s[k]);
   const bgOnly = !!bgOf(s) && !bgOf(s).photo;
   if (s.overlay || !slots.length || bgOnly) { el.innerHTML = `<p class="hint">${s.overlay ? "This slide is a text-only overlay, so there's no photo to edit." : bgOnly ? "This slide shows a background instead of its photo. Pick Photo under Background in Layout and framing to edit the photo." : "Add a photo to this slide first, or give it a plain or gradient background in Layout and framing."}</p>`; return; }
@@ -4797,6 +4903,21 @@ function renderFPanel() {
   const chip = el.querySelector('[data-fadj][aria-pressed="true"]'); if (chip) chip.scrollIntoView({ block: "nearest", inline: "nearest" });
 }
 $("#fEdit").addEventListener("click", () => { dropTextSel(true); S.fpanel = S.fpanel === "photo" ? false : "photo"; renderFPanel(); drawFocus(); });
+$("#fTex").addEventListener("click", () => { dropTextSel(true); closeHist(); S.fpanel = S.fpanel === "tex" ? false : "tex"; renderFPanel(); drawFocus(); });
+/* the large view's Texture panel: presets, a chip per effect (with its amount), one slider for the chosen effect, and its two colors
+   for duotone and split tone */
+S.ftex = "grain"; let texCardT = 0;
+function texPanelHTML(s) {
+  const T = s.texture || {}, cur = TEX_LIST.find(x => x[0] === S.ftex) || TEX_LIST[0], v = +T[cur[0]] || 0, cols = TEX_COLORS[cur[0]];
+  return `<div class="fchips" role="group" aria-label="Presets">${Object.entries(TEX_PRE).map(([k, [l]]) => `<button type="button" data-ftexpre="${k}">${l}</button>`).join("")}</div>
+    <div class="fchips" role="group" aria-label="Texture">${TEX_LIST.map(([k, l]) => `<button type="button" data-ftex="${k}" aria-pressed="${k === cur[0]}">${l}<i>${Math.round((+T[k] || 0) * 100)}%</i></button>`).join("")}</div>
+    <div class="frow"><input type="range" id="fTexR" aria-label="${cur[1]}" min="0" max="1" step="0.01" value="${v}" data-fmt="pct">
+      <span class="numbox"><input type="number" class="num" data-for="fTexR" value="${toBox("pct", v)}" step="any" aria-label="${cur[1]}, exact value"><span>%</span></span>
+      ${cols ? cols.map(([k, l, d]) => `<label class="ftexc" title="${l}"><input type="color" data-ftexc="${k}" value="${texColor(T, k, d)}" aria-label="${cur[1]} ${l.toLowerCase()}"><span>${l}</span></label>`).join("") : ""}
+</div>
+    <div class="frow ftexb"><button type="button" class="btn ghost sm" data-ftexall>Use on every slide</button><button type="button" class="btn ghost sm" data-ftexnone>No texture</button></div>`;
+}
+function texChanged(sid) { saveSlide(sid); scheduleDraw(sid); const card = document.getElementById("card-" + sid); if (card && !card.querySelector(".texbox input:focus")) renderBoard(new Set([sid])); }
 $("#fTextBtn").addEventListener("click", () => {
   dropTextSel(true);
   const open = S.fpanel === "text" && !S.ftfield;
@@ -4809,6 +4930,10 @@ $("#fPanel").addEventListener("click", e => {
   else if (b.dataset.ftab) { switchEditor(b.dataset.ftab); drawFocus(); }
   else if (b.dataset.fedit) openEditorFor(b.dataset.fedit);
   else if (b.dataset.fslot) { S.fslot = b.dataset.fslot; renderFPanel(); }
+  else if (b.dataset.ftex) { S.ftex = b.dataset.ftex; renderFPanel(); }
+  else if (b.dataset.ftexpre) { const s = S.slides[focusSid]; if (!s) return; remember(focusSid); s.texture = { ...TEX_PRE[b.dataset.ftexpre][1] }; S.ftex = Object.keys(s.texture).find(k => TEX_KEYS.includes(k)) || S.ftex; texChanged(focusSid); renderFPanel(); }
+  else if (b.hasAttribute("data-ftexnone")) { const s = S.slides[focusSid]; if (!s) return; remember(focusSid); delete s.texture; texChanged(focusSid); renderFPanel(); }
+  else if (b.hasAttribute("data-ftexall")) { const s = S.slides[focusSid]; if (s) texAct("texall", b, focusSid, s); }
   else if (b.dataset.fadj) { S.fadj = b.dataset.fadj; renderFPanel(); }
   else if (b.id === "fAdjReset") { const r = $("#fAdj"); r.value = 0; r.dispatchEvent(new Event("input", { bubbles: true })); }
 });
@@ -4818,6 +4943,15 @@ $("#fPanel").addEventListener("input", e => {
     /* text that came in with its own markup (the phone's Format menu, a dictation, an old browser's Enter): back to the box's own */
     if (el.isContentEditable && !e.isComposing && el.querySelector("div,p,b,strong,i,em,u,ins,mark,font,[style]")) { const sel = selIn(el); setRich(el, toMarked(oneLine(el.dataset.ff, richChars(el, true)))); if (sel) setSel(el, sel[0], sel[1]); }
     return onFF(el);
+  }
+  if (e.target.id === "fTexR" || e.target.dataset.ftexc) {   /* Texture: the chosen effect's amount, or one of its colors */
+    const s = S.slides[focusSid]; if (!s) return;
+    const k = e.target.dataset.ftexc || S.ftex, v = e.target.dataset.ftexc ? e.target.value : +e.target.value;
+    remember(focusSid, "tex." + k); s.texture = s.texture || {}; s.texture[k] = v;
+    if (!e.target.dataset.ftexc) { syncBox(e.target); const c = $(`#fPanel [data-ftex="${k}"] i`); if (c) c.textContent = Math.round(v * 100) + "%"; showBubble(e.target); }
+    saveSlide(focusSid); scheduleDraw(focusSid);
+    clearTimeout(texCardT); const sid = focusSid; texCardT = setTimeout(() => renderBoard(new Set([sid])), 400);
+    return;
   }
   if (e.target.id !== "fAdj") return;
   const s = S.slides[focusSid], slot = S.fslot, k = S.fadj; if (!s || !s[slot]) return;
@@ -6298,6 +6432,7 @@ function openFocus(sid) {
 $("#focusDlg").addEventListener("close", () => { if (S.crop) { S.crop = null; saveSlide(focusSid); } S.psel = null; closeOverlays(); focusSid = null; S.fsel = null; S.ftsel = null; hideArr(); S.ftfield = null; fpts.clear(); fg = null; xg = null; lpts.clear(); lg = null; $("#fTrash").hidden = true; hideBubble(); layoutLite(); document.documentElement.classList.remove("modal-open"); });
 /* Esc closes a preview first, then the text editor, then the large view */
 $("#focusDlg").addEventListener("cancel", e => {
+  if (!histPop.hidden) { e.preventDefault(); closeHist(); return; }
   if (closeOverlays()) e.preventDefault();
   else if (S.crop) { e.preventDefault(); exitCrop(); }
   else if (S.padOn && padTarget()) { e.preventDefault(); S.padOn = false; updateFocusUI(); }
