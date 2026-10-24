@@ -452,6 +452,28 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .fbar button{display:inline-flex;align-items:center;gap:5px;border:0;background:none;color:#131111;font-size:13px;font-weight:700;padding:7px 11px;border-radius:999px;cursor:pointer}
 .fbar button:hover{background:rgba(0,0,0,.08)}
 .fbar button.del{color:#c4260f}
+.fpad{position:absolute;z-index:3;transform:translateX(-50%);display:grid;justify-items:center;gap:10px;padding:12px 16px 14px;background:rgba(24,20,19,.9);border:1px solid rgba(255,255,255,.12);border-radius:18px;box-shadow:0 8px 24px rgba(0,0,0,.45);touch-action:none;user-select:none;-webkit-user-select:none;line-height:0}
+.fpad[hidden]{display:none}
+.fpad button{border:0;background:none;color:#fff;cursor:pointer;display:grid;place-items:center;padding:0;-webkit-tap-highlight-color:transparent}
+.fpad svg{width:22px;height:22px}
+.fpad .dpad{display:grid;grid-template-columns:repeat(3,42px);grid-template-rows:repeat(3,36px)}
+.fpad .nb svg{fill:#fff;stroke:none;width:26px;height:26px}
+.fpad .nb:active svg,.fpad .nb:hover svg{fill:#ff7a1a}
+.fpad .nb.u{grid-area:1/2}.fpad .nb.l{grid-area:2/1}.fpad .nb.r{grid-area:2/3}.fpad .nb.d{grid-area:3/2}
+.fpad .al{display:flex;gap:12px}
+.fpad .al button{width:44px;height:44px;border-radius:50%;background:rgba(224,45,18,.55)}
+.fpad .al button:hover,.fpad .al button:active{background:#e02d12}
+.fpad .al svg{fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;width:20px;height:20px}
+.fpad .px{position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;opacity:.7}
+.fpad .px svg{fill:none;stroke:#fff;stroke-width:2.2;stroke-linecap:round;width:14px;height:14px}
+.fbar button.on{background:#131111;color:#fff}
+#focusDlg.lite .fpad{display:none!important}
+.fpad.sm{padding:8px 12px 10px;gap:6px;border-radius:14px}
+.fpad.sm .dpad{grid-template-columns:repeat(3,36px);grid-template-rows:repeat(3,30px)}
+.fpad.sm .nb svg{width:22px;height:22px}
+.fpad.sm .al{gap:8px}
+.fpad.sm .al button{width:38px;height:38px}
+.fpad.sm .al svg{width:18px;height:18px}
 .fbar svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .fdel{position:absolute;width:36px;height:36px;border-radius:50%;border:2px solid #fff;background:#e02d12;color:#fff;display:grid;place-items:center;padding:0;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .fdel svg{width:18px;height:18px}
@@ -839,6 +861,7 @@ details.gsec[open]{padding-bottom:14px}
       <div class="tsel" id="fTsel" hidden></div>
       <div class="fbar" id="fBar" role="toolbar" aria-label="Selected text" hidden></div>
       <div class="farr" id="fArr" role="menu" aria-label="Layer order" hidden></div>
+      <div class="fpad" id="fPad" role="group" aria-label="Position" hidden><button type="button" class="px" data-padx title="Close" aria-label="Close position pad"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="dpad"><button type="button" class="nb u" data-nudge="u" title="Move up" aria-label="Move up"><svg viewBox="0 0 24 24"><path d="M12 5l7 11H5z"/></svg></button><button type="button" class="nb l" data-nudge="l" title="Move left" aria-label="Move left"><svg viewBox="0 0 24 24"><path d="M5 12l11-7v14z"/></svg></button><button type="button" class="nb r" data-nudge="r" title="Move right" aria-label="Move right"><svg viewBox="0 0 24 24"><path d="M19 12L8 19V5z"/></svg></button><button type="button" class="nb d" data-nudge="d" title="Move down" aria-label="Move down"><svg viewBox="0 0 24 24"><path d="M12 19L5 8h14z"/></svg></button></div><div class="al"><button type="button" data-align="h" title="Centre left to right" aria-label="Centre left to right"><svg viewBox="0 0 24 24"><path d="M12 4v16M2 12h7M6 9l3 3-3 3M22 12h-7M18 9l-3 3 3 3"/></svg></button><button type="button" data-align="v" title="Centre top to bottom" aria-label="Centre top to bottom"><svg viewBox="0 0 24 24"><path d="M4 12h16M12 2v7M9 6l3 3 3-3M12 22v-7M9 18l3-3 3 3"/></svg></button><button type="button" data-align="c" title="Centre on the slide" aria-label="Centre on the slide"><svg viewBox="0 0 24 24"><path d="M4 20l6-6M6 14h4v4M20 4l-6 6M18 10h-4V6"/></svg></button></div></div>
       <button type="button" class="fdel" id="fDel" aria-label="Delete this sticker" hidden><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
       <div class="psel" id="fPsel" hidden></div>
       <div class="fcrop" id="fCrop" hidden><img class="cimg" alt=""><div class="cframe"></div><div class="cbox"><i data-ch="nw"></i><i data-ch="n"></i><i data-ch="ne"></i><i data-ch="e"></i><i data-ch="se"></i><i data-ch="s"></i><i data-ch="sw"></i><i data-ch="w"></i></div></div>
@@ -4010,7 +4033,7 @@ rot.addEventListener("keydown", e => {
 function updateFocusUI() {
   const st = focusSid && selSticker(), del = $("#fDel"), busy = !!(fg && fg.moved) || !!xg;
   rail.hidden = rot.hidden = !st; del.hidden = !st || busy;
-  updateHistUI(); updateTextUI(); placeXf(); placeSides(); placeCrop(); placePsel();
+  updateHistUI(); updateTextUI(); placeXf(); placeSides(); placeCrop(); placePsel(); placePad();
   if (S.crop) { rail.hidden = rot.hidden = del.hidden = true; $("#fBar").hidden = true; return; }
   if (!st) return;
   placeRail(st, false); placeRot(st, false);
@@ -4028,7 +4051,7 @@ function placePsel() {
   if (!f || !k || liteOn()) { el.hidden = true; return; }
   el.hidden = false; Object.assign(el.style, { left: f.x * k + "px", top: f.y * k + "px", width: f.w * k + "px", height: f.h * k + "px" });
   const bar = $("#fBar");
-  if (barKey !== "photo") { barKey = "photo"; bar.innerHTML = `<button type="button" data-fbar="crop">${CROP_I}Crop</button><button type="button" data-fbar="preplace">${SWAP_I}Replace</button><button type="button" data-fbar="pedit">${ADJ_I}Edit photo</button>`; }
+  if (barKey !== "photo") { barKey = "photo"; bar.innerHTML = `<button type="button" data-fbar="crop">${CROP_I}Crop</button><button type="button" data-fbar="preplace">${SWAP_I}Replace</button><button type="button" data-fbar="pedit">${ADJ_I}Edit photo</button><button type="button" data-fbar="pos" title="Nudge and centre the picture">${POS_I}Position</button>`; }
   bar.hidden = false;
   const bw = bar.offsetWidth, bh = bar.offsetHeight, sw = fcv.clientWidth, sh = fcv.clientHeight;
   bar.style.left = clamp((f.x + f.w / 2) * k, bw / 2 + 4, Math.max(bw / 2 + 4, sw - bw / 2 - 4)) + "px";
@@ -4547,10 +4570,10 @@ function updateTextUI() {
   if (!layer) Object.assign(tsel.style, { left: box.x0 * k - pad + "px", top: box.y0 * k - pad + "px", width: (box.x1 - box.x0) * k + 2 * pad + "px", height: (box.y1 - box.y0) * k + 2 * pad + "px" });
   const ref = selRef();
   if (S.fpanel === "text" && S.ftfield === ref) { bar.hidden = true; return; }   /* already open in the editor */
-  const row = /^text\.rows\./.test(ref), key = row ? "row" : "text";
+  const row = /^text\.rows\./.test(ref), movable = !row && !!moveGroup(S.slides[focusSid], S.ftsel), key = row ? "row" : movable ? "text" : "textfix";
   if (barKey !== key) {
     barKey = key;
-    bar.innerHTML = `<button type="button" data-fbar="edit">${PEN_I}Edit</button><button type="button" data-fbar="dup">${DUP_I}${row ? "Duplicate row" : "Duplicate"}</button>${row ? `<button type="button" class="del" data-fbar="delrow">${TRASH}Delete row</button>` : ""}`;
+    bar.innerHTML = `<button type="button" data-fbar="edit">${PEN_I}Edit</button><button type="button" data-fbar="dup">${DUP_I}${row ? "Duplicate row" : "Duplicate"}</button>${row ? `<button type="button" class="del" data-fbar="delrow">${TRASH}Delete row</button>` : ""}${movable ? `<button type="button" data-fbar="pos" title="Nudge and centre">${POS_I}Position</button>` : ""}`;
   }
   bar.hidden = false;
   const gb = layer ? null : xfBox(), at = gb ? { x0: gb.cx - gb.w / 2, x1: gb.cx + gb.w / 2, y0: gb.cy - gb.h / 2, y1: gb.cy + gb.h / 2 } : box, gp = gb ? pad + 10 : pad;   /* under the whole block when its frame shows */
@@ -4567,7 +4590,7 @@ function stickerBar(st) {
   if (!box || !k || liteOn() || (fg && fg.moved) || railDrag || rotDrag || xg || (S.fpanel === "text" && S.ftfield === "layer:" + st.id)) { bar.hidden = true; hideArr(); return; }
   const custom = st.kind === "custom", text = st.kind === "text", save = custom && !(st.pool && S.mine.has(st.pool)), key = `st:${st.kind}:${save}`;
   const btn = (a, ic, l, t) => `<button type="button" data-fbar="${a}"${t ? ` title="${t}"` : ""}>${ic}${l}</button>`;
-  if (barKey !== key) { barKey = key; bar.innerHTML = (text ? btn("edit", PEN_I, "Edit") : custom ? btn("mkedit", PEN_I, "Edit", "Edit or enhance this sticker") : "") + btn(text ? "dup" : "dupst", DUP_I, "Duplicate", "Duplicate (Ctrl+D)") + btn("arr", LAYER_I, "Arrange", "Layer order") + (save ? btn("savemine", STAR_I, "Save", "Save to My stickers") : ""); }
+  if (barKey !== key) { barKey = key; bar.innerHTML = (text ? btn("edit", PEN_I, "Edit") : custom ? btn("mkedit", PEN_I, "Edit", "Edit or enhance this sticker") : "") + btn(text ? "dup" : "dupst", DUP_I, "Duplicate", "Duplicate (Ctrl+D)") + btn("arr", LAYER_I, "Arrange", "Layer order") + btn("pos", POS_I, "Position", "Nudge and centre") + (save ? btn("savemine", STAR_I, "Save", "Save to My stickers") : ""); }
   if (S.arrOpen && S.arrOpen !== st.id) hideArr();
   bar.hidden = false;
   const bw = bar.offsetWidth, bh = bar.offsetHeight, sw = fcv.clientWidth, sh = fcv.clientHeight;
@@ -4599,6 +4622,7 @@ $("#fBar").addEventListener("click", e => {
   const b = e.target.closest("[data-fbar]"); if (!b || !focusSid) return;
   if (b.dataset.fbar === "savemine") { saveToMine(focusSid, selSticker()); updateTextUI(); return; }
   if (b.dataset.fbar === "crop") { enterCrop(S.psel); return; }
+  if (b.dataset.fbar === "pos") { S.padOn = !S.padOn; hideArr(); updateFocusUI(); return; }
   if (b.dataset.fbar === "preplace") { const k = S.psel; S.psel = null; openPicker(focusSid, k); return; }
   if (b.dataset.fbar === "pedit") { S.fslot = S.psel; S.psel = null; S.fpanel = "photo"; renderFPanel(); drawFocus(); return; }
   if (b.dataset.fbar === "dupst") { const st = selSticker(); if (st) dupSticker(focusSid, st.id); return; }
@@ -4609,6 +4633,81 @@ $("#fBar").addEventListener("click", e => {
   else deleteRowSel();
 });
 function openTextEditor() { const ref = selRef(); if (ref) openEditorFor(ref); }
+/* Position (from the bar): a pad of arrows that nudge the selected sticker, text block or photo (hold to keep going, faster after
+   a moment), and buttons that centre it left-to-right, top-to-bottom or both: on the slide for a sticker or text, in its frame for
+   the photo's picture. Arrow keys nudge too (Shift for bigger steps). Each press is one Undo step. */
+const POS_I = `<svg viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/></svg>`;
+S.padOn = false; let nudgeT = 0, padRep = null;
+function padTarget() {   /* what the pad moves: a sticker, a movable text block, or the selected photo */
+  const s = focusSid && S.slides[focusSid]; if (!s || liteOn()) return null;
+  const st = selSticker(); if (st) return { st };
+  const grp = S.ftsel && moveGroup(s, S.ftsel); if (grp && !grp.startsWith("rows.")) return { grp };
+  if (S.psel && !S.fsel && !S.ftsel) { const g = photoGeo(S.psel); if (g) return { g }; }
+  return null;
+}
+function nudgeSel(dx, dy) {
+  const t = padTarget(), s = S.slides[focusSid], { w: W, h: H } = geoOf(focusSid); if (!t) return false;
+  if (t.st) { const x0 = t.st.x, y0 = t.st.y; t.st.x = +clamp((t.st.x ?? 0.5) + dx / W, 0, 1).toFixed(4); t.st.y = +clamp((t.st.y ?? 0.5) + dy / H, 0, 1).toFixed(4); scheduleDraw(focusSid); return t.st.x !== x0 || t.st.y !== y0; }
+  if (t.grp) { s.layout = s.layout || {}; const m = (s.layout.move || {})[t.grp] || [0, 0]; s.layout.move = { ...(s.layout.move || {}), [t.grp]: [Math.round(m[0] + dx), Math.round(m[1] + dy)] }; scheduleDraw(focusSid); return true; }
+  const g = t.g, f0 = [g.slot.fx, g.slot.fy]; placePhoto(g, g.x + dx, g.y + dy, g.w); scheduleDraw(focusSid);
+  return g.slot.fx !== f0[0] || g.slot.fy !== f0[1];
+}
+function alignTo(how) {   /* h: centre left to right, v: top to bottom, c: both */
+  const t = padTarget(), s = S.slides[focusSid], { w: W, h: H } = geoOf(focusSid); if (!t) return;
+  remember(focusSid);
+  const ax = how !== "v", ay = how !== "h";
+  if (t.st) { if (ax) t.st.x = 0.5; if (ay) t.st.y = 0.5; }
+  else if (t.grp) {
+    const b = xfBox(); if (!b) return;
+    s.layout = s.layout || {}; const m = (s.layout.move || {})[t.grp] || [0, 0];
+    s.layout.move = { ...(s.layout.move || {}), [t.grp]: [Math.round(m[0] + (ax ? W / 2 - b.cx : 0)), Math.round(m[1] + (ay ? H / 2 - b.cy : 0))] };
+  } else { if (ax) t.g.slot.fx = 0.5; if (ay) t.g.slot.fy = 0.5; }
+  nudgeEnd();
+  toast(t.g ? (how === "c" ? "Picture centred in its frame" : how === "h" ? "Picture centred left to right" : "Picture centred top to bottom") : how === "c" ? "Centred on the slide" : how === "h" ? "Centred left to right" : "Centred top to bottom");
+}
+function nudgeEnd() {
+  const sid = focusSid, st = selSticker(); if (!sid) return;
+  saveSlide(sid); if (st) syncStickerControls(sid, st); scheduleDraw(sid);
+}
+function placePad() {
+  const pad = $("#fPad"), t = S.padOn && !S.crop && !(fg && fg.moved) && !xg ? padTarget() : null;
+  const pb = $("#fBar [data-fbar='pos']"); if (pb) pb.classList.toggle("on", !!S.padOn);
+  if (!t) { pad.hidden = true; return; }
+  pad.hidden = false; pad.classList.toggle("sm", fcv.clientWidth < 440);
+  /* where it goes: the bottom or top of the slide (centre, left or right), wherever it covers least of the selected thing, its
+     bar and the size and turn controls */
+  const sw = fcv.clientWidth, sh = fcv.clientHeight, pw = pad.offsetWidth, ph = pad.offsetHeight, k = sw / geoOf(focusSid).w, bar = $("#fBar");
+  const obs = [];
+  if (!bar.hidden) obs.push({ l: bar.offsetLeft - bar.offsetWidth / 2, t: bar.offsetTop, r: bar.offsetLeft + bar.offsetWidth / 2, b: bar.offsetTop + bar.offsetHeight });
+  if (!xf.hidden) obs.push({ l: xf.offsetLeft - 20, t: xf.offsetTop - 20, r: xf.offsetLeft + xf.offsetWidth + 20, b: xf.offsetTop + xf.offsetHeight + (t.st ? 64 : 20) });
+  if (t.st) { obs.push({ l: 0, t: 0, r: 56, b: sh }); obs.push({ l: 0, t: 0, r: sw, b: 48 }); }   /* the size rail and the turn slider */
+  const ov = (x, y) => obs.reduce((n, o) => n + Math.max(0, Math.min(o.r, x + pw) - Math.max(o.l, x)) * Math.max(0, Math.min(o.b, y + ph) - Math.max(o.t, y)), 0);
+  let best = null;
+  for (const y of [sh - ph - 10, 10]) for (const x of [(sw - pw) / 2, sw - pw - 10, 10]) { const n = ov(x, y); if (!best || n < best.n - 1) best = { n, x, y }; }
+  pad.style.left = best.x + pw / 2 + "px"; pad.style.top = Math.max(0, best.y) + "px";
+}
+const fpad = $("#fPad");
+function padStop() { if (!padRep) return; clearTimeout(padRep.t); padRep = null; nudgeEnd(); }
+fpad.addEventListener("pointerdown", e => {
+  const b = e.target.closest("[data-nudge]"); if (!b || !padTarget()) return;
+  e.preventDefault(); try { b.setPointerCapture(e.pointerId); } catch (err) {}
+  const [dx, dy] = { l: [-1, 0], r: [1, 0], u: [0, -1], d: [0, 1] }[b.dataset.nudge];
+  remember(focusSid); padStop(); padRep = { n: 0 };
+  const step = () => {
+    if (!padRep) return;
+    const k = padRep.n < 8 ? 10 : padRep.n < 24 ? 25 : 50;
+    if (!nudgeSel(dx * k, dy * k) && padRep.n === 0 && padTarget().g) toast("Zoom the photo in (pinch, or Crop) to move it further this way");
+    padRep.n++; padRep.t = setTimeout(step, padRep.n === 1 ? 380 : 60);
+  };
+  step();
+});
+["pointerup", "pointercancel", "lostpointercapture"].forEach(ev => fpad.addEventListener(ev, padStop));
+fpad.addEventListener("click", e => {
+  const a = e.target.closest("[data-align]"), x = e.target.closest("[data-padx]"), n = e.target.closest("[data-nudge]");
+  if (a) alignTo(a.dataset.align);
+  else if (x) { S.padOn = false; updateFocusUI(); }
+  else if (n && e.detail === 0) { const [dx, dy] = { l: [-1, 0], r: [1, 0], u: [0, -1], d: [0, 1] }[n.dataset.nudge]; remember(focusSid, "nudge"); nudgeSel(dx * 10, dy * 10); nudgeEnd(); }   /* from the keyboard */
+});
 /* Duplicate: a settings row is copied as a new row under it (a slide holds up to 4); a text layer is copied as is; any other text
    becomes extra text with the same size and weight, just under the original. The copy is selected, ready to drag or edit. */
 function duplicateText(ref) {
@@ -5540,6 +5639,7 @@ $("#focusDlg").addEventListener("close", () => { if (S.crop) { S.crop = null; sa
 $("#focusDlg").addEventListener("cancel", e => {
   if (closeOverlays()) e.preventDefault();
   else if (S.crop) { e.preventDefault(); exitCrop(); }
+  else if (S.padOn && padTarget()) { e.preventDefault(); S.padOn = false; updateFocusUI(); }
   else if (S.fpanel === "text" && S.ftfield) { e.preventDefault(); closeTextEditor(); }
 });
 const g0w = () => geoOf(focusSid).w, g0h = () => geoOf(focusSid).h;
@@ -5578,7 +5678,7 @@ function drawFocus() {
     : touch
     ? ((s.stickers || []).length ? H2("Tap text or a sticker to select it. Drag, pinch or twist a sticker; drop it on the bin to delete it. Swipe for the next slide.", "Tap text or a sticker. Swipe for the next slide.")
       : H2("Tap any text to select it, then drag it, edit it or duplicate it. Swipe for the next slide.", "Tap text to select it. Swipe for the next slide."))
-    : H2((s.stickers || []).length ? "Click text or a sticker to select it. Drag to move, a corner to resize, the round handle to turn. Ctrl+Space adds a sticker or photo, Ctrl+D duplicates, Ctrl+[ ] change the layer order." : "Click any text to select it, then drag it, edit it or duplicate it. Ctrl+Space adds a sticker or photo; arrow keys change slides.");
+    : H2((s.stickers || []).length ? "Click text or a sticker to select it. Drag to move, a handle to resize, the round one to turn; arrow keys nudge it and Position centres it. Ctrl+Space adds a sticker or photo, Ctrl+D duplicates, Ctrl+[ ] change the layer order." : "Click any text to select it, then drag it, edit it or duplicate it. Ctrl+Space adds a sticker or photo; arrow keys change slides.");
   updateFocusUI();
 }
 /* the round arrows at the slide's left and right edges: previous and next slide (on touch screens a swipe does it too) */
@@ -5669,6 +5769,11 @@ document.addEventListener("keydown", e => {
   const mod = e.metaKey || e.ctrlKey, k = e.key.toLowerCase();
   if (mod && k === "z") { e.preventDefault(); stepHistory(focusSid, !e.shiftKey); return; }
   if (mod && k === "y") { e.preventDefault(); stepHistory(focusSid, false); return; }
+  const nd = !mod && !e.altKey && !S.crop && padTarget() && { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
+  if (nd) {   /* something selected: the arrow keys nudge it (Shift: 5×), as in Canva */
+    e.preventDefault(); remember(focusSid, "nudge"); nudgeSel(nd[0] * (e.shiftKey ? 50 : 10), nd[1] * (e.shiftKey ? 50 : 10));
+    clearTimeout(nudgeT); nudgeT = setTimeout(nudgeEnd, 450); return;
+  }
   if (e.key === "ArrowLeft") stepFocus(-1);
   if (e.key === "ArrowRight") stepFocus(1);
   if ((e.key === "Delete" || e.key === "Backspace") && S.fsel) { e.preventDefault(); removeSticker(focusSid, S.fsel); }
