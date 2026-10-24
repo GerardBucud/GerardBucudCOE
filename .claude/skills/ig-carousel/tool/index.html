@@ -474,6 +474,37 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .fpad.sm .al{gap:8px}
 .fpad.sm .al button{width:38px;height:38px}
 .fpad.sm .al svg{width:18px;height:18px}
+.bdgrid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr))}
+.bdgrid button{position:relative}
+.bdgrid button[aria-pressed="true"]{border-color:var(--accent)}
+.bdgrid button[aria-pressed="true"]::after{content:"✓";position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:13px;display:grid;place-items:center}
+.bdgrid img,.bdgrid svg{aspect-ratio:1;object-fit:contain;background:var(--sunken)}
+.bdgrid svg{width:100%;height:auto;display:block;border-radius:6px}
+.bdsel{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.bdsel button{position:relative;width:84px;border:1px solid var(--line);border-radius:8px;background:var(--sunken);padding:4px;display:grid;gap:2px;font-size:11px;color:var(--muted);cursor:pointer}
+.bdsel img,.bdsel svg{width:100%;height:64px;object-fit:contain;display:block}
+.bdsel span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bdsel b{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#131111;color:#fff;font-size:13px;display:grid;place-items:center}
+.gthumb .swatch{width:70%;aspect-ratio:1;border-radius:50%;display:block;border:1px solid rgba(0,0,0,.15)}
+.swatchbtn{position:relative;overflow:hidden}
+.swatchbtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.chips i.sw{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:5px;vertical-align:-1px;border:1px solid rgba(0,0,0,.2)}
+.bditem{border:1px solid var(--line);border-radius:10px}
+.bditem>summary{display:flex;align-items:center;gap:10px;padding:6px 10px;cursor:pointer;list-style:none;font-size:13px}
+.bditem>summary::-webkit-details-marker{display:none}
+.bditem>summary b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bditem>summary span{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40%}
+.bditem>summary::after{content:"";width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin:-4px 4px 0 0}
+.bditem[open]>summary::after{transform:rotate(-135deg);margin-top:4px}
+.bditem>.rowbox{border:0;border-top:1px solid var(--line);border-radius:0 0 10px 10px}
+.bdth{width:34px;height:34px;flex:0 0 34px;display:grid;place-items:center;background:var(--sunken);border-radius:6px;overflow:hidden;font-style:normal}
+.bdth img,.bdth svg{max-width:100%;max-height:100%;object-fit:contain}
+.bdth span{font-size:8px;color:var(--muted);text-align:center;line-height:1.1}
+.bdth .swatch{width:24px;height:24px;border-radius:50%;border:1px solid rgba(0,0,0,.15)}
+.texbox{border:1px solid var(--line);border-radius:10px;padding:8px 12px}
+.texbox summary{cursor:pointer;font-weight:600;font-size:14px}
+.texbox .texin{display:grid;gap:12px;margin-top:10px}
+.xf.nos i,.xf.nos b{display:none}
 .fbar svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .fdel{position:absolute;width:36px;height:36px;border-radius:50%;border:2px solid #fff;background:#e02d12;color:#fff;display:grid;place-items:center;padding:0;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.4)}
 .fdel svg{width:18px;height:18px}
@@ -789,6 +820,20 @@ details.gsec[open]{padding-bottom:14px}
   </div>
 </dialog>
 
+<dialog id="bdDlg" aria-labelledby="bdTitle">
+  <div class="dlg-h"><h3 id="bdTitle">Add to the breakdown</h3><span class="grow"></span>
+    <label class="btn primary sm" id="bdUpLbl"><span>Upload photos or PNGs</span><input type="file" id="bdFiles" accept="image/*" multiple class="sr"></label>
+    <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="dlg-b">
+    <div class="bdsel" id="bdSel" aria-label="Picked"></div>
+    <div class="two"><div><label class="lbl" for="bdGroup">Section for these (optional)</label><input class="ctl" id="bdGroup" list="bdGroups" placeholder="e.g. LIGHTING" autocomplete="off"><datalist id="bdGroups"></datalist></div>
+      <label class="check" style="align-self:end"><input type="checkbox" id="bdCut" checked><span>Cut out the background<small>Automatic, no sliders. A PNG that's see-through already stays as it is.</small></span></label></div>
+    <div class="actions"><button type="button" class="btn primary" id="bdGo" disabled>Add items</button><span class="hint" id="bdStatus" role="status"></span></div>
+    <h4>My stickers</h4><div class="pick bdgrid" id="bdMine"></div>
+    <h4>Photo library</h4><div class="searchrow"><label class="sr" for="bdSearch">Search photos</label><input type="search" class="ctl" id="bdSearch" placeholder="Search your library" autocomplete="off"></div>
+    <div class="pick bdgrid" id="bdLib"></div></div>
+</dialog>
+
 <dialog id="stickDlg" aria-labelledby="stickTitle">
   <div class="dlg-h"><h3 id="stickTitle">Add a sticker</h3><span class="grow"></span>
     <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -991,6 +1036,7 @@ const TEMPLATES = {
   beforeafter: { label: "Before / after", slots: ["img", "img2"], text: { aValue: "BEFORE", aLabel: "D-LOG M", aNote: "STRAIGHT OUT OF CAMERA. FLAT ON PURPOSE", bValue: "AFTER", bLabel: "GRADED", bNote: "THE SAME CLIP AFTER THE COLOR GRADE", section: "BEFORE / AFTER", foot: "SAVE FOR LATER" } },
   save: { label: "Save for later", slots: ["img"], text: { left: "DON’T LOSE", right: "THESE", big: "**SAVE** FOR **LATER**", sub: "FOLLOW **{handle}**", section: "CAMERA SETUP", foot: "{handle}" } },
   photo: { label: "Photo", slots: ["img"], text: { label: "", note: "", section: "", foot: "SAVE FOR LATER" } },
+  breakdown: { label: "Breakdown (room or setup)", slots: ["img"], text: { title: "HOTEL MINIMALIST VIBES", sub: "WHITE THEME", items: [{ group: "COLOR PALETTE", name: "WHITE", note: "", color: "#ffffff" }, { group: "COLOR PALETTE", name: "WARM BEIGE", note: "", color: "#d9cbb8" }, { group: "COLOR PALETTE", name: "BLACK", note: "", color: "#111111" }, { group: "LIGHTING", name: "WALL LAMP", note: "WARM GLOW" }, { group: "LIGHTING", name: "TABLE LAMP", note: "" }], section: "", foot: "" } },
   gear: { label: "Gear breakdown", slots: ["img"], text: { num: "01", title: "LIGHTING – __STEP ONE__", items: [{ name: "KEY LIGHT", note: "" }, { name: "SOFTBOX", note: "" }], tipK: "", tip: "", section: "GEAR", foot: "SAVE FOR LATER" } }
 };
 const FIELDS = {
@@ -999,12 +1045,13 @@ const FIELDS = {
   beforeafter: [["aValue", "Top half, big word"], ["aLabel", "Top half, label"], ["aNote", "Top half, note", "area"], ["bValue", "Bottom half, big word"], ["bLabel", "Bottom half, label"], ["bNote", "Bottom half, note", "area"], ["section", "Footer, middle"], ["foot", "Footer, right"]],
   save: [["left", "Small word, left"], ["right", "Small word, right"], ["big", "Big text (**bold**, Enter = new line)", "area"], ["sub", "Under the big text ({handle} = your handle)"], ["section", "Footer, middle"], ["foot", "Footer, right"]],
   photo: [["label", "Caption heading"], ["note", "Caption text", "area"], ["section", "Footer, middle"], ["foot", "Footer, right"]],
+  breakdown: [["title", "Title (over the photo)"], ["sub", "Under the title"], "BITEMS", ["section", "Footer, middle (optional)"], ["foot", "Footer, right (optional)"]],
   gear: [["num", "Step number (small, above the heading)"], ["title", "Heading (__italic__ for the accent words)"], "ITEMS", ["tipK", "Tip heading (optional, e.g. MUST HAVE)"], ["tip", "Tip text (optional)", "area"], ["section", "Footer, middle"], ["foot", "Footer, right"]]
 };
 const TEXT_KEYS = {
   cover: ["left", "right", "title", "sub", "section", "foot"], specs: ["section", "foot", "tipK", "tip"],
   beforeafter: ["aValue", "aLabel", "aNote", "bValue", "bLabel", "bNote", "section", "foot"],
-  save: ["left", "right", "big", "sub", "section", "foot"], photo: ["label", "note", "section", "foot"], gear: ["num", "title", "tipK", "tip", "section", "foot"]
+  save: ["left", "right", "big", "sub", "section", "foot"], photo: ["label", "note", "section", "foot"], breakdown: ["title", "sub", "section", "foot"], gear: ["num", "title", "tipK", "tip", "section", "foot"]
 };
 
 /* ---------- text engine (canvas, tracked, kerned) ---------- */
@@ -2042,7 +2089,279 @@ function renderGear(ctx, post, s, idx, total, d) {
   drawFooter(ctx, post, t, idx, total, LAND ? x0 : M, LAND ? x1 : W - M);
   INK = ink0;
 }
+/* ---------- breakdown: a room or setup photo on top (none when layout.split is 0), then a panel that breaks it down: sections (a
+   heading each) of items, each a picture (a cut-out, one of My stickers, Claude's drawing or a color swatch) with a bold name and a
+   regular subtext, or a bullet line for text-only items. text.items = [{group, name, note, img?|vec?|color?, t?: "list"}]; items with the
+   same group form a section, in the order they first appear. The items are laid out to fit the panel (as large as they can be, in 1 to
+   3 rows of sections); each item (picture + name + subtext) moves and resizes as one in the large view (layout.move / layout.scale
+   "item.N"), a section moves with its items ("sec.<NAME>"), the title too ("btitle"). slide.panel = {kind: solid|gradient|photo, c1,
+   c2, dir, dim, lines}: the panel's background (photo: img2, or the main photo blurred) and the lines between sections. */
+const BD_PANEL = "#efeae4", BD_PANEL2 = "#d8cbbb";
+function bdSections(items) {
+  const secs = [], by = new Map();
+  items.forEach((it, i) => {
+    const name = String((it && it.group) ?? "").trim(), key = up(name);
+    let sec = by.get(key); if (!sec) { sec = { name, key, idx: [] }; by.set(key, sec); secs.push(sec); }
+    sec.idx.push(i);
+  });
+  secs.forEach(sec => { sec.list = sec.idx.every(i => items[i].t === "list"); });
+  return secs;
+}
+function bdPanelOf(s) {
+  const P = s.panel || {}, kind = ["solid", "gradient", "photo"].includes(P.kind) ? P.kind : "solid";
+  const c1 = HEXCOL.test(P.c1) ? P.c1 : BD_PANEL, c2 = HEXCOL.test(P.c2) ? P.c2 : BD_PANEL2;
+  return { kind, c1, c2, dir: BG_DIRS.includes(P.dir) ? P.dir : "down", dim: P.dim == null || P.dim === "" ? 0.45 : clamp(+P.dim, 0, 0.9), lines: P.lines !== false };
+}
+function designBreakdown(ctx, post, s) {
+  const t = s.text || {}, L = s.layout || {}, items = (Array.isArray(t.items) ? t.items : []).filter(Boolean).slice(0, 30);
+  const split = L.split == null || L.split === "" ? (LAND ? 0.64 : 0.55) : clamp(+L.split, 0, 0.85), ph = Math.round(H * split);
+  const photo = ph >= 120 ? { x: 0, y: 0, w: W, h: ph } : null, box = { x: 0, y: photo ? ph : 0, w: W, h: H - (photo ? ph : 0) };
+  const P = bdPanelOf(s);
+  const ink = s.ink === "white" ? "#ffffff" : s.ink === "black" ? "#111111" : P.kind === "photo" ? "#ffffff" : inkOn(P.kind === "gradient" ? mixHex(P.c1, P.c2) : P.c1);
+  const A = s.overlay || !photo ? null : analyze(s.img, W, ph), us = userScrim(L);
+  const titleScrim = !photo || !(t.title || t.sub) ? 0 : us ?? (s.overlay ? 0.3 : A ? scrimFor(A.stats(W * 0.4, 100, W - M + 40, 420)) : 0);
+  const secs = bdSections(items);
+  return { kind: "breakdown", items, secs, photo, box, P, ink, A, titleScrim, foot: !!(t.section || t.foot),
+    note: `Breakdown: ${photo ? "the photo on top, " : ""}${items.length} item${items.length === 1 ? "" : "s"} in ${secs.length} section${secs.length === 1 ? "" : "s"}, laid out to fit` };
+}
+/* the panel's background */
+function bdPaintPanel(ctx, s, d) {
+  const b = d.box, P = d.P;
+  if (P.kind === "photo") {
+    if (s.img2) { drawPhoto(ctx, s.img2, b.x, b.y, b.w, b.h, "ADD THE PANEL PHOTO"); if (KEEP) return; }
+    else {
+      const img0 = getImg(s.img);
+      ctx.fillStyle = "#1a1514"; ctx.fillRect(b.x, b.y, b.w, b.h);
+      if (img0) {   /* the main photo, blurred */
+        const r = coverRect(img0, b.w, b.h, null), soft = photoFor(s.img, img0, 480);
+        ctx.save(); ctx.beginPath(); ctx.rect(b.x, b.y, b.w, b.h); ctx.clip();
+        ctx.filter = `blur(${Math.max(2, Math.round(Math.max(b.w, b.h) * 0.025 * RENDER_SCALE))}px)`;
+        ctx.drawImage(soft, b.x + r.dx - 60, b.y + r.dy - 60, r.dw + 120, r.dh + 120); ctx.restore();
+      }
+    }
+    if (P.dim > 0) { ctx.fillStyle = `rgba(0,0,0,${P.dim})`; ctx.fillRect(b.x, b.y, b.w, b.h); }
+    return;
+  }
+  if (P.kind === "gradient") {
+    const g = P.dir === "radial" ? ctx.createRadialGradient(b.x + b.w / 2, b.y + b.h * 0.4, 0, b.x + b.w / 2, b.y + b.h * 0.4, Math.hypot(b.w, b.h) * 0.6)
+      : P.dir === "right" ? ctx.createLinearGradient(b.x, 0, b.x + b.w, 0) : P.dir === "diag" ? ctx.createLinearGradient(b.x, b.y, b.x + b.w, b.y + b.h) : ctx.createLinearGradient(0, b.y, 0, b.y + b.h);
+    g.addColorStop(0, P.c1); g.addColorStop(1, P.c2); ctx.fillStyle = g;
+  } else ctx.fillStyle = P.c1;
+  ctx.fillRect(b.x, b.y, b.w, b.h);
+}
+/* the layout: the largest picture size s at which every section fits the panel, trying 1 to 3 rows of sections (in order) and up to
+   3 rows of items inside a section. Text widths are measured once at 100 px; the result is cached, so drags redraw quickly. */
+const BDL = new Map();
+function bdMetrics(s) { const f = clamp(s * 0.15, 26, 44); return { s, f, fo: f * 0.82, hf: f * 0.95, lf: f * 0.9, cw: s * 1.25, gx: s * 0.12, gy: s * 0.16, gs: Math.max(56, s * 0.3), gr: s * 0.22 + 40 }; }
+function bdLayout(ctx, post, items, secs, IW, IH) {
+  const key = JSON.stringify([IW, IH, post && post.handle, items.map(it => [it.name, it.note, it.group, it.t])]);
+  const hit = BDL.get(key); if (hit) return hit;
+  const m100 = items.map(it => ({ n: it.name ? richW(ctx, up(fillR(it.name, post)), 100, 700, -0.02) : 0, o: it.note ? richW(ctx, up(fillR(it.note, post)), 100, 400, -0.01) : 0 }));
+  const headH = (sec, m) => sec.name ? capH(m.hf) + m.hf * 0.95 + 10 : 0;
+  const nLines = (w100, size, tw) => w100 ? Math.min(2, Math.max(1, Math.ceil(w100 * size / 100 / tw))) : 0;
+  const itemH = (i, m) => { const tw = m.cw - 8, nl = nLines(m100[i].n, m.f, tw), ol = nLines(m100[i].o, m.fo, tw); return m.s + (nl || ol ? m.s * 0.13 + 8 : 0) + nl * m.f * 1.18 + (ol ? (nl ? m.f * 0.35 : 0) + ol * m.fo * 1.22 : 0); };
+  const listDims = (sec, m) => { let w = 0, h = 0; for (const i of sec.idx) { w = Math.max(w, m.lf * 0.9 + m100[i].n * m.lf / 100, m100[i].o ? m.lf * 0.9 + m100[i].o * m.lf * 0.85 / 100 : 0); h += m.lf * 1.6 + (m100[i].o ? m.lf * 1.25 : 0); } return { w: Math.min(w + 10, IW), h: headH(sec, m) + h }; };
+  const secDims = (sec, m, K) => {
+    if (sec.list) return { ...listDims(sec, m), k: 0, c: 0 };
+    const n = sec.idx.length, k = Math.min(K, n), c = Math.ceil(n / k);
+    let h = headH(sec, m); for (let r = 0; r < k; r++) { const rowIdx = sec.idx.slice(r * c, r * c + c); if (rowIdx.length) h += Math.max(...rowIdx.map(i => itemH(i, m))) + (r ? m.gy : 0); }
+    const wHead = sec.name ? richW(ctx, up(fillR(sec.name, post)), m.hf, 700, 0.04) : 0;
+    return { w: Math.max(c * m.cw + (c - 1) * m.gx, wHead), h, k, c };
+  };
+  const evalPlan = (rows, K, sz) => {
+    const m = bdMetrics(sz); let total = 0, ok = true;
+    const out = rows.map(rs => { const ds = rs.map(sec => secDims(sec, m, K)), w = ds.reduce((a, x) => a + x.w, 0) + (ds.length - 1) * m.gs, h = Math.max(...ds.map(x => x.h)); if (w > IW) ok = false; return { ds, w, h }; });
+    total = out.reduce((a, r) => a + r.h, 0) + (out.length - 1) * m.gr; if (total > IH) ok = false;
+    return { ok, m, out, total };
+  };
+  const plans = [], nS = secs.length;
+  const parts = (n, R) => { const res = []; const rec = (start, left, acc) => { if (left === 1) { res.push([...acc, n - start]); return; } for (let k = 1; k <= n - start - (left - 1); k++) rec(start + k, left - 1, [...acc, k]); }; rec(0, R, []); return res; };
+  for (let R = 1; R <= Math.min(3, nS); R++) for (const p of parts(nS, R)) { let at = 0; const rows = p.map(k => { const r = secs.slice(at, at + k); at += k; return r; }); for (let K = 1; K <= 3; K++) plans.push({ rows, K, R }); }
+  let best = null;
+  const smax = Math.max(60, Math.min(560, IH * 0.75));
+  for (const pl of plans) {
+    let lo = 40, hi = smax;
+    if (!evalPlan(pl.rows, pl.K, lo).ok) { if (!best) best = { pl, sz: lo, fit: false }; continue; }
+    for (let it = 0; it < 16; it++) { const mid = (lo + hi) / 2; if (evalPlan(pl.rows, pl.K, mid).ok) lo = mid; else hi = mid; }
+    if (!best || !best.fit || lo > best.sz * 1.03 || (lo > best.sz * 0.97 && (pl.R < best.pl.R || (pl.R === best.pl.R && pl.K < best.pl.K)))) best = { pl, sz: lo, fit: true };
+  }
+  const res = { s: 0, rows: [], dividers: [] };
+  if (!best) { BDL.set(key, res); return res; }
+  const ev = evalPlan(best.pl.rows, best.pl.K, best.sz), m = ev.m;
+  Object.assign(res, m);
+  const R = ev.out.length, extraV = Math.max(0, IH - ev.total), gv = Math.min(extraV / (R + 1), 220), top0 = (extraV - gv * (R - 1)) / 2;
+  let y = top0;
+  ev.out.forEach((row, ri) => {
+    const n = row.ds.length, extraH = Math.max(0, IW - row.w), gh = Math.min(extraH / (n + 1), 320), x0 = (extraH - gh * (n - 1)) / 2;
+    let x = x0; const rs = best.pl.rows[ri], rowOut = { y, h: row.h, secs: [] };
+    row.ds.forEach((dm, si) => {
+      const sec = rs[si], hh = headH(sec, m), so = { key: sec.key, name: sec.name, first: sec.idx[0], x, w: dm.w, y, headY: y, list: sec.list, cells: [] };
+      if (sec.list) {
+        let ly = y + hh;
+        for (const i of sec.idx) { const it = items[i]; so.cells.push({ i, x, top: ly, note: !!it.note }); ly += m.lf * 1.6 + (it.note ? m.lf * 1.25 : 0); }
+      } else {
+        let ry = y + hh;
+        for (let r = 0; r < dm.k; r++) {
+          const rowIdx = sec.idx.slice(r * dm.c, r * dm.c + dm.c); if (!rowIdx.length) break;
+          const rw = rowIdx.length * m.cw + (rowIdx.length - 1) * m.gx, rx = x + (dm.w - rw) / 2;
+          rowIdx.forEach((i, k) => {
+            const it = items[i], tw = m.cw - 8;
+            so.cells.push({ i, cx: rx + k * (m.cw + m.gx) + m.cw / 2, top: ry,
+              nl: it.name ? wrap(ctx, up(fillR(it.name, post)), tw, m.f, 700, -0.02).slice(0, 2) : [], ol: it.note ? wrap(ctx, up(fillR(it.note, post)), tw, m.fo, 400, -0.01).slice(0, 2) : [] });
+          });
+          ry += Math.max(...rowIdx.map(i => itemH(i, m))) + m.gy;
+        }
+      }
+      rowOut.secs.push(so);
+      if (si < n - 1) res.dividers.push({ x: x + dm.w + (m.gs + gh) / 2, y0: y - 10, y1: y + row.h + 10 });
+      x += dm.w + m.gs + gh;
+    });
+    res.rows.push(rowOut);
+    y += row.h + m.gr + gv;
+  });
+  if (BDL.size > 200) BDL.clear();
+  BDL.set(key, res);
+  return res;
+}
+function bdPic(ctx, it, cx, top, bw, bh) {   /* an item's picture, fitted into bw × bh: a color swatch is a circle */
+  if (HEXCOL.test(it.color) && !it.img && !it.vec) {
+    const r = Math.min(bw, bh) * 0.42;
+    ctx.save(); ctx.beginPath(); ctx.arc(cx, top + bh / 2, r, 0, Math.PI * 2); ctx.fillStyle = it.color; ctx.fill();
+    ctx.lineWidth = Math.max(2, r * 0.025); ctx.strokeStyle = INK === "#ffffff" ? "rgba(255,255,255,.35)" : "rgba(0,0,0,.16)"; ctx.stroke(); ctx.restore(); return;
+  }
+  gearPic(ctx, it, cx, top, bw, bh);
+}
+function renderBreakdown(ctx, post, s, idx, total, d) {
+  const t = s.text || {}, L = s.layout || {}, b = d.box, items = d.items, ink0 = INK;
+  if (d.photo) drawPhoto(ctx, s.img, 0, 0, W, d.photo.h, "ADD THE ROOM OR SETUP PHOTO");
+  if (!OVERLAY || KEEP) bdPaintPanel(ctx, s, d);
+  /* the title: over the photo's top right (white, shaded when the photo is bright), else at the top of the panel */
+  const tm = moveOf(L, "btitle"), tsz = LAND ? 60 : 66, ssz = LAND ? 46 : 50, tt = up(fillR(t.title, post)), st = up(fillR(t.sub, post));
+  const tl = tt ? wrap(ctx, tt, W * 0.62, tsz, 700, -0.03).slice(0, 2) : [], sl = st ? wrap(ctx, st, W * 0.62, ssz, 400, -0.02).slice(0, 2) : [];
+  const titleH = (tl.length ? capH(tsz) + (tl.length - 1) * tsz * 1.12 : 0) + (sl.length ? (tl.length ? 26 : 0) + capH(ssz) + (sl.length - 1) * ssz * 1.15 : 0);
+  if (d.photo && d.titleScrim > 0) shade(ctx, 0, Math.min(d.photo.h, 300 + titleH + 120), d.titleScrim, "top", W * 0.3, W);
+  INK = d.photo ? "#ffffff" : d.ink;
+  const tx = d.photo ? W - M : M, ty0 = d.photo ? 150 : b.y + 150, al = d.photo ? "right" : "left";
+  if (titleH) withScale(L, "btitle", tx + tm[0], ty0 + tm[1], () => {
+    let ty = ty0 + tm[1];
+    TF = "text.title"; tl.forEach(ln => { txt(ctx, ln, tx + tm[0], ty, { size: tsz, weight: 700, track: -0.03, align: al }); ty += tsz * 1.12; });
+    if (tl.length) ty += capH(tsz) - tsz * 1.12 + 26;
+    TF = "text.sub"; sl.forEach(ln => { txt(ctx, ln, tx + tm[0], ty, { size: ssz, weight: 400, track: -0.02, align: al, alpha: 0.92 }); ty += ssz * 1.15; });
+    TF = null;
+  });
+  /* the items */
+  INK = d.ink;
+  const padX = LAND ? 120 : 90, padT = d.photo ? (LAND ? 80 : 90) : 150 + (titleH ? titleH + 110 : 0), padB = d.foot ? 280 : (LAND ? 80 : 90);
+  const IW = b.w - 2 * padX, IH = b.h - padT - padB, ox = b.x + padX, oy = b.y + padT;
+  if (items.length && IH > 80) {
+    const lay = bdLayout(ctx, post, items, d.secs, IW, IH), m = lay;
+    if (d.P.lines) for (const dv of lay.dividers) { ctx.save(); ctx.fillStyle = INK === "#ffffff" ? "rgba(255,255,255,.22)" : "rgba(17,17,17,.14)"; ctx.fillRect(ox + dv.x - 1, oy + dv.y0, 2, dv.y1 - dv.y0); ctx.restore(); }
+    for (const row of lay.rows) for (const so of row.secs) {
+      const ms = moveOf(L, "sec." + so.key);
+      if (so.name) { TF = `text.items.${so.first}.group`; txt(ctx, up(fillR(so.name, post)), so.list ? ox + so.x + ms[0] : ox + so.x + so.w / 2 + ms[0], oy + so.headY + ms[1], { size: m.hf, weight: 700, track: 0.04, align: so.list ? "left" : "center" }); TF = null; }
+      for (const c of so.cells) {
+        const it = items[c.i], mi = moveOf(L, "item." + c.i);
+        if (so.list) {
+          const ax = ox + c.x + ms[0] + mi[0], ay = oy + c.top + ms[1] + mi[1];
+          withScale(L, "item." + c.i, ax, ay, () => {
+            TF = `text.items.${c.i}.name`; txt(ctx, "• " + up(fillR(it.name, post)), ax, ay, { size: m.lf, weight: 400, track: -0.01 });
+            TF = `text.items.${c.i}.note`; if (it.note) txt(ctx, up(fillR(it.note, post)), ax + m.lf * 0.9, ay + m.lf * 1.25, { size: m.lf * 0.85, weight: 400, track: -0.01, alpha: 0.7 });
+            TF = null;
+          });
+          continue;
+        }
+        const ax = ox + c.cx + ms[0] + mi[0], ay = oy + c.top + ms[1] + mi[1], pw = m.cw * 0.94, phh = m.s;
+        withScale(L, "item." + c.i, ax, ay, () => {
+          const X = TXF, f = X ? (v, a) => a + (v - a) * X.k : v => v;
+          TF = null; TXF = null;
+          ctx.save(); if (X) { ctx.translate(X.ax, X.ay); ctx.scale(X.k, X.k); ctx.translate(-X.ax, -X.ay); }
+          const txtOnly = it.t === "list";   /* a text-only item among pictures: its words where the picture would be */
+          if (!txtOnly) bdPic(ctx, it, ax, ay, pw, phh); ctx.restore();
+          TXF = X;
+          if (TB && !txtOnly) TB[`text.items.${c.i}.pic`] = { x0: f(ax - pw / 2, X && X.ax), x1: f(ax + pw / 2, X && X.ax), y0: f(ay, X && X.ay), y1: f(ay + phh, X && X.ay), size: 0, w: 700, lines: [], al: "center" };
+          let y = txtOnly ? ay + phh / 2 - (c.nl.length * m.f * 1.18 + c.ol.length * m.fo * 1.22) / 2 : ay + phh + (c.nl.length || c.ol.length ? m.s * 0.13 + 8 : 0);
+          TF = `text.items.${c.i}.name`; c.nl.forEach(ln => { txt(ctx, ln, ax, y, { size: m.f, weight: 700, track: -0.02, align: "center" }); y += m.f * 1.18; });
+          if (c.nl.length) y += capH(m.f) - m.f * 1.18 + m.f * 0.35;
+          TF = `text.items.${c.i}.note`; c.ol.forEach(ln => { txt(ctx, ln, ax, y, { size: m.fo, weight: 400, track: -0.01, align: "center", alpha: 0.75 }); y += m.fo * 1.22; });
+          TF = null;
+        });
+      }
+    }
+  }
+  if (d.foot) drawFooter(ctx, post, t, idx, total);
+  INK = ink0;
+}
+
+/* ---------- textures over the whole slide (slide.texture: each effect 0 to 1): grain, TV lines, duotone (dark to c1, light to c2),
+   VHS (color fringes and a few slipped bands), dust and scratches, vignette. Seeded, so the export matches what's on screen. ---------- */
+const TEX_KEYS = ["grain", "scan", "duo", "vhs", "dust", "vig"];
+function texOf(s) {
+  const t = s && s.texture; if (!t || typeof t !== "object") return null;
+  const o = { c1: HEXCOL.test(t.c1) ? t.c1 : "#1a0a06", c2: HEXCOL.test(t.c2) ? t.c2 : "#ff7a1a" }; let any = false;
+  for (const k of TEX_KEYS) { o[k] = clamp(+t[k] || 0, 0, 1); if (o[k] > 0) any = true; }
+  return any ? o : null;
+}
+const seeded = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+let NOISE = null;
+function noiseTile() {
+  if (NOISE) return NOISE;
+  const c = document.createElement("canvas"); c.width = c.height = 256;
+  const x = c.getContext("2d"), im = x.createImageData(256, 256), r = seeded(1234);
+  for (let i = 0; i < 256 * 256; i++) { const v = Math.round(128 + (r() + r() + r() - 1.5) * 150); im.data[i * 4] = im.data[i * 4 + 1] = im.data[i * 4 + 2] = clamp(v, 0, 255); im.data[i * 4 + 3] = 255; }
+  x.putImageData(im, 0, 0); return (NOISE = c);
+}
+function applyTexture(ctx, cv, tx, scale) {
+  const cw = cv.width, ch = cv.height; if (!cw || !ch) return;
+  let keep = null;
+  if (OVERLAY) { keep = document.createElement("canvas"); keep.width = cw; keep.height = ch; keep.getContext("2d").drawImage(cv, 0, 0); }   /* see-through parts stay see-through */
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+  if (tx.duo || tx.vhs) {
+    const im = ctx.getImageData(0, 0, cw, ch), p = im.data;
+    if (tx.duo) {
+      const a = parseInt(tx.c1.slice(1), 16), b = parseInt(tx.c2.slice(1), 16), A = [a >> 16, (a >> 8) & 255, a & 255], B = [b >> 16, (b >> 8) & 255, b & 255], k = tx.duo;
+      for (let i = 0; i < p.length; i += 4) { const l = (0.2126 * p[i] + 0.7152 * p[i + 1] + 0.0722 * p[i + 2]) / 255; for (let c = 0; c < 3; c++) p[i + c] = p[i + c] + ((A[c] + (B[c] - A[c]) * l) - p[i + c]) * k; }
+    }
+    if (tx.vhs) {
+      const sh = Math.max(1, Math.round(10 * tx.vhs * scale)), src = new Uint8ClampedArray(p);
+      for (let y = 0; y < ch; y++) for (let x = 0; x < cw; x++) { const i = (y * cw + x) * 4; p[i] = src[(y * cw + Math.max(0, x - sh)) * 4]; p[i + 2] = src[(y * cw + Math.min(cw - 1, x + sh)) * 4 + 2]; }
+      const r = seeded(77), bands = 2 + Math.round(4 * tx.vhs);
+      for (let n = 0; n < bands; n++) {   /* a few slipped bands, as on a worn tape */
+        const y0 = Math.floor(r() * ch), bh = Math.max(1, Math.round((6 + r() * 26) * scale)), off = Math.round((r() - 0.5) * 40 * tx.vhs * scale);
+        for (let y = y0; y < Math.min(ch, y0 + bh); y++) { const row = p.slice(y * cw * 4, (y + 1) * cw * 4); for (let x = 0; x < cw; x++) { const sx = clamp(x - off, 0, cw - 1); for (let c = 0; c < 3; c++) p[(y * cw + x) * 4 + c] = Math.min(255, row[sx * 4 + c] * 1.08); } }
+      }
+    }
+    ctx.putImageData(im, 0, 0);
+  }
+  if (tx.vig) {
+    const g = ctx.createRadialGradient(cw / 2, ch / 2, Math.min(cw, ch) * 0.3, cw / 2, ch / 2, Math.hypot(cw, ch) / 2);
+    g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, `rgba(0,0,0,${0.75 * tx.vig})`); ctx.fillStyle = g; ctx.fillRect(0, 0, cw, ch);
+  }
+  if (tx.scan || tx.vhs) {
+    const per = Math.max(2, 7 * scale), pc = document.createElement("canvas"); pc.width = 4; pc.height = Math.max(2, Math.round(per));
+    const px = pc.getContext("2d"); px.fillStyle = "#000"; px.fillRect(0, 0, 4, Math.max(1, Math.round(pc.height / 2)));
+    ctx.globalAlpha = Math.max(tx.scan, tx.vhs * 0.4) * 0.5; ctx.fillStyle = ctx.createPattern(pc, "repeat"); ctx.fillRect(0, 0, cw, ch); ctx.globalAlpha = 1;
+  }
+  if (tx.grain) {
+    const pat = ctx.createPattern(noiseTile(), "repeat"), gs = Math.max(0.6, 2.2 * scale);
+    if (pat.setTransform) pat.setTransform(new DOMMatrix().scale(gs));
+    ctx.globalCompositeOperation = "overlay"; ctx.globalAlpha = Math.min(1, tx.grain * 0.9); ctx.fillStyle = pat; ctx.fillRect(0, 0, cw, ch);
+    ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
+  }
+  if (tx.dust) {
+    const r = seeded(4242), n = Math.round(160 * tx.dust), k = scale;
+    for (let i = 0; i < n; i++) {
+      const x = r() * cw, y = r() * ch, rad = (1 + r() * 3.5) * k * 1.4;
+      ctx.fillStyle = r() < 0.7 ? `rgba(255,255,255,${(0.25 + r() * 0.45) * tx.dust})` : `rgba(0,0,0,${(0.2 + r() * 0.4) * tx.dust})`;
+      ctx.beginPath(); ctx.arc(x, y, Math.max(0.5, rad), 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.strokeStyle = `rgba(255,255,255,${0.3 * tx.dust})`; ctx.lineWidth = Math.max(0.6, 1.6 * k);
+    for (let i = 0, m = Math.round(7 * tx.dust); i < m; i++) { const x = r() * cw, y = r() * ch, len = (200 + r() * 700) * k; ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + (r() - 0.5) * 60 * k, y + len / 2, x + (r() - 0.5) * 40 * k, y + len); ctx.stroke(); }
+  }
+  if (keep) { ctx.globalCompositeOperation = "destination-in"; ctx.drawImage(keep, 0, 0); ctx.globalCompositeOperation = "source-over"; }
+  ctx.restore();
+}
 function design(ctx, post, s) {
+  if (s.type === "breakdown") return designBreakdown(ctx, post, s);
   if (s.type === "gear") return designGear(ctx, post, s);
   if (s.type === "specs") return designSpecs(ctx, post, s);
   if (s.type === "cover" || s.type === "save") return designTitle(ctx, post, s);
@@ -2072,10 +2391,12 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
   else if (s.type === "cover" || s.type === "save") renderTitle(ctx, post, s, idx, total, d);
   else if (s.type === "beforeafter") renderBA(ctx, post, s, idx, total, d);
   else if (s.type === "gear") renderGear(ctx, post, s, idx, total, d);
+  else if (s.type === "breakdown") renderBreakdown(ctx, post, s, idx, total, d);
   else renderPhotoSlide(ctx, post, s, idx, total, d);
   d.tboxes = TB; TB = null; TF = null; d.geo = geo; CX0 = M; CX1 = W - M;
   if (UNDER) flushUnder(ctx);   /* a slide with no text */
   d.boxes = ub.concat(drawStickers(ctx, post, { stickers: all.filter(t => !t.under) }, forExport ? null : hiliteId));
+  const tex = texOf(s0); if (tex) applyTexture(ctx, cv, tex, scale);
   d.photos = PH.map(p => ({ key: p.slot && p.slot === s.img ? "img" : p.slot && p.slot === s.img2 ? "img2" : null, x: p.x, y: p.y, w: p.w, h: p.h, contain: p.contain })).filter(p => p.key);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   OVERLAY = false; KEEP = false; PH = []; WHOLE = false; BG = null; HL = null; INK = "#ffffff"; DISP = null; EXPORTING = false;
@@ -2228,6 +2549,7 @@ function fieldHTML(sid, s) {
       continue;
     }
     if (f === "ITEMS") { parts.push(gearHTML(sid, s)); continue; }
+    if (f === "BITEMS") { parts.push(bdHTML(sid, s)); continue; }
     const [k, label, kind] = f;
     parts.push(kind === "area"
       ? `<div><label class="lbl" for="${id(k)}">${esc(label)}</label><textarea class="ctl" id="${id(k)}" data-f="text.${k}">${esc(t[k])}</textarea></div>`
@@ -2257,25 +2579,317 @@ async function drawGear(sid, i, quiet) {
   const s = S.slides[sid], it = s && ((s.text || {}).items || [])[i]; if (!it || !S.sample) return false;
   const name = plainText(it.name).trim(), key = name.toLowerCase();
   const mine = [...S.mine.values()].find(d => key && String(d.name || "").toLowerCase() === key);
-  if (mine) { remember(sid); setGearPic(it, mine); saveSlide(sid); renderBoard(new Set([sid])); return true; }
+  if (mine) { remember(sid); setGearPic(it, mine); delete it.color; saveSlide(sid); renderBoard(new Set([sid])); return true; }
   S.busy.add("gear:" + sid + ":" + i); if (!quiet) toast(`Claude is drawing ${name || "it"}…`);
   try {
-    const r = await S.sample.json(GEAR_DRAW.replace("{DESC}", `${name || "camera gear"}${it.note ? ` (${plainText(it.note)})` : ""}`.slice(0, 300)), { modelTier: "default", cache: false });
+    const r = await S.sample.json((s.type === "breakdown" ? BD_DRAW : GEAR_DRAW).replace("{DESC}", `${name || (s.type === "breakdown" ? "the object" : "camera gear")}${it.note ? ` (${plainText(it.note)})` : ""}`.slice(0, 300)), { modelTier: "default", cache: false });
     const vec = cleanVec(r); if (!vec) { if (!quiet) toast("Claude's drawing couldn't be used. Try again"); return false; }
     const cur = S.slides[sid] && S.slides[sid].text.items[i]; if (!cur || plainText(cur.name).trim() !== name) return false;   /* the item changed meanwhile */
-    remember(sid); delete cur.img; cur.vec = vec; saveSlide(sid); renderBoard(new Set([sid]));
+    remember(sid); delete cur.img; delete cur.color; cur.vec = vec; saveSlide(sid); renderBoard(new Set([sid]));
     return true;
   } catch (e) { if (!quiet) toast(SAMPLE_ERR[e && e.code] || "Couldn’t reach Claude. Try again"); return false; }
   finally { S.busy.delete("gear:" + sid + ":" + i); }
 }
 async function drawAllGear(sids) {
-  const todo = []; for (const sid of sids) ((S.slides[sid] || {}).text || {}).items?.forEach((it, i) => { if (!it.img && !it.vec && plainText(it.name).trim()) todo.push([sid, i]); });
+  const todo = []; for (const sid of sids) ((S.slides[sid] || {}).text || {}).items?.forEach((it, i) => { if (!it.img && !it.vec && it.t !== "list" && !HEXCOL.test(it.color) && plainText(it.name).trim()) todo.push([sid, i]); });
   if (!todo.length) return;
   let ok = 0; toast(`Drawing ${todo.length} gear picture${todo.length === 1 ? "" : "s"} with Claude…`);
   for (const [sid, i] of todo) if (await drawGear(sid, i, true)) ok++;
   toast(ok ? `${ok} gear picture${ok === 1 ? "" : "s"} drawn. Swap any for a photo or a cut-out` : "Claude couldn't draw the gear this time. Try Draw the missing pictures again");
 }
-function setGearPic(it, def) { delete it.img; delete it.vec; if (def.vec) it.vec = clone(def.vec); else if (def.src) it.img = clone(def.src); else if (def.asset || def.file) it.img = def.asset ? { asset: def.asset } : { file: def.file }; }
+function setGearPic(it, def) { delete it.img; delete it.vec; delete it.color; delete it.t; if (def.vec) it.vec = clone(def.vec); else if (def.src) it.img = clone(def.src); else if (def.asset || def.file) it.img = def.asset ? { asset: def.asset } : { file: def.file }; }
+/* ---------- breakdown slides: the items under the photo ----------
+   Each item: a section (items with the same one sit together under its heading), a bold name, a regular subtext, and a picture: a
+   photo cut out automatically (and saved to My stickers), one of My stickers, Claude's drawing, or a color swatch; or text only (a
+   bullet line). Add items… takes several photos, PNGs or stickers at once. */
+const bdThumb = it => it.t === "list" ? `<span>Text only</span>` : HEXCOL.test(it.color) && !it.img && !it.vec ? `<span class="swatch" style="background:${it.color}"></span>` : gearThumb(it);
+function bdHTML(sid, s) {
+  const items = (s.text || {}).items || [], id = k => `${sid}-${k}`, groups = [...new Set(items.map(it => String(it.group || "").trim()).filter(Boolean))];
+  return items.map((it, i) => {
+    const list = it.t === "list", pic = it.img || it.vec || HEXCOL.test(it.color);
+    return `<details class="bditem" data-bdopen="${sid}:${i}"${S.bdOpen.has(sid + ":" + i) ? " open" : ""}><summary><i class="bdth">${bdThumb(it)}</i><b>${esc(plainText(it.name) || "Item " + (i + 1))}</b><span>${esc(it.group || "")}</span></summary><div class="rowbox"><div class="rowhead"><span>Item ${i + 1}</span><span class="grow"></span>
+      <button class="btn ghost sm" data-act="bdmove" data-i="${i}" data-d="-1" aria-label="Move item ${i + 1} up" title="Move up"${i ? "" : " disabled"}>↑</button><button class="btn ghost sm" data-act="bdmove" data-i="${i}" data-d="1" aria-label="Move item ${i + 1} down" title="Move down"${i < items.length - 1 ? "" : " disabled"}>↓</button>
+      <button class="btn ghost sm" data-act="bddup" data-i="${i}">Duplicate</button><button class="btn ghost sm" data-act="bddel" data-i="${i}" aria-label="Remove item ${i + 1}">Remove</button></div>
+      <div><label class="lbl" for="${id("b" + i + "g")}">Section</label><input class="ctl" id="${id("b" + i + "g")}" data-f="text.items.${i}.group" value="${esc(it.group)}" list="${id("bdgroups")}" placeholder="e.g. LIGHTING"></div>
+      <div class="two"><div><label class="lbl" for="${id("b" + i + "n")}">Name (bold)</label><input class="ctl" id="${id("b" + i + "n")}" data-f="text.items.${i}.name" value="${esc(it.name)}"></div>
+      <div><label class="lbl" for="${id("b" + i + "t")}">Subtext</label><input class="ctl" id="${id("b" + i + "t")}" data-f="text.items.${i}.note" value="${esc(it.note)}" placeholder="e.g. Wall lamp"></div></div>
+      ${list ? "" : `<div class="gearpic"><i class="gthumb">${bdThumb(it)}</i><div class="actions"><button class="btn sm" data-act="bdphoto" data-i="${i}">Photo (auto cut-out)</button><button class="btn sm" data-act="gearmine" data-i="${i}">My stickers</button>${S.sample ? `<button class="btn sm" data-act="geardraw" data-i="${i}">Claude draws it</button>` : ""}<label class="btn sm swatchbtn">Color swatch<input type="color" data-bdcolor="${i}" value="${HEXCOL.test(it.color) ? it.color : "#d9cbb8"}" aria-label="Swatch color for item ${i + 1}"></label>${it.img && !it.cut ? `<button class="btn sm" data-act="bdcut" data-i="${i}">Cut out the background</button>` : ""}${pic ? `<button class="btn ghost sm" data-act="bdnoimg" data-i="${i}">Remove picture</button>` : ""}</div></div>`}
+      <label class="check"><input type="checkbox" data-act="bdlist" data-i="${i}"${list ? " checked" : ""}><span>Text only<small>A bullet line under the section heading, no picture.</small></span></label></div></details>`;
+  }).join("")
+    + `<datalist id="${id("bdgroups")}">${groups.map(g => `<option value="${esc(g)}">`).join("")}</datalist>
+    <div class="actions"><button class="btn primary sm" data-act="bdadd">Add items…</button><button class="btn sm" data-act="bdaddtext">Add a text item</button>${S.sample && items.some(it => it.t !== "list" && !it.img && !it.vec && !HEXCOL.test(it.color)) ? `<button class="btn sm" data-act="geardrawall">Draw the missing pictures</button>` : ""}<button class="btn ghost sm" data-act="bdarrange">Arrange automatically</button></div>
+    <p class="hint" style="margin:0">Add items… takes photos, PNGs or My stickers, several at once; photos are cut out automatically and saved to My stickers. Items with the same section sit together under its heading, and the layout fits them to the panel. In the large view, drag an item (its picture, name and subtext move together) or a section heading (its items follow); Arrange automatically puts them back.</p>`;
+}
+const BD_DRAW = `Draw this object as a clean product icon for an Instagram carousel that breaks down a room or a setup: {DESC}
+
+Draw the object itself, seen from the front or three-quarters, as recognizable as possible from its outline and main parts, with solid shapes and a few cut-out details (holes stay holes); no text, no logos, no background, no shadow.
+Reply with only JSON: {"viewBox":[<width>,<height>],"paths":[{"d":"<SVG path data: M L H V C S Q T A Z commands and numbers only>","fill":"currentColor"}]}
+Every fill is "currentColor" (the slide's text color); fill rule is even-odd. At most 24 paths, numbers with at most 1 decimal, all inside the viewBox; use [100,100] unless the object is clearly wide or tall.`;
+const BD_NAME = `Name this item for a breakdown slide (a room tour or a desk setup, with each piece pictured and named under the photo). The picture is the item, cut out of its photo.
+
+Reply with only JSON: {"name":"<the product's name or model if you can tell (like \\"IKEA VARMBLIXT\\" or \\"SONY A7 V\\"), else a short plain name (like \\"WALL LAMP\\"), in capitals, at most 4 words>","note":"<what it is or does, 1 to 3 words, like \\"Wall lamp\\" or \\"Key light\\">"}`;
+const bdNice = n => String(n || "").replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim().toUpperCase().slice(0, 40);
+const bdAutoName = n => !n || /^(img|dsc|dscf|pxl|mvimg|screenshot|screen shot|photo|image|untitled|cutout|cut out|sticker|whatsapp image|download)([\s_-]|\d|$)/i.test(n.trim()) || /^[\d\s]+$/.test(n) || /^[a-f0-9]{8,}$/i.test(n.trim());
+const canSee = () => !!(S.sample && S.imgLimits && !S.tagOff);
+function loadImgEl(src) { return new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = () => rej(new Error("load")); im.src = src; }); }
+/* Smart cut-out: the background is read from the photo's edges (up to three colors, in a perceptual color space), and everything
+   connected to the edges that's close to it (or blends smoothly into it, like a soft shadow or a gradient wall) turns see-through;
+   specks are dropped, background-colored holes inside the object open up, and the edge is softened. A PNG that's see-through already
+   is only trimmed. ok = false when the edges are too busy to be a background (a photo of a whole room): then a box from Claude around
+   the named object is tried, and if that's no better the item keeps the photo as it is. */
+const LIN = new Float32Array(256).map((_, i) => { const c = i / 255; return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); });
+function smartCut(im, crop) {
+  const iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height, [cx0, cy0, cx1, cy1] = crop || [0, 0, iw, ih], cw = cx1 - cx0, chh = cy1 - cy0;
+  const k = Math.min(1, 1200 / Math.max(cw, chh)), w = Math.max(2, Math.round(cw * k)), h = Math.max(2, Math.round(chh * k)), n = w * h;
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d", { willReadFrequently: true }); x.imageSmoothingQuality = "high"; x.drawImage(im, cx0, cy0, cw, chh, 0, 0, w, h);
+  const img = x.getImageData(0, 0, w, h), d = img.data, a = new Uint8Array(n);
+  let clear = 0; for (let i = 0; i < n; i++) { a[i] = d[i * 4 + 3]; if (a[i] < 128) clear++; }
+  if (clear > n * 0.02) return finishCut(x, img, a, w, h, true, c);   /* a PNG with its own see-through parts */
+  const Lc = new Float32Array(n), Ac = new Float32Array(n), Bc = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const r = LIN[d[i * 4]], g = LIN[d[i * 4 + 1]], b = LIN[d[i * 4 + 2]];
+    const X = Math.cbrt((0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.9505), Y = Math.cbrt(0.2126 * r + 0.7152 * g + 0.0722 * b), Z = Math.cbrt((0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.089);
+    Lc[i] = 116 * Y - 16; Ac[i] = 500 * (X - Y); Bc[i] = 200 * (Y - Z);
+  }
+  const band = [], bw = Math.max(2, Math.round(Math.min(w, h) * 0.006));
+  for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) if (xx < bw || yy < bw || xx >= w - bw || yy >= h - bw) band.push(yy * w + xx);
+  /* the background's colors: k-means on the edge band */
+  const K = 3, cen = [0, 0.5, 0.99].map(q => { const i = band[Math.floor(q * (band.length - 1))]; return [Lc[i], Ac[i], Bc[i]]; }), cnt = new Array(K).fill(0);
+  const dist = (i, c0) => Math.hypot(Lc[i] - c0[0], Ac[i] - c0[1], Bc[i] - c0[2]);
+  for (let it = 0; it < 8; it++) {
+    const sum = cen.map(() => [0, 0, 0]); cnt.fill(0);
+    for (const i of band) { let bi = 0, bd = Infinity; cen.forEach((c0, j) => { const dd = dist(i, c0); if (dd < bd) { bd = dd; bi = j; } }); sum[bi][0] += Lc[i]; sum[bi][1] += Ac[i]; sum[bi][2] += Bc[i]; cnt[bi]++; }
+    cen.forEach((c0, j) => { if (cnt[j]) { c0[0] = sum[j][0] / cnt[j]; c0[1] = sum[j][1] / cnt[j]; c0[2] = sum[j][2] / cnt[j]; } });
+  }
+  const keep = cen.filter((_, j) => cnt[j] >= band.length * 0.12);
+  const near = i => { let bd = Infinity; for (const c0 of keep) { const dd = dist(i, c0); if (dd < bd) bd = dd; } return bd; };
+  const bd0 = band.map(near).sort((p, q) => p - q), t = clamp(bd0[Math.floor(bd0.length * 0.9)] * 1.8 + 4, 8, 30);
+  const uniform = bd0.filter(v => v <= t).length / bd0.length;
+  /* flood from the edges */
+  const bg = new Uint8Array(n), q = new Int32Array(n); let qh = 0, qt = 0;
+  const dn = new Float32Array(n); for (let i = 0; i < n; i++) dn[i] = near(i);
+  for (const i of band) if (dn[i] < t && !bg[i]) { bg[i] = 1; q[qt++] = i; }
+  const step = (i, j) => { if (bg[j]) return; if (dn[j] < t || (dn[j] < 2 * t && Math.hypot(Lc[j] - Lc[i], Ac[j] - Ac[i], Bc[j] - Bc[i]) < 2.2)) { bg[j] = 1; q[qt++] = j; } };
+  while (qh < qt) { const i = q[qh++], xx = i % w; if (xx > 0) step(i, i - 1); if (xx < w - 1) step(i, i + 1); if (i >= w) step(i, i - w); if (i < n - w) step(i, i + w); }
+  /* specks off, background-colored holes open */
+  const lab = new Int32Array(n).fill(-1), sizes = [];
+  const comp = (want, i0, id) => { let size = 0; qh = qt = 0; q[qt++] = i0; lab[i0] = id; while (qh < qt) { const i = q[qh++], xx = i % w; size++; for (const j of [xx > 0 ? i - 1 : -1, xx < w - 1 ? i + 1 : -1, i >= w ? i - w : -1, i < n - w ? i + w : -1]) if (j >= 0 && lab[j] < 0 && bg[j] === want) { lab[j] = id; q[qt++] = j; } } return size; };
+  for (let i = 0; i < n; i++) if (!bg[i] && lab[i] < 0) sizes.push(comp(0, i, sizes.length));
+  const big = Math.max(0, ...sizes), main = big / Math.max(1, sizes.reduce((s1, v) => s1 + v, 0));   /* one object, or scattered pieces of a busy scene */
+  for (let i = 0; i < n; i++) if (!bg[i] && sizes[lab[i]] < Math.max(n * 0.002, big * 0.04)) bg[i] = 1;
+  lab.fill(-1); const hole = [];
+  for (let i = 0; i < n; i++) if (!bg[i] && dn[i] < t * 0.6 && lab[i] < 0) {   /* a region inside the object that matches the background */
+    let size = 0; qh = qt = 0; q[qt++] = i; lab[i] = 1; const pts = [];
+    while (qh < qt) { const j = q[qh++], xx = j % w; size++; pts.push(j); for (const m of [xx > 0 ? j - 1 : -1, xx < w - 1 ? j + 1 : -1, j >= w ? j - w : -1, j < n - w ? j + w : -1]) if (m >= 0 && lab[m] < 0 && !bg[m] && dn[m] < t * 0.6) { lab[m] = 1; q[qt++] = m; } }
+    if (size > n * 0.004) hole.push(pts);
+  }
+  for (const pts of hole) for (const j of pts) bg[j] = 1;
+  let fg = 0; for (let i = 0; i < n; i++) { a[i] = bg[i] ? 0 : 255; if (!bg[i]) fg++; }
+  const frac = fg / n, ok = keep.length > 0 && uniform >= 0.6 && main >= 0.5 && frac > 0.02 && frac < 0.96;
+  if (!ok) return { ok: false, raw: c, why: uniform < 0.6 || main < 0.5 ? "busy" : frac <= 0.02 ? "empty" : "full" };
+  /* soften the edge by a pixel */
+  const s0 = new Uint8Array(a);
+  for (let yy = 1; yy < h - 1; yy++) for (let xx = 1; xx < w - 1; xx++) { const i = yy * w + xx; if (s0[i - 1] === s0[i] && s0[i + 1] === s0[i] && s0[i - w] === s0[i] && s0[i + w] === s0[i]) continue; let tt = 0; for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) tt += s0[i + dy * w + dx]; a[i] = Math.round(tt / 9); }
+  return finishCut(x, img, a, w, h, true, c);
+}
+function finishCut(x, img, a, w, h, ok, raw) {   /* apply the alpha and trim to what's left */
+  const d = img.data, n = w * h; let x0 = w, y0 = h, x1 = -1, y1 = -1;
+  for (let i = 0; i < n; i++) { d[i * 4 + 3] = a[i]; if (a[i] > 16) { const xx = i % w, yy = (i / w) | 0; if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; } }
+  if (x1 < 0) return { ok: false, raw, why: "empty" };
+  const raw2 = document.createElement("canvas"); raw2.width = w; raw2.height = h; raw2.getContext("2d").drawImage(raw, 0, 0);
+  x.putImageData(img, 0, 0);
+  const o = document.createElement("canvas"); o.width = x1 - x0 + 1; o.height = y1 - y0 + 1;
+  o.getContext("2d").drawImage(x.canvas, x0, y0, o.width, o.height, 0, 0, o.width, o.height);
+  return { ok, canvas: o, raw: raw2, ar: o.width / o.height };
+}
+async function bdFindBox(im, what) {
+  const r = await S.sample.json(`Find this in the photo: ${what}\n\nReply with only JSON: {"box":[x0,y0,x1,y1]}, the box around it with a little margin, as fractions of the photo's width and height (0 to 1, x0 < x1, y0 < y1). If it isn't in the photo: {"box":null}.`, { images: [await imgJpeg(im, 1200)], modelTier: "default", cache: false });
+  const b = r && Array.isArray(r.box) && r.box.map(Number);
+  if (!b || b.length !== 4 || !b.every(Number.isFinite) || b[2] <= b[0] || b[3] <= b[1]) return null;
+  const iw = im.naturalWidth || im.width, ih = im.naturalHeight || im.height, mx = (b[2] - b[0]) * 0.04, my = (b[3] - b[1]) * 0.04;
+  return [clamp(b[0] - mx, 0, 1) * iw, clamp(b[1] - my, 0, 1) * ih, clamp(b[2] + mx, 0, 1) * iw, clamp(b[3] + my, 0, 1) * ih].map(Math.round);
+}
+async function smartCutout(im, what) {
+  let r = smartCut(im, null);
+  if (!r.ok && r.why === "busy" && what && canSee()) {
+    try { const box = await bdFindBox(im, what); if (box) { const r2 = smartCut(im, box); r = r2.ok ? r2 : { ...r2, raw: r2.raw || r.raw }; } } catch (e) {}
+  }
+  return r;
+}
+async function canvasSrc(cv, name) {   /* a canvas as a PNG in the board's storage (or a local blob in tests) */
+  const k = Math.min(1, 1400 / Math.max(cv.width, cv.height)), c = document.createElement("canvas");
+  c.width = Math.round(cv.width * k); c.height = Math.round(cv.height * k); c.getContext("2d").drawImage(cv, 0, 0, c.width, c.height);
+  const blob = await new Promise(res => c.toBlob(res, "image/png"));
+  return { src: S.assets ? { asset: (await S.assets.upload(new File([blob], slug(name || "item") + ".png", { type: "image/png" }))).id } : { file: URL.createObjectURL(blob) }, ar: c.width / c.height };
+}
+async function bdName(cv) {   /* Claude names an item from its picture */
+  if (!canSee()) return null;
+  try {
+    const c = document.createElement("canvas"), k = Math.min(1, 800 / Math.max(cv.width, cv.height)); c.width = Math.max(1, Math.round(cv.width * k)); c.height = Math.max(1, Math.round(cv.height * k));
+    const x = c.getContext("2d"); x.fillStyle = "#ffffff"; x.fillRect(0, 0, c.width, c.height); x.drawImage(cv, 0, 0, c.width, c.height);
+    const r = await S.sample.json(BD_NAME, { images: [c.toDataURL("image/jpeg", 0.85)], modelTier: "default", cache: false });
+    const name = String((r && r.name) || "").trim().toUpperCase().slice(0, 40), note = String((r && r.note) || "").trim().slice(0, 40);
+    return name ? { name, note } : null;
+  } catch (e) { return null; }
+}
+/* one picture (a library photo or an uploaded file) → an item: cut out (saved to My stickers), or the photo as it is */
+async function bdItemFrom(src, name0, cut, group, file) {
+  const im = await loadImgEl(src), nice = bdNice(name0), auto = bdAutoName(name0);
+  const r = cut ? await smartCutout(im, auto ? "" : nice) : { ok: false, raw: null };
+  const it = { group, name: auto ? "ITEM" : nice, note: "" };
+  let named = null;
+  if (r.ok) {
+    const out = await canvasSrc(r.canvas, nice || "item"); it.img = out.src; it.cut = true;
+    if (auto) named = await bdName(r.canvas);
+    if (named) { it.name = named.name; it.note = named.note; }
+    addMine({ name: it.name === "ITEM" ? nice || "Cut-out" : it.name, ar: out.ar, src: out.src });
+  } else {
+    it.img = file ? (S.assets ? { asset: (await S.assets.upload(file)).id } : { file: src }) : (src.startsWith("blob:") || src.startsWith("data:") ? { file: src } : null);
+    if (auto && r.raw) named = await bdName(r.raw);
+    if (named) { it.name = named.name; it.note = named.note; }
+  }
+  return { it, cutFailed: cut && !r.ok };
+}
+async function bdPhotoTo(sid, i, p) {   /* the Photo button on an item: a library photo, cut out */
+  const s = S.slides[sid], it0 = s && s.text.items[i]; if (!it0) return;
+  const key = "bd:" + sid + ":" + i; if (S.busy.has(key)) return; S.busy.add(key);
+  toast("Cutting it out…");
+  try {
+    const src = srcOf(p), im = await loadImgEl(src), r = await smartCutout(im, plainText(it0.name) !== "ITEM" ? plainText(it0.name) : "");
+    const cur = S.slides[sid] && S.slides[sid].text.items[i]; if (!cur) return;
+    remember(sid);
+    delete cur.vec; delete cur.color; delete cur.t;
+    if (r.ok) {
+      const out = await canvasSrc(r.canvas, plainText(cur.name) || p.name); cur.img = out.src; cur.cut = true;
+      if (bdAutoName(plainText(cur.name)) || plainText(cur.name) === "ITEM") { const nm = await bdName(r.canvas); if (nm) { cur.name = nm.name; if (!cur.note) cur.note = nm.note; } }
+      addMine({ name: plainText(cur.name) || bdNice(p.name), ar: out.ar, src: out.src });
+      toast("Cut out, and saved to My stickers");
+    } else { cur.img = p.asset ? { asset: p.asset } : { file: p.file }; delete cur.cut; toast("The background is too busy to cut out on its own, so the photo is used as it is. To cut it by hand: My stickers, then From a photo"); }
+    saveSlide(sid); renderBoard(new Set([sid]));
+  } catch (e) { toast("That photo couldn't be cut out. Try another"); }
+  finally { S.busy.delete(key); }
+}
+async function bdRecut(sid, i) {   /* Cut out the background, for an item that shows a whole photo */
+  const s = S.slides[sid], it = s && s.text.items[i]; if (!it || !it.img) return;
+  toast("Cutting it out…");
+  try {
+    const im = await loadImgEl(srcOf(it.img)), r = await smartCutout(im, plainText(it.name) !== "ITEM" ? plainText(it.name) : "");
+    if (!r.ok) { toast("The background is too busy to cut out on its own. Cut it by hand: My stickers, then From a photo"); return; }
+    const out = await canvasSrc(r.canvas, plainText(it.name)), cur = S.slides[sid] && S.slides[sid].text.items[i]; if (!cur) return;
+    remember(sid); cur.img = out.src; cur.cut = true; addMine({ name: plainText(cur.name) || "Cut-out", ar: out.ar, src: out.src });
+    saveSlide(sid); renderBoard(new Set([sid])); toast("Cut out, and saved to My stickers");
+  } catch (e) { toast("That picture couldn't be cut out"); }
+}
+function bdAct(act, b, sid, s) {   /* the card's breakdown buttons; true when handled */
+  const t = s.text = s.text || {}, items = t.items = t.items || [], i = +b.dataset.i;
+  if (act === "bdadd") { openBdAdd(sid); return true; }
+  if (act === "bdaddtext") { remember(sid); const g = items.length ? items[items.length - 1].group || "" : ""; items.push({ group: g, name: "CLEAN LINES", note: "", t: "list" }); saveSlide(sid); renderBoard(new Set([sid])); return true; }
+  if (act === "bdmove") { const j = i + +b.dataset.d; if (j < 0 || j >= items.length) return true; remember(sid); [items[i], items[j]] = [items[j], items[i]]; if (S.bdOpen.delete(sid + ":" + i)) S.bdOpen.add(sid + ":" + j); bdClearMoves(s); saveSlide(sid); renderBoard(new Set([sid])); return true; }
+  if (act === "bddup") { remember(sid); items.splice(i + 1, 0, clone(items[i])); bdClearMoves(s); saveSlide(sid); renderBoard(new Set([sid])); return true; }
+  if (act === "bddel") { remember(sid); items.splice(i, 1); bdClearMoves(s); saveSlide(sid); renderBoard(new Set([sid])); toast(`Item ${i + 1} removed`, () => stepHistory(sid, true)); return true; }
+  if (act === "bdphoto") { openPicker(sid, "bd:" + i); return true; }
+  if (act === "bdcut") { bdRecut(sid, i); return true; }
+  if (act === "bdnoimg") { const it = items[i]; if (it) { remember(sid); delete it.img; delete it.vec; delete it.color; delete it.cut; saveSlide(sid); renderBoard(new Set([sid])); } return true; }
+  if (act === "bdarrange") { remember(sid); bdClearMoves(s, true); saveSlide(sid); renderBoard(new Set([sid])); toast("Items back in their places"); return true; }
+  if (act === "bdnoimg2") { remember(sid); s.img2 = null; saveSlide(sid); renderBoard(new Set([sid])); return true; }
+  if (act === "bdpc") { remember(sid); s.panel = { ...(s.panel || {}), kind: "solid", c1: b.dataset.c }; saveSlide(sid); renderBoard(new Set([sid])); return true; }
+  return false;
+}
+function bdClearMoves(s, all) {   /* item numbers changed (or Arrange automatically): their own moves and sizes go */
+  const L = s.layout || {};
+  for (const k of ["move", "scale"]) if (L[k]) for (const g of Object.keys(L[k])) if (g.startsWith("item.") || (all && g.startsWith("sec."))) delete L[k][g];
+}
+/* Add items: pick any mix of new uploads, library photos and My stickers; they're added in that order, cut out unless told not to */
+const BDA = { sid: null, sel: [], q: "", busy: false };
+S.bdOpen = new Set();   /* the item rows left open on the cards, so they stay open when the card redraws */
+document.addEventListener("toggle", e => { const d = e.target; if (d.dataset && d.dataset.bdopen) { if (d.open) S.bdOpen.add(d.dataset.bdopen); else S.bdOpen.delete(d.dataset.bdopen); } }, true);
+function openBdAdd(sid) {
+  Object.assign(BDA, { sid, sel: [], q: "", busy: false });
+  const s = S.slides[sid], groups = [...new Set(((s.text || {}).items || []).map(it => String(it.group || "").trim()).filter(Boolean))];
+  $("#bdGroup").value = ""; $("#bdGroups").innerHTML = groups.map(g => `<option value="${esc(g)}">`).join(""); $("#bdSearch").value = ""; $("#bdStatus").textContent = "";
+  $("#bdUpLbl").hidden = !(S.assets || S.local);
+  renderBdAdd(); $("#bdDlg").showModal();
+}
+function renderBdAdd() {
+  const picked = (k, id) => BDA.sel.some(e => e.k === k && e.id === id);
+  $("#bdSel").innerHTML = BDA.sel.length ? BDA.sel.map((e, j) => { const th = e.k === "mine" ? minePreview(S.mine.get(e.id) || {}) : `<img src="${esc(e.k === "photo" ? srcOf(S.photos.get(e.id)) : e.url)}" alt="">`; return `<button type="button" data-bdrm="${j}" title="Take it off the list">${th}<span>${esc(e.name)}</span><b aria-hidden="true">×</b></button>`; }).join("") : `<p class="hint" style="margin:0">Nothing picked yet. Upload photos or PNGs, or tap photos and stickers below (several at once).</p>`;
+  const mine = [...S.mine.entries()].sort((a, b) => (b[1].addedAt || 0) - (a[1].addedAt || 0));
+  $("#bdMine").innerHTML = mine.length ? mine.map(([id, d]) => `<button type="button" data-bdmine="${esc(id)}" aria-pressed="${picked("mine", id)}" title="${esc(d.name)}">${minePreview(d)}<span>${esc(d.name)}</span></button>`).join("") : `<p class="hint" style="margin:0">No stickers saved yet.</p>`;
+  const q = BDA.q.trim(), ph = ownPhotos().filter(([, p]) => !q || matches(p, q)).reverse().slice(0, 120);
+  $("#bdLib").innerHTML = ph.map(([id, p]) => `<button type="button" data-bdph="${esc(id)}" aria-pressed="${picked("photo", id)}" title="${esc(p.desc || p.name)}"><img loading="lazy" src="${esc(srcOf(p))}" alt=""><span>${esc(p.name)}</span></button>`).join("") || `<p class="hint" style="margin:0">No photos${q ? ` match “${esc(q)}”` : ""}.</p>`;
+  const n = BDA.sel.length; $("#bdGo").disabled = !n || BDA.busy; $("#bdGo").textContent = BDA.busy ? "Adding…" : `Add ${n || ""} item${n === 1 ? "" : "s"}`.replace("  ", " ");
+}
+$("#bdDlg").addEventListener("click", e => {
+  const t = e.target, rm = t.closest("[data-bdrm]"), mi = t.closest("[data-bdmine]"), ph = t.closest("[data-bdph]");
+  if (BDA.busy) return;
+  const toggle = (k, id, name) => { const j = BDA.sel.findIndex(x => x.k === k && x.id === id); if (j >= 0) BDA.sel.splice(j, 1); else BDA.sel.push({ k, id, name }); renderBdAdd(); };
+  if (rm) { BDA.sel.splice(+rm.dataset.bdrm, 1); renderBdAdd(); }
+  else if (mi) { const d = S.mine.get(mi.dataset.bdmine); if (d) toggle("mine", mi.dataset.bdmine, d.name); }
+  else if (ph) { const p = S.photos.get(ph.dataset.bdph); if (p) toggle("photo", ph.dataset.bdph, p.name); }
+  else if (t.closest("#bdGo")) bdAddGo();
+});
+$("#bdDlg").addEventListener("input", e => { if (e.target.id === "bdSearch") { BDA.q = e.target.value; renderBdAdd(); } });
+$("#bdDlg").addEventListener("change", e => {
+  if (e.target.id !== "bdFiles") return;
+  for (const f of [...e.target.files]) { if (!/^image\//.test(f.type)) { toast(`${f.name}: use a photo or a PNG`); continue; } BDA.sel.push({ k: "file", id: "f" + Math.random().toString(36).slice(2), file: f, url: URL.createObjectURL(f), name: f.name.replace(/\.[^.]+$/, "") }); }
+  e.target.value = ""; renderBdAdd();
+});
+async function bdAddGo() {
+  const sid = BDA.sid, list = BDA.sel.slice(), group = $("#bdGroup").value.trim().toUpperCase().slice(0, 40), cut = $("#bdCut").checked; if (!sid || !list.length) return;
+  BDA.busy = true; renderBdAdd();
+  const made = [], noCut = []; let failed = 0;
+  for (const [j, e] of list.entries()) {
+    $("#bdStatus").textContent = `${j + 1} of ${list.length}: ${e.k === "mine" ? "adding" : cut ? "cutting out" : "adding"} ${e.name}…`;
+    try {
+      if (e.k === "mine") { const d = S.mine.get(e.id); if (d) made.push({ group, name: bdNice(d.name) || "ITEM", note: "", ...(d.vec ? { vec: clone(d.vec) } : { img: clone(d.src), cut: true }) }); continue; }
+      const p = e.k === "photo" ? S.photos.get(e.id) : null;
+      const r = await bdItemFrom(p ? srcOf(p) : e.url, e.name, cut, group, e.k === "file" ? e.file : null);
+      if (p && !r.it.img) r.it.img = p.asset ? { asset: p.asset } : { file: p.file };
+      made.push(r.it); if (r.cutFailed) noCut.push(r.it.name);
+    } catch (err) { failed++; }
+  }
+  BDA.busy = false;
+  const s = S.slides[sid];
+  if (s && made.length) { remember(sid); s.text.items = ((s.text.items || []).concat(made)).slice(0, 30); saveSlide(sid); renderBoard(new Set([sid])); if (focusSid === sid) drawFocus(); }
+  $("#bdDlg").close();
+  toast(`${made.length} item${made.length === 1 ? "" : "s"} added${noCut.length ? `. ${noCut.length === 1 ? noCut[0] + " is" : noCut.length + " are"} a whole photo: the background was too busy to cut out on its own` : ""}${failed ? `. ${failed} couldn't be added` : ""}`);
+}
+function onBdColor(el) {   /* Color swatch: the item becomes a color circle */
+  const card = el.closest(".card"), sid = card && card.dataset.sid, s = sid && S.slides[sid], it = s && s.text.items[+el.dataset.bdcolor]; if (!it) return;
+  remember(sid, "bdcolor" + el.dataset.bdcolor); it.color = el.value; delete it.img; delete it.vec; delete it.cut; delete it.t;
+  saveSlide(sid); scheduleDraw(sid);
+  const th = el.closest(".gearpic") && el.closest(".gearpic").querySelector(".gthumb"); if (th) th.innerHTML = bdThumb(it);
+}
+/* Texture: presets */
+const TEX_PRE = { film: { grain: 0.35, dust: 0.25, vig: 0.3 }, tv: { scan: 0.55, grain: 0.2, vig: 0.35 }, vhs: { vhs: 0.6, scan: 0.3, grain: 0.25 }, duo: { duo: 0.85, grain: 0.2, c1: "#1a0a06", c2: "#ff7a1a" }, duo2: { duo: 1, grain: 0.15, c1: "#0e0b0a", c2: "#f2ede6" } };
+function texHTML(sid, s) {
+  const T = s.texture || {}, v = k => +T[k] || 0, on = TEX_KEYS.some(k => v(k) > 0);
+  return `<details class="texbox"${on ? " open" : ""}><summary>Texture over the whole slide${on ? " (on)" : ""}</summary><div class="texin">
+    <div class="chips">${[["film", "Film"], ["tv", "TV lines"], ["vhs", "VHS"], ["duo", "Duotone: brand"], ["duo2", "Duotone: cream"]].map(([k, l]) => `<button type="button" data-act="texpre" data-p="${k}">${l}</button>`).join("")}</div>
+    <div class="two">${rng(sid, "texture.grain", "Grain", 0, 1, 0.01, v("grain"), "pct")}${rng(sid, "texture.scan", "TV lines", 0, 1, 0.01, v("scan"), "pct")}</div>
+    <div class="two">${rng(sid, "texture.vhs", "VHS", 0, 1, 0.01, v("vhs"), "pct")}${rng(sid, "texture.dust", "Dust and scratches", 0, 1, 0.01, v("dust"), "pct")}</div>
+    <div class="two">${rng(sid, "texture.vig", "Vignette", 0, 1, 0.01, v("vig"), "pct")}${rng(sid, "texture.duo", "Duotone", 0, 1, 0.01, v("duo"), "pct")}</div>
+    <div class="two"><div><label class="lbl" for="${sid}-tc1">Duotone shadows</label><input type="color" class="ctl" id="${sid}-tc1" data-f="texture.c1" value="${HEXCOL.test(T.c1) ? T.c1 : "#1a0a06"}"></div><div><label class="lbl" for="${sid}-tc2">Duotone highlights</label><input type="color" class="ctl" id="${sid}-tc2" data-f="texture.c2" value="${HEXCOL.test(T.c2) ? T.c2 : "#ff7a1a"}"></div></div>
+    <div class="actions"><button type="button" class="btn sm" data-act="texall">Use on every slide</button><button type="button" class="btn ghost sm" data-act="texnone">No texture</button></div>
+    <p class="hint" style="margin:0">On top of everything, stickers too, and in the PNGs and the PDF.</p></div></details>`;
+}
+function texAct(act, b, sid, s) {
+  if (act === "texpre") { remember(sid); s.texture = { ...TEX_PRE[b.dataset.p] }; saveSlide(sid); renderBoard(new Set([sid])); if (focusSid === sid) drawFocus(); return true; }
+  if (act === "texnone") { remember(sid); delete s.texture; saveSlide(sid); renderBoard(new Set([sid])); if (focusSid === sid) drawFocus(); return true; }
+  if (act === "texall") { const tx = clone(s.texture || null); let n = 0; for (const id of order()) { if (id === sid) continue; const o = S.slides[id]; remember(id); if (tx) o.texture = clone(tx); else delete o.texture; saveSlide(id); n++; } renderBoard(); toast(tx ? `This texture is on all ${n + 1} slides` : "Textures off on every slide"); return true; }
+  return false;
+}
+function bdPanelHTML(sid, s) {
+  const P = bdPanelOf(s), L = s.layout || {}, land = geoOf(sid).land;
+  const opts = (key, list, v) => list.map(([k, l]) => `<option value="${k}"${v === k ? " selected" : ""}>${l}</option>`).join("");
+  let h = `<div class="two">${rng(sid, "layout.split", "Photo height (0 = no photo)", 0, 0.85, 0.01, L.split ?? (land ? 0.64 : 0.55), "pct")}<div><label class="lbl" for="${sid}-bdpk">Panel background</label><select class="ctl" id="${sid}-bdpk" data-act="bdpanel">${opts("kind", [["solid", "Solid color"], ["gradient", "Gradient"], ["photo", "Photo"]], P.kind)}</select></div></div>`;
+  if (P.kind === "solid") h += `<div class="two"><div><label class="lbl" for="${sid}-bdc1">Panel color</label><input type="color" class="ctl" id="${sid}-bdc1" data-f="panel.c1" value="${P.c1}"></div><div class="chips" style="align-self:end">${[["#efeae4", "Linen"], ["#ffffff", "White"], ["#0e0b0a", "Black"], ["#e02d12", "Cover red"], ["#1c1918", "Charcoal"]].map(([c, l]) => `<button type="button" data-act="bdpc" data-c="${c}" title="${l}"><i class="sw" style="background:${c}"></i>${l}</button>`).join("")}</div></div>`;
+  else if (P.kind === "gradient") h += `<div class="two"><div><label class="lbl" for="${sid}-bdc1">From</label><input type="color" class="ctl" id="${sid}-bdc1" data-f="panel.c1" value="${P.c1}"></div><div><label class="lbl" for="${sid}-bdc2">To</label><input type="color" class="ctl" id="${sid}-bdc2" data-f="panel.c2" value="${P.c2}"></div></div><div><label class="lbl" for="${sid}-bddir">Direction</label><select class="ctl" id="${sid}-bddir" data-f="panel.dir">${opts("dir", BG_DIR_NAMES, P.dir)}</select></div>`;
+  else h += `<div class="actions"><button class="btn sm" data-act="replace" data-slot="img2">${s.img2 ? "Change the panel photo" : "Choose a panel photo"}</button>${s.img2 ? `<button class="btn ghost sm" data-act="bdnoimg2">Use the main photo, blurred</button>` : `<span class="hint">Now: the main photo, blurred.</span>`}</div>${rng(sid, "panel.dim", "Darken the panel photo", 0, 0.9, 0.05, P.dim, "pct")}`;
+  h += `<label class="check"><input type="checkbox" data-f="panel.lines" data-bool${P.lines ? " checked" : ""}><span>Lines between sections</span></label>`;
+  return h;
+}
 /* extra text layers (free text on top of the slide), listed under Edit text */
 function layerHTML(sid, s) {
   const ls = (s.stickers || []).map((st, i) => [st, i]).filter(([st]) => st.kind === "text");
@@ -2349,8 +2963,9 @@ function layoutHTML(sid, s) {
   parts.push(`<div><label class="lbl" for="${sid}-ovmode">Photo or video</label><select class="ctl" id="${sid}-ovmode" data-act="ovmode">${[["off", "Show the photo"], ["text", "Video behind: text only (transparent PNG)"], ["keep", "Video behind: keep background, panels and text"]].map(([v, l]) => `<option value="${v}"${om === v ? " selected" : ""}>${l}</option>`).join("")}</select>
     <p class="hint" style="margin:6px 0 0">${om === "text" ? "Only the text is left (and stickers): lay it over a video in Edits or CapCut." : om === "keep" ? "The photo's spot is see-through and everything else stays: put your video under it in Edits or CapCut." : "To use a video instead of the photo, pick one of the Video behind options and download the PNG."}</p></div>`);
   parts.push(`<label class="check"><input type="checkbox" id="${sid}-whole" data-f="whole" data-bool${s.whole ? " checked" : ""}><span>Show the whole photo<small>No cropping: the photo fits inside the slide and a blurred copy fills the rest. Good for a photo with text in it, like a finished cover, in another ratio.</small></span></label>`);
-  if (geoOf(sid).land && s.type !== "beforeafter" && s.type !== "photo" && s.type !== "gear") parts.push(`<div class="two">${sel(sid, "layout.side", "Text side (wide slides)", [["auto", "Auto"], ["left", "Left"], ["right", "Right"]], L.side)}${s.type === "specs" ? "" : sel(sid, "layout.panel", "Panel color", [["auto", "From the photo"], ["black", "Black"], ["red", "Cover red"]], L.panel)}</div>`);
-  if (s.type === "gear") {
+  if (geoOf(sid).land && s.type !== "beforeafter" && s.type !== "photo" && s.type !== "gear" && s.type !== "breakdown") parts.push(`<div class="two">${sel(sid, "layout.side", "Text side (wide slides)", [["auto", "Auto"], ["left", "Left"], ["right", "Right"]], L.side)}${s.type === "specs" ? "" : sel(sid, "layout.panel", "Panel color", [["auto", "From the photo"], ["black", "Black"], ["red", "Cover red"]], L.panel)}</div>`);
+  if (s.type === "breakdown") parts.push(bdPanelHTML(sid, s));
+  else if (s.type === "gear") {
     parts.push(`<div class="two">${sel(sid, "layout.panel", "Panel color", [["auto", "Black"], ["red", "Cover red"], ["light", "Light"]], L.panel)}${rng(sid, "layout.split", geoOf(sid).land ? "Photo width" : "Photo height", 0.3, 0.7, 0.01, L.split ?? 0.5, "pct")}</div>`);
   } else if (s.type === "specs") {
     parts.push(`<div class="two">${sel(sid, "layout.style", "Text style", [["auto", "Auto"], ["overlay", "Over the photo"], ["panel", "Solid panel"]], L.style)}${sel(sid, "layout.pos", "Text position", [["auto", "Auto"], ["top", "Top"], ["bottom", "Bottom"]], L.pos)}</div>`);
@@ -2366,6 +2981,7 @@ function layoutHTML(sid, s) {
     parts.push(`<div class="two">${rng(sid, slot + ".fx", nm + "left / right", 0, 1, 0.01, v.fx ?? 0.5, "pct")}${rng(sid, slot + ".fy", nm + "up / down", 0, 1, 0.01, v.fy ?? 0.5, "pct")}</div>`);
     parts.push(rng(sid, slot + ".zoom", nm + "zoom", 1, 3, 0.01, v.zoom ?? 1, "x"));
   }
+  parts.push(texHTML(sid, s));
   return parts.join("");
 }
 function applyHTML(sid, s) {
@@ -2547,6 +3163,7 @@ function onBgInput(el) {
 document.addEventListener("input", e => {
   const el = e.target;
   if (el.dataset && el.dataset.bg && el.type === "color") return onBgInput(el);
+  if (el.dataset && el.dataset.bdcolor != null) return onBdColor(el);
   if (el.type === "range") showBubble(el);
   if (el.dataset && el.dataset.f) onField(el);
   else if (el.dataset && el.dataset.m && S.post) {
@@ -2585,6 +3202,13 @@ document.addEventListener("change", e => {
     if (box) box.disabled = r.disabled;
     saveSlide(sid); scheduleDraw(sid);
   } else if (el.dataset.act === "bgmode") setBgMode(el.closest(".card").dataset.sid, el.value);
+  else if (el.dataset.act === "bdlist" || el.dataset.act === "bdpanel") {   /* breakdown: an item turns text only, or the panel's background kind */
+    const sid = el.closest(".card").dataset.sid, sl = S.slides[sid]; if (!sl) return;
+    remember(sid);
+    if (el.dataset.act === "bdlist") { const it = sl.text.items[+el.dataset.i]; if (it) { if (el.checked) it.t = "list"; else delete it.t; } }
+    else sl.panel = { ...(sl.panel || {}), kind: el.value };
+    saveSlide(sid); renderBoard(new Set([sid])); if (focusSid === sid) drawFocus();
+  }
   else if (el.dataset.act === "ovmode") {   /* photo, or a video behind: text only, or with the backgrounds and panels kept */
     const sid = el.closest(".card").dataset.sid, sl = S.slides[sid]; if (!sl) return;
     remember(sid);
@@ -2640,6 +3264,7 @@ document.addEventListener("click", e => {
   const sid = card.dataset.sid, s = S.slides[sid], act = b.dataset.act;
   if (!["menu", "del", "delok", "cdl", "cpv", "cratio", "cfit"].includes(act)) closeMenus();
   if (cardMenuAction(b, sid)) return;
+  if (s && (bdAct(act, b, sid, s) || texAct(act, b, sid, s))) return;
   if (act === "fold") { setFold(sid, !S.folded.has(sid)); saveFolds(); }
   else if (act === "focus") { if (Date.now() - S.suppressClick > 450) openFocus(sid); }
   else if (act === "replace") openPicker(sid, b.dataset.slot);
@@ -3916,6 +4541,12 @@ fcv.addEventListener("pointermove", e => {
 function moveGroup(s, f) {
   if (!f || !s) return null;
   let m = f.match(/^text\.rows\.(\d+)\./); if (m) return "rows." + m[1];
+  if (s.type === "breakdown") {   /* an item (picture, name, subtext) moves as one; a section heading takes its items along */
+    if (f === "text.title" || f === "text.sub") return "btitle";
+    m = f.match(/^text\.items\.(\d+)\.(name|note|pic|group)$/); if (!m) return null;
+    const it = ((s.text || {}).items || [])[+m[1]]; if (!it) return null;
+    return m[2] === "group" ? "sec." + up(String(it.group ?? "").trim()) : "item." + m[1];
+  }
   if ((s.type === "specs" || s.type === "gear") && (f === "text.tipK" || f === "text.tip")) return "tip";
   if (s.type === "gear" && (f === "text.num" || f === "text.title")) return "gtitle";
   if ((s.type === "cover" || s.type === "save") && /^text\.(left|right|title|big|sub)$/.test(f)) return "title";
@@ -4079,14 +4710,15 @@ function xfBox() {   /* the selected thing's box in slide pixels: {cx, cy, w, h,
   if (st) { const b = (S.focusBoxes || []).find(x => x.id === st.id); return b && b.w ? { cx: b.cx, cy: b.cy, w: b.w, h: b.h, rot: b.rot || 0, sticker: st.id } : null; }
   const grp = S.ftsel && moveGroup(s, S.ftsel); if (!grp || grp.startsWith("rows.")) return null;
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  for (const [f, b] of Object.entries(S.ftboxes || {})) if (moveGroup(s, f) === grp && b.x1 > b.x0) { x0 = Math.min(x0, b.x0); y0 = Math.min(y0, b.y0); x1 = Math.max(x1, b.x1); y1 = Math.max(y1, b.y1); }
+  const inGrp = f => { const g = moveGroup(s, f); if (g === grp) return true; if (!grp.startsWith("sec.") || !g || !g.startsWith("item.")) return false; const it = s.text.items[+g.slice(5)]; return !!it && "sec." + up(String(it.group ?? "").trim()) === grp; };
+  for (const [f, b] of Object.entries(S.ftboxes || {})) if (inGrp(f) && b.x1 > b.x0) { x0 = Math.min(x0, b.x0); y0 = Math.min(y0, b.y0); x1 = Math.max(x1, b.x1); y1 = Math.max(y1, b.y1); }
   return x1 > x0 ? { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, w: x1 - x0, h: y1 - y0, rot: 0, grp } : null;
 }
 function placeXf() {
   const b = focusSid && !liteOn() && !(fg && fg.moved && fg.mode === "tmove") ? xfBox() : null, k = focusSid ? fcv.clientWidth / geoOf(focusSid).w : 0;
   if (!b || !k || (S.fpanel === "text" && S.ftfield && !b.sticker)) { xf.hidden = true; return; }
   const pad = 8, mn = TOUCH() ? 88 : 44, w = Math.max(mn, b.w * k + 2 * pad), h = Math.max(mn, b.h * k + 2 * pad);   /* room to grab a small sticker between the handles */
-  xf.hidden = false; xf.classList.toggle("text", !b.sticker);
+  xf.hidden = false; xf.classList.toggle("text", !b.sticker); xf.classList.toggle("nos", !!(b.grp && b.grp.startsWith("sec.")));   /* a section moves, but doesn't resize */
   Object.assign(xf.style, { left: b.cx * k - w / 2 + "px", top: b.cy * k - h / 2 + "px", width: w + "px", height: h + "px", transform: b.rot ? `rotate(${b.rot}deg)` : "" });
   if (!b.sticker) $("#fTsel").hidden = true;
 }
@@ -4220,16 +4852,16 @@ function fieldPath(s, f) {
   if (f.startsWith("layer:")) { const i = (s.stickers || []).findIndex(t => t.id === f.slice(6) && t.kind === "text"); return i < 0 ? null : `stickers.${i}.label`; }
   const m = f.match(/^text\.rows\.(\d+)\.(label|value|note)$/);
   if (m) return ((s.text || {}).rows || [])[+m[1]] ? f : null;
-  const g = f.match(/^text\.items\.(\d+)\.(name|note)$/);
-  if (g) return ((s.text || {}).items || [])[+g[1]] ? f : null;
+  const g = f.match(/^text\.items\.(\d+)\.(name|note|group|pic)$/);
+  if (g) { if (!((s.text || {}).items || [])[+g[1]] || (g[2] === "group" && s.type !== "breakdown")) return null; return g[2] === "pic" ? `text.items.${g[1]}.name` : f; }
   return (FIELDS[s.type] || []).some(d => Array.isArray(d) && "text." + d[0] === f) ? f : null;
 }
 function fieldInfo(s, path) {   /* label, current value, and "line" or "area" */
   if (HEAD_FIELDS[path]) return { label: HEAD_FIELDS[path], value: S.post[path.slice(5)] ?? "", kind: "line" };
   let m = path.match(/^text\.rows\.(\d+)\.(label|value|note)$/);
   if (m) return { label: `Row ${+m[1] + 1}, ${{ label: "label", value: "big value", note: "why (small text)" }[m[2]]}`, value: s.text.rows[+m[1]][m[2]] ?? "", kind: m[2] === "note" ? "area" : "line" };
-  m = path.match(/^text\.items\.(\d+)\.(name|note)$/);
-  if (m) return { label: `Gear ${+m[1] + 1}, ${m[2]}`, value: s.text.items[+m[1]][m[2]] ?? "", kind: "line" };
+  m = path.match(/^text\.items\.(\d+)\.(name|note|group)$/);
+  if (m) return { label: s.type === "breakdown" ? (m[2] === "group" ? "Section heading" : `Item ${+m[1] + 1}, ${m[2] === "name" ? "name" : "subtext"}`) : `Gear ${+m[1] + 1}, ${m[2]}`, value: s.text.items[+m[1]][m[2]] ?? "", kind: "line" };
   m = path.match(/^stickers\.(\d+)\.label$/);
   if (m) return { label: `Extra text ${s.stickers.slice(0, +m[1] + 1).filter(t => t.kind === "text").length}`, value: s.stickers[+m[1]].label ?? "", kind: "area" };
   const k = path.slice(5), d = FIELDS[s.type].find(x => Array.isArray(x) && x[0] === k);
@@ -4389,6 +5021,8 @@ function editorRefs(s, ref) {
   if (grp === "a" || grp === "b") return ["Value", "Label", "Note"].map(k => `text.${grp}${k}`);
   if (grp === "caption") return ["text.label", "text.note"];
   if (grp === "gtitle") return ["text.num", "text.title"];
+  if (/^text\.items\.\d+\.group$/.test(ref)) return [ref];
+  if (grp === "btitle") return ["text.title", "text.sub"];
   const gm = ref.match(/^text\.items\.(\d+)\./); if (gm) return [`text.items.${gm[1]}.name`, `text.items.${gm[1]}.note`];
   if (HEAD_FIELDS[ref]) return ["post.series", "post.subject"];
   if (ref === "text.section" || ref === "text.foot") return ["text.section", "text.foot"];
@@ -4398,7 +5032,9 @@ function editorTitle(s, ref) {
   if (ref.startsWith("layer:")) return "Extra text";
   const grp = moveGroup(s, ref);
   if (grp && grp.startsWith("rows.")) return `Row ${+grp.slice(5) + 1}`;
-  return grp ? { title: "Title", tip: "Tip", a: "Before", b: "After", caption: "Caption" }[grp] : HEAD_FIELDS[ref] ? "Header (every slide)" : "Footer";
+  if (grp && grp.startsWith("item.")) return `Item ${+grp.slice(5) + 1}`;
+  if (grp && grp.startsWith("sec.")) return "Section heading";
+  return grp ? { title: "Title", tip: "Tip", a: "Before", b: "After", caption: "Caption", gtitle: "Heading", btitle: "Title" }[grp] || "Text" : HEAD_FIELDS[ref] ? "Header (every slide)" : "Footer";
 }
 const NARROW = /^(text\.rows\.\d+\.(label|value)|text\.(left|right|section|foot|[ab](Value|Label))|post\.\w+)$/;
 const layerOpts = (st, i) => `<select class="ctl" id="ff-stickers-${i}-w" data-ff="stickers.${i}.w" aria-label="Weight" style="width:auto"><option value="700"${+st.w === 400 ? "" : " selected"}>Bold</option><option value="400"${+st.w === 400 ? " selected" : ""}>Regular</option></select>${alignSel(`ff-stickers-${i}-al`, `data-ff="stickers.${i}.al" aria-label="Align" style="width:auto"`, st.al)}`;
@@ -4417,6 +5053,10 @@ function textPanelHTML(s) {
   const out = [`<div class="lhead"><h4>This slide</h4><span class="grow"></span>${touch ? "" : fmtBarHTML()}</div>`];
   if (touch) out.push(`<p class="hint">Tap any text to edit it, with the slide above it.</p>`);
   for (const d of FIELDS[s.type]) {
+    if (d === "BITEMS") {
+      bdSections(t.items || []).forEach(sec => out.push(`<div class="rowbox"><div class="rowhead"><span>${esc(sec.name || "Items")}</span></div>${sec.name ? `<div>${fld(`text.items.${sec.idx[0]}.group`, "Section heading")}</div>` : ""}${sec.idx.map(i => `<div class="two"><div>${fld(`text.items.${i}.name`, "Name")}</div><div>${fld(`text.items.${i}.note`, "Subtext")}</div></div>`).join("")}</div>`));
+      continue;
+    }
     if (d === "ITEMS") {
       ((t.items || [])).forEach((it, i) => out.push(`<div class="rowbox"><div class="rowhead"><span>Gear ${i + 1}</span></div><div class="two"><div>${fld(`text.items.${i}.name`, "Name")}</div><div>${fld(`text.items.${i}.note`, "Note")}</div></div></div>`));
       continue;
@@ -4435,6 +5075,14 @@ function textPanelHTML(s) {
   return out.join("");
 }
 /* typing in the Text panel: the slide redraws as you type, and the card's own fields follow */
+function bdRenameSection(sid, s, i0, old, v) {   /* the heading names its whole section: every item in it follows (and the section's move) */
+  s.text.items.forEach((it, j) => { if (j !== i0 && String(it.group ?? "") === old) it.group = v; });
+  const mv = s.layout && s.layout.move, ko = "sec." + up(old.trim()), kn = "sec." + up(v.trim());
+  if (mv && mv[ko] && ko !== kn) { mv[kn] = mv[ko]; delete mv[ko]; }
+  const card = document.getElementById("card-" + sid);
+  if (card) s.text.items.forEach((it, j) => { const x = card.querySelector(`[data-f="text.items.${j}.group"]`); if (x && x.value !== it.group) x.value = it.group; });
+  if (S.ftsel && moveGroup(s, S.ftsel) === null) S.ftsel = null;
+}
 function onFF(el, remembered) {
   const sid = focusSid, s = S.slides[sid], path = el.dataset.ff; if (!s || !path) return;
   if (HEAD_FIELDS[path]) {
@@ -4444,7 +5092,10 @@ function onFF(el, remembered) {
   }
   const w = /\.w$/.test(path), v = w ? (+el.value === 400 ? 400 : 700) : ffValue(el);
   if (!remembered) remember(sid, path);
-  setPath(s, path, v); saveSlide(sid); scheduleDraw(sid);
+  const gm = s.type === "breakdown" && path.match(/^text\.items\.(\d+)\.group$/), old = gm ? String(s.text.items[+gm[1]].group ?? "") : null;
+  setPath(s, path, v);
+  if (gm) bdRenameSection(sid, s, +gm[1], old, String(v));
+  saveSlide(sid); scheduleDraw(sid);
   const card = document.getElementById("card-" + sid);
   if (card) card.querySelectorAll(`[data-f="${path}"]`).forEach(x => { x.value = v; });
   if (path === "text.section") renderLibrary();
@@ -4715,7 +5366,11 @@ function duplicateText(ref) {
   const { w: W, h: H } = geoOf(sid);
   let copy = null, msg = "";
   const m = path.match(/^text\.rows\.(\d+)\.(\w+)$/), rows = (s.text || {}).rows || [];
-  if (ref.startsWith("layer:")) {
+  const bm = s.type === "breakdown" && path.match(/^text\.items\.(\d+)\./);
+  if (bm) {   /* a breakdown item: the whole item, after it */
+    const i = +bm[1]; remember(sid); s.text.items.splice(i + 1, 0, clone(s.text.items[i])); bdClearMoves(s); saveSlide(sid);
+    S.fsel = null; S.ftsel = copy = `text.items.${i + 1}.name`; msg = `Item ${i + 1} copied. It's under Edit text too`;
+  } else if (ref.startsWith("layer:")) {
     const st = s.stickers.find(t => t.id === ref.slice(6)), box = (S.focusBoxes || []).find(b => b.id === st.id);
     remember(sid);
     const c = { ...clone(st), id: newStickerId(), y: box ? clamp(freeSpot(box, box.x1 - box.x0, box.y1 - box.y0) / H, 0.03, 0.97) : clamp((st.y ?? 0.5) + 0.06, 0.03, 0.97) };
@@ -5062,7 +5717,7 @@ let pickFor = null;
 function openPicker(sid, slot) {
   pickFor = { sid, slot };
   const s = S.slides[sid], ref = slot === "ref";
-  $("#pickTitle").textContent = ref ? "Reference image" : slot.startsWith("gear:") ? "Gear picture" : s.type === "beforeafter" ? (slot === "img" ? "Replace before photo" : "Replace after photo") : "Replace image";
+  $("#pickTitle").textContent = ref ? "Reference image" : slot.startsWith("gear:") ? "Gear picture" : slot.startsWith("bd:") ? "Item picture (cut out automatically)" : slot === "img2" && s.type === "breakdown" ? "Panel photo" : s.type === "beforeafter" ? (slot === "img" ? "Replace before photo" : "Replace after photo") : "Replace image";
   $("#pickUploadLbl").hidden = !(S.assets || S.local);
   $("#pickUploadTxt").textContent = ref ? "Upload a reference" : "Upload new photo";
   $("#pickHint").textContent = ref ? "Pick a post you like (a screenshot works), from your library or a new upload. Claude matches this slide's layout, text styling and photo look to it and keeps your own words and photo. Tweak anything afterwards, or Undo. New uploads go to the References folder."
@@ -5086,10 +5741,11 @@ function usePhoto(id) {
   const { sid, slot } = pickFor, s = S.slides[sid];
   if (slot === "ref") { $("#pickDlg").close(); referenceSlide(sid, id); return; }
   const p = S.photos.get(id);
+  if (slot.startsWith("bd:")) { $("#pickDlg").close(); bdPhotoTo(sid, +slot.slice(3), p); return; }
   if (slot.startsWith("gear:")) { const it = s.text.items[+slot.slice(5)]; if (it) { remember(sid); setGearPic(it, p); saveSlide(sid); renderBoard(new Set([sid])); } $("#pickDlg").close(); toast("Gear picture set. A cut-out on a plain background looks cleanest"); return; }
   remember(sid);
   s[slot] = { ...(p.asset ? { asset: p.asset } : { file: p.file }), fx: 0.5, fy: 0.5, zoom: 1 };
-  s.layout = {};
+  if (s.type !== "breakdown") s.layout = {};   /* a breakdown keeps its items where they are */
   saveSlide(sid);
   $("#pickDlg").close();
   renderBoard(new Set([sid])); renderLibrary();
@@ -5135,7 +5791,9 @@ beforeafter: aValue, aLabel, aNote, bValue, bLabel, bNote, section, foot
 save: left, right, big, sub, section, foot
 photo: label, note, section, foot
 gear: num, title, items [{name, note}], tipK, tip, section, foot
+breakdown: title, sub, items [{group, name, note, text?, color?}], section, foot
 (section is the footer's middle text, foot is the footer's right text.)
+A "breakdown" slide breaks a room, a desk setup or a look down into its parts: the photo on top, then a panel of sections, each with a heading (group, like "LIGHTING", "COLOR PALETTE", "KEY ELEMENTS", "FURNITURE") and its items: name = the product or its plain name ("IKEA VARMBLIXT", "QUEEN BED FRAME"), note = what it is in 1 to 3 words ("Wall lamp"); "color": "#hex" makes an item a color swatch (for a palette), "text": true a bullet line with no picture (for a list of ideas like "Clean lines"); otherwise its picture is set by the creator ("picture": true when it has one). title (and sub) sit over the photo ("1. HOTEL MINIMALIST VIBES" / "WHITE THEME"). Keep items in their sections and order unless asked; up to about 16 items.
 A "gear" slide breaks one shot down into the gear behind it (a shot list with the gear used): its photo, at the top (on the left of a wide slide), shows the setup or the shot; num is the step number ("01"); title names the step or category, with the accent words in __italic__ ("LIGHTING – __STEP ONE__", "CAMERA __GEAR__", "S-LOG3 – REC 709 – __CUSTOM LUT__"); items are 1 to 4 pieces of gear, name = the product's name ("APUTURE QUICK DOME 90", "SONY A7 V", "35MM F1.4"), note = an optional 1 to 3 word role ("KEY LIGHT", "ND FILTER"); the picture of each item is set by the creator or drawn later ("picture": true when it has one); tipK / tip are an optional must-have tip ("MUST HAVE", one short sentence).
 
 Layout (change only when a comment asks about placement): pos top|middle|bottom, style overlay|panel (specs only), tip left|right|inline (specs only), panel black|red (specs), black|red|light (gear), split 0.3 to 0.7 (gear: how much of the slide the photo takes), scrim 0 to 0.9 (how much to darken behind text). "auto" puts everything back to auto-fit.
@@ -5185,7 +5843,8 @@ const isThumbPhoto = p => p && (p.folder === THUMB_FOLDER || String(p.folder || 
 const ownPhotos = () => [...S.photos.entries()].filter(([, p]) => !isRefPhoto(p) && !isThumbPhoto(p));
 function slideItem(sid, withComment) {   /* a slide as Claude reads it */
   const s = S.slides[sid];
-  const text = s.type === "gear" ? { ...s.text, items: ((s.text || {}).items || []).map(it => ({ name: it.name, note: it.note || "", picture: !!(it.img || it.vec) })) } : s.text;
+  const text = s.type === "gear" ? { ...s.text, items: ((s.text || {}).items || []).map(it => ({ name: it.name, note: it.note || "", picture: !!(it.img || it.vec) })) }
+    : s.type === "breakdown" ? { ...s.text, items: ((s.text || {}).items || []).map(it => ({ group: it.group || "", name: it.name, note: it.note || "", ...(it.t === "list" ? { text: true } : HEXCOL.test(it.color) && !it.img && !it.vec ? { color: it.color } : { picture: !!(it.img || it.vec) }) })) } : s.text;
   return { id: sid, type: s.type, text, layout: s.layout || {}, photo: (s.img && s.img.asset) || null, photo2: (s.img2 && s.img2.asset) || null, edits: (s.img && s.img.adj) || {}, edits2: (s.img2 && s.img2.adj) || {},
     overlay: !!s.overlay, bg: s.bg || null, ink: s.ink || "auto", hl: s.hl || null, stickers: (s.stickers || []).map(({ id, ...rest }) => rest.kind === "custom" ? { kind: "custom", name: rest.name, x: rest.x, y: rest.y, size: rest.size, rot: rest.rot || 0, ...(rest.vec && rest.color ? { color: rest.color } : {}), ...(rest.under ? { under: true } : {}) } : rest), ...(withComment ? { comment: s.comment || "" } : {}) };
 }
@@ -5205,12 +5864,13 @@ function cleanText(type, raw, prev) {
   const out = clone(prev || TEMPLATES[type].text);
   if (raw && typeof raw === "object") {
     for (const k of TEXT_KEYS[type]) if (raw[k] != null && typeof raw[k] !== "object") out[k] = String(raw[k]).slice(0, 400);
-    if (type === "gear" && Array.isArray(raw.items)) {   /* names and notes from Claude; each keeps its picture (matched by name, else by place) */
-      const prev0 = (prev && prev.items) || [], used = new Set(), key = v => plainText(v).trim().toLowerCase();
-      out.items = raw.items.slice(0, 4).filter(r => r && typeof r === "object").map((r, i) => {
+    if ((type === "gear" || type === "breakdown") && Array.isArray(raw.items)) {   /* names and notes from Claude; each keeps its picture (matched by name, else by place) */
+      const prev0 = (prev && prev.items) || [], used = new Set(), key = v => plainText(v).trim().toLowerCase(), bd = type === "breakdown";
+      out.items = raw.items.slice(0, bd ? 30 : 4).filter(r => r && typeof r === "object").map((r, i) => {
         const it = { name: String(r.name ?? "").slice(0, 60), note: String(r.note ?? "").slice(0, 80) };
+        if (bd) { it.group = String(r.group ?? "").slice(0, 40); if (r.text === true) it.t = "list"; if (typeof r.color === "string" && HEXCOL.test(r.color)) it.color = r.color; }
         let pv = prev0.find(x => !used.has(x) && key(x.name) === key(it.name)); if (!pv && prev0.length === raw.items.length) pv = prev0[i];
-        if (pv && !used.has(pv)) { used.add(pv); if (pv.img) it.img = clone(pv.img); if (pv.vec) it.vec = clone(pv.vec); }
+        if (pv && !used.has(pv)) { used.add(pv); if (pv.img) it.img = clone(pv.img); if (pv.vec) it.vec = clone(pv.vec); if (pv.cut) it.cut = true; if (bd && pv.color && !it.color && !it.t) it.color = pv.color; }
         return it;
       });
     }
@@ -5424,6 +6084,7 @@ function capOutline(c) {   /* the slides as plain text, for Claude */
     const s = c.slides[sid], t = s.text || {}, bits = [];
     for (const k of TEXT_KEYS[s.type] || []) if (t[k]) bits.push(`${k}: ${plainText(fill(t[k], c.meta))}`);
     (t.rows || []).forEach(r => bits.push(`row: ${plainText(r.label)} = ${plainText(r.value)} (${plainText(r.note)})`));
+    (t.items || []).forEach(it => bits.push(`item: ${it.group ? plainText(it.group) + " / " : ""}${plainText(it.name)}${it.note ? ` (${plainText(it.note)})` : ""}`));
     (s.stickers || []).forEach(st => { if (st.kind === "text" || STICKERS[st.kind] && STICKERS[st.kind].type === "pill") bits.push(`sticker: ${plainText(fill(st.label ?? STICKERS[st.kind].text, c.meta))}`); });
     return `${pad2(i + 1)}${s.alt ? " (another version of the slide before)" : ""} ${TEMPLATES[s.type].label}: ${bits.join(" | ")}`;
   }).join("\n");
@@ -5571,7 +6232,7 @@ function genPrompt(ids, note, own, ratio) {
     : `- Never put a reference image on a slide. For "photo", pick the creator's own photo from the library by id when one fits the slide (go by its description and tags), or null to leave the spot for the creator. A slide that works without a photo can use a plain or gradient background ("bg") instead.`;
   const fmt = `Reply with only this JSON object:
 {"title":"<a short post name>","series":"<header, left>","subject":"<header, right: what it's about>","slides":[{"type":"cover","ref":1,"text":{<the complete text object for the type>},"layout":"auto","photo":null,"photo2":null,"edits":{},"edits2":{},"bg":null,"ink":"auto","hl":null,"whole":false,"stickers":[],"summary":"<one sentence: what the slide takes from reference N, and what you changed to make it the creator's>"}],"notes":"<for the creator: what you adapted to their brand, and what they still need to fill in>"}
-3 to 14 slides, usually about one per reference image, in their order. "type" is cover, specs, beforeafter, save, photo or gear. "ref" is the number of the reference image the slide is patterned after, or null. "photo" and "photo2" (the after photo of a beforeafter slide) are a library photo id${own ? `, "ref:N"` : ""} or null. "layout" is "auto" or an object of layout values; "edits" and "edits2" are photo edit values; "bg", "ink", "hl", "whole" and "stickers" as described above.`;
+3 to 14 slides, usually about one per reference image, in their order. "type" is cover, specs, beforeafter, save, photo, gear or breakdown (a room or setup photo with its parts named underneath: palette swatches, lighting, furniture, gear). "ref" is the number of the reference image the slide is patterned after, or null. "photo" and "photo2" (the after photo of a beforeafter slide) are a library photo id${own ? `, "ref:N"` : ""} or null. "layout" is "auto" or an object of layout values; "edits" and "edits2" are photo edit values; "bg", "ink", "hl", "whole" and "stickers" as described above.`;
   return [GEN_RULES.replace("{PHOTOS}", ph), `How the slides work:\n${COPY_STYLE}\n\n${TEMPLATE_DOC}`,
     `THE CREATOR: handle ${base.handle || "(none)"}; their header so far: ${base.series || "STEAL MY SETTINGS"} / ${base.subject || ""}; their carousels: ${titles.length ? titles.map(t => `"${t}"`).join(", ") : "(none yet)"}. The new post is ${ratio}.`,
     `THE CREATOR'S NOTE ABOUT THIS CAROUSEL: ${note || "(none: take the topic from the references and keep any facts general)"}`,
@@ -6167,7 +6828,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { S, order, MK, applyWithClaude, drawFocus, updateFocusUI, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode };   /* sticker tools, for tests */
+window.__t = { S, order, MK, applyWithClaude, drawFocus, updateFocusUI, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
