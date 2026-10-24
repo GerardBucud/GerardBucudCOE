@@ -593,6 +593,11 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .cropbar .cturn{padding:0;width:34px;height:32px;display:grid;place-items:center}.cropbar .cturn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .cstr{display:grid;gap:2px;font-size:11.5px;color:#b9b0ac;min-width:120px;flex:1 1 120px}.cstr b{color:#f3eeeb;font-variant-numeric:tabular-nums;font-weight:600}.cstr input{accent-color:var(--accent);width:100%}
 .fpad button[hidden]{display:none}
+#fFind{display:none}   /* search lives in the ⋮ menu */
+@media (pointer:fine) and (min-width:761px){#fPrev,#fNext{display:none}}   /* computers: the round ‹ › by the slide and the arrow keys */
+.dlmenu .mitem{display:grid;gap:2px;width:100%;text-align:left}
+#dupRatio{display:flex;flex-wrap:wrap;gap:6px}
+#dupRatio button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
 .txbox{display:grid;gap:10px}
 .txhead{display:flex;align-items:center;gap:8px}.txhead .hint{margin:0;font-size:11.5px}
 .txlist{display:grid;gap:6px}
@@ -988,6 +993,7 @@ details.gsec[open]{padding-bottom:14px}
     <div class="more"><button class="icon" id="fPv" aria-label="Preview" title="Preview" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div>
     <button class="icon" id="fFind" aria-label="Add a sticker or photo (Ctrl+Space)" title="Add a sticker or photo (Ctrl+Space)"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5L21 21"/></svg></button>
     <div class="more"><button class="icon" id="fDl" aria-label="Download" title="Download" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></button></div>
+    <div class="more"><button class="icon" id="fMore" aria-label="More" title="More" aria-expanded="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="5.5" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="18.5" r="1.6" fill="currentColor" stroke="none"/></svg></button></div>
     <button class="icon" id="fPrev" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
     <button class="icon" id="fNext" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
     <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -1059,7 +1065,8 @@ details.gsec[open]{padding-bottom:14px}
 <dialog id="dupDlg" aria-labelledby="dupTitle">
   <div class="dlg-h"><h3 id="dupTitle">Duplicate slide</h3><span class="grow"></span>
     <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-  <div class="dlg-b"><div class="choices">
+  <div class="dlg-b"><div class="dupratio"><p class="lbl" style="margin:0 0 6px">Size of the copy</p><div class="chips" id="dupRatio" role="group" aria-label="Size of the copy"></div></div>
+    <div class="choices" style="margin-top:14px">
     <button type="button" class="choice" data-dup="ver"><b id="dupVerT">Another version of this slide</b><span id="dupVerS"></span></button>
     <button type="button" class="choice" data-dup="new"><b>A new slide</b><span id="dupNewS"></span></button>
   </div></div>
@@ -4069,6 +4076,11 @@ function addSlide(type, quiet) {
 }
 /* Duplicate asks first: another version keeps the numbering (05/06 stays 05/06), a new slide adds to the count. */
 let dupFor = null;
+let dupRatio = "same";   /* the copy's size: "same", or a ratio (the post's own ratio means it follows the post) */
+function renderDupRatio() {
+  const s = S.slides[dupFor], cur = geoFor(S.post, s).key, chip = (k, l) => `<button type="button" data-dupr="${k}" aria-pressed="${dupRatio === k}">${l}</button>`;
+  $("#dupRatio").innerHTML = chip("same", `Same as this slide (${RATIOS[cur][2]})`) + Object.entries(RATIOS).filter(([k]) => k !== cur).map(([k, r]) => chip(k, r[2] + (k === ratioKey(S.post) ? " · the post's" : ""))).join("");
+}
 function openDup(sid) {
   dupFor = sid;
   const x = numOf(sid), nn = pad2(x.n);
@@ -4076,19 +4088,30 @@ function openDup(sid) {
   $("#dupVerT").textContent = `Another version of slide ${nn}`;
   $("#dupVerS").textContent = `Keeps the numbering: both show ${nn}/${pad2(x.total)}. Good for comparing options before you post; the copy is marked V${x.of + 1}.`;
   $("#dupNewS").textContent = `Adds slide ${pad2(x.n + 1)} and moves the ones after it up a number (${pad2(x.total + 1)} slides).`;
+  dupRatio = "same"; renderDupRatio();
   $("#dupDlg").showModal();
 }
-$("#dupDlg").addEventListener("click", e => { const b = e.target.closest("[data-dup]"); if (b && dupFor) { $("#dupDlg").close(); duplicate(dupFor, b.dataset.dup === "ver"); } });
-function duplicate(sid, asVersion) {
+$("#dupDlg").addEventListener("click", e => {
+  const r = e.target.closest("[data-dupr]"); if (r) { dupRatio = r.dataset.dupr; renderDupRatio(); return; }
+  const b = e.target.closest("[data-dup]"); if (b && dupFor) { $("#dupDlg").close(); duplicate(dupFor, b.dataset.dup === "ver", dupRatio); }
+});
+function duplicate(sid, asVersion, ratio) {
   const nid = newId(), c = clone(S.slides[sid]);
   c.status = "review"; c.comment = ""; delete c.undo; delete c.applied;
+  if (ratio && ratio !== "same" && RATIOS[ratio]) {   /* another size: the stickers keep their place and size on the new shape */
+    const g0 = geoFor(S.post, c);
+    if (ratio === ratioKey(S.post)) delete c.ratio; else c.ratio = ratio;
+    remapStickers(c, g0, geoFor(S.post, c));
+  }
   if (asVersion) c.alt = true; else delete c.alt;
   S.slides[nid] = c;
   const g = groups().find(x => x.includes(sid)), o = order().filter(id => id !== nid);
   o.splice(o.indexOf(g[g.length - 1]) + 1, 0, nid);
   S.post.order = o; saveSlide(nid); saveMeta(); renderBoard(); renderLibrary();
   const x = numOf(nid);
-  toast(asVersion ? `Added version ${x.v} of slide ${pad2(x.n)}` : `Added slide ${pad2(x.n)}`);
+  const sz = ratio && ratio !== "same" ? `, ${RATIOS[geoFor(S.post, c).key][2]}` : "";
+  toast(asVersion ? `Added version ${x.v} of slide ${pad2(x.n)}${sz}` : `Added slide ${pad2(x.n)}${sz}`);
+  if ($("#focusDlg").open) { openFocus(nid); return; }   /* from the large view: show the copy there */
   const card = document.getElementById("card-" + nid); if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 function del(sid) {
@@ -7410,6 +7433,14 @@ function cardMenuAction(b, sid) {
 }
 $("#fDl").addEventListener("click", () => { dropTextSel(true); openMenuUnder($("#fDl"), dlMenuHTML(), "dlmenu"); });
 $("#fPv").addEventListener("click", () => { dropTextSel(true); openMenuUnder($("#fPv"), pvMenuHTML(), "dlmenu"); });
+/* ⋮ in the large view's header: search (quick add), duplicate this slide, and its size */
+function moreMenuHTML() {
+  const s = S.slides[focusSid], own = s && RATIOS[s.ratio] ? s.ratio : null, chip = (k, l, on) => `<button type="button" data-fratio="${k}" aria-pressed="${on}">${l}</button>`;
+  return `<button type="button" class="mitem" data-fmore="find">Search stickers and photos<small>Add one to this slide · Ctrl+Space</small></button>
+    <button type="button" class="mitem" data-fmore="dup">Duplicate slide…<small>A new slide or another version, in any size</small></button>
+    <div class="mratio"><small>Size of this slide</small><div class="fchips" role="group" aria-label="Size of this slide">${chip("post", `Post (${ratioKey(S.post)})`, !own)}${Object.entries(RATIOS).map(([k, r]) => chip(k, r[2], own === k)).join("")}</div></div>`;
+}
+$("#fMore").addEventListener("click", () => { dropTextSel(true); openMenuUnder($("#fMore"), moreMenuHTML(), "dlmenu fmore"); });
 /* When a slide changes size, its stickers keep their distance from the nearest edge, the way the header, footer and text blocks do
    (one near the middle keeps its place). Switching back puts them where they were. */
 function remapStickers(s, g0, g1) {
@@ -7453,8 +7484,10 @@ $("#focusDlg").addEventListener("click", e => {
   if (fr || ff) {
     e.stopPropagation();   /* the menu redraws and stays open */
     if (fr) setSlideRatio(focusSid, fr.dataset.fratio); else setWhole(focusSid, ff.dataset.ffit === "whole");
-    const m = $("#focusDlg .dlmenu"); if (m) m.innerHTML = dlMenuHTML(); return;
+    const m = $("#focusDlg .dlmenu"); if (m) m.innerHTML = m.classList.contains("fmore") ? moreMenuHTML() : dlMenuHTML(); return;
   }
+  const mo = t.closest("[data-fmore]");
+  if (mo) { closeMenus(); if (mo.dataset.fmore === "find") openQuick(); else if (focusSid) openDup(focusSid); return; }
   const nv = t.closest("[data-fnav]"); if (nv) { navOverlay(+nv.dataset.fnav); return; }
   if (t.closest("[data-fshut]")) { closeOverlays(); return; }
   const pa = t.closest("[data-papp]"); if (pa) { S.papp = pa.dataset.papp; renderPhone(); return; }
