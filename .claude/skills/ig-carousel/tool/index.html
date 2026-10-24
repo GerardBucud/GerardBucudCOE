@@ -474,6 +474,25 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .xf .xrot{position:absolute;left:50%;bottom:-44px;width:30px;height:30px;margin-left:-15px;border-radius:50%;background:#fff;color:#131111;display:grid;place-items:center;pointer-events:auto;touch-action:none;cursor:grab;box-shadow:0 1px 6px rgba(0,0,0,.45)}
 .xf .xrot svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .xf.text .xrot,.xf.text::after{display:none}
+.xf i[data-xh=n],.xf i[data-xh=s]{left:50%;margin-left:-11px;width:22px;height:8px;border-radius:4px;cursor:ns-resize}.xf i[data-xh=n]{top:-5px}.xf i[data-xh=s]{bottom:-5px}
+.xf i[data-xh=e],.xf i[data-xh=w]{top:50%;margin-top:-11px;width:8px;height:22px;border-radius:4px;cursor:ew-resize}.xf i[data-xh=e]{right:-5px}.xf i[data-xh=w]{left:-5px}
+.xf.text i[data-xh=n],.xf.text i[data-xh=s],.xf.text i[data-xh=e],.xf.text i[data-xh=w]{display:none}
+.xf::after{bottom:-14px}
+/* the slide's photo: selected (a thin frame) and crop mode (the whole picture, its frame and 8 handles) */
+.fstage{z-index:0}
+.psel{position:absolute;border:2px solid #8b5cf6;pointer-events:none;z-index:1}.psel[hidden]{display:none}
+.fcrop{position:absolute;inset:0;pointer-events:none;z-index:2}.fcrop[hidden]{display:none}
+.fcrop .cimg{position:absolute;opacity:.35;z-index:-1;max-width:none;pointer-events:none;user-select:none;-webkit-user-drag:none}
+.fcrop .cframe{position:absolute;border:calc(2px * var(--cs,1)) solid #8b5cf6;box-shadow:0 0 0 1px rgba(0,0,0,.3)}
+.fcrop .cbox{position:absolute;border:calc(1px * var(--cs,1)) dashed rgba(255,255,255,.75);pointer-events:auto;cursor:move;touch-action:none}
+.fcrop .cbox i{position:absolute;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:#fff;box-shadow:0 1px 5px rgba(0,0,0,.5);pointer-events:auto;touch-action:none}
+.fcrop .cbox i[data-ch=nw]{left:0;top:0;cursor:nwse-resize}.fcrop .cbox i[data-ch=n]{left:50%;top:0;cursor:ns-resize}.fcrop .cbox i[data-ch=ne]{left:100%;top:0;cursor:nesw-resize}.fcrop .cbox i[data-ch=e]{left:100%;top:50%;cursor:ew-resize}
+.fcrop .cbox i[data-ch=se]{left:100%;top:100%;cursor:nwse-resize}.fcrop .cbox i[data-ch=s]{left:50%;top:100%;cursor:ns-resize}.fcrop .cbox i[data-ch=sw]{left:0;top:100%;cursor:nesw-resize}.fcrop .cbox i[data-ch=w]{left:0;top:50%;cursor:ew-resize}
+@media (pointer:coarse){.fcrop .cbox i{width:26px;height:26px;margin:-13px 0 0 -13px}}
+.fcrop .cbox i{transform:scale(var(--cs,1))}
+.cropbar{position:absolute;left:50%;transform:translateX(-50%) scale(var(--cs,1));transform-origin:50% 0;display:none;gap:8px;align-items:center;background:#1c1918;border:1px solid #3a3432;border-radius:999px;padding:5px 6px 5px 14px;z-index:3;line-height:1.2;color:#f3eeeb;font-size:13px}
+.fcrop:not([hidden])~.cropbar{display:flex}
+#focusDlg.lite .fcrop,#focusDlg.lite .psel,#focusDlg.lite .cropbar{display:none!important}
 @media (pointer:coarse){.xf i{width:22px;height:22px;border-radius:50%}.xf i[data-xh=nw]{left:-12px;top:-12px}.xf i[data-xh=ne]{right:-12px;top:-12px}.xf i[data-xh=sw]{left:-12px;bottom:-12px}.xf i[data-xh=se]{right:-12px;bottom:-12px}.xf .xrot{width:36px;height:36px;margin-left:-18px;bottom:-50px}.xf::after{height:16px;bottom:-16px}}
 #focusDlg.lite .xf{display:none}
 .fside[hidden],#focusDlg.lite .fside{display:none}
@@ -821,7 +840,10 @@ details.gsec[open]{padding-bottom:14px}
       <div class="fbar" id="fBar" role="toolbar" aria-label="Selected text" hidden></div>
       <div class="farr" id="fArr" role="menu" aria-label="Layer order" hidden></div>
       <button type="button" class="fdel" id="fDel" aria-label="Delete this sticker" hidden><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
-      <div class="xf" id="fXf" hidden><i data-xh="nw"></i><i data-xh="ne"></i><i data-xh="sw"></i><i data-xh="se"></i><b class="xrot" data-xh="rot" title="Drag to turn" aria-label="Turn"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4h-4"/></svg></b></div>
+      <div class="psel" id="fPsel" hidden></div>
+      <div class="fcrop" id="fCrop" hidden><img class="cimg" alt=""><div class="cframe"></div><div class="cbox"><i data-ch="nw"></i><i data-ch="n"></i><i data-ch="ne"></i><i data-ch="e"></i><i data-ch="se"></i><i data-ch="s"></i><i data-ch="sw"></i><i data-ch="w"></i></div></div>
+      <div class="cropbar" id="fCropBar"><span id="fCropZoom">100%</span><button type="button" class="btn ghost sm" data-crop="reset">Reset</button><button type="button" class="btn primary sm" data-crop="done">Done</button></div>
+      <div class="xf" id="fXf" hidden><i data-xh="nw"></i><i data-xh="ne"></i><i data-xh="sw"></i><i data-xh="se"></i><i data-xh="n"></i><i data-xh="s"></i><i data-xh="e"></i><i data-xh="w"></i><b class="xrot" data-xh="rot" title="Drag to turn" aria-label="Turn"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v4h-4"/></svg></b></div>
       <div class="ftrash" id="fTrash" aria-hidden="true" hidden><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></div></div>
       <button type="button" class="fside l" id="fSideL" data-fside="-1" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
       <button type="button" class="fside r" id="fSideR" data-fside="1" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
@@ -1144,6 +1166,16 @@ function coverRect(img, rw, rh, slot) {
   return { dx: (rw - dw) * fx, dy: (rh - dh) * fy, dw, dh, s };
 }
 let OVERLAY = false; /* true while rendering a text-only (transparent) slide */
+/* ...and KEEP when that overlay keeps the slide's backgrounds and panels: only the photo's spot is see-through (for a video behind
+   it). PH collects where each photo is drawn ({slot, x, y, w, h, contain}), for the large view's photo selection and crop. */
+let KEEP = false, PH = [];
+function hole(ctx, x, y, w, h) {   /* a see-through spot: cleared in the export, a checkerboard on screen */
+  if (EXPORTING) { ctx.clearRect(x, y, w, h); return; }
+  ctx.save(); ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
+  ctx.fillStyle = "#2b2626"; ctx.fillRect(x, y, w, h); ctx.fillStyle = "#1e1a1a";
+  for (let yy = Math.floor(y / 90) * 90, r = Math.floor(y / 90); yy < y + h; yy += 90, r++) for (let xx = Math.floor(x / 180) * 180 + (r % 2) * 90; xx < x + w; xx += 180) ctx.fillRect(xx, yy, 90, 90);
+  ctx.restore();
+}
 let WHOLE = false;   /* true while rendering a slide set to show its whole photo */
 /* A slide's own background: slide.bg = {c1, c2, dir, photo} (c2 makes it a gradient; dir down | right | diag | radial). Without
    photo it replaces the photo; with photo: true the whole photo sits on it, uncropped (like Show the whole photo, on the color
@@ -1172,9 +1204,15 @@ function containRect(img, rw, rh, slot) {
   return { dx: (rw - dw) * fx, dy: (rh - dh) * fy, dw, dh };
 }
 function drawPhoto(ctx, slot, rx, ry, rw, rh, emptyText) {
-  if (OVERLAY) return;
+  if (OVERLAY && !KEEP) return;
   if (BG && !BG.photo) return paintBg(ctx, rx, ry, rw, rh);
   const img0 = getImg(slot);
+  PH.push({ slot, x: rx, y: ry, w: rw, h: rh, contain: !!(WHOLE || BG) });
+  if (KEEP) {   /* the photo's spot goes see-through: the whole frame, or just the photo's own box when it sits on a color */
+    if (BG) { paintBg(ctx, rx, ry, rw, rh); if (img0) { const c = containRect(img0, rw, rh, slot); hole(ctx, rx + c.dx, ry + c.dy, c.dw, c.dh); } else hole(ctx, rx, ry, rw, rh); }
+    else hole(ctx, rx, ry, rw, rh);
+    return;
+  }
   ctx.save();
   ctx.beginPath(); ctx.rect(rx, ry, rw, rh); ctx.clip();
   if (img0 && (WHOLE || BG)) {
@@ -1360,6 +1398,10 @@ function toneHex(r, g, b) {
 }
 /* thresholds: luma p90 (0-255), local spread, edge energy */
 const TH = { p90: 150, std: 26, edge: 11 };
+/* once the photo has been moved or zoomed by hand in the large view, the layout's choices (text top or bottom, panel or over
+   the photo, which corner the tip takes) are judged on the framing it had before, so moving the picture never shuffles the text;
+   how dark the shade behind the text is still follows what's under it now */
+const heldA = (slot, rw, rh, A) => A && slot && slot.hold ? analyze({ ...slot, ...slot.hold }, rw, rh) : A;
 const okZone = s => s.p90 <= TH.p90 && s.std <= TH.std && s.edge <= TH.edge;
 const zoneScore = s => s.p90 + 1.5 * s.std + 3 * s.edge;
 const scrimFor = s => s.p90 <= 112 ? 0 : clamp(1 - 100 / s.p90, 0.1, 0.72);
@@ -1581,10 +1623,10 @@ function drawTip(ctx, g, x, capTop, align, withRule) {
 /* ---------- design (auto layout) per template ---------- */
 function designSpecs(ctx, post, s) {
   const t = s.text || {}, L = s.layout || {};
-  const A = s.overlay ? null : analyze(s.img, W, H), ov = s.overlay ? 0.3 : null;
+  const A = s.overlay ? null : analyze(s.img, W, H), AD = heldA(s.img, W, H, A), ov = s.overlay ? 0.3 : null;
   let side = null, landMode = null;
   if (LAND) {   /* landscape: the table goes in a column on one side: on a solid panel, or over the photo where white type reads */
-    const pick = L.side === "left" || L.side === "right" ? L.side : null, colSt = sd => { setCol(sd); return A ? A.stats(CX0 - 30, 110, CX1 + 30, H - 200) : DARK; };
+    const pick = L.side === "left" || L.side === "right" ? L.side : null, colSt = sd => { setCol(sd); return AD ? AD.stats(CX0 - 30, 110, CX1 + 30, H - 200) : DARK; };
     const stL = colSt("left"), stR = colSt("right"), calm = zoneScore(stR) < zoneScore(stL) ? "right" : "left";
     const pi = A && getImg(s.img), narrow = !!pi && (pi.naturalWidth || pi.width) / (pi.naturalHeight || pi.height) < 0.9 * W / H;   /* a photo narrower than the slide gets cropped hard: give it its own side */
     const style0 = BG ? "overlay" : L.style || "auto";   /* a plain or gradient background needs no panel */
@@ -1597,9 +1639,9 @@ function designSpecs(ctx, post, s) {
   const hasTip = !!(t.tipK || t.tip);
   const tipIn = hasTip ? tipGeo(ctx, t, Math.min(1000, CX1 - CX0)) : null;
   const inlineH = hasTip ? 64 + tipIn.h : 0;
-  const stTop = A ? A.stats(CX0 - 30, 110, CX1 + 30, 232 + tableH + 40) : DARK;
+  const stTop = AD ? AD.stats(CX0 - 30, 110, CX1 + 30, 232 + tableH + 40) : DARK;
   const botEnd = H - 270, botTop = Math.max(232, botEnd - tableH - inlineH);
-  const stBot = A ? A.stats(CX0 - 30, botTop - 40, CX1 + 30, botEnd + 20) : DARK;
+  const stBot = AD ? AD.stats(CX0 - 30, botTop - 40, CX1 + 30, botEnd + 20) : DARK;
   const style = BG ? "overlay" : L.style || "auto", pref = L.pos || "auto";
   let mode, pos;
   if (LAND) { mode = landMode; pos = pref === "bottom" ? "bottom" : "top"; }
@@ -1621,8 +1663,8 @@ function designSpecs(ctx, post, s) {
       for (const side of sides) for (const w of [650, 600, 550, 500, 450, 400]) {
         const g = tipGeo(ctx, t, w), top = H - 280 - g.h;
         const x0 = side === "right" ? CX1 - w - 30 : CX0 - 20, x1 = side === "right" ? CX1 + 20 : CX0 + w + 30;
-        const st = A ? A.stats(x0, top - 80, x1, H - 250) : DARK;
-        if (okZone(st) || !A) { if (!best || w > best.w) best = { side, w, g, top, st }; break; }
+        const st = AD ? AD.stats(x0, top - 80, x1, H - 250) : DARK;
+        if (okZone(st) || !A) { if (!best || w > best.w) best = { side, w, g, top, st: AD !== A ? A.stats(x0, top - 80, x1, H - 250) : st }; break; }
       }
       if (!best && L.tip && L.tip !== "auto") { const w = 600, g = tipGeo(ctx, t, w); best = { side: L.tip, w, g, top: H - 280 - g.h, st: A ? A.stats(L.tip === "right" ? CX1 - w : CX0, H - 280 - g.h - 80, L.tip === "right" ? CX1 : CX0 + w, H - 250) : DARK, forced: true }; }
       if (best) d.tip = { mode: "corner", ...best, scrim: us ?? ov ?? (best.forced ? Math.max(0.45, scrimFor(best.st)) : scrimFor(best.st)) };
@@ -1632,7 +1674,7 @@ function designSpecs(ctx, post, s) {
     d.scrimFoot = us ?? ov ?? footScrim(A);
   } else if (mode === "overlay") {
     d.tableTop = botTop; d.tip = { mode: hasTip ? "inline" : "none" };
-    d.scrimBot = us ?? ov ?? scrimFor(stBot); d.scrimHead = us ?? ov ?? headScrim(A);
+    d.scrimBot = us ?? ov ?? scrimFor(AD !== A ? A.stats(CX0 - 30, botTop - 40, CX1 + 30, botEnd + 20) : stBot); d.scrimHead = us ?? ov ?? headScrim(A);
   } else {
     d.panel = L.panel === "black" ? "#0e0b0a" : L.panel === "red" ? "#e02d12" : (A ? A.darkTone() : "#0e0b0a");
     d.tip = { mode: hasTip ? "inline" : "none" };
@@ -1740,7 +1782,7 @@ function designTitle(ctx, post, s) {
   const split = LAND && !s.overlay && !BG && L.style !== "overlay" && !!(t0.left || t0.right || t0.title || t0.big || t0.sub) ? (L.side === "right" ? "right" : "left") : null;
   if (split) setCol(split);
   const b = titleBlock(ctx, post, s), m = blockMetrics(ctx, post, s, b);
-  const A = s.overlay ? null : analyze(s.img, split ? W - COLW : W, H);
+  const A = s.overlay ? null : analyze(s.img, split ? W - COLW : W, H), AD = heldA(s.img, split ? W - COLW : W, H, A);
   const hasText = m.hasSmall || m.hasSub || b.lines.length > 0, cx = (CX0 + CX1) / 2;
   const yFor = p => p === "top" ? 499 : p === "middle" ? Math.round(H / 2 - m.h / 2) : Math.round(H - 370 - m.h);
   const mv = moveOf(L, "title");
@@ -1755,14 +1797,14 @@ function designTitle(ctx, post, s) {
   let pick = null, best = null;
   for (const p of order) {
     const y = yFor(p);
-    const st = A ? A.stats(W / 2 - m.bw / 2 - 40, y - 50, W / 2 + m.bw / 2 + 40, y + m.h + 50) : DARK;
+    const st = AD ? AD.stats(W / 2 - m.bw / 2 - 40, y - 50, W / 2 + m.bw / 2 + 40, y + m.h + 50) : DARK;
     const sc = zoneScore(st);
     if (!best || sc < best.sc) best = { p, y, st, sc };
     if (!pick && (okZone(st) || !A)) pick = { p, y, st };
   }
   pick = pick || best;
   const us = userScrim(L), ty = pick.y + mv[1], tx = cx + mv[0];
-  const st = mv[0] || mv[1] ? (A ? A.stats(tx - m.bw / 2 - 40, ty - 50, tx + m.bw / 2 + 40, ty + m.h + 50) : DARK) : pick.st;   /* moved: judge the spot it's in now */
+  const st = mv[0] || mv[1] || AD !== A ? (A ? A.stats(tx - m.bw / 2 - 40, ty - 50, tx + m.bw / 2 + 40, ty + m.h + 50) : DARK) : pick.st;   /* moved: judge the spot it's in now */
   const scrim = !hasText ? 0 : us ?? (s.overlay ? 0.3 : scrimFor(st));
   return { kind: "title", b, m, A, pos: pick.p, y: ty, scrim, cx: tx, cx0: CX0, cx1: CX1, scrimFoot: us ?? (s.overlay ? 0.3 : footScrim(A)),
     note: !hasText ? "Photo only, plus the footer" : `Title <b>${pick.p === "top" ? "at the top" : pick.p === "middle" ? "in the middle" : "at the bottom"}</b>${scrim > 0 ? " · darkened behind it" : ""}` };
@@ -1861,15 +1903,15 @@ function designPhoto(ctx, post, s) {
   const lines = wrap(ctx, up(t.note || ""), Math.min(900, W - 2 * M), 37, 400, -0.035);
   const hasCap = !!(t.label || lines.length);
   const h = (t.label ? capH(41) : 0) + (lines.length ? (t.label ? 30 : 0) + capH(37) + (lines.length - 1) * LH : 0);
-  const A = s.overlay ? null : analyze(s.img, W, H);
+  const A = s.overlay ? null : analyze(s.img, W, H), AD = heldA(s.img, W, H, A);
   const yFor = p => p === "top" ? 232 : p === "middle" ? Math.round(H / 2 - h / 2) : Math.round(H - 280 - h);
   const order = L.pos && L.pos !== "auto" ? [L.pos] : ["bottom", "top", "middle"];
   let pick = null, best = null;
-  for (const p of order) { const y = yFor(p), st = A ? A.stats(M - 30, y - 60, M + 960, y + h + 40) : DARK, sc = zoneScore(st);
+  for (const p of order) { const y = yFor(p), st = AD ? AD.stats(M - 30, y - 60, M + 960, y + h + 40) : DARK, sc = zoneScore(st);
     if (!best || sc < best.sc) best = { p, y, st, sc }; if (!pick && (okZone(st) || !A)) pick = { p, y, st }; }
   pick = pick || best;
   const us = userScrim(L), cm = moveOf(L, "caption");
-  const ov = s.overlay ? 0.3 : null, st = cm[0] || cm[1] ? (A ? A.stats(M - 30 + cm[0], pick.y + cm[1] - 60, M + 960 + cm[0], pick.y + cm[1] + h + 40) : DARK) : pick.st;
+  const ov = s.overlay ? 0.3 : null, st = cm[0] || cm[1] || AD !== A ? (A ? A.stats(M - 30 + cm[0], pick.y + cm[1] - 60, M + 960 + cm[0], pick.y + cm[1] + h + 40) : DARK) : pick.st;
   return { kind: "photo", lines, h, hasCap, A, y: pick.y + cm[1], x: M + cm[0], pos: pick.p, scrim: hasCap ? (us ?? ov ?? scrimFor(st)) : 0, scrimFoot: us ?? ov ?? footScrim(A), scrimHead: us ?? ov ?? headScrim(A),
     note: hasCap ? `Caption <b>${pick.p}</b>` : "Photo only" };
 }
@@ -1924,7 +1966,7 @@ function renderGear(ctx, post, s, idx, total, d) {
   drawPhoto(ctx, s.img, d.photo.x, d.photo.y, d.photo.w, d.photo.h, "ADD THE SHOT");
   if (d.scrimHead) shade(ctx, 0, 520, d.scrimHead, "top", d.photo.x, d.photo.x + d.photo.w);
   drawHeader(ctx, post, M, d.photo.x + d.photo.w - (LAND ? 110 : M));
-  if (!OVERLAY) { if (BG) paintBg(ctx, b.x, b.y, b.w, b.h); else { ctx.fillStyle = d.panel; ctx.fillRect(b.x, b.y, b.w, b.h); } }
+  if (!OVERLAY || KEEP) { if (BG) paintBg(ctx, b.x, b.y, b.w, b.h); else { ctx.fillStyle = d.panel; ctx.fillRect(b.x, b.y, b.w, b.h); } }
   const ink0 = INK;
   INK = s.ink === "white" ? "#ffffff" : s.ink === "black" ? "#111111" : BG ? INK : inkOn(d.panel);
   const accent = d.panel === GEAR_PANELS.red && !BG ? INK : "#e02d12";
@@ -1989,19 +2031,20 @@ function checker(ctx) {
   for (let y = 0, r = 0; y < H; y += 90, r++) for (let x = (r % 2) * 90; x < W; x += 180) ctx.fillRect(x, y, 90, 90);
   ctx.restore();
 }
-function renderSlide(cv, post, s, idx, total, scale, forExport, hiliteId) {
+function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
+  const keep = !!(s0.overlay && s0.overlayKeep), s = keep ? { ...s0, overlay: false } : s0;   /* keep: laid out as a normal slide, the photo spots cut out */
   const geo = geoFor(post, s); setGeo(geo);
   const ctx = cv.getContext("2d");
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
-  OVERLAY = !!s.overlay; WHOLE = !!s.whole; RENDER_SCALE = forExport ? 1 : scale; TB = {}; TF = null; EXPORTING = !!forExport;
+  OVERLAY = !!s0.overlay; KEEP = keep; PH = []; WHOLE = !!s.whole; RENDER_SCALE = forExport ? 1 : scale; TB = {}; TF = null; EXPORTING = !!forExport;
   BG = bgOf(s); HL = HEXCOL.test(s.hl) ? s.hl : null; DISP = famOf(post, s);
   INK = s.ink === "black" ? "#111111" : s.ink === "white" ? "#ffffff" : BG ? inkOn(BG.c2 ? mixHex(BG.c1, BG.c2) : BG.c1) : "#ffffff";   /* auto: dark text on a light background */
-  if (OVERLAY) { if (!forExport) checker(ctx); } else if (BG) paintBg(ctx, 0, 0, W, H); else { ctx.fillStyle = "#100c0b"; ctx.fillRect(0, 0, W, H); }
+  if (OVERLAY && !KEEP) { if (!forExport) checker(ctx); } else if (BG) paintBg(ctx, 0, 0, W, H); else { ctx.fillStyle = "#100c0b"; ctx.fillRect(0, 0, W, H); }
   const d = design(ctx, post, s);
   const all = (s.stickers || []).filter(Boolean), under = all.filter(t => t.under), ub = [];
   UNDER = under.length ? { post, list: under, hilite: forExport ? null : hiliteId, boxes: ub } : null;
-  if (OVERLAY) d.note = (d.note || "") + " · <b>transparent PNG</b>";
+  if (OVERLAY) d.note = (d.note || "") + (KEEP ? " · <b>transparent photo spot</b>" : " · <b>transparent PNG</b>");
   if (s.type === "specs") renderSpecs(ctx, post, s, idx, total, d);
   else if (s.type === "cover" || s.type === "save") renderTitle(ctx, post, s, idx, total, d);
   else if (s.type === "beforeafter") renderBA(ctx, post, s, idx, total, d);
@@ -2010,8 +2053,9 @@ function renderSlide(cv, post, s, idx, total, scale, forExport, hiliteId) {
   d.tboxes = TB; TB = null; TF = null; d.geo = geo; CX0 = M; CX1 = W - M;
   if (UNDER) flushUnder(ctx);   /* a slide with no text */
   d.boxes = ub.concat(drawStickers(ctx, post, { stickers: all.filter(t => !t.under) }, forExport ? null : hiliteId));
+  d.photos = PH.map(p => ({ key: p.slot && p.slot === s.img ? "img" : p.slot && p.slot === s.img2 ? "img2" : null, x: p.x, y: p.y, w: p.w, h: p.h, contain: p.contain })).filter(p => p.key);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  OVERLAY = false; WHOLE = false; BG = null; HL = null; INK = "#ffffff"; DISP = null; EXPORTING = false;
+  OVERLAY = false; KEEP = false; PH = []; WHOLE = false; BG = null; HL = null; INK = "#ffffff"; DISP = null; EXPORTING = false;
   return d;
 }
 
@@ -2254,7 +2298,7 @@ const gradCSS = (c1, c2, dir) => dir === "radial" ? `radial-gradient(circle at 5
 function bgHTML(sid, s) {
   const B = bgOf(s), mode = !B ? "photo" : (B.photo ? "p" : "") + (B.c2 ? "grad" : "plain");
   const opt = (v, l) => `<option value="${v}"${mode === v ? " selected" : ""}>${l}</option>`;
-  let h = `<div class="two"><div><label class="lbl" for="${sid}-bgmode">Background</label><select class="ctl" id="${sid}-bgmode" data-act="bgmode"${s.overlay ? " disabled" : ""}>${opt("photo", "Photo")}${opt("pplain", "Photo on a color")}${opt("pgrad", "Photo on a gradient")}${opt("plain", "Plain color")}${opt("grad", "Gradient")}</select></div>${sel(sid, "ink", "Text color", [["auto", "Auto"], ["white", "White"], ["black", "Black"]], s.ink)}</div>`;
+  let h = `<div class="two"><div><label class="lbl" for="${sid}-bgmode">Background</label><select class="ctl" id="${sid}-bgmode" data-act="bgmode"${s.overlay && !s.overlayKeep ? " disabled" : ""}>${opt("photo", "Photo")}${opt("pplain", "Photo on a color")}${opt("pgrad", "Photo on a gradient")}${opt("plain", "Plain color")}${opt("grad", "Gradient")}</select></div>${sel(sid, "ink", "Text color", [["auto", "Auto"], ["white", "White"], ["black", "Black"]], s.ink)}</div>`;
   if (!B) return h;
   if (B.photo) h += `<p class="hint" style="margin:0">The whole photo sits on the ${B.c2 ? "gradient" : "color"}, uncropped. Move and size it with the Photo sliders below (zoom makes it bigger).</p>`;
   h += `<div class="bgrow"><label class="colr"><input type="color" data-bg="c1" value="${B.c1}"><span>${B.c2 ? "From" : "Color"}</span></label>`
@@ -2278,7 +2322,9 @@ function layoutHTML(sid, s) {
   const L = s.layout || {}, parts = [`<div class="autonote"></div>`, `<button class="btn sm" data-act="autofit" style="justify-self:start">Auto-fit text to the photo</button>`, `<div class="bgbox">${bgHTML(sid, s)}</div>`];
   const pf = FAMS[S.post && S.post.font] ? FAMS[S.post.font].label : "Nimbus Sans";
   parts.push(`<div><label class="lbl" for="${sid}-font">Big text font (titles and big numbers)</label>${fontSel(`${sid}-font`, 'data-f="font"', s.font, ["", `The post's (${pf})`]).replace('</select>', `<option value="nimbus"${s.font === "nimbus" ? " selected" : ""}>Nimbus Sans</option></select>`)}</div>`);
-  parts.push(`<label class="check"><input type="checkbox" id="${sid}-overlay" data-f="overlay" data-bool${s.overlay ? " checked" : ""}><span>Text-only overlay (transparent PNG)<small>Leaves the photo out so you can lay the text over a video in Edits or CapCut.</small></span></label>`);
+  const om = !s.overlay ? "off" : s.overlayKeep ? "keep" : "text";
+  parts.push(`<div><label class="lbl" for="${sid}-ovmode">Photo or video</label><select class="ctl" id="${sid}-ovmode" data-act="ovmode">${[["off", "Show the photo"], ["text", "Video behind: text only (transparent PNG)"], ["keep", "Video behind: keep background, panels and text"]].map(([v, l]) => `<option value="${v}"${om === v ? " selected" : ""}>${l}</option>`).join("")}</select>
+    <p class="hint" style="margin:6px 0 0">${om === "text" ? "Only the text is left (and stickers): lay it over a video in Edits or CapCut." : om === "keep" ? "The photo's spot is see-through and everything else stays: put your video under it in Edits or CapCut." : "To use a video instead of the photo, pick one of the Video behind options and download the PNG."}</p></div>`);
   parts.push(`<label class="check"><input type="checkbox" id="${sid}-whole" data-f="whole" data-bool${s.whole ? " checked" : ""}><span>Show the whole photo<small>No cropping: the photo fits inside the slide and a blurred copy fills the rest. Good for a photo with text in it, like a finished cover, in another ratio.</small></span></label>`);
   if (geoOf(sid).land && s.type !== "beforeafter" && s.type !== "photo" && s.type !== "gear") parts.push(`<div class="two">${sel(sid, "layout.side", "Text side (wide slides)", [["auto", "Auto"], ["left", "Left"], ["right", "Right"]], L.side)}${s.type === "specs" ? "" : sel(sid, "layout.panel", "Panel color", [["auto", "From the photo"], ["black", "Black"], ["red", "Cover red"]], L.panel)}</div>`);
   if (s.type === "gear") {
@@ -2295,7 +2341,7 @@ function layoutHTML(sid, s) {
   for (const slot of TEMPLATES[s.type].slots) {
     const v = s[slot] || {}, nm = s.type === "beforeafter" ? (slot === "img" ? "Before photo: " : "After photo: ") : "Photo: ";
     parts.push(`<div class="two">${rng(sid, slot + ".fx", nm + "left / right", 0, 1, 0.01, v.fx ?? 0.5, "pct")}${rng(sid, slot + ".fy", nm + "up / down", 0, 1, 0.01, v.fy ?? 0.5, "pct")}</div>`);
-    parts.push(rng(sid, slot + ".zoom", nm + "zoom", 1, 2.5, 0.01, v.zoom ?? 1, "x"));
+    parts.push(rng(sid, slot + ".zoom", nm + "zoom", 1, 3, 0.01, v.zoom ?? 1, "x"));
   }
   return parts.join("");
 }
@@ -2516,6 +2562,13 @@ document.addEventListener("change", e => {
     if (box) box.disabled = r.disabled;
     saveSlide(sid); scheduleDraw(sid);
   } else if (el.dataset.act === "bgmode") setBgMode(el.closest(".card").dataset.sid, el.value);
+  else if (el.dataset.act === "ovmode") {   /* photo, or a video behind: text only, or with the backgrounds and panels kept */
+    const sid = el.closest(".card").dataset.sid, sl = S.slides[sid]; if (!sl) return;
+    remember(sid);
+    if (el.value === "off") { delete sl.overlay; delete sl.overlayKeep; } else { sl.overlay = true; if (el.value === "keep") sl.overlayKeep = true; else delete sl.overlayKeep; }
+    saveSlide(sid); renderBoard(new Set([sid])); if (focusSid === sid) drawFocus();
+    toast(el.value === "off" ? "The photo is back" : el.value === "keep" ? "The photo's spot is see-through in the PNG; the rest stays" : "Text only: the PNG is see-through everywhere else");
+  }
   else if (el.tagName === "SELECT" && el.dataset.bg) onBgInput(el);
   else if (el.tagName === "SELECT" && el.dataset.f) onField(el);
   else if (el.id === "postSel") selectPost(el.value);
@@ -3482,7 +3535,7 @@ const sizeOf = st => +st.size || STICKERS[st.kind].size;
 
 /* a slide someone is dragging, pinching, turning or resizing right now: kept as it is on screen (a save coming back from the
    board doesn't replace it mid-gesture, and in the large view the card waits until the gesture ends) */
-const gesturing = sid => (!!drag && drag.sid === sid && drag.moved) || (sid === focusSid && !!((fg && fg.mode !== "swipe") || xg || railDrag || rotDrag));
+const gesturing = sid => (!!drag && drag.sid === sid && drag.moved) || (sid === focusSid && !!((fg && fg.mode !== "swipe") || xg || cg || railDrag || rotDrag));
 /* cards: mouse only, so a finger on a card still scrolls the page */
 let drag = null;
 document.addEventListener("pointerdown", e => {
@@ -3535,16 +3588,20 @@ fcv.addEventListener("pointerdown", e => {
   if (liteOn()) return liteDown(e);
   try { fcv.setPointerCapture(e.pointerId); } catch (err) {}
   const p = frameXY(fcv, e, geoOf(focusSid)); fpts.set(e.pointerId, p);
+  if (S.crop) { cropDown(e, p); return; }
   if (fpts.size === 1) {
     let st = inXf(p) || stickerAt(s, S.focusBoxes, p[0], p[1]);
     if (st && st.under && st.id !== S.fsel && textAt(p[0], p[1])) st = null;   /* text in front of a sticker that's behind it wins */
     const tf = st ? null : textAt(p[0], p[1]);
     const grp = !st && tf && moveGroup(s, tf), grab = !!grp && !!S.ftsel && moveGroup(s, S.ftsel) === grp;   /* already selected: a drag moves it */
-    fg = null; fgRem = false;
+    fg = null; fgRem = false; pselPrev = S.psel;
     S.fsel = st ? st.id : null; S.ftsel = tf;
+    const ph = !st && !tf ? photoAt(p) : null;   /* the photo under the press, when nothing else is */
+    if (!ph || st || tf) S.psel = null;
     if (st) fDragFrom(st, p, [e.clientX, e.clientY]);
     else if (grab) fg = textGrab(s, grp, tf, p, e);
-    else if (e.pointerType !== "mouse") fg = { mode: "swipe", c0: [e.clientX, e.clientY], t0: Date.now() };
+    else if (ph && (e.pointerType === "mouse" || S.psel === ph.key)) { S.psel = ph.key; fg = { mode: "pan", g0: photoGeo(ph.key), p0: p, c0: [e.clientX, e.clientY], moved: false }; if (!fg.g0) fg = null; }   /* a mouse drag (or a finger on the selected photo) moves the picture in its frame */
+    else if (e.pointerType !== "mouse") fg = { mode: "swipe", c0: [e.clientX, e.clientY], t0: Date.now(), tap: ph && ph.key };
     if (S.fpanel === "text" && S.ftfield) {
       const nf = st ? (st.kind === "text" ? "layer:" + st.id : null) : tf;
       if (!nf) { closeTextEditor(true); return; }   /* tapped away from the text: done with it */
@@ -3554,6 +3611,8 @@ fcv.addEventListener("pointerdown", e => {
   } else if (fpts.size === 2) {
     const [a, b] = [...fpts.values()], mid = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
     const st = selSticker() || stickerAt(s, S.focusBoxes, mid[0], mid[1]) || stickerAt(s, S.focusBoxes, p[0], p[1]);
+    const pk = !st && (S.psel || pselPrev);   /* two fingers zoom the selected photo (even when the first one landed on text) */
+    if (pk) { const g0 = photoGeo(pk); if (g0) { S.psel = pk; S.ftsel = null; fg = { mode: "ppinch", g0, d0: Math.max(1, Math.hypot(b[0] - a[0], b[1] - a[1])), m0: mid, moved: false }; drawFocus(); } return; }
     if (!st) return;
     S.fsel = st.id; fPinchFrom(st);
     $("#fTrash").hidden = true; $("#fTrash").classList.remove("hot");
@@ -3568,6 +3627,16 @@ fcv.addEventListener("pointermove", e => {
   if (fg.st) fg.st = ((S.slides[focusSid] || {}).stickers || []).find(t => t.id === fg.st.id) || fg.st;
   const st = fg.st;
   if (fg.mode === "swipe") return;   /* decided when the finger lifts */
+  if (fg.mode === "pan" || fg.mode === "cmove") {
+    if (!fg.moved && Math.hypot(e.clientX - fg.c0[0], e.clientY - fg.c0[1]) < 4) return;
+    if (!fg.moved) { fRemember(); fg.moved = true; }
+    const g = fg.g0; placePhoto(g, g.x + p[0] - fg.p0[0], g.y + p[1] - fg.p0[1], g.w); scheduleDraw(focusSid); return;
+  }
+  if (fg.mode === "ppinch" && fpts.size >= 2) {
+    const [a, b] = [...fpts.values()], g = fg.g0, k = Math.max(1, Math.hypot(b[0] - a[0], b[1] - a[1])) / fg.d0, m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    if (!fg.moved) { fRemember(); fg.moved = true; }
+    placePhoto(g, m[0] - (fg.m0[0] - g.x) * k, m[1] - (fg.m0[1] - g.y) * k, g.w * k); scheduleDraw(focusSid); return;
+  }
   if (fg.mode === "tmove") {
     if (fpts.size !== 1 || (!fg.moved && Math.hypot(e.clientX - fg.c0[0], e.clientY - fg.c0[1]) < 6)) return;
     if (!fg.moved) { fRemember(); fg.moved = true; }
@@ -3599,9 +3668,16 @@ function fUp(e) {
   if (fpts.size === 1 && fg.mode === "pinch") { fDragFrom(st, [...fpts.values()][0], null); return; }   /* one finger lifted: keep dragging with the other */
   if (fpts.size) return;
   if (fg.mode === "swipe") {
-    const dx = e.clientX - fg.c0[0], dy = e.clientY - fg.c0[1], quick = Date.now() - fg.t0 < 900; fg = null;
+    const dx = e.clientX - fg.c0[0], dy = e.clientY - fg.c0[1], quick = Date.now() - fg.t0 < 900, tap = fg.tap; fg = null;
     if (e.type === "pointerup" && quick && Math.abs(dx) > 60 && Math.abs(dx) > 1.5 * Math.abs(dy)) swipeTo(dx < 0 ? 1 : -1);
+    else if (tap && e.type === "pointerup" && Math.hypot(dx, dy) < 10) photoTap(tap);   /* a tap on the photo selects it; a second quick tap crops */
     return;
+  }
+  if (fg.mode === "pan" || fg.mode === "ppinch" || fg.mode === "cmove" || fg.mode === "ctap") {
+    const m = fg.mode, moved = fg.moved; fg = null; fgRem = false;
+    if (moved) saveSlide(sid); else if (m === "ctap" && e.type === "pointerup") exitCrop();
+    else if (m === "pan" && e.type === "pointerup") photoTap(S.psel, e.pointerType === "mouse");   /* a finger: a second quick tap crops */
+    scheduleDraw(sid); return;
   }
   if (fg.mode === "tmove") {
     const moved = fg.moved, rows = fg.grp.startsWith("rows."); fg = null; fgRem = false; ROWDRAG = null;
@@ -3662,7 +3738,140 @@ function liteTap(e) {
 fcv.addEventListener("dblclick", e => {
   const s = S.slides[focusSid]; if (!s || liteOn()) return;
   const p = frameXY(fcv, e, geoOf(focusSid)), st = stickerAt(s, S.focusBoxes, p[0], p[1]), tf = st ? null : textAt(p[0], p[1]);
-  if ((st && st.kind === "text") || tf) { S.fsel = st ? st.id : null; S.ftsel = tf; openTextEditor(); }
+  if (S.crop) { exitCrop(); return; }
+  if ((st && st.kind === "text") || tf) { S.fsel = st ? st.id : null; S.ftsel = tf; openTextEditor(); return; }
+  const ph = !st && photoAt(p); if (ph) enterCrop(ph.key);
+});
+/* ---------- the slide's photo in the large view (Canva-style) ----------
+   Tap the photo to select it: a drag then moves the picture inside its frame (the frame stays), two fingers zoom it. Double-tap
+   (or double-click, or Crop) for crop mode: the whole picture shows, dimmed outside the frame, with 8 handles; pulling a handle
+   zooms it with the opposite corner or side staying where it is, dragging moves it, tap outside it (or Done, or Esc) to finish.
+   The picture always covers its frame (a whole-photo or photo-on-a-color slide lets it sit inside instead); zoom is 1× to 3×. */
+S.psel = null; S.crop = null; S.fphotos = [];
+let lastPhotoTap = { t: 0, key: null }, pselPrev = null;
+function photoAt(p) { return (S.fphotos || []).find(f => p[0] >= f.x && p[0] <= f.x + f.w && p[1] >= f.y && p[1] <= f.y + f.h && photoGeo(f.key)) || null; }
+function photoGeo(key) {   /* the photo's frame and where its picture sits now, in slide pixels */
+  const s = S.slides[focusSid], f = (S.fphotos || []).find(x => x.key === key), slot = s && s[key], img = slot && getImg(slot);
+  if (!f || !img || (bgOf(s) && !bgOf(s).photo)) return null;
+  const r = f.contain ? containRect(img, f.w, f.h, slot) : coverRect(img, f.w, f.h, slot), iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height;
+  return { key, f, slot, img, x: f.x + r.dx, y: f.y + r.dy, w: r.dw, h: r.dh, ar: iw / ih, base: (f.contain ? Math.min(f.w / iw, f.h / ih) : Math.max(f.w / iw, f.h / ih)) * iw };
+}
+function placePhoto(g, x, y, w) {   /* put the picture at x, y with width w: zoom kept to 1×–3×, and it keeps covering its frame */
+  if (!g.slot.hold) g.slot.hold = { zoom: g.slot.zoom ?? 1, fx: g.slot.fx ?? 0.5, fy: g.slot.fy ?? 0.5 };   /* the layout stays as it was (see heldA) */
+  const z = clamp(w / g.base, 1, 3), ww = g.base * z, hh = ww / g.ar, f = g.f, sx = f.w - ww, sy = f.h - hh;
+  g.slot.zoom = +z.toFixed(4);
+  g.slot.fx = Math.abs(sx) < 0.5 ? 0.5 : +clamp((x - f.x) / sx, 0, 1).toFixed(4);
+  g.slot.fy = Math.abs(sy) < 0.5 ? 0.5 : +clamp((y - f.y) / sy, 0, 1).toFixed(4);
+}
+function photoTap(key, mouse) {
+  if (!key) return;
+  const now = Date.now(), dbl = !mouse && lastPhotoTap.key === key && now - lastPhotoTap.t < 380;
+  lastPhotoTap = { t: now, key };
+  S.psel = key; S.fsel = null; S.ftsel = null;
+  if (dbl) enterCrop(key); else drawFocus();
+}
+function enterCrop(key) {
+  if (!photoGeo(key)) { toast("Add a photo to this slide first"); return; }
+  if (S.fpanel === "text" && S.ftfield) closeTextEditor(true);
+  S.crop = key; S.psel = key; S.fsel = null; S.ftsel = null; drawFocus();
+}
+function exitCrop() { if (!S.crop) return; S.crop = null; saveSlide(focusSid); scheduleDraw(focusSid); }
+function cropDown(e, p) {   /* in crop mode: a press on the picture moves it; a tap off it finishes */
+  const g = photoGeo(S.crop); if (!g) { exitCrop(); return; }
+  const inside = p[0] >= g.x && p[0] <= g.x + g.w && p[1] >= g.y && p[1] <= g.y + g.h;
+  fg = { mode: inside ? "cmove" : "ctap", g0: g, p0: p, c0: [e.clientX, e.clientY], moved: false }; fgRem = false;
+}
+/* the crop overlay: the picture's full extent (dimmed past the slide's edge), the frame, and the 8 handles. When the picture
+   reaches past the space there is, the view shrinks until all of it (and its handles) fits, as Canva does; it holds still while
+   a handle or the picture is being dragged and settles when it's let go. */
+const fcrop = $("#fCrop");
+let cropT = "";
+function cropFit(g, k) {
+  const stg = $("#fStage");
+  if (!cg) {
+    stg.style.transform = ""; stg.style.transformOrigin = "";
+    const W = $("#fWrap").getBoundingClientRect(), O = stg.getBoundingClientRect(), c = fcv.getBoundingClientRect(), m = 24;
+    const L = c.left + Math.min(g.x, g.f.x) * k, T = c.top + Math.min(g.y, g.f.y) * k, R = c.left + Math.max(g.x + g.w, g.f.x + g.f.w) * k, B = c.top + Math.max(g.y + g.h, g.f.y + g.f.h) * k, bar = 56;   /* the picture, the frame, and the bar under them */
+    const fits = L >= W.left + m && R <= W.right - m && T >= W.top + m && B + bar <= W.bottom - m, s = Math.max(0.55, Math.min(1, (W.width - 2 * m) / (R - L), (W.height - 2 * m - bar) / (B - T)));   /* not smaller than about half: past that, the handles wait at the edge */
+    const tx = (W.left + W.right) / 2 - (O.left + s * ((L + R) / 2 - O.left)), ty = (W.top + W.bottom - bar) / 2 - (O.top + s * ((T + B) / 2 - O.top));
+    cropT = fits ? "" : `translate(${Math.round(tx)}px,${Math.round(ty)}px) scale(${+s.toFixed(4)})`;
+    fcrop.style.setProperty("--cs", fits ? 1 : +(1 / s).toFixed(4));
+  }
+  stg.style.transformOrigin = cropT ? "0 0" : ""; stg.style.transform = cropT;
+}
+function placeCrop() {
+  const g = S.crop && focusSid && !liteOn() ? photoGeo(S.crop) : null;
+  if (!g) { fcrop.hidden = true; cropT = ""; return; }
+  const k = fcv.clientWidth / geoOf(focusSid).w, px = v => v * k + "px";
+  fcrop.hidden = false;
+  const im = fcrop.querySelector(".cimg"); if (im.dataset.src !== srcOf(g.slot)) { im.src = srcOf(g.slot); im.dataset.src = srcOf(g.slot); }
+  Object.assign(im.style, { left: px(g.x), top: px(g.y), width: px(g.w), height: px(g.h) });
+  Object.assign(fcrop.querySelector(".cbox").style, { left: px(g.x), top: px(g.y), width: px(g.w), height: px(g.h) });
+  Object.assign(fcrop.querySelector(".cframe").style, { left: px(g.f.x), top: px(g.f.y), width: px(g.f.w), height: px(g.f.h) });
+  $("#fCropZoom").textContent = Math.round((g.slot.zoom || 1) * 100) + "%";
+  cropFit(g, k);
+  /* a handle whose corner or side is out of sight waits at the edge of the view; pulling it works the same (by how far it moves) */
+  const W = $("#fWrap").getBoundingClientRect(), c = fcv.getBoundingClientRect(), kk = c.width / fcv.clientWidth || 1, bl = g.x * k, bt = g.y * k, bw = g.w * k, bh = g.h * k;
+  const vl = (W.left + 16 - c.left) / kk - bl, vr = (W.right - 16 - c.left) / kk - bl, vt = (W.top + 16 - c.top) / kk - bt, vb = (W.bottom - 16 - c.top) / kk - bt;
+  const mx = (Math.max(0, vl) + Math.min(bw, vr)) / 2, my = (Math.max(0, vt) + Math.min(bh, vb)) / 2;
+  for (const h of fcrop.querySelectorAll("[data-ch]")) {
+    const d = h.dataset.ch, x = d.includes("e") ? bw : d.includes("w") ? 0 : mx, y = d.includes("s") ? bh : d.includes("n") ? 0 : my;
+    h.style.left = clamp(x, Math.min(vl, vr), Math.max(vl, vr)) + "px"; h.style.top = clamp(y, Math.min(vt, vb), Math.max(vt, vb)) + "px";
+  }
+  const cs = +fcrop.style.getPropertyValue("--cs") || 1, bar = $("#fCropBar");
+  bar.style.setProperty("--cs", cs);
+  const vT = vt + bt, vB = vb + bt, vL = vl + bl, vR = vr + bl, bh2 = (bar.offsetHeight || 46) * cs, bw2 = (bar.offsetWidth || 200) * cs / 2;   /* kept in sight */
+  bar.style.top = clamp(Math.max(g.y + g.h, g.f.y + g.f.h) * k + 10 * cs, Math.min(vT, vB - bh2), vB - bh2) + "px";
+  bar.style.left = clamp((g.f.x + g.f.w / 2) * k, vL + bw2, Math.max(vL + bw2, vR - bw2)) + "px";
+}
+/* in crop mode: a handle zooms the picture with the opposite corner or side staying put; a drag anywhere on the picture (the
+   dimmed part too) moves it; two fingers zoom it about their middle; a double-click finishes */
+let cg = null; const cpts = new Map();
+fcrop.addEventListener("pointerdown", e => {
+  const h = e.target.closest("[data-ch]"); if (!S.crop || !(h || e.target.closest(".cbox"))) return;
+  const g = photoGeo(S.crop); if (!g) return;
+  e.preventDefault(); e.stopPropagation(); try { (h || e.target).setPointerCapture(e.pointerId); } catch (err) {}
+  const p = frameXY(fcv, e, geoOf(focusSid)); cpts.set(e.pointerId, p);
+  if (!cg || cg.mode !== "move" || cpts.size < 2) remember(focusSid);
+  if (h && cpts.size === 1) {
+    const k = h.dataset.ch, sx = k.includes("e") ? 1 : k.includes("w") ? -1 : 0, sy = k.includes("s") ? 1 : k.includes("n") ? -1 : 0;
+    cg = { mode: "handle", pid: e.pointerId, g, sx, sy, p0: p, ax: sx > 0 ? g.x : sx < 0 ? g.x + g.w : g.x + g.w / 2, ay: sy > 0 ? g.y : sy < 0 ? g.y + g.h : g.y + g.h / 2 };
+  } else if (cpts.size === 1) cg = { mode: "move", pid: e.pointerId, g, p0: p };
+  else if (cpts.size === 2 && cg && cg.mode === "move") { const [a, b] = [...cpts.values()]; cg = { mode: "pinch", g: photoGeo(S.crop), d0: Math.max(1, Math.hypot(b[0] - a[0], b[1] - a[1])), m0: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2] }; }
+});
+fcrop.addEventListener("pointermove", e => {
+  if (!cg || !cpts.has(e.pointerId)) return;
+  const p = frameXY(fcv, e, geoOf(focusSid)), g = cg.g; cpts.set(e.pointerId, p);
+  if (cg.mode === "move") { if (e.pointerId !== cg.pid) return; placePhoto(g, g.x + p[0] - cg.p0[0], g.y + p[1] - cg.p0[1], g.w); }
+  else if (cg.mode === "pinch") {
+    if (cpts.size < 2) return;
+    const [a, b] = [...cpts.values()], kk = Math.max(1, Math.hypot(b[0] - a[0], b[1] - a[1])) / cg.d0, m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    placePhoto(g, m[0] - (cg.m0[0] - g.x) * kk, m[1] - (cg.m0[1] - g.y) * kk, g.w * kk);
+  } else {
+    if (e.pointerId !== cg.pid) return;
+    const wx = cg.sx ? g.w + (p[0] - cg.p0[0]) * cg.sx : 0, wy = cg.sy ? (g.h + (p[1] - cg.p0[1]) * cg.sy) * g.ar : 0;   /* the opposite corner or side stays put */
+    const w = clamp(cg.sx && cg.sy ? Math.max(wx, wy) : cg.sx ? wx : wy, g.base, g.base * 3), h = w / g.ar;
+    const x = cg.sx > 0 ? cg.ax : cg.sx < 0 ? cg.ax - w : cg.ax - w / 2, y = cg.sy > 0 ? cg.ay : cg.sy < 0 ? cg.ay - h : cg.ay - h / 2;
+    placePhoto(g, x, y, w);
+    bubbleAt($("#focusDlg"), e.clientX + 18, e.clientY - 18, Math.round(g.slot.zoom * 100) + "%", "right");
+  }
+  scheduleDraw(focusSid);
+});
+function cropEnd(e) {
+  if (!cpts.has(e.pointerId)) return;
+  cpts.delete(e.pointerId);
+  if (!cg) return;
+  if (cg.mode === "pinch" && cpts.size === 1) { const [id, p] = [...cpts.entries()][0]; cg = { mode: "move", pid: id, g: photoGeo(S.crop), p0: p }; return; }   /* one finger lifted: keep moving with the other */
+  if (cpts.size) return;
+  cg = null; hideBubble(); saveSlide(focusSid); scheduleDraw(focusSid);
+}
+fcrop.addEventListener("pointerup", cropEnd); fcrop.addEventListener("pointercancel", cropEnd);
+fcrop.addEventListener("dblclick", e => { if (S.crop) { e.stopPropagation(); exitCrop(); } });
+$("#fWrap").addEventListener("pointerdown", e => { if (S.crop && !e.target.closest("#fStage, [data-fside]")) exitCrop(); });   /* a press on the space around the slide finishes too */
+$("#fCropBar").addEventListener("click", e => {
+  const b = e.target.closest("[data-crop]"); if (!b || !S.crop) return;
+  if (b.dataset.crop === "done") exitCrop();
+  else { const g = photoGeo(S.crop); if (g) { remember(focusSid); Object.assign(g.slot, { zoom: 1, fx: 0.5, fy: 0.5 }); saveSlide(focusSid); scheduleDraw(focusSid); } }
 });
 let padX = 0, padT = 0;
 fcv.addEventListener("wheel", e => {
@@ -3801,7 +4010,8 @@ rot.addEventListener("keydown", e => {
 function updateFocusUI() {
   const st = focusSid && selSticker(), del = $("#fDel"), busy = !!(fg && fg.moved) || !!xg;
   rail.hidden = rot.hidden = !st; del.hidden = !st || busy;
-  updateHistUI(); updateTextUI(); placeXf(); placeSides();
+  updateHistUI(); updateTextUI(); placeXf(); placeSides(); placeCrop(); placePsel();
+  if (S.crop) { rail.hidden = rot.hidden = del.hidden = true; $("#fBar").hidden = true; return; }
   if (!st) return;
   placeRail(st, false); placeRot(st, false);
   const box = (S.focusBoxes || []).find(b => b.id === st.id), k = fcv.clientWidth / geoOf(focusSid).w;
@@ -3812,12 +4022,25 @@ function updateFocusUI() {
   del.style.left = (R0 + 46 <= fcv.clientWidth ? R0 + 8 : Math.max(0, L0 - 44)) + "px";
   del.style.top = clamp(T0 - 40, 0, fcv.clientHeight - 36) + "px";
 }
+/* the selected photo: a thin frame around it and a bar (Crop, Replace, Edit photo) */
+function placePsel() {
+  const el = $("#fPsel"), f = S.psel && !S.crop && !S.fsel && !S.ftsel ? (S.fphotos || []).find(x => x.key === S.psel) : null, k = focusSid ? fcv.clientWidth / geoOf(focusSid).w : 0;
+  if (!f || !k || liteOn()) { el.hidden = true; return; }
+  el.hidden = false; Object.assign(el.style, { left: f.x * k + "px", top: f.y * k + "px", width: f.w * k + "px", height: f.h * k + "px" });
+  const bar = $("#fBar");
+  if (barKey !== "photo") { barKey = "photo"; bar.innerHTML = `<button type="button" data-fbar="crop">${CROP_I}Crop</button><button type="button" data-fbar="preplace">${SWAP_I}Replace</button><button type="button" data-fbar="pedit">${ADJ_I}Edit photo</button>`; }
+  bar.hidden = false;
+  const bw = bar.offsetWidth, bh = bar.offsetHeight, sw = fcv.clientWidth, sh = fcv.clientHeight;
+  bar.style.left = clamp((f.x + f.w / 2) * k, bw / 2 + 4, Math.max(bw / 2 + 4, sw - bw / 2 - 4)) + "px";
+  bar.style.top = clamp((f.y + f.h) * k - bh - 16, 4, Math.max(4, sh - bh - 4)) + "px";
+}
+const CROP_I = `<svg viewBox="0 0 24 24"><path d="M6 2v16h16M2 6h16v16"/></svg>`, SWAP_I = `<svg viewBox="0 0 24 24"><path d="M4 7h13l-3-3M20 17H7l3 3"/></svg>`, ADJ_I = `<svg viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>`;
 /* the round previous / next buttons: beside the slide when there's room, else on its edges (and out of the way while something
    on the slide is selected, when the size and rotate controls are there) */
 function placeSides() {
   const L = $("#fSideL"), R = $("#fSideR"), o = order(), at = o.indexOf(focusSid);
   const wr = $("#fWrap").getBoundingClientRect(), cr = fcv.getBoundingClientRect(), gap = Math.min(cr.left - wr.left, wr.right - cr.right), out = gap >= 54;
-  const away = !out && !!(S.fsel || S.ftsel || S.ftfield);
+  const away = !!S.crop || (!out && !!(S.fsel || S.ftsel || S.ftfield || S.psel));
   L.hidden = at <= 0 || away; R.hidden = at < 0 || at >= o.length - 1 || away;
   const y = cr.top - wr.top + cr.height / 2, bw = L.offsetWidth || R.offsetWidth || 42;
   for (const [b, x] of [[L, out ? cr.left - wr.left - bw - 8 : cr.left - wr.left + 6], [R, out ? cr.right - wr.left + 8 : cr.right - wr.left - bw - 6]]) {
@@ -3857,7 +4080,7 @@ xf.addEventListener("pointerdown", e => {
   const r = fcv.getBoundingClientRect(), k = r.width / geoOf(focusSid).w, c = [r.left + b.cx * k, r.top + b.cy * k], s = S.slides[focusSid], st = selSticker();
   remember(focusSid); bubbleHeld = true;
   xg = { h: hd.dataset.xh, pid: e.pointerId, c, d0: Math.max(8, Math.hypot(e.clientX - c[0], e.clientY - c[1])), a0: Math.atan2(e.clientY - c[1], e.clientX - c[0]),
-    sticker: b.sticker, grp: b.grp, s0: st ? sizeOf(st) : scaleOf(s.layout, b.grp), r0: st ? +st.rot || 0 : 0 };
+    sticker: b.sticker, grp: b.grp, s0: st ? sizeOf(st) : scaleOf(s.layout, b.grp), r0: st ? +st.rot || 0 : 0, box: b };
   updateFocusUI();
 });
 xf.addEventListener("pointermove", e => {
@@ -3871,7 +4094,14 @@ xf.addEventListener("pointermove", e => {
     v = ((v % 360) + 540) % 360 - 180;
     const snap = Math.round(v / 45) * 45; if (Math.abs(v - snap) < 4) v = snap === -180 ? 180 : snap;   /* clicks into 0°, 45°, 90°… */
     st.rot = Math.round(v); label = st.rot + "°";
-  } else if (st) { st.size = Math.round(clamp(xg.s0 * d / xg.d0, 40, MAX_SIZE(st))); label = st.size + " px"; }
+  } else if (st) {   /* a corner or side handle: the opposite corner or side stays where it is, the shape stays the same */
+    const h = xg.h, sx = h.includes("e") ? 1 : h.includes("w") ? -1 : 0, sy = h.includes("s") ? 1 : h.includes("n") ? -1 : 0, b = xg.box, g = geoOf(focusSid), rr = (b.rot || 0) * Math.PI / 180;
+    const p = frameXY(fcv, e, g), vx = p[0] - b.cx, vy = p[1] - b.cy, ux = vx * Math.cos(-rr) - vy * Math.sin(-rr), uy = vx * Math.sin(-rr) + vy * Math.cos(-rr);
+    const Ax = -sx * b.w / 2, Ay = -sy * b.h / 2, Dx = sx * b.w, Dy = sy * b.h;
+    const kk = clamp(((ux - Ax) * Dx + (uy - Ay) * Dy) / (Dx * Dx + Dy * Dy || 1), 40 / xg.s0, MAX_SIZE(st) / xg.s0);
+    const lx = Ax + Dx * kk / 2, ly = Ay + Dy * kk / 2, cx = b.cx + lx * Math.cos(rr) - ly * Math.sin(rr), cy = b.cy + lx * Math.sin(rr) + ly * Math.cos(rr);
+    st.size = Math.round(xg.s0 * kk); st.x = clamp(cx / g.w, 0, 1); st.y = clamp(cy / g.h, 0, 1); label = st.size + " px";
+  }
   else { const v = clamp(xg.s0 * d / xg.d0, 0.5, 2.5), k = Math.abs(v - 1) < 0.03 ? 1 : +v.toFixed(3); s.layout = s.layout || {}; s.layout.scale = { ...(s.layout.scale || {}), [xg.grp]: k }; label = Math.round(k * 100) + "%"; }
   bubbleAt($("#focusDlg"), e.clientX + 18, e.clientY - 18, label, "right");
   scheduleDraw(focusSid);
@@ -4368,6 +4598,9 @@ $("#fArr").addEventListener("click", e => { const b = e.target.closest("[data-ar
 $("#fBar").addEventListener("click", e => {
   const b = e.target.closest("[data-fbar]"); if (!b || !focusSid) return;
   if (b.dataset.fbar === "savemine") { saveToMine(focusSid, selSticker()); updateTextUI(); return; }
+  if (b.dataset.fbar === "crop") { enterCrop(S.psel); return; }
+  if (b.dataset.fbar === "preplace") { const k = S.psel; S.psel = null; openPicker(focusSid, k); return; }
+  if (b.dataset.fbar === "pedit") { S.fslot = S.psel; S.psel = null; S.fpanel = "photo"; renderFPanel(); drawFocus(); return; }
   if (b.dataset.fbar === "dupst") { const st = selSticker(); if (st) dupSticker(focusSid, st.id); return; }
   if (b.dataset.fbar === "arr") { const st = selSticker(); if (!st) return; if (S.arrOpen === st.id) hideArr(); else { S.arrOpen = st.id; renderArr(); } return; }
   if (b.dataset.fbar === "mkedit") { const st = selSticker(); if (st) openMaker(focusSid, "photo", { sid: focusSid, id: st.id }); return; }
@@ -5297,17 +5530,19 @@ function makePostFromRefs(res, ids, own, ratio) {
 /* ---------- focus view ---------- */
 let focusSid = null;
 function openFocus(sid) {
-  focusSid = sid; S.fsel = null; S.ftsel = null; S.ftfield = null; if (S.fpanel === "text") S.fpanel = false;
+  focusSid = sid; S.fsel = null; S.ftsel = null; S.ftfield = null; S.psel = null; S.crop = null; if (S.fpanel === "text") S.fpanel = false;
   const dlg = $("#focusDlg"); if (!dlg.open) dlg.showModal();
   document.documentElement.classList.add("modal-open");
   renderFPanel(); drawFocus();
 }
-$("#focusDlg").addEventListener("close", () => { closeOverlays(); focusSid = null; S.fsel = null; S.ftsel = null; hideArr(); S.ftfield = null; fpts.clear(); fg = null; xg = null; lpts.clear(); lg = null; $("#fTrash").hidden = true; hideBubble(); layoutLite(); document.documentElement.classList.remove("modal-open"); });
+$("#focusDlg").addEventListener("close", () => { if (S.crop) { S.crop = null; saveSlide(focusSid); } S.psel = null; closeOverlays(); focusSid = null; S.fsel = null; S.ftsel = null; hideArr(); S.ftfield = null; fpts.clear(); fg = null; xg = null; lpts.clear(); lg = null; $("#fTrash").hidden = true; hideBubble(); layoutLite(); document.documentElement.classList.remove("modal-open"); });
 /* Esc closes a preview first, then the text editor, then the large view */
 $("#focusDlg").addEventListener("cancel", e => {
   if (closeOverlays()) e.preventDefault();
+  else if (S.crop) { e.preventDefault(); exitCrop(); }
   else if (S.fpanel === "text" && S.ftfield) { e.preventDefault(); closeTextEditor(); }
 });
+const g0w = () => geoOf(focusSid).w, g0h = () => geoOf(focusSid).h;
 function drawFocus() {
   const dlg = $("#focusDlg"), s = S.slides[focusSid]; if (!s || !dlg.open) return;
   const x = numOf(focusSid), g = geoOf(focusSid), dpr = window.devicePixelRatio || 1, box = $("#fWrap").getBoundingClientRect(), lite = dlg.classList.contains("lite");
@@ -5319,11 +5554,22 @@ function drawFocus() {
   if (S.fpanel === "text" && S.ftfield && !S.ftfield.startsWith("layer:") && !S.fsel) S.ftsel = S.ftfield;   /* the editor's text stays outlined */
   if (S.ftsel && !fieldPath(s, S.ftsel)) S.ftsel = null;
   const d = renderSlide(cv, S.post, s, x.n, x.total, sc, false, lite ? S.fsel || S.hilite : S.hilite);   /* the selection frame outlines a selected sticker */
+  S.fphotos = d.photos || [];
+  if (S.crop) {   /* crop mode: the rest of the picture, dimmed, over everything outside its frame */
+    const g = photoGeo(S.crop);
+    if (!g) S.crop = null;
+    else { const c = cv.getContext("2d"); c.save(); c.setTransform(sc, 0, 0, sc, 0, 0); c.beginPath(); c.rect(0, 0, g0w(), g0h()); c.rect(g.f.x, g.f.y, g.f.w, g.f.h); c.clip("evenodd"); c.globalAlpha = 0.4; c.drawImage(g.img, g.x, g.y, g.w, g.h); c.restore(); }
+  }
+  if (S.psel && !(S.fphotos || []).some(f => f.key === S.psel)) S.psel = null;
   S.focusBoxes = d.boxes || []; S.ftboxes = d.tboxes || {}; S.frows = d.rowBoxes || [];
   if (lite) placeLite(); else $("#fStage").style.transform = "";
   $("#focusTitle").textContent = `${pad2(x.n)}/${pad2(x.total)}${x.of > 1 ? ` · V${x.v}` : ""} ${slideName(s)}${RATIOS[s.ratio] && s.ratio !== ratioKey(S.post) ? " · " + s.ratio : ""}`;
   const touch = TOUCH(), grp = S.ftsel && moveGroup(s, S.ftsel), row = grp && grp.startsWith("rows."), H2 = (l, sh) => `<span class="long">${l}</span><span class="short">${sh || l}</span>`;
-  $("#fHint").innerHTML = S.fpanel === "text" && S.ftfield
+  $("#fHint").innerHTML = S.crop
+    ? H2(touch ? "Pull a handle to zoom (the opposite side stays), drag the picture to choose what shows, pinch to zoom. Done or a tap around the slide finishes." : "Pull a handle to zoom (the opposite side stays), drag the picture to choose what shows. Done, Esc or a double-click finishes.", "Pull a handle to zoom, drag to move. Done finishes.")
+    : S.psel && !S.fsel && !S.ftsel
+    ? H2(touch ? "Drag to move the photo in its frame, pinch to zoom it. Double-tap or Crop for the crop handles." : "Drag to move the photo in its frame. Double-click or Crop for the crop handles.", touch ? "Drag to move, pinch to zoom, double-tap to crop." : "Drag to move, double-click to crop.")
+    : S.fpanel === "text" && S.ftfield
     ? (touch ? H2("Tap a box to type. Select words and tap B, I, U or H to style them; with nothing selected they style the whole text. Tap other text on the slide to edit that.", "Tap a box to type. B I U H style the selected words, or all of it.") : H2("Type in the boxes; the slide changes as you go. Select words, then B, I, U or H (or Ctrl + B, I, U) to style them; with nothing selected they style the whole text. Click other text to edit that. Enter or Done when you've finished."))
     : S.ftsel
     ? (!grp ? H2("The header and footer stay in place on every slide. Edit changes their words.", "Header and footer stay put. Edit changes them.")
@@ -5340,7 +5586,8 @@ $("#fWrap").addEventListener("click", e => { const b = e.target.closest("[data-f
 function stepFocus(d) {
   const o = order(), i = o.indexOf(focusSid), j = clamp(i + d, 0, o.length - 1);
   if (j === i) return;
-  focusSid = o[j]; S.fsel = null; S.ftsel = null; ROWDRAG = null; fg = null;
+  if (S.crop) exitCrop();
+  focusSid = o[j]; S.fsel = null; S.ftsel = null; S.psel = null; ROWDRAG = null; fg = null;
   if (S.ftfield) { S.ftfield = null; S.fpanel = false; }   /* the small editor was for the other slide's text */
   renderFPanel(); drawFocus();
 }
@@ -5815,7 +6062,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { S, order, MK, applyWithClaude, drawFocus, updateFocusUI, selSticker, cleanStickers, xfBox, gesturing, layerList };   /* sticker tools, for tests */
+window.__t = { S, order, MK, applyWithClaude, drawFocus, updateFocusUI, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
