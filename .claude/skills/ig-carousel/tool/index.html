@@ -593,6 +593,23 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .cropbar .cturn{padding:0;width:34px;height:32px;display:grid;place-items:center}.cropbar .cturn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .cstr{display:grid;gap:2px;font-size:11.5px;color:#b9b0ac;min-width:120px;flex:1 1 120px}.cstr b{color:#f3eeeb;font-variant-numeric:tabular-nums;font-weight:600}.cstr input{accent-color:var(--accent);width:100%}
 .fpad button[hidden]{display:none}
+.txbox{display:grid;gap:10px}
+.txhead{display:flex;align-items:center;gap:8px}.txhead .hint{margin:0;font-size:11.5px}
+.txlist{display:grid;gap:6px}
+.txrow{display:grid;grid-template-columns:30px minmax(0,1fr) auto 32px 32px;align-items:center;gap:4px;padding:4px;border:1px solid rgba(128,118,114,.35);border-radius:10px;background:rgba(128,118,114,.08);transition:transform .12s}
+.txrow.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.txrow.off .txname{opacity:.45}
+.txrow.drag{transition:none;z-index:2;position:relative;box-shadow:0 6px 18px rgba(0,0,0,.35);background:rgba(128,118,114,.25)}
+.txrow button{border:0;background:none;color:inherit;cursor:pointer;padding:0;font:inherit}
+.txh{width:30px;height:36px;display:grid;place-items:center;cursor:grab;touch-action:none}.txh svg{width:18px;height:18px;fill:currentColor;opacity:.7}
+.txname{display:grid;text-align:left;min-width:0;line-height:1.25}.txname b{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.txname span{font-size:11px;opacity:.65;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.txon{font-size:12px;padding:5px 6px;max-width:122px;min-height:32px}
+.txi{width:32px;height:32px;display:grid;place-items:center;font-size:18px;border-radius:8px}.txi svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.txi[aria-pressed="false"]{opacity:.55}
+.txedh{margin:0;font-size:12px;opacity:.8}
+.txed,.txadd{display:grid;gap:8px}
+.fchips button.zero{opacity:.6}
+.card .txbox .fchips button{border-color:#d9d2ce;background:#fff;color:#2b2626}.card .txbox .fchips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
 .ftexl{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;color:#b9b0ac}
 .ftexl button{border:1px solid #3a3432;background:#1c1918;color:#d9d2ce;border-radius:999px;padding:6px 11px;font-size:12.5px;cursor:pointer}
 .ftexl button[aria-pressed="true"]{background:#f3eeeb;border-color:#f3eeeb;color:#111;font-weight:700}
@@ -1209,9 +1226,9 @@ let INK = "#ffffff", HL = null;
 let UNDER = null;
 function flushUnder(ctx) {
   const u = UNDER; UNDER = null; if (!u) return;
-  const tf = TF, tx = TXF, fk = FK; TF = null; TXF = null; FK = null;
+  const tf = TF, tx = TXF, fk = FK, tl = TL; TF = null; TXF = null; FK = null; TL = null;   /* a sticker's words belong to the sticker */
   u.boxes.push(...drawStickers(ctx, u.post, { stickers: u.list }, u.hilite));
-  TF = tf; TXF = tx; FK = fk;
+  TF = tf; TXF = tx; FK = fk; TL = tl;
 }
 function txt(ctx, str, x, capTop, o) {
   if (UNDER) flushUnder(ctx);
@@ -1349,7 +1366,7 @@ function hole(ctx, x, y, w, h) {   /* a see-through spot: cleared in the export,
 }
 /* PFR: a frame around this slide's photo on a slide that isn't a frame slide (slide.pframe, same fields as slide.frame); TL: while
    a texture skips the text, the text and the stickers over it are drawn on this separate layer, put back after the texture. */
-let PFR = null, TL = null;
+let PFR = null, TL = null, SL = null;
 function photoMatte(ctx, x, y, w, h) {
   const f = PFR.f, wins = frameWins(f.kind, { x, y, w, h }, f), sc = Math.abs(ctx.getTransform().a) || 1;
   const c = document.createElement("canvas"); c.width = Math.max(1, Math.ceil(w * sc)); c.height = Math.max(1, Math.ceil(h * sc));
@@ -2450,15 +2467,23 @@ function renderBreakdown(ctx, post, s, idx, total, d) {
 /* ---------- textures over the whole slide (slide.texture: each effect 0 to 1): grain, TV lines, duotone (dark to c1, light to c2),
    split tone (shadows toward s1, highlights toward s2), VHS (color fringes and a few slipped bands), old film (faded, warm, scratched),
    paper (fibers and blotches), halftone (a dot screen), dust and scratches, vignette. Seeded, so the export matches the screen. ---------- */
-/* slide.texture.layer: "all" (over everything), "under" (the background and photos: the text and the stickers over it stay clean),
-   "photo" (only on the photos, inside their frames' windows) */
-const TEX_LAYERS = ["all", "under", "photo"];
+/* Texture layers: slide.textures = [{id, name, on, fx: {grain, film, … c1, c2, s1, s2}, off?}], bottom (applied first) to top, like
+   adjustment layers. on: what it textures: "all" (everything), "bg" (background and panels), "photo" (the photos, inside their frames'
+   windows), "bgphoto" (both: the text and stickers stay clean), "text" (all the words as one), "sticker" (all the stickers). A slide
+   from before layers has slide.texture = {…effects, layer: all|under|photo}: it reads as one layer, and looks as it did. */
+const TEX_ON = ["all", "bg", "photo", "bgphoto", "text", "sticker"];
+function texLayers(s) {
+  if (s && Array.isArray(s.textures)) return s.textures.filter(l => l && typeof l === "object");
+  const t = s && s.texture; if (!t || typeof t !== "object") return [];
+  const { layer, ...fx } = t;
+  return [{ id: "t0", name: "Texture", on: layer === "under" ? "bgphoto" : layer === "photo" ? "photo" : "all", fx }];
+}
+const texStack = s => texLayers(s).filter(l => !l.off).map(l => ({ on: TEX_ON.includes(l.on) ? l.on : "all", tx: texOf({ texture: l.fx }) })).filter(l => l.tx);
 const TEX_KEYS = ["grain", "scan", "duo", "split", "vhs", "film", "burn", "paper", "half", "dust", "vig"];
 function texOf(s) {
   const t = s && s.texture; if (!t || typeof t !== "object") return null;
   const o = { c1: HEXCOL.test(t.c1) ? t.c1 : "#1a0a06", c2: HEXCOL.test(t.c2) ? t.c2 : "#ff7a1a", s1: HEXCOL.test(t.s1) ? t.s1 : "#145a6e", s2: HEXCOL.test(t.s2) ? t.s2 : "#ff9a3c" }; let any = false;
   for (const k of TEX_KEYS) { o[k] = clamp(+t[k] || 0, 0, 1); if (o[k] > 0) any = true; }
-  o.layer = TEX_LAYERS.includes(t.layer) ? t.layer : "all";
   return any ? o : null;
 }
 const seeded = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
@@ -2676,8 +2701,9 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
   const ctx = cv.getContext("2d");
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
   ctx.setTransform(scale, 0, 0, scale, 0, 0);
-  const tex = texOf(s0), lay = tex && tex.layer !== "all" ? tex.layer : null;
-  let tlc = null; if (lay) { tlc = document.createElement("canvas"); tlc.width = cv.width; tlc.height = cv.height; TL = tlc.getContext("2d"); TL.setTransform(scale, 0, 0, scale, 0, 0); }
+  const stack = texStack(s0), split = stack.some(l => l.on !== "all"), blank = () => { const c = document.createElement("canvas"); c.width = cv.width; c.height = cv.height; return c; };
+  let tlc = null, slc = null;   /* while a texture skips or picks out the words or the stickers, they're drawn on their own layers */
+  if (split) { tlc = blank(); slc = blank(); TL = tlc.getContext("2d"); SL = slc.getContext("2d"); TL.setTransform(scale, 0, 0, scale, 0, 0); SL.setTransform(scale, 0, 0, scale, 0, 0); }
   PFR = s.type !== "frame" && s.pframe && FRAMES[s.pframe.kind] && s.img ? { slot: s.img, f: frameOf({ frame: s.pframe }), inkAuto: s.ink !== "white" && s.ink !== "black" } : null;
   OVERLAY = !!s0.overlay; KEEP = keep; PH = []; WHOLE = !!s.whole; RENDER_SCALE = forExport ? 1 : scale; TB = {}; TF = null; EXPORTING = !!forExport;
   BG = bgOf(s); HL = HEXCOL.test(s.hl) ? s.hl : null; DISP = famOf(post, s);
@@ -2696,17 +2722,36 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
   else renderPhotoSlide(ctx, post, s, idx, total, d);
   d.tboxes = TB; TB = null; TF = null; d.geo = geo; CX0 = M; CX1 = W - M;
   if (UNDER) flushUnder(ctx);   /* a slide with no text */
-  if (TL) TL.setTransform(scale, 0, 0, scale, 0, 0);
-  d.boxes = ub.concat(drawStickers(TL || ctx, post, { stickers: all.filter(t => !t.under) }, forExport ? null : hiliteId));
-  TL = null; PFR = null;
-  if (tex && lay === "photo") {   /* textured copy, kept only inside the photos */
-    const tc = document.createElement("canvas"); tc.width = cv.width; tc.height = cv.height; tc.getContext("2d").drawImage(cv, 0, 0);
-    applyTexture(tc.getContext("2d"), tc, tex, scale);
-    ctx.save(); ctx.setTransform(scale, 0, 0, scale, 0, 0); ctx.beginPath();
-    for (const p of PH) { if (p.wins) p.wins.forEach(w => winPath(ctx, w, true)); else ctx.rect(p.x, p.y, p.w, p.h); }
-    ctx.clip("nonzero"); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(tc, 0, 0); ctx.restore();
-  } else if (tex) applyTexture(ctx, cv, tex, scale);
-  if (tlc) { ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.drawImage(tlc, 0, 0); ctx.restore(); }
+  TL = null;
+  d.boxes = ub.concat(drawStickers(SL || ctx, post, { stickers: all.filter(t => !t.under) }, forExport ? null : hiliteId));
+  SL = null; PFR = null;
+  if (stack.length) {
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (split) { ctx.drawImage(tlc, 0, 0); ctx.drawImage(slc, 0, 0); }
+    /* each group's mask: where it shows in the finished slide (the words and the stickers cover what's under them) */
+    const masks = {}, maskOf = on => {
+      if (masks[on]) return masks[on];
+      const m = blank(), x = m.getContext("2d");
+      if (on === "text") x.drawImage(tlc, 0, 0);
+      else if (on === "sticker") { x.drawImage(slc, 0, 0); if (under.length) { x.setTransform(scale, 0, 0, scale, 0, 0); drawStickers(x, post, { stickers: under }, null); x.setTransform(1, 0, 0, 1, 0, 0); } }
+      else {
+        x.fillStyle = "#fff";
+        if (on === "photo") { x.setTransform(scale, 0, 0, scale, 0, 0); x.beginPath(); for (const p of PH) { if (p.wins) p.wins.forEach(w => winPath(x, w, true)); else x.rect(p.x, p.y, p.w, p.h); } x.fill("nonzero"); x.setTransform(1, 0, 0, 1, 0, 0); }
+        else x.fillRect(0, 0, m.width, m.height);
+        x.globalCompositeOperation = "destination-out";
+        if (on === "bg") x.drawImage(maskOf("photo"), 0, 0);
+        x.drawImage(maskOf("text"), 0, 0); x.drawImage(maskOf("sticker"), 0, 0);
+      }
+      return (masks[on] = m);
+    };
+    for (const L of stack) {   /* bottom to top: each texture works on the slide as the ones under it left it */
+      if (L.on === "all") { applyTexture(ctx, cv, L.tx, scale); continue; }
+      const tc = blank(), tx = tc.getContext("2d"); tx.drawImage(cv, 0, 0); applyTexture(tx, tc, L.tx, scale);
+      tx.globalCompositeOperation = "destination-in"; tx.drawImage(maskOf(L.on), 0, 0);
+      ctx.drawImage(tc, 0, 0);
+    }
+    ctx.restore();
+  }
   d.photos = PH.map(p => ({ key: (p.slot && FRAME_SLOTS.find(k => s[k] === p.slot)) || null, x: p.x, y: p.y, w: p.w, h: p.h, contain: p.contain })).filter(p => p.key);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   OVERLAY = false; KEEP = false; PH = []; WHOLE = false; BG = null; HL = null; INK = "#ffffff"; DISP = null; EXPORTING = false;
@@ -3276,27 +3321,128 @@ const TEX_COLORS = { duo: [["c1", "Shadows", "#1a0a06"], ["c2", "Highlights", "#
 const TEX_PRE = { film: ["Old film", { film: 0.7, grain: 0.3, dust: 0.3 }], burn: ["Film burn", { burn: 0.6, film: 0.3, grain: 0.25 }], paper: ["Paper", { paper: 0.7, grain: 0.15 }], half: ["Halftone", { half: 0.6 }],
   split: ["Split tone", { split: 0.7, grain: 0.15, s1: "#145a6e", s2: "#ff9a3c" }], duo: ["Duotone: brand", { duo: 0.85, grain: 0.2, c1: "#1a0a06", c2: "#ff7a1a" }], duo2: ["Duotone: cream", { duo: 1, grain: 0.15, c1: "#0e0b0a", c2: "#f2ede6" }],
   grainy: ["Grain + dust", { grain: 0.35, dust: 0.25, vig: 0.3 }], tv: ["TV lines", { scan: 0.55, grain: 0.2, vig: 0.35 }], vhs: ["VHS", { vhs: 0.6, scan: 0.3, grain: 0.25 }] };
-const TEX_LAYER_L = [["all", "Everything"], ["under", "Under the text"], ["photo", "Photo only"]];
-const texPreset = (s, k) => ({ ...TEX_PRE[k][1], ...(s.texture && s.texture.layer && s.texture.layer !== "all" ? { layer: s.texture.layer } : {}) });   /* a preset keeps where the texture goes */
+/* Texture layers (slide.textures, see texLayers in the renderer): a list with the top layer first, as in Canva. Each layer has its
+   effects (a preset's several, or one), what it applies to, an eye and a bin; drag its handle to reorder (arrow keys on the handle
+   too); tap its name to edit its effects. Layers apply bottom to top, so split tone then TV lines differs from the other way round.
+   The card and the large view's Texture panel show the same list. */
+const TEX_ON_L = [["all", "Everything"], ["bg", "Background"], ["photo", "Photos"], ["bgphoto", "Background + photos"], ["text", "Text"], ["sticker", "Stickers"]];
+const TEX_DEF = { grain: 0.35, film: 0.6, burn: 0.6, paper: 0.6, half: 0.5, duo: 0.85, split: 0.7, scan: 0.5, vhs: 0.5, dust: 0.35, vig: 0.4 };
 const texColor = (T, k, def) => HEXCOL.test(T[k]) ? T[k] : def;
+const EYE_OFF_I = `<svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 5.6A10 10 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3.2 3.9M6.3 7.4A16.6 16.6 0 0 0 2.5 12S6 18.5 12 18.5a9.4 9.4 0 0 0 4.4-1.1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>`;
+S.txSel = {}; S.txFx = {}; S.txAdd = {};
+const fxName = fx => TEX_LIST.filter(([k]) => +fx[k] > 0).map(([, l]) => l).join(" + ") || "Empty";
+const fxSum = fx => TEX_LIST.filter(([k]) => +fx[k] > 0).map(([k, l]) => `${l} ${Math.round(fx[k] * 100)}%`).join(", ") || "no effect yet";
+let txN = 0; const txId = () => "t" + Date.now().toString(36) + (txN++).toString(36);
+const texSid = el => { const c = el.closest(".card"); return c ? c.dataset.sid : el.closest("#fPanel") ? focusSid : null; };
+const txCur = (sid, L) => L.find(l => l.id === S.txSel[sid]) || L[L.length - 1] || null;
+function texLayersHTML(sid, s) {
+  const L = texLayers(s), sel = txCur(sid, L), add = !!S.txAdd[sid] || !L.length;
+  const rows = L.slice().reverse().map(l => `<div class="txrow${sel && l.id === sel.id ? " on" : ""}${l.off ? " off" : ""}" data-txrow="${esc(l.id)}">
+    <button type="button" class="txh" data-txh="${esc(l.id)}" title="Drag to reorder (or arrow keys)" aria-label="Reorder ${esc(l.name || fxName(l.fx || {}))}">${GRIP_I}</button>
+    <button type="button" class="txname" data-txpick="${esc(l.id)}" aria-pressed="${!!sel && l.id === sel.id}"><b>${esc(l.name || fxName(l.fx || {}))}</b><span>${esc(fxSum(l.fx || {}))}</span></button>
+    <select class="ctl txon" data-txon="${esc(l.id)}" aria-label="Apply to">${TEX_ON_L.map(([k, t]) => `<option value="${k}"${(l.on || "all") === k ? " selected" : ""}>${t}</option>`).join("")}</select>
+    <button type="button" class="txi" data-txeye="${esc(l.id)}" aria-pressed="${!l.off}" title="${l.off ? "Show" : "Hide"}" aria-label="${l.off ? "Show" : "Hide"} this layer">${l.off ? EYE_OFF_I : EYE_I}</button>
+    <button type="button" class="txi" data-txdel="${esc(l.id)}" title="Delete" aria-label="Delete this layer">×</button></div>`).join("");
+  let ed = "";
+  if (sel && !add) {
+    const fx = sel.fx || {}, cur = TEX_LIST.find(x => x[0] === S.txFx[sid]) || TEX_LIST.find(x => +fx[x[0]] > 0) || TEX_LIST[0], v = +fx[cur[0]] || 0, cols = TEX_COLORS[cur[0]];
+    ed = `<div class="txed"><p class="txedh">Effects in <b>${esc(sel.name || fxName(fx))}</b></p>
+      <div class="fchips" role="group" aria-label="Effects in this layer">${TEX_LIST.map(([k, l]) => `<button type="button" data-txfx="${k}" aria-pressed="${k === cur[0]}"${+fx[k] > 0 ? "" : ' class="zero"'}>${l}<i>${Math.round((+fx[k] || 0) * 100)}%</i></button>`).join("")}</div>
+      <div class="frow"><input type="range" data-txr="${cur[0]}" aria-label="${cur[1]}" min="0" max="1" step="0.01" value="${v}" data-fmt="pct">
+        <span class="numbox"><input type="number" class="num" data-txn="${cur[0]}" value="${Math.round(v * 100)}" min="0" max="100" step="1" aria-label="${cur[1]}, exact value"><span>%</span></span>
+        ${cols ? cols.map(([k, l, d]) => `<label class="ftexc" title="${l}"><input type="color" data-txc="${k}" value="${texColor(fx, k, d)}" aria-label="${cur[1]} ${l.toLowerCase()}"><span>${l}</span></label>`).join("") : ""}</div></div>`;
+  }
+  const adder = add ? `<div class="txadd"><p class="txedh">${L.length ? "Add a layer on top" : "Pick a texture to start"}</p>
+      <div class="fchips" role="group" aria-label="Presets">${Object.entries(TEX_PRE).map(([k, [l]]) => `<button type="button" data-txaddp="${k}">${l}</button>`).join("")}</div>
+      <div class="fchips" role="group" aria-label="One effect">${TEX_LIST.map(([k, l]) => `<button type="button" data-txadde="${k}">${l}</button>`).join("")}</div></div>` : "";
+  return `<div class="txbox"><div class="txhead"><b>Texture layers</b><span class="hint">top applies last</span><span class="grow"></span>${L.length ? `<button type="button" class="btn sm" data-txaddt aria-pressed="${add}">${add ? "Cancel" : "+ Add"}</button>` : ""}</div>
+    ${L.length ? `<div class="txlist" role="list">${rows}</div>` : ""}${adder}${ed}
+    ${L.length ? `<div class="frow ftexb"><button type="button" class="btn ghost sm" data-txall>Use on every slide</button><button type="button" class="btn ghost sm" data-txnone>No texture</button></div>` : ""}</div>`;
+}
 function texHTML(sid, s) {
-  const T = s.texture || {}, v = k => +T[k] || 0, on = TEX_KEYS.some(k => v(k) > 0), pairs = [];
-  for (let i = 0; i < TEX_LIST.length; i += 2) pairs.push(`<div class="two">${TEX_LIST.slice(i, i + 2).map(([k, l]) => rng(sid, "texture." + k, l, 0, 1, 0.01, v(k), "pct")).join("")}</div>`);
-  const colors = Object.entries(TEX_COLORS).map(([e, cs]) => `<div class="two">${cs.map(([k, l, d]) => `<div><label class="lbl" for="${sid}-t${k}">${e === "duo" ? "Duotone" : "Split tone"} ${l.toLowerCase()}</label><input type="color" class="ctl" id="${sid}-t${k}" data-f="texture.${k}" value="${texColor(T, k, d)}"></div>`).join("")}</div>`).join("");
-  return `<details class="texbox"${on ? " open" : ""}><summary>Texture over the whole slide${on ? " (on)" : ""}</summary><div class="texin">
-    <div class="chips">${Object.entries(TEX_PRE).map(([k, [l]]) => `<button type="button" data-act="texpre" data-p="${k}">${l}</button>`).join("")}</div>
-    <div class="chips" role="group" aria-label="Apply the texture to"><span class="lbl" style="margin:0 4px 0 0;align-self:center">Apply to</span>${TEX_LAYER_L.map(([k, l]) => `<button type="button" data-act="texlayer" data-l="${k}" aria-pressed="${(T.layer || "all") === k}">${l}</button>`).join("")}</div>
-    ${pairs.join("")}${colors}
-    <div class="actions"><button type="button" class="btn sm" data-act="texall">Use on every slide</button><button type="button" class="btn ghost sm" data-act="texnone">No texture</button></div>
-    <p class="hint" style="margin:0">Everything: over the whole slide, stickers too. Under the text: the background and photos get it, the words and stickers stay clean. Photo only: just inside the photos. In the PNGs and the PDF too; the large view's Texture button has the same.</p></div></details>`;
+  const n = texLayers(s).length, key = "tex-" + sid;
+  return `<details class="texbox" data-bdopen="${key}"${S.bdOpen.has(key) ? " open" : ""}><summary>Textures${n ? ` (${n} layer${n === 1 ? "" : "s"})` : ""}</summary><div class="texin">${texLayersHTML(sid, s)}
+    <p class="hint" style="margin:0">Each layer picks what it textures: Everything, Background, Photos, Background + photos, Text (all the words) or Stickers. In the PNGs and the PDF too; the large view's Texture button has the same.</p></div></details>`;
 }
-function texAct(act, b, sid, s) {
-  if (act === "texlayer") { remember(sid); s.texture = { ...(s.texture || {}), layer: b.dataset.l }; if (b.dataset.l === "all") delete s.texture.layer; saveSlide(sid); renderBoard(new Set([sid])); if (focusSid === sid) { drawFocus(); if (S.fpanel === "tex") renderFPanel(); } return true; }
-  if (act === "texpre") { remember(sid); s.texture = texPreset(s, b.dataset.p); saveSlide(sid); renderBoard(new Set([sid])); if (focusSid === sid) drawFocus(); return true; }
-  if (act === "texnone") { remember(sid); delete s.texture; saveSlide(sid); renderBoard(new Set([sid])); if (focusSid === sid) drawFocus(); return true; }
-  if (act === "texall") { const tx = clone(s.texture || null); let n = 0; for (const id of order()) { if (id === sid) continue; const o = S.slides[id]; remember(id); if (tx) o.texture = clone(tx); else delete o.texture; saveSlide(id); n++; } renderBoard(); toast(tx ? `This texture is on all ${n + 1} slides` : "Textures off on every slide"); return true; }
-  return false;
+function txEdit(sid, key, fn) {   /* change the slide's layers (an older single texture becomes the first layer) */
+  const s = S.slides[sid]; if (!s) return null;
+  remember(sid, key);
+  const L = clone(texLayers(s)).map(l => ({ ...l, id: l.id || txId(), fx: l.fx || {} }));
+  fn(L);
+  delete s.texture; if (L.length) s.textures = L; else delete s.textures;
+  saveSlide(sid); return L;
 }
+function txRefresh(sid) { scheduleDraw(sid); if (focusSid === sid && S.fpanel === "tex") renderFPanel(); renderBoard(new Set([sid])); }
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-txpick],[data-txeye],[data-txdel],[data-txfx],[data-txaddt],[data-txaddp],[data-txadde],[data-txall],[data-txnone]"); if (!b) return;
+  const sid = texSid(b), s = sid && S.slides[sid]; if (!s) return;
+  const d = b.dataset, add = (name, fx) => { const id = txId(); txEdit(sid, null, L => L.push({ id, name, on: "all", fx })); S.txSel[sid] = id; S.txAdd[sid] = false; S.txFx[sid] = TEX_KEYS.find(k => +fx[k] > 0); };
+  if (d.txpick) { S.txSel[sid] = d.txpick; S.txAdd[sid] = false; }
+  else if (d.txeye) txEdit(sid, null, L => { const l = L.find(x => x.id === d.txeye); if (l) { if (l.off) delete l.off; else l.off = true; } });
+  else if (d.txdel) txEdit(sid, null, L => { const j = L.findIndex(x => x.id === d.txdel); if (j >= 0) L.splice(j, 1); });
+  else if (d.txfx) S.txFx[sid] = d.txfx;
+  else if (b.hasAttribute("data-txaddt")) S.txAdd[sid] = !S.txAdd[sid];
+  else if (d.txaddp) add(TEX_PRE[d.txaddp][0], clone(TEX_PRE[d.txaddp][1]));
+  else if (d.txadde) { const k = d.txadde, fx = { [k]: TEX_DEF[k] }; (TEX_COLORS[k] || []).forEach(([c, , def]) => { fx[c] = def; }); add(TEX_LIST.find(x => x[0] === k)[1], fx); }
+  else if (b.hasAttribute("data-txnone")) txEdit(sid, null, L => { L.length = 0; });
+  else if (b.hasAttribute("data-txall")) {
+    const L = clone(texLayers(s)); let n = 0;
+    for (const id of order()) { if (id === sid) continue; const o = S.slides[id]; remember(id); delete o.texture; if (L.length) o.textures = clone(L); else delete o.textures; saveSlide(id); n++; }
+    renderBoard(); toast(L.length ? `These texture layers are on all ${n + 1} slides` : "Textures off on every slide");
+  }
+  txRefresh(sid);
+});
+let txInT = 0;
+document.addEventListener("input", e => {
+  const el = e.target, d = el.dataset || {}; if (!(d.txr || d.txn || d.txc)) return;
+  const sid = texSid(el), s = sid && S.slides[sid]; if (!s) return;
+  const cur = txCur(sid, texLayers(s)); if (!cur) return;
+  const k = d.txr || d.txn || d.txc, v = d.txc ? el.value : d.txn ? clamp(+el.value / 100, 0, 1) : +el.value; if (!d.txc && !isFinite(v)) return;
+  txEdit(sid, "tx." + cur.id + "." + k, L => { const l = L.find(x => x.id === cur.id); if (l) l.fx[k] = v; });
+  const box = el.closest(".txbox");
+  if (box && !d.txc) {
+    if (d.txr) { const n = box.querySelector(`[data-txn="${k}"]`); if (n) n.value = Math.round(v * 100); showBubble(el); } else { const r = box.querySelector(`[data-txr="${k}"]`); if (r) r.value = v; }
+    const c = box.querySelector(`[data-txfx="${k}"]`); if (c) { c.querySelector("i").textContent = Math.round(v * 100) + "%"; c.classList.toggle("zero", !(v > 0)); }
+  }
+  scheduleDraw(sid);
+  clearTimeout(txInT); const inCard = !!el.closest(".card");   /* the other view catches up when the slider rests */
+  txInT = setTimeout(() => { if (inCard) { if (focusSid === sid && S.fpanel === "tex") renderFPanel(); } else renderBoard(new Set([sid])); }, 450);
+});
+document.addEventListener("change", e => {
+  const el = e.target; if (!el.dataset || !el.dataset.txon) return;
+  const sid = texSid(el); if (!sid) return;
+  txEdit(sid, null, L => { const l = L.find(x => x.id === el.dataset.txon); if (l) l.on = el.value; }); S.txSel[sid] = el.dataset.txon; txRefresh(sid);
+});
+document.addEventListener("change", e => { const d = e.target.dataset || {}; if (d.txr || d.txn) { hideBubble(); const sid = texSid(e.target); if (sid) txRefresh(sid); } });
+/* reorder: drag a layer's handle (the row follows the finger), or arrow keys on it */
+let txDrag = null;
+document.addEventListener("pointerdown", e => {
+  const h = e.target.closest("[data-txh]"); if (!h) return;
+  const list = h.closest(".txlist"), row = h.closest(".txrow"); if (!list || !row) return;
+  e.preventDefault(); try { h.setPointerCapture(e.pointerId); } catch (err) {}
+  const rows = [...list.children], from = rows.indexOf(row);
+  txDrag = { sid: texSid(h), id: h.dataset.txh, row, rows, from, to: from, y0: e.clientY, mids: rows.map(r => { const q = r.getBoundingClientRect(); return q.top + q.height / 2; }), h: row.getBoundingClientRect().height };
+  row.classList.add("drag");
+});
+document.addEventListener("pointermove", e => {
+  if (!txDrag) return;
+  const dy = e.clientY - txDrag.y0, y = txDrag.mids[txDrag.from] + dy; txDrag.row.style.transform = `translateY(${dy}px)`;
+  const to = txDrag.mids.filter((m, i) => i !== txDrag.from && y > m).length; txDrag.to = to;   /* the rows whose middle it has passed */
+  txDrag.rows.forEach((r, i) => { if (r === txDrag.row) return; const shift = txDrag.from < to && i > txDrag.from && i <= to ? -txDrag.h : txDrag.from > to && i >= to && i < txDrag.from ? txDrag.h : 0; r.style.transform = shift ? `translateY(${shift}px)` : ""; });
+});
+function txMove(sid, id, toShown) {   /* toShown: the place in the list as shown (top first) */
+  txEdit(sid, null, L => { const j = L.findIndex(x => x.id === id); if (j < 0) return; const [l] = L.splice(j, 1); L.splice(clamp(L.length - toShown, 0, L.length), 0, l); });
+  S.txSel[sid] = id; txRefresh(sid);
+}
+const txDrop = () => { if (!txDrag) return; const t = txDrag; txDrag = null; t.rows.forEach(r => { r.style.transform = ""; r.classList.remove("drag"); }); if (t.to !== t.from) txMove(t.sid, t.id, t.to); else { S.txSel[t.sid] = t.id; txRefresh(t.sid); } };
+document.addEventListener("pointerup", txDrop); document.addEventListener("pointercancel", txDrop);
+document.addEventListener("keydown", e => {
+  const h = e.target.closest && e.target.closest("[data-txh]"); if (!h || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
+  e.preventDefault(); e.stopPropagation();
+  const list = h.closest(".txlist"), rows = [...list.children], i = rows.indexOf(h.closest(".txrow")), to = clamp(i + (e.key === "ArrowUp" ? -1 : 1), 0, rows.length - 1);
+  if (to === i) return; const sid = texSid(h), id = h.dataset.txh; txMove(sid, id, to);
+  requestAnimationFrame(() => { const nh = document.querySelector(`${list.closest(".card") ? "#card-" + sid : "#fPanel"} [data-txh="${id}"]`); if (nh) nh.focus(); });
+}, true);
 function bdPanelHTML(sid, s) {
   const P = bdPanelOf(s), L = s.layout || {}, land = geoOf(sid).land;
   const opts = (key, list, v) => list.map(([k, l]) => `<option value="${k}"${v === k ? " selected" : ""}>${l}</option>`).join("");
@@ -3689,7 +3835,7 @@ document.addEventListener("click", e => {
   if (s && act === "frcolor") { remember(sid); s.frame = { ...(s.frame || {}), color: b.dataset.c }; saveSlide(sid); renderBoard(new Set([sid])); if (focusSid === sid) drawFocus(); return; }
   if (s && act === "frpick") { openFrames([...S.selected], sid); return; }
   if (act === "frpack") { openFrames([], null); return; }
-  if (s && (bdAct(act, b, sid, s) || texAct(act, b, sid, s) || (/^row(add|del|move)$/.test(act) && rowAct(act, b, sid, s)))) return;
+  if (s && (bdAct(act, b, sid, s) || (/^row(add|del|move)$/.test(act) && rowAct(act, b, sid, s)))) return;
   if (act === "fold") { setFold(sid, !S.folded.has(sid)); saveFolds(); }
   else if (act === "focus") { if (Date.now() - S.suppressClick > 450) openFocus(sid); }
   else if (act === "replace") openPicker(sid, b.dataset.slot);
@@ -5337,7 +5483,7 @@ function renderFPanel() {
   if (S.fpanel === "text") { el.innerHTML = textPanelHTML(s); updateFmtBar(); return; }
   if (S.fpanel === "row") { el.innerHTML = rowPanelHTML(s); return; }
   if (S.fpanel === "frame") { el.innerHTML = framePanelHTML(s); const c = el.querySelector('[data-ffr][aria-pressed="true"]'); if (c) c.scrollIntoView({ block: "nearest", inline: "nearest" }); return; }
-  if (S.fpanel === "tex") { el.innerHTML = texPanelHTML(s); const c = el.querySelector('[data-ftex][aria-pressed="true"]'); if (c) c.scrollIntoView({ block: "nearest", inline: "nearest" }); return; }
+  if (S.fpanel === "tex") { el.innerHTML = texPanelHTML(s); const c = el.querySelector('[data-txfx][aria-pressed="true"]'); if (c) c.scrollIntoView({ block: "nearest", inline: "nearest" }); return; }
   const slots = TEMPLATES[s.type].slots.filter(k => s[k]);
   const bgOnly = !!bgOf(s) && !bgOf(s).photo;
   if (s.overlay || !slots.length || bgOnly) { el.innerHTML = `<p class="hint">${s.overlay ? "This slide is a text-only overlay, so there's no photo to edit." : bgOnly ? "This slide shows a background instead of its photo. Pick Photo under Background in Layout and framing to edit the photo." : "Add a photo to this slide first, or give it a plain or gradient background in Layout and framing."}</p>`; return; }
@@ -5356,7 +5502,7 @@ $("#fDone").addEventListener("click", () => { S.psel = null; S.fsel = null; S.ft
 $("#fTex").addEventListener("click", () => { dropTextSel(true); closeHist(); S.fpanel = S.fpanel === "tex" ? false : "tex"; renderFPanel(); drawFocus(); });
 /* the large view's Texture panel: presets, a chip per effect (with its amount), one slider for the chosen effect, and its two colors
    for duotone and split tone */
-S.ftex = "grain"; let texCardT = 0;
+let texCardT = 0;
 /* the large view's Frame panel: on a frame slide, its frame; on any other slide, a frame around its photo (slide.pframe), the
    text staying where it is */
 const thumbMemo = new Map();
@@ -5380,17 +5526,7 @@ function frameSet(o) {   /* o: null (no frame), or the fields to change */
   else s.pframe = { kind: "4x5", ...(s.pframe || {}), ...o };
   saveSlide(focusSid); renderFPanel(); drawFocus(); renderBoard(new Set([focusSid]));
 }
-function texPanelHTML(s) {
-  const T = s.texture || {}, cur = TEX_LIST.find(x => x[0] === S.ftex) || TEX_LIST[0], v = +T[cur[0]] || 0, cols = TEX_COLORS[cur[0]];
-  return `<div class="fchips" role="group" aria-label="Presets">${Object.entries(TEX_PRE).map(([k, [l]]) => `<button type="button" data-ftexpre="${k}">${l}</button>`).join("")}</div>
-    <div class="fchips" role="group" aria-label="Texture">${TEX_LIST.map(([k, l]) => `<button type="button" data-ftex="${k}" aria-pressed="${k === cur[0]}">${l}<i>${Math.round((+T[k] || 0) * 100)}%</i></button>`).join("")}</div>
-    <div class="frow"><input type="range" id="fTexR" aria-label="${cur[1]}" min="0" max="1" step="0.01" value="${v}" data-fmt="pct">
-      <span class="numbox"><input type="number" class="num" data-for="fTexR" value="${toBox("pct", v)}" step="any" aria-label="${cur[1]}, exact value"><span>%</span></span>
-      ${cols ? cols.map(([k, l, d]) => `<label class="ftexc" title="${l}"><input type="color" data-ftexc="${k}" value="${texColor(T, k, d)}" aria-label="${cur[1]} ${l.toLowerCase()}"><span>${l}</span></label>`).join("") : ""}
-</div>
-    <div class="frow ftexl" role="group" aria-label="Apply the texture to"><span>Apply to</span>${TEX_LAYER_L.map(([k, l]) => `<button type="button" data-ftexl="${k}" aria-pressed="${(T.layer || "all") === k}">${l}</button>`).join("")}</div>
-    <div class="frow ftexb"><button type="button" class="btn ghost sm" data-ftexall>Use on every slide</button><button type="button" class="btn ghost sm" data-ftexnone>No texture</button></div>`;
-}
+function texPanelHTML(s) { return texLayersHTML(focusSid, s); }
 /* the large view's Edit row panel: each item's name and subtext, the row's picture size, text size and spacing, and more stickers */
 function rowPanelHTML(s) {
   const st = (s.stickers || []).find(t => t.id === S.frow && t.kind === "bdrow");
@@ -5400,7 +5536,6 @@ function rowPanelHTML(s) {
     <div class="frowitems">${items.map((it, j) => `<div class="frowitem"><i class="bdth">${it.vec ? minePreview({ vec: it.vec }) : `<img src="${esc(srcOf(it.src))}" alt="">`}</i><input class="ctl" data-frow="${j}.name" value="${esc(it.name)}" aria-label="Item ${j + 1} name" placeholder="Name"><input class="ctl" data-frow="${j}.note" value="${esc(it.note)}" aria-label="Item ${j + 1} subtext" placeholder="Subtext"><button type="button" class="btn ghost sm" data-frowdel="${j}" aria-label="Remove item ${j + 1}">×</button></div>`).join("")}</div>
     <div class="frowsls">${sl("size", "Picture size", 40, 900, 2, st.size || 240, "px")}${sl("ts", "Text size", 0.5, 2.5, 0.05, st.ts || 1, "x")}${sl("gap", "Space between", 0, 2, 0.05, st.gap ?? 0.25, "x")}</div>`;
 }
-function texChanged(sid) { saveSlide(sid); scheduleDraw(sid); const card = document.getElementById("card-" + sid); if (card && !card.querySelector(".texbox input:focus")) renderBoard(new Set([sid])); }
 $("#fTextBtn").addEventListener("click", () => {
   dropTextSel(true);
   const open = S.fpanel === "text" && !S.ftfield;
@@ -5413,16 +5548,11 @@ $("#fPanel").addEventListener("click", e => {
   else if (b.dataset.ftab) { switchEditor(b.dataset.ftab); drawFocus(); }
   else if (b.dataset.fedit) openEditorFor(b.dataset.fedit);
   else if (b.dataset.fslot) { S.fslot = b.dataset.fslot; renderFPanel(); }
-  else if (b.dataset.ftex) { S.ftex = b.dataset.ftex; renderFPanel(); }
   else if (b.hasAttribute("data-frowadd")) { if (focusSid && S.frow) openBdAdd(focusSid, S.frow); }
   else if (b.hasAttribute("data-frowdone")) { S.fpanel = false; renderFPanel(); drawFocus(); }
   else if (b.dataset.frowdel != null) { const s = S.slides[focusSid], st = s && (s.stickers || []).find(t => t.id === S.frow); if (!st) return; remember(focusSid); st.items.splice(+b.dataset.frowdel, 1); if (!st.items.length) { s.stickers = s.stickers.filter(t => t !== st); S.fsel = null; S.fpanel = false; } saveSlide(focusSid); renderBoard(new Set([focusSid])); renderFPanel(); drawFocus(); }
-  else if (b.dataset.ftexpre) { const s = S.slides[focusSid]; if (!s) return; remember(focusSid); s.texture = texPreset(s, b.dataset.ftexpre); S.ftex = Object.keys(s.texture).find(k => TEX_KEYS.includes(k)) || S.ftex; texChanged(focusSid); renderFPanel(); }
-  else if (b.dataset.ftexl) { const s = S.slides[focusSid]; if (!s) return; remember(focusSid); s.texture = { ...(s.texture || {}), layer: b.dataset.ftexl }; if (b.dataset.ftexl === "all") delete s.texture.layer; texChanged(focusSid); renderFPanel(); if (!texOf(s)) toast("Pick a texture too: this sets where it goes"); }
   else if (b.dataset.ffr) frameSet(b.dataset.ffr === "none" ? null : { kind: b.dataset.ffr });
   else if (b.dataset.ffrc) frameSet({ color: b.dataset.ffrc });
-  else if (b.hasAttribute("data-ftexnone")) { const s = S.slides[focusSid]; if (!s) return; remember(focusSid); delete s.texture; texChanged(focusSid); renderFPanel(); }
-  else if (b.hasAttribute("data-ftexall")) { const s = S.slides[focusSid]; if (s) texAct("texall", b, focusSid, s); }
   else if (b.dataset.fadj) { S.fadj = b.dataset.fadj; renderFPanel(); }
   else if (b.id === "fAdjReset") { const r = $("#fAdj"); r.value = 0; r.dispatchEvent(new Event("input", { bubbles: true })); }
 });
@@ -5446,15 +5576,6 @@ $("#fPanel").addEventListener("input", e => {
     if (!s[key]) return;
     remember(focusSid, "fr." + k); s[key] = { ...s[key], [k]: v }; if (e.target.dataset.ffrs) showBubble(e.target);
     saveSlide(focusSid); scheduleDraw(focusSid); clearTimeout(texCardT); const sid = focusSid; texCardT = setTimeout(() => renderBoard(new Set([sid])), 500);
-    return;
-  }
-  if (e.target.id === "fTexR" || e.target.dataset.ftexc) {   /* Texture: the chosen effect's amount, or one of its colors */
-    const s = S.slides[focusSid]; if (!s) return;
-    const k = e.target.dataset.ftexc || S.ftex, v = e.target.dataset.ftexc ? e.target.value : +e.target.value;
-    remember(focusSid, "tex." + k); s.texture = s.texture || {}; s.texture[k] = v;
-    if (!e.target.dataset.ftexc) { syncBox(e.target); const c = $(`#fPanel [data-ftex="${k}"] i`); if (c) c.textContent = Math.round(v * 100) + "%"; showBubble(e.target); }
-    saveSlide(focusSid); scheduleDraw(focusSid);
-    clearTimeout(texCardT); const sid = focusSid; texCardT = setTimeout(() => renderBoard(new Set([sid])), 400);
     return;
   }
   if (e.target.id !== "fAdj") return;
