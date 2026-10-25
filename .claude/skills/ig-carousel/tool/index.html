@@ -1599,6 +1599,7 @@ function coverRect(img, rw, rh, slot) {
   const fx = clamp(slot && slot.fx != null ? +slot.fx : 0.5, 0, 1), fy = clamp(slot && slot.fy != null ? +slot.fy : 0.5, 0, 1);
   return { dx: (rw - dw) * fx, dy: (rh - dh) * fy, dw, dh, s };
 }
+let NUMOFF = false; /* the slide number (01/12) is hidden: post.num "hide", or the slide's own num "hide" / "show" */
 let OVERLAY = false; /* true while rendering a text-only (transparent) slide */
 /* ...and KEEP when that overlay keeps the slide's backgrounds and panels: only the photo's spot is see-through (for a video behind
    it). PH collects where each photo is drawn ({slot, x, y, w, h, contain}), for the large view's photo selection and crop. */
@@ -1913,7 +1914,7 @@ function drawHeader(ctx, post, x0 = M, x1 = W - M) {
 }
 function drawFooter(ctx, post, t, idx, total, x0 = M, x1 = W - M) {
   const o = { size: 43, weight: 700, track: -0.05 };
-  TF = null; txt(ctx, `${pad2(idx)}/${pad2(total)}`, x0, FOOT_Y, o);
+  TF = null; if (!NUMOFF) txt(ctx, `${pad2(idx)}/${pad2(total)}`, x0, FOOT_Y, o);
   TF = "text.section"; txt(ctx, up(fillR(t.section, post)), (x0 + x1) / 2, FOOT_Y, { ...o, align: "center" });
   TF = "text.foot"; txt(ctx, up(fillR(t.foot, post)), x1, FOOT_Y, { ...o, align: "right" });
   TF = null;
@@ -3097,6 +3098,7 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
     TXR = { w: cv.width, h: cv.height, cls: new Map(), own: new Set(), sig: key => tls.map((L, i) => !L.texts || L.texts.includes(key) ? i : -1).filter(i => i >= 0).join(",") };
   }
   PFR = s.type !== "frame" && s.pframe && FRAMES[s.pframe.kind] && s.img ? { slot: s.img, f: frameOf({ frame: s.pframe }), inkAuto: s.ink !== "white" && s.ink !== "black" } : null;
+  NUMOFF = s0.num === "hide" || (s0.num !== "show" && !!post && post.num === "hide");
   OVERLAY = !!s0.overlay; KEEP = keep; PH = []; WHOLE = !!s.whole; RENDER_SCALE = forExport ? 1 : scale; TB = {}; TF = null; EXPORTING = !!forExport;
   BG = bgOf(s); HL = HEXCOL.test(s.hl) ? s.hl : null; DISP = famOf(post, s); FOV = s.fonts && typeof s.fonts === "object" ? s.fonts : null; TST = s.tstyle && typeof s.tstyle === "object" ? s.tstyle : null; LSY = {};
   INK = s.ink === "black" ? "#111111" : s.ink === "white" ? "#ffffff" : BG ? inkOn(BG.c2 ? mixHex(BG.c1, BG.c2) : BG.c1) : "#ffffff";   /* auto: dark text on a light background */
@@ -3975,7 +3977,7 @@ const gradCSS = (c1, c2, dir) => dir === "radial" ? `radial-gradient(circle at 5
 function bgHTML(sid, s) {
   const B = bgOf(s), mode = !B ? "photo" : (B.photo ? "p" : "") + (B.c2 ? "grad" : "plain");
   const opt = (v, l) => `<option value="${v}"${mode === v ? " selected" : ""}>${l}</option>`;
-  let h = `<div class="two"><div><label class="lbl" for="${sid}-bgmode">Background</label><select class="ctl" id="${sid}-bgmode" data-act="bgmode"${s.overlay && !s.overlayKeep ? " disabled" : ""}>${opt("photo", "Photo")}${opt("pplain", "Photo on a color")}${opt("pgrad", "Photo on a gradient")}${opt("plain", "Plain color")}${opt("grad", "Gradient")}</select></div>${sel(sid, "ink", "Text color", [["auto", "Auto"], ["white", "White"], ["black", "Black"]], s.ink)}</div>`;
+  let h = `<div class="two"><div><label class="lbl" for="${sid}-bgmode">Background</label><select class="ctl" id="${sid}-bgmode" data-act="bgmode"${s.overlay && !s.overlayKeep ? " disabled" : ""}>${opt("photo", "Photo")}${opt("pplain", "Photo on a color")}${opt("pgrad", "Photo on a gradient")}${opt("plain", "Plain color")}${opt("grad", "Gradient")}</select></div>${sel(sid, "ink", "Text color", [["auto", "Auto"], ["white", "White"], ["black", "Black"]], s.ink)}</div><div class="two">${sel(sid, "num", "Slide number (01/12)", [["auto", `As the post (${S.post && S.post.num === "hide" ? "hidden" : "shown"})`], ["show", "Show"], ["hide", "Hide"]], s.num)}</div>`;
   if (!B) return h;
   if (B.photo) h += `<p class="hint" style="margin:0">The whole photo sits on the ${B.c2 ? "gradient" : "color"}, uncropped. Move and size it with the Photo sliders below (zoom makes it bigger).</p>`;
   h += `<div class="bgrow"><label class="colr"><input type="color" data-bg="c1" value="${B.c1}"><span>${B.c2 ? "From" : "Color"}</span></label>`
@@ -4122,6 +4124,7 @@ function renderMain() {
         <div><label class="lbl" for="m-subject">Header, right</label><input class="ctl" id="m-subject" data-m="subject"></div>
         <div><label class="lbl" for="m-handle">Your handle</label><input class="ctl" id="m-handle" data-m="handle"></div>
         <div><label class="lbl" for="m-font">Big text font</label>${fontSel("m-font", 'data-m="font"', S.post && S.post.font)}</div>
+        <div><label class="lbl" for="m-num">Slide numbers (01/12)</label><select class="ctl" id="m-num" data-m="num"><option value="">Show on every slide</option><option value="hide">Hide on every slide</option></select></div>
       </div>
       <div class="actions" style="padding-bottom:10px"><button class="btn ghost sm danger" id="delPost">Delete this post</button></div></details>
     <div class="boardtools"><button class="btn ghost sm" id="foldAll">Fold all slides</button><span class="hint">Tap the arrow on a slide to fold or open just that one. Drag a folded slide by its ⋮⋮ grip to move it.</span></div>
@@ -4211,6 +4214,7 @@ document.addEventListener("input", e => {
     S.post[el.dataset.m] = el.value; saveMeta();
     if (el.dataset.m === "title") $("#postTitle").textContent = el.value || "Untitled post";
     if (el.dataset.m === "font") { if (!el.value) delete S.post.font; renderBoard(new Set(order())); }
+    if (el.dataset.m === "num") { if (!el.value) delete S.post.num; renderBoard(new Set(order())); toast(el.value ? "Slide numbers hidden on every slide. A slide can still show its own (Layout, or ⋮ in the large view)" : "Slide numbers show on every slide"); }
     if (el.dataset.m === "overall") updateApplyAll();
     else if (el.dataset.m !== "title") scheduleDraw();
   } else if (el.id === "photoName" || el.id === "photoDesc" || el.id === "photoTags") {
@@ -8354,6 +8358,7 @@ function moreMenuHTML() {
   const s = S.slides[focusSid], own = s && RATIOS[s.ratio] ? s.ratio : null, chip = (k, l, on) => `<button type="button" data-fratio="${k}" aria-pressed="${on}">${l}</button>`;
   return `<button type="button" class="mitem" data-fmore="find">Search stickers and photos<small>Add one to this slide · Ctrl+Space</small></button>
     <button type="button" class="mitem" data-fmore="dup">Duplicate slide…<small>A new slide or another version, in any size</small></button>
+    <div class="mratio"><small>Slide number (01/12) on this slide</small><div class="fchips" role="group" aria-label="Slide number on this slide">${["auto", "show", "hide"].map(k => `<button type="button" data-fnum="${k}" aria-pressed="${(s && s.num || "auto") === k}">${k === "auto" ? `As the post (${S.post && S.post.num === "hide" ? "hidden" : "shown"})` : k === "show" ? "Show" : "Hide"}</button>`).join("")}</div></div>
     <div class="mratio"><small>Size of this slide</small><div class="fchips" role="group" aria-label="Size of this slide">${chip("post", `Post (${ratioKey(S.post)})`, !own)}${Object.entries(RATIOS).map(([k, r]) => chip(k, r[2], own === k)).join("")}</div></div>`;
 }
 $("#fMore").addEventListener("click", () => { dropTextSel(true); openMenuUnder($("#fMore"), moreMenuHTML(), "dlmenu fmore"); });
@@ -8401,6 +8406,14 @@ $("#focusDlg").addEventListener("click", e => {
     e.stopPropagation();   /* the menu redraws and stays open */
     if (fr) setSlideRatio(focusSid, fr.dataset.fratio); else setWhole(focusSid, ff.dataset.ffit === "whole");
     const m = $("#focusDlg .dlmenu"); if (m) m.innerHTML = m.classList.contains("fmore") ? moreMenuHTML() : dlMenuHTML(); return;
+  }
+  const fn = t.closest("[data-fnum]");
+  if (fn) {
+    e.stopPropagation(); const s = S.slides[focusSid], v = fn.dataset.fnum; if (!s || (s.num || "auto") === v) return;
+    remember(focusSid); if (v === "auto") delete s.num; else s.num = v;
+    saveSlide(focusSid); renderBoard(new Set([focusSid])); drawFocus();
+    const m = $("#focusDlg .dlmenu.fmore"); if (m) m.innerHTML = moreMenuHTML();
+    toast(v === "auto" ? "This slide follows the post's setting for numbers" : v === "hide" ? "No slide number on this slide" : "This slide shows its number"); return;
   }
   const mo = t.closest("[data-fmore]");
   if (mo) { closeMenus(); if (mo.dataset.fmore === "find") openQuick(); else if (focusSid) openDup(focusSid); return; }
