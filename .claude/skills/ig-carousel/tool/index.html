@@ -676,6 +676,7 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .cropbar .cturn{padding:0;width:34px;height:32px;display:grid;place-items:center}.cropbar .cturn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .cstr{display:grid;gap:2px;font-size:11.5px;color:#b9b0ac;min-width:120px;flex:1 1 120px}.cstr b{color:#f3eeeb;font-variant-numeric:tabular-nums;font-weight:600}.cstr input{accent-color:var(--accent);width:100%}
 .fpad button[hidden]{display:none}
+.dlmenu small.mhead{display:block;padding:10px 12px 2px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;opacity:.7}
 .ffont{max-height:min(360px,60vh);overflow:auto;min-width:240px}
 .ffont button{font-size:16px;padding:7px 10px;justify-content:flex-start}
 .ffont button[aria-checked="true"]{background:var(--accent);color:#fff}
@@ -7848,8 +7849,8 @@ function waitImages(s) {
     e.img.addEventListener("load", res, { once: true }); e.img.addEventListener("error", res, { once: true });
   })));
 }
-async function slideBlob(sid, type = "image/png", quality) {   /* full size, 1800 × 2700; a JPG of an overlay slide gets a black background */
-  const s = S.slides[sid], x = numOf(sid), g = geoOf(sid);
+async function slideBlob(sid, type = "image/png", quality, over) {   /* full size, 1800 × 2700; a JPG of an overlay slide gets a black background */
+  const s0 = S.slides[sid], s = over ? { ...s0, overlay: true, overlayKeep: over === "keep" } : s0, x = numOf(sid), g = geoOf(sid);   /* over: a PNG for a video editor, the slide as it is */
   await waitImages(s);
   const cv = document.createElement("canvas"); cv.width = g.w; cv.height = g.h;
   renderSlide(cv, S.post, s, x.n, x.total, 1, true);
@@ -7888,6 +7889,7 @@ async function offer(filename, blob) {
   toast("Downloads aren't available here. Use PNG on each slide instead");
   return false;
 }
+async function exportOverlay(sid, mode) { toast("Rendering the overlay PNG…"); const blob = await slideBlob(sid, "image/png", undefined, mode); if (blob) offer(fileName(sid).replace(/\.png$/, mode === "keep" ? "-overlay.png" : "-text.png"), blob); }
 async function exportOne(sid) { toast("Rendering PNG…"); const blob = await slideBlob(sid); if (blob) offer(fileName(sid), blob); }
 /* ---------- the large view's download menu: PNG and JPG at full size, full screen, and a phone preview ---------- */
 /* a photo-only slide (like a finished cover with its text in the photo) that this size crops a lot: say so */
@@ -7908,7 +7910,8 @@ function dlMenuHTML(sid = focusSid, card = false) {
   const photo = !s.overlay && TEMPLATES[s.type].slots.some(k => s[k]), fit = (k, l) => `<button type="button" ${A.f}="${k}" aria-pressed="${(k === "whole") === !!s.whole}">${l}</button>`;
   return `<div class="mratio"><small>Ratio for this slide</small><div class="fchips" role="group" aria-label="Ratio for this slide">${chip("post", `Post (${ratioKey(S.post)})`, !own)}${Object.entries(RATIOS).map(([k, r]) => chip(k, r[2], own === k)).join("")}</div>`
     + (photo ? `<small>Photo</small><div class="fchips" role="group" aria-label="Photo">${fit("fill", "Fill the slide")}${fit("whole", "Whole photo")}</div>${cutNote(s, g)}` : "") + `</div>`
-    + `<button type="button" ${A.dl}="png">Download PNG<small>Full quality, ${g.w} × ${g.h}</small></button><button type="button" ${A.dl}="jpg">Download JPG<small>Best quality, smaller file</small></button>`;
+    + `<button type="button" ${A.dl}="png">Download PNG<small>Full quality, ${g.w} × ${g.h}</small></button><button type="button" ${A.dl}="jpg">Download JPG<small>Best quality, smaller file</small></button>`
+    + `<small class="mhead">For Edits, CapCut or any video editor</small><button type="button" ${A.dl}="ovkeep">Overlay PNG: ${s.type === "frame" || (s.pframe && s.pframe.kind) ? "frame and text" : "the slide"}, photo see-through<small>Put it on top of your video: it shows through the ${s.type === "frame" ? "windows" : "photo spot"}</small></button><button type="button" ${A.dl}="ovtext">Overlay PNG: text only<small>Just the words${(s.stickers || []).length ? " and stickers" : ""}, see-through everywhere else</small></button>`;
 }
 function pvMenuHTML(card = false) {
   const a = card ? 'data-act="dlk" data-k' : "data-fdl";
@@ -7935,6 +7938,7 @@ function cardMenuAction(b, sid) {
   if (act === "dlk") {
     const k = b.dataset.k; closeMenus();
     if (k === "png") exportOne(sid);
+    else if (k === "ovkeep" || k === "ovtext") exportOverlay(sid, k === "ovkeep" ? "keep" : "text");
     else if (k === "jpg") { toast("Rendering JPG…"); slideBlob(sid, "image/jpeg", 1).then(bl => { if (bl) offer(fileName(sid).replace(/\.png$/, ".jpg"), bl); }); }
     else { openFocus(sid); requestAnimationFrame(() => focusDownload(k)); }
     return true;
@@ -8008,6 +8012,7 @@ $("#focusDlg").addEventListener("click", e => {
 function focusDownload(kind) {
   const sid = focusSid; if (!sid) return;
   if (kind === "png") return exportOne(sid);
+  if (kind === "ovkeep" || kind === "ovtext") return exportOverlay(sid, kind === "ovkeep" ? "keep" : "text");
   if (kind === "jpg") { toast("Rendering JPG…"); return slideBlob(sid, "image/jpeg", 1).then(b => { if (b) offer(fileName(sid).replace(/\.png$/, ".jpg"), b); }); }
   if (kind === "phone" || kind === "grid") { S.pview = kind === "grid" ? "grid" : "feed"; return openOverlay("phone"); }
   openOverlay(kind);
