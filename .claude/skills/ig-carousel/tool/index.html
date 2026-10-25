@@ -672,6 +672,18 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .cropbar .cturn{padding:0;width:34px;height:32px;display:grid;place-items:center}.cropbar .cturn svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .cstr{display:grid;gap:2px;font-size:11.5px;color:#b9b0ac;min-width:120px;flex:1 1 120px}.cstr b{color:#f3eeeb;font-variant-numeric:tabular-nums;font-weight:600}.cstr input{accent-color:var(--accent);width:100%}
 .fpad button[hidden]{display:none}
+.ffont{max-height:min(360px,60vh);overflow:auto;min-width:240px}
+.ffont button{font-size:16px;padding:7px 10px;justify-content:flex-start}
+.ffont button[aria-checked="true"]{background:var(--accent);color:#fff}
+.ffont p.fcat{margin:8px 8px 2px;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+.infob svg{width:20px;height:20px}
+#helpDlg,#keysDlg{width:min(620px,calc(100vw - 24px))}
+.helpb h4{margin:14px 0 6px}.helpb h4:first-child{margin-top:0}.helpb ul{margin:0;padding-left:18px;display:grid;gap:6px;line-height:1.45}
+#keysList h4{margin:14px 0 4px}
+.krow{display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.krow kbd{font:inherit;font-size:12.5px;border:1px solid var(--line);border-radius:6px;padding:3px 8px;white-space:nowrap;background:var(--surface)}
+.krow kbd.own{border-color:var(--accent)}
+.krow.fixed{grid-template-columns:1fr auto auto}
 #fFind{display:none}   /* search lives in the ⋮ menu */
 @media (pointer:fine) and (min-width:761px){#fPrev,#fNext{display:none}}   /* computers: the round ‹ › by the slide and the arrow keys */
 .dlmenu .mitem{display:grid;gap:2px;width:100%;text-align:left}
@@ -934,6 +946,7 @@ details.gsec[open]{padding-bottom:14px}
   <button id="refPost" class="btn ghost sm refb" title="Make a new carousel patterned after posts you like">References</button>
   <button id="capPost" class="btn ghost sm capb" title="Hooky captions with hashtags for your carousels">Captions</button>
   <span class="grow"></span>
+  <div class="more"><button id="infoBtn" class="icon infob" aria-label="Help and shortcuts" title="Help and shortcuts" aria-expanded="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.6" r=".6" fill="currentColor"/></svg></button></div>
   <span id="pill" class="pill" data-s="local"><i></i><span>Loading</span></span>
   <button id="applyAll" class="btn accent" hidden disabled>Apply comments</button>
   <button id="dlAll" class="btn primary" disabled>Download all</button>
@@ -1086,6 +1099,7 @@ details.gsec[open]{padding-bottom:14px}
       <div class="tsel" id="fTsel" hidden></div>
       <div class="fbar" id="fBar" role="toolbar" aria-label="Selected text" hidden></div>
       <div class="farr" id="fArr" role="menu" aria-label="Layer order" hidden></div>
+      <div class="farr ffont" id="fFontPop" role="menu" aria-label="Font for this text" hidden></div>
       <div class="fpad" id="fPad" role="group" aria-label="Position" hidden><button type="button" class="px" data-padx title="Close" aria-label="Close position pad"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="dpad"><button type="button" class="nb u" data-nudge="u" title="Move up" aria-label="Move up"><svg viewBox="0 0 24 24"><path d="M12 5l7 11H5z"/></svg></button><button type="button" class="nb l" data-nudge="l" title="Move left" aria-label="Move left"><svg viewBox="0 0 24 24"><path d="M5 12l11-7v14z"/></svg></button><button type="button" class="nb r" data-nudge="r" title="Move right" aria-label="Move right"><svg viewBox="0 0 24 24"><path d="M19 12L8 19V5z"/></svg></button><button type="button" class="nb d" data-nudge="d" title="Move down" aria-label="Move down"><svg viewBox="0 0 24 24"><path d="M12 19L5 8h14z"/></svg></button></div><div class="al"><button type="button" data-align="h" title="Centre left to right" aria-label="Centre left to right"><svg viewBox="0 0 24 24"><path d="M12 4v16M2 12h7M6 9l3 3-3 3M22 12h-7M18 9l-3 3 3 3"/></svg></button><button type="button" data-align="v" title="Centre top to bottom" aria-label="Centre top to bottom"><svg viewBox="0 0 24 24"><path d="M4 12h16M12 2v7M9 6l3 3 3-3M12 22v-7M9 18l3-3 3 3"/></svg></button><button type="button" data-align="c" title="Centre on the slide" aria-label="Centre on the slide"><svg viewBox="0 0 24 24"><path d="M4 20l6-6M6 14h4v4M20 4l-6 6M18 10h-4V6"/></svg></button></div></div>
       <button type="button" class="fdel" id="fDel" aria-label="Delete this sticker" hidden><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
       <div class="psel" id="fPsel" hidden></div>
@@ -1142,6 +1156,33 @@ details.gsec[open]{padding-bottom:14px}
     <button class="btn primary sm" id="prevDl" disabled>Download PDF</button>
     <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="dlg-b" id="prevPages"></div>
+</dialog>
+
+<dialog id="helpDlg" aria-labelledby="helpTitle">
+  <div class="dlg-h"><h3 id="helpTitle">The artboard in two minutes</h3><span class="grow"></span>
+    <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="dlg-b helpb">
+    <h4>The board</h4>
+    <ul><li><b>Top bar</b>: switch posts or start a <b>New post</b>, the post's ratio, <b>References</b> (a new carousel patterned after posts you like), <b>Captions</b>, <b>Apply comments</b> and <b>Download all</b>.</li>
+      <li><b>Post settings</b>: series, subject, handle, the big text font, and your overall note for Claude.</li>
+      <li>Each <b>slide card</b>: the slide, your comment and status (Claude reads comments when you press Apply comments), and its settings: text, photos, stickers, layout, textures. Fold a card with its arrow, or all of them with <b>Fold all slides</b> (Ctrl+A).</li>
+      <li><b>Photo library</b> (below the slides): upload, search, folders. Select photos to move, <b>Download</b> or <b>Put in frames</b>.</li></ul>
+    <h4>The large view (tap a slide)</h4>
+    <ul><li>Tap any text, sticker or photo to select it: drag to move, pull a handle to resize, the round one to turn. The bar under it: <b>Edit</b>, <b>Font</b>, <b>Duplicate</b>, <b>Arrange</b>, <b>Position</b>; a photo has <b>Crop</b> (with Turn and Straighten), <b>Replace</b>, <b>Edit photo</b>.</li>
+      <li>Toolbar: <b>Sticker</b>, <b>Text</b>, <b>History</b> (undo, redo, earlier versions), <b>Texture</b> (Text layers and Background layers you can stack and reorder), <b>Frame</b>, <b>Edit photo</b>.</li>
+      <li>Header: <b>Preview</b> (phone, profile grid, full screen), <b>Download</b> (PNG or JPG, the slide's size), <b>⋮</b> (search, duplicate in any size, size of this slide).</li></ul>
+    <h4>Getting it out</h4>
+    <ul><li><b>Download all</b> saves every slide (and transparent overlays for video slides). The PDF guide for ManyChat is on the post.</li>
+      <li>Everything saves as you go. Keyboard shortcuts: <b>ⓘ → Keyboard shortcuts</b>.</li></ul>
+  </div>
+</dialog>
+
+<dialog id="keysDlg" aria-labelledby="keysTitle">
+  <div class="dlg-h"><h3 id="keysTitle">Keyboard shortcuts</h3><span class="grow"></span>
+    <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="dlg-b"><p class="hint" style="margin:0 0 6px">Press <b>Change</b>, then the new keys (with Ctrl, ⌘ or Alt). A key that's already used swaps over. Saved in this browser.</p>
+    <div id="keysList"></div>
+    <div class="actions"><button type="button" class="btn ghost sm" id="keysReset" hidden>Reset all to the defaults</button></div></div>
 </dialog>
 
 <dialog id="dupDlg" aria-labelledby="dupTitle">
@@ -1352,8 +1393,19 @@ function flushUnder(ctx) {
   u.boxes.push(...drawStickers(ctx, u.post, { stickers: u.list }, u.hilite));
   TF = tf; TXF = tx; FK = fk; NOTX = false;
 }
+/* FOV: the slide's own font for single texts (slide.fonts = {field path: font key, "nimbus" for Nimbus Sans}), chosen in the large
+   view; a font wider than the one the layout measured is sized down to the same width, so the layout holds */
+let FOV = null;
 function txt(ctx, str, x, capTop, o) {
   if (UNDER) flushUnder(ctx);
+  if (FOV && TF && FOV[TF] && !o.fov && str) {
+    const nf = FOV[TF] === "nimbus" ? null : FAMS[FOV[TF]] ? FOV[TF] : undefined;
+    if (nf !== undefined) {
+      const of = o.fam !== undefined ? (FAMS[o.fam] ? o.fam : null) : FK, w = o.weight ?? 700, tr = o.track ?? -0.05;
+      const w0 = inFam(of, () => richW(ctx, String(str), o.size, w, tr)), w1 = inFam(nf, () => richW(ctx, String(str), o.size, w, tr));
+      return txt(ctx, str, x, capTop, { ...o, fam: nf, fov: 1, size: w1 > w0 * 1.01 && w1 > 0 ? o.size * w0 / w1 : o.size });
+    }
+  }
   if (TXR && !NOTX && !TXR.own.has(ctx) && (!STK || TXK)) {   /* texture layers pick out the words: draw them on their own layer */
     const t = txLayerFor(TF || TXK || ""); t.setTransform(ctx.getTransform());
     t.shadowColor = ctx.shadowColor; t.shadowBlur = ctx.shadowBlur; t.shadowOffsetX = ctx.shadowOffsetX; t.shadowOffsetY = ctx.shadowOffsetY;
@@ -2977,7 +3029,7 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
   }
   PFR = s.type !== "frame" && s.pframe && FRAMES[s.pframe.kind] && s.img ? { slot: s.img, f: frameOf({ frame: s.pframe }), inkAuto: s.ink !== "white" && s.ink !== "black" } : null;
   OVERLAY = !!s0.overlay; KEEP = keep; PH = []; WHOLE = !!s.whole; RENDER_SCALE = forExport ? 1 : scale; TB = {}; TF = null; EXPORTING = !!forExport;
-  BG = bgOf(s); HL = HEXCOL.test(s.hl) ? s.hl : null; DISP = famOf(post, s);
+  BG = bgOf(s); HL = HEXCOL.test(s.hl) ? s.hl : null; DISP = famOf(post, s); FOV = s.fonts && typeof s.fonts === "object" ? s.fonts : null;
   INK = s.ink === "black" ? "#111111" : s.ink === "white" ? "#ffffff" : BG ? inkOn(BG.c2 ? mixHex(BG.c1, BG.c2) : BG.c1) : "#ffffff";   /* auto: dark text on a light background */
   if (OVERLAY && !KEEP) { if (!forExport) checker(ctx); } else if (BG) paintBg(ctx, 0, 0, W, H); else { ctx.fillStyle = "#100c0b"; ctx.fillRect(0, 0, W, H); }
   const d = design(ctx, post, s);
@@ -3051,7 +3103,7 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
   }
   d.photos = PH.map(p => ({ key: (p.slot && FRAME_SLOTS.find(k => s[k] === p.slot)) || null, x: p.x, y: p.y, w: p.w, h: p.h, contain: p.contain })).filter(p => p.key);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  OVERLAY = false; KEEP = false; PH = []; WHOLE = false; BG = null; HL = null; INK = "#ffffff"; DISP = null; EXPORTING = false; TXR = null; STK = false; NOTX = false;
+  OVERLAY = false; KEEP = false; PH = []; WHOLE = false; BG = null; HL = null; INK = "#ffffff"; DISP = null; EXPORTING = false; TXR = null; STK = false; NOTX = false; FOV = null;
   return d;
 }
 
@@ -6359,6 +6411,7 @@ let barKey = "";
 const selRef = () => { const st = selSticker(); return st ? (st.kind === "text" ? "layer:" + st.id : null) : S.ftsel; };
 function updateTextUI() {
   const tsel = $("#fTsel"), bar = $("#fBar"), st = focusSid && selSticker(), k = focusSid ? fcv.clientWidth / geoOf(focusSid).w : 0;
+  if (!$("#fFontPop").hidden && fontFor !== fontKey()) hideFontPop();   /* the Font list belongs to the text it was opened for */
   const layer = st && st.kind === "text" ? st : null;
   if (st) { stickerBar(st); tsel.hidden = true; return; }
   const box = layer ? (S.focusBoxes || []).find(b => b.id === layer.id) : st ? null : (S.ftboxes || {})[S.ftsel];
@@ -6371,7 +6424,7 @@ function updateTextUI() {
   const row = /^text\.rows\./.test(ref), movable = !row && !!moveGroup(S.slides[focusSid], S.ftsel), key = row ? "row" : movable ? "text" : "textfix";
   if (barKey !== key) {
     barKey = key;
-    bar.innerHTML = `<button type="button" data-fbar="edit">${PEN_I}Edit</button><button type="button" data-fbar="dup">${DUP_I}${row ? "Duplicate row" : "Duplicate"}</button>${row ? `<button type="button" class="del" data-fbar="delrow">${TRASH}Delete row</button>` : ""}${movable ? `<button type="button" data-fbar="pos" title="Nudge and centre">${POS_I}Position</button>` : ""}`;
+    bar.innerHTML = `<button type="button" data-fbar="edit">${PEN_I}Edit</button><button type="button" data-fbar="font" title="Font for this text">${FONT_I}Font</button><button type="button" data-fbar="dup">${DUP_I}${row ? "Duplicate row" : "Duplicate"}</button>${row ? `<button type="button" class="del" data-fbar="delrow">${TRASH}Delete row</button>` : ""}${movable ? `<button type="button" data-fbar="pos" title="Nudge and centre">${POS_I}Position</button>` : ""}`;
   }
   bar.hidden = false;
   const gb = layer ? null : xfBox(), at = gb ? { x0: gb.cx - gb.w / 2, x1: gb.cx + gb.w / 2, y0: gb.cy - gb.h / 2, y1: gb.cy + gb.h / 2 } : box, gp = gb ? pad + 10 : pad;   /* under the whole block when its frame shows */
@@ -6388,7 +6441,7 @@ function stickerBar(st) {
   if (!box || !k || liteOn() || (fg && fg.moved) || railDrag || rotDrag || xg || (S.fpanel === "text" && S.ftfield === "layer:" + st.id)) { bar.hidden = true; hideArr(); return; }
   const custom = st.kind === "custom", text = st.kind === "text", save = custom && !(st.pool && S.mine.has(st.pool)), key = `st:${st.kind}:${save}`;
   const btn = (a, ic, l, t) => `<button type="button" data-fbar="${a}"${t ? ` title="${t}"` : ""}>${ic}${l}</button>`;
-  if (barKey !== key) { barKey = key; bar.innerHTML = (text ? btn("edit", PEN_I, "Edit") : custom ? btn("mkedit", PEN_I, "Edit", "Edit or enhance this sticker") : st.kind === "bdrow" ? btn("rowedit", PEN_I, "Edit row", "Names, subtext, sizes, and more stickers") : "") + btn(text ? "dup" : "dupst", DUP_I, "Duplicate", "Duplicate (Ctrl+D)") + btn("arr", LAYER_I, "Arrange", "Layer order") + btn("pos", POS_I, "Position", "Nudge and centre") + (save ? btn("savemine", STAR_I, "Save", "Save to My stickers") : ""); }
+  if (barKey !== key) { barKey = key; bar.innerHTML = (text ? btn("edit", PEN_I, "Edit") + btn("font", FONT_I, "Font", "Font for this text") : custom ? btn("mkedit", PEN_I, "Edit", "Edit or enhance this sticker") : st.kind === "bdrow" ? btn("rowedit", PEN_I, "Edit row", "Names, subtext, sizes, and more stickers") : "") + btn(text ? "dup" : "dupst", DUP_I, "Duplicate", "Duplicate (Ctrl+D)") + btn("arr", LAYER_I, "Arrange", "Layer order") + btn("pos", POS_I, "Position", "Nudge and centre") + (save ? btn("savemine", STAR_I, "Save", "Save to My stickers") : ""); }
   if (S.arrOpen && S.arrOpen !== st.id) hideArr();
   bar.hidden = false;
   const bw = bar.offsetWidth, bh = bar.offsetHeight, sw = fcv.clientWidth, sh = fcv.clientHeight;
@@ -6400,10 +6453,46 @@ function stickerBar(st) {
   if (S.arrOpen === st.id) placeArr();
 }
 /* Arrange: a small menu under the bar */
-function hideArr() { S.arrOpen = null; $("#fArr").hidden = true; }
+function hideArr() { S.arrOpen = null; $("#fArr").hidden = true; hideFontPop(); }
+/* Font (on the bar of a selected text): every font, each shown in itself, by kind. A slide's text keeps it in slide.fonts[field
+   path] (the renderer sizes a wider font down to the same width); a text layer keeps it as its own font */
+const FONT_I = `<svg viewBox="0 0 24 24"><path d="M4 19L9.5 5h1L16 19M6.3 14h7.4"/><path d="M17 11.5c.8-.6 1.6-.9 2.4-.9 1.4 0 2.1.8 2.1 2.2V19M21.5 15.3c-2.8 0-4.6.7-4.6 2.1 0 1 .8 1.6 1.9 1.6 1.4 0 2.7-1.1 2.7-2.6"/></svg>`;
+function fontTarget() {
+  const s = S.slides[focusSid], st = selSticker(); if (!s) return null;
+  if (st && st.kind === "text") return { s, st, cur: FAMS[st.font] ? st.font : "" };
+  const ref = !st && S.ftsel ? selRef() : null, path = ref && fieldPath(s, ref);
+  return path ? { s, path, cur: (s.fonts || {})[path] || "" } : null;
+}
+let fontFor = null;
+const fontKey = () => { const t = fontTarget(); return t ? focusSid + "|" + (t.st ? "st:" + t.st.id : t.path) : null; };
+function openFontPop() {
+  const t = fontTarget(), el = $("#fFontPop"); if (!t) return;
+  fontFor = fontKey();
+  const o = (k, l, css) => `<button type="button" role="menuitemradio" data-ffont="${k}" aria-checked="${t.cur === k}"${css ? ` style="font-family:${esc(css)}"` : ""}>${esc(l)}</button>`;
+  const again = !el.hidden, top = el.scrollTop;   /* a redraw after a pick keeps its scroll */
+  el.innerHTML = `<p>Font for this text</p>${o("", t.st ? "Nimbus Sans (default)" : "As the slide has it")}${t.st ? "" : o("nimbus", "Nimbus Sans", '"Nimbus Sans",Arial,sans-serif')}`
+    + FAM_CATS.map(c => { const fs = Object.entries(FAMS).filter(([, f]) => f.cat === c); return fs.length ? `<p class="fcat">${c}</p>` + fs.map(([k, f]) => o(k, f.label, f.css)).join("") : ""; }).join("");
+  el.hidden = false; placeFontPop();
+  if (again) el.scrollTop = top; else { const c = el.querySelector('[aria-checked="true"]'); if (c) el.scrollTop = Math.max(0, c.offsetTop - 40); }
+}
+function hideFontPop() { const el = $("#fFontPop"); if (el) el.hidden = true; }
+function placeFontPop() {
+  const el = $("#fFontPop"), bar = $("#fBar"); if (!el || el.hidden || bar.hidden) return;
+  const sw = fcv.clientWidth, sh = fcv.clientHeight, w = el.offsetWidth, h = el.offsetHeight, bt = bar.offsetTop, bh = bar.offsetHeight;
+  el.style.left = clamp(bar.offsetLeft - w / 2, 4, Math.max(4, sw - w - 4)) + "px";
+  el.style.top = (bt + bh + 6 + h <= sh - 4 ? bt + bh + 6 : Math.max(4, bt - 6 - h)) + "px";
+}
+$("#fFontPop").addEventListener("click", e => {
+  const b = e.target.closest("[data-ffont]"), t = fontTarget(); if (!b || !t) return;
+  const k = b.dataset.ffont; remember(focusSid);
+  if (t.st) { if (k) t.st.font = k; else delete t.st.font; }
+  else { const f = { ...(t.s.fonts || {}) }; if (k) f[t.path] = k; else delete f[t.path]; if (Object.keys(f).length) t.s.fonts = f; else delete t.s.fonts; }
+  saveSlide(focusSid); scheduleDraw(focusSid); renderBoard(new Set([focusSid]));
+  openFontPop();
+});
 function renderArr() {
   const el = $("#fArr"), s = S.slides[focusSid], st = selSticker(); if (!S.arrOpen || !s || !st) { hideArr(); return; }
-  const inf = layerInfo(s, st.id), kb = !TOUCH(), it = (a, l, sc, off) => `<button type="button" role="menuitem" data-arr="${a}"${off ? " disabled" : ""}><span>${l}</span>${kb ? `<kbd>${sc}</kbd>` : ""}</button>`;
+  const inf = layerInfo(s, st.id), kb = !TOUCH(), it = (a, l, sc, off) => `<button type="button" role="menuitem" data-arr="${a}"${off ? " disabled" : ""}><span>${l}</span>${kb ? `<kbd>${keyLabel(keyOf(a))}</kbd>` : ""}</button>`;
   el.innerHTML = `<p>${inf.under ? "Behind the text" : "In front of the text"} · layer ${inf.i + 1 - (inf.under ? 0 : 1)} of ${inf.of}</p>`
     + it("front", "Bring to front", "Ctrl+Shift+]", inf.top) + it("fwd", inf.under && inf.i === layerList(s).indexOf("|") - 1 ? "Bring in front of the text" : "Bring forward", "Ctrl+]", inf.top)
     + it("back1", !inf.under && inf.i === layerList(s).indexOf("|") + 1 ? "Send behind the text" : "Send backward", "Ctrl+[", inf.bottom) + it("back", "Send to back", "Ctrl+Shift+[", inf.bottom);
@@ -6420,6 +6509,7 @@ $("#fBar").addEventListener("click", e => {
   const b = e.target.closest("[data-fbar]"); if (!b || !focusSid) return;
   if (b.dataset.fbar === "savemine") { saveToMine(focusSid, selSticker()); updateTextUI(); return; }
   if (b.dataset.fbar === "crop") { enterCrop(S.psel); return; }
+  if (b.dataset.fbar === "font") { if ($("#fFontPop").hidden) openFontPop(); else hideFontPop(); return; }
   if (b.dataset.fbar === "pos") { S.padOn = !S.padOn; hideArr(); updateFocusUI(); return; }
   if (b.dataset.fbar === "rowedit") { const st = selSticker(); if (!st) return; S.frow = st.id; S.fpanel = "row"; hideArr(); renderFPanel(); drawFocus(); return; }
   if (b.dataset.fbar === "preplace") { const k = S.psel; S.psel = null; openPicker(focusSid, k); return; }
@@ -7577,23 +7667,83 @@ $("#fKb").addEventListener("click", e => {
   else if (k === "all") { S.ftfield = null; renderFPanel(); drawFocus(); }
   else stepHistory(focusSid, k === "undo");
 });
+/* ---------- keyboard shortcuts: one list, each changeable in ⓘ → Keyboard shortcuts (kept in this browser). "Mod" is Ctrl, or
+   Cmd on a Mac (either works). Keys are read by position (e.code), so Shift doesn't change ] into }. ---------- */
+const KEYS = [
+  ["quick", "Search stickers and photos (quick add)", "Mod+Space", "Large view"], ["phone", "Phone preview (again: back)", "Mod+F", "Large view"],
+  ["full", "Full screen (again: back)", "Mod+Shift+F", "Large view"], ["dup", "Duplicate the selected sticker or text", "Mod+D", "Large view"],
+  ["undo", "Undo", "Mod+Z", "Large view"], ["redo", "Redo (Mod+Shift+Z works too)", "Mod+Y", "Large view"],
+  ["fwd", "Bring forward", "Mod+]", "Large view"], ["back1", "Send backward", "Mod+[", "Large view"],
+  ["front", "Bring to front", "Mod+Shift+]", "Large view"], ["back", "Send to back", "Mod+Shift+[", "Large view"],
+  ["foldall", "Fold or unfold all slides", "Mod+A", "Board"]
+];
+const KEYS_FIXED = [["Arrow keys", "Nudge the selection (Shift: 5×); with nothing selected, the previous or next slide", "Large view"], ["Delete", "Delete the selected sticker", "Large view"],
+  ["Esc", "Close a preview, then the text editor, then the large view", "Large view"], ["Arrow keys on a slide's ⋮⋮ grip", "Move the slide", "Board"]];
+const IS_MAC = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+let KEYMAP = {}; try { KEYMAP = JSON.parse(localStorage.getItem("carousel.keys") || "{}") || {}; } catch (e) { KEYMAP = {}; }
+const keyDef = id => (KEYS.find(k => k[0] === id) || [])[2];
+const keyOf = id => KEYMAP[id] || keyDef(id);
+const CODE_K = { Space: "Space", BracketLeft: "[", BracketRight: "]", Comma: ",", Period: ".", Slash: "/", Backslash: "\\", Minus: "-", Equal: "=", Semicolon: ";", Quote: "'", Backquote: "`", ArrowLeft: "Left", ArrowRight: "Right", ArrowUp: "Up", ArrowDown: "Down", Enter: "Enter", Tab: "Tab" };
+function comboOf(e) {   /* the event as "Mod+Shift+F" */
+  const c = e.code || "", k = CODE_K[c] || (/^Key[A-Z]$/.test(c) ? c.slice(3) : /^Digit\d$/.test(c) ? c.slice(5) : /^F\d{1,2}$/.test(c) ? c : (e.key || "").length === 1 ? e.key.toUpperCase() : e.key);
+  return [(e.metaKey || e.ctrlKey) && "Mod", e.altKey && "Alt", e.shiftKey && "Shift", k].filter(Boolean).join("+");
+}
+const keyIs = (e, id) => comboOf(e) === keyOf(id);
+const keyLabel = c => String(c || "").replace(/Mod/g, IS_MAC ? "⌘" : "Ctrl");
+function saveKeys() { try { localStorage.setItem("carousel.keys", JSON.stringify(KEYMAP)); } catch (e) {} }
+/* the board: fold or unfold every slide (not while typing, or with a dialog open: there it's the usual select-all) */
 document.addEventListener("keydown", e => {
-  if (!$("#focusDlg").open || $("#mkDlg").open || $("#stickDlg").open || $("#qDlg").open) return;
-  const mod0 = e.metaKey || e.ctrlKey;
-  if (mod0 && e.code === "Space") { e.preventDefault(); openQuick(); return; }   /* works while typing too */
-  if (mod0 && !e.altKey && e.key.toLowerCase() === "f") {   /* Ctrl/Cmd+F: phone preview; with Shift: full screen. Again: back */
-    e.preventDefault(); const want = e.shiftKey ? "full" : "phone";
+  if (keyRec || !keyIs(e, "foldall") || document.querySelector("dialog[open]") || /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+  e.preventDefault(); const o = order(), all = o.every(id => S.folded.has(id)); o.forEach(id => setFold(id, !all)); saveFolds();
+  toast(all ? "All slides open" : "All slides folded");
+});
+/* ⓘ in the header: Help (a quick read of the board) and Keyboard shortcuts (each can be changed: Change, then press the new keys) */
+let keyRec = null;
+function renderKeys() {
+  const groups = ["Large view", "Board"], row = ([id, l, , where]) => `<div class="krow"><span>${esc(keyLabel(l))}</span><kbd${KEYMAP[id] ? ' class="own"' : ""}>${keyRec === id ? "Press the new keys…" : esc(keyLabel(keyOf(id)))}</kbd>
+      <button type="button" class="btn ghost sm" data-krec="${id}">${keyRec === id ? "Cancel" : "Change"}</button>${KEYMAP[id] ? `<button type="button" class="btn ghost sm" data-kreset="${id}" title="Back to ${esc(keyLabel(keyDef(id)))}">Reset</button>` : ""}</div>`;
+  $("#keysList").innerHTML = groups.map(g => `<h4>${g}</h4>` + KEYS.filter(k => k[3] === g).map(row).join("") + KEYS_FIXED.filter(k => k[2] === g).map(([c, l]) => `<div class="krow fixed"><span>${esc(l)}</span><kbd>${esc(c)}</kbd><span class="hint">fixed</span></div>`).join("")).join("");
+  $("#keysReset").hidden = !Object.keys(KEYMAP).length;
+}
+function openKeys() { keyRec = null; renderKeys(); $("#keysDlg").showModal(); }
+$("#keysDlg").addEventListener("click", e => {
+  const r = e.target.closest("[data-krec]"), z = e.target.closest("[data-kreset]");
+  if (r) { keyRec = keyRec === r.dataset.krec ? null : r.dataset.krec; renderKeys(); }
+  else if (z) { delete KEYMAP[z.dataset.kreset]; saveKeys(); renderKeys(); }
+  else if (e.target.closest("#keysReset")) { KEYMAP = {}; saveKeys(); keyRec = null; renderKeys(); toast("Shortcuts back to the defaults"); }
+});
+$("#keysDlg").addEventListener("close", () => { keyRec = null; });
+document.addEventListener("keydown", e => {   /* recording a new shortcut: the next keys pressed (with Ctrl/Cmd or Alt) */
+  if (!keyRec) return;
+  if (["Control", "Meta", "Shift", "Alt"].includes(e.key)) return;
+  e.preventDefault(); e.stopPropagation();
+  if (e.key === "Escape") { keyRec = null; renderKeys(); return; }
+  const c = comboOf(e);
+  if (!/^(Mod|Alt)\+/.test(c)) { toast("Use Ctrl (⌘ on a Mac) or Alt with a key, so typing isn't caught"); return; }
+  const id = keyRec, other = KEYS.find(k => k[0] !== id && keyOf(k[0]) === c);
+  if (other) { const mine = keyOf(id); if (mine === keyDef(other[0])) delete KEYMAP[other[0]]; else KEYMAP[other[0]] = mine; toast(`${keyLabel(c)} was “${other[1]}”: that one is ${keyLabel(mine)} now`); }
+  if (c === keyDef(id)) delete KEYMAP[id]; else KEYMAP[id] = c;
+  saveKeys(); keyRec = null; renderKeys(); renderArr();
+}, true);
+$("#infoBtn").addEventListener("click", () => openMenuUnder($("#infoBtn"), `<button type="button" class="mitem" data-info="help">Help<small>A quick read of the artboard</small></button><button type="button" class="mitem" data-info="keys">Keyboard shortcuts<small>See them all, and change them</small></button>`, "dlmenu infomenu"));
+document.addEventListener("click", e => { const b = e.target.closest("[data-info]"); if (!b) return; closeMenus(); if (b.dataset.info === "help") $("#helpDlg").showModal(); else openKeys(); });
+document.addEventListener("keydown", e => {
+  if (!$("#focusDlg").open || $("#mkDlg").open || $("#stickDlg").open || $("#qDlg").open || keyRec) return;
+  if (keyIs(e, "quick")) { e.preventDefault(); openQuick(); return; }   /* works while typing too */
+  if (keyIs(e, "phone") || keyIs(e, "full")) {   /* phone preview or full screen; the same keys again: back */
+    e.preventDefault(); const want = keyIs(e, "full") ? "full" : "phone";
     if (ovKind === want) closeOverlays(); else { closeOverlays(); focusDownload(want); }
     return;
   }
-  if (mod0 && !e.shiftKey && !e.altKey && e.key.toLowerCase() === "d") e.preventDefault();   /* not the browser's bookmark */
+  if (keyIs(e, "dup")) e.preventDefault();   /* not the browser's bookmark */
   if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
-  if (mod0 && !e.altKey && e.key.toLowerCase() === "d") { const st = selSticker(); if (st) dupSticker(focusSid, st.id); else if (S.ftsel) duplicateText(selRef()); else toast("Select a sticker or some text to duplicate it"); return; }
-  if (mod0 && (e.code === "BracketRight" || e.code === "BracketLeft")) { e.preventDefault(); const st = selSticker(); if (st) arrange(focusSid, st.id, e.code === "BracketRight" ? (e.shiftKey ? "front" : "fwd") : (e.shiftKey ? "back" : "back1")); return; }
+  if (keyIs(e, "dup")) { const st = selSticker(); if (st) dupSticker(focusSid, st.id); else if (S.ftsel) duplicateText(selRef()); else toast("Select a sticker or some text to duplicate it"); return; }
+  const ar = ["front", "fwd", "back1", "back"].find(id => keyIs(e, id));
+  if (ar) { e.preventDefault(); const st = selSticker(); if (st) arrange(focusSid, st.id, ar); return; }
   if (ovKind) { if (e.key === "ArrowLeft") navOverlay(-1); else if (e.key === "ArrowRight") navOverlay(1); return; }
-  const mod = e.metaKey || e.ctrlKey, k = e.key.toLowerCase();
-  if (mod && k === "z") { e.preventDefault(); stepHistory(focusSid, !e.shiftKey); return; }
-  if (mod && k === "y") { e.preventDefault(); stepHistory(focusSid, false); return; }
+  const mod = e.metaKey || e.ctrlKey;
+  if (keyIs(e, "undo")) { e.preventDefault(); stepHistory(focusSid, true); return; }
+  if (keyIs(e, "redo") || comboOf(e) === "Mod+Shift+Z") { e.preventDefault(); stepHistory(focusSid, false); return; }
   const nd = !mod && !e.altKey && !S.crop && padTarget() && { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[e.key];
   if (nd) {   /* something selected: the arrow keys nudge it (Shift: 5×), as in Canva */
     e.preventDefault(); remember(focusSid, "nudge"); nudgeSel(nd[0] * (e.shiftKey ? 50 : 10), nd[1] * (e.shiftKey ? 50 : 10));
