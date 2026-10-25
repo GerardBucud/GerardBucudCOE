@@ -778,6 +778,18 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .inline-form .hint{margin:0;color:var(--muted);font-size:13px}
 .lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
 .tile{position:relative;display:grid;gap:4px;min-width:0;border:0;background:none;padding:0;text-align:left;cursor:pointer;font-size:12px;color:var(--muted)}
+.tile .vdur,#pickGrid .vdur{position:absolute;left:6px;top:6px;padding:2px 7px;border-radius:999px;background:rgba(0,0,0,.66);color:#fff;font:600 11px/1.5 system-ui,sans-serif;pointer-events:none;z-index:2}
+#pickGrid button{position:relative}
+.tile video.tvid{position:absolute;left:0;top:0;width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;pointer-events:none;z-index:1}
+.frame[data-vid]{position:relative}
+.frame[data-vid]::after{content:attr(data-vid);position:absolute;left:8px;bottom:8px;padding:3px 9px;border-radius:999px;background:rgba(0,0,0,.66);color:#fff;font:600 12px/1.4 system-ui,sans-serif;pointer-events:none}
+.fvid{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;background:rgba(18,18,18,.82);color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.35);max-width:calc(100% - 24px)}
+.fvid[hidden]{display:none}
+@media (hover:hover){.fvid{opacity:.18;transition:opacity .2s}.fwrap:hover .fvid,.fvid:focus-within,.fvid.paused{opacity:1}}
+.fvid .icon{width:32px;height:32px;color:#fff;background:none;border:0;display:grid;place-items:center;padding:0}
+.fvid .icon svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.fvid .vt{font:600 12px/1 system-ui,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fvid input[type=range]{width:min(220px,30vw);accent-color:#fff}
 .tile img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;background:var(--sunken);display:block;outline:3px solid transparent;outline-offset:-3px}
 .tile[aria-pressed="true"] img{outline-color:var(--accent)}
 .tile .tick{position:absolute;top:6px;left:6px;width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.35);display:grid;place-items:center;color:#fff;font-size:13px;font-weight:700}
@@ -965,7 +977,7 @@ details.gsec[open]{padding-bottom:14px}
 
 <dialog id="pickDlg" aria-labelledby="pickTitle">
   <div class="dlg-h"><h3 id="pickTitle">Replace image</h3><span class="grow"></span>
-    <label class="btn primary sm" id="pickUploadLbl"><span id="pickUploadTxt">Upload new photo</span><input type="file" id="pickUpload" accept="image/*" class="sr"></label>
+    <label class="btn primary sm" id="pickUploadLbl"><span id="pickUploadTxt">Upload new photo</span><input type="file" id="pickUpload" accept="image/*,video/*" class="sr"></label>
     <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="dlg-b"><p id="pickHint" style="margin:0 0 12px;color:var(--muted)">Pick a photo from your library. The text design re-fits to the photo you choose.</p>
     <div class="searchrow"><label class="sr" for="pickSearch">Search photos</label><input type="search" class="ctl" id="pickSearch" placeholder="Search by name, folder or what's in it" autocomplete="off"></div>
@@ -1117,6 +1129,7 @@ details.gsec[open]{padding-bottom:14px}
       <div class="ftrash" id="fTrash" aria-hidden="true" hidden><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></div></div>
       <button type="button" class="fside l" id="fSideL" data-fside="-1" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
       <button type="button" class="fside r" id="fSideR" data-fside="1" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+      <div class="fvid" id="fVid" role="group" aria-label="Video" hidden><button type="button" class="icon" data-vid="play" aria-label="Pause"></button><span class="vt" id="fVidT">0:00 / 0:00</span><input type="range" id="fVidR" min="0" max="1000" value="0" aria-label="Video position"><button type="button" class="icon" data-vid="snd" aria-label="Sound on"></button><button type="button" class="icon" data-vid="still" title="Use this frame as the still (the card, PNG and PDF)" aria-label="Use this frame as the still"></button></div>
     </div>
     <div class="fpanel" id="fPanel" hidden></div>
     <div class="ftools">
@@ -1173,11 +1186,12 @@ details.gsec[open]{padding-bottom:14px}
     <ul><li><b>Top bar</b>: switch posts or start a <b>New post</b>, the post's ratio, <b>References</b> (a new carousel patterned after posts you like), <b>Captions</b>, <b>Apply comments</b> and <b>Download all</b>.</li>
       <li><b>Post settings</b>: series, subject, handle, the big text font, and your overall note for Claude.</li>
       <li>Each <b>slide card</b>: the slide, your comment and status (Claude reads comments when you press Apply comments), and its settings: text, photos, stickers, layout, textures. Fold a card with its arrow, or all of them with <b>Fold all slides</b> (Ctrl+A).</li>
-      <li><b>Photo library</b> (below the slides): upload, search, folders. Select photos to move, <b>Download</b> or <b>Put in frames</b>.</li></ul>
+      <li><b>Photo library</b> (below the slides): upload photos and videos, search, folders. Select photos to move, <b>Download</b> or <b>Put in frames</b>. A video goes in any photo spot (Replace); videos over 20 MB are made smaller as they upload.</li></ul>
     <h4>The large view (tap a slide)</h4>
     <ul><li>Tap any text, sticker or photo to select it: drag to move, pull a handle to resize, the round one to turn. The bar under it: <b>Edit</b>, <b>Font</b>, <b>Duplicate</b>, <b>Arrange</b>, <b>Position</b>; a photo has <b>Crop</b> (with Turn and Straighten), <b>Replace</b>, <b>Edit photo</b>.</li>
       <li>Toolbar: <b>Sticker</b>, <b>Text</b>, <b>History</b> (undo, redo, earlier versions), <b>Texture</b> (Text layers and Background layers you can stack and reorder), <b>Frame</b>, <b>Edit photo</b>.</li>
-      <li>Header: <b>Preview</b> (phone, profile grid, full screen), <b>Download</b> (PNG or JPG, the slide's size), <b>⋮</b> (search, duplicate in any size, size of this slide).</li></ul>
+      <li>Header: <b>Preview</b> (phone, profile grid, full screen), <b>Download</b> (PNG or JPG, the slide's size; <b>Download video (MP4)</b> on a video slide), <b>⋮</b> (search, duplicate in any size, size of this slide).</li>
+      <li>A video slide plays under the slide, with play, sound and a bar to scrub; the camera button makes the frame showing the slide's still.</li></ul>
     <h4>Getting it out</h4>
     <ul><li><b>Download all</b> saves every slide (and transparent overlays for video slides). The PDF guide for ManyChat is on the post.</li>
       <li>Everything saves as you go. Keyboard shortcuts: <b>ⓘ → Keyboard shortcuts</b>.</li></ul>
@@ -1508,10 +1522,28 @@ function rule(ctx, y, x0 = CX0, x1 = CX1, a = 0.42) {
 /* ---------- images ---------- */
 const imgCache = new Map();
 let onImageReady = () => {};
+const assetUrl = id => window.__ASSET_URL__ ? window.__ASSET_URL__(id) : "/_blob/" + id;
+/* videos: a photo spot can hold a video, slot = {asset | file (the video), vid: 1, poster | pfile (a still frame, JPG), dur, …}; a library
+   video is {asset | file, kind: "video", poster | pfile, dur, …}. srcOf gives the still, so everything that reads a photo (thumbnails, layout,
+   tags, cut-outs, PNGs) reads the still; vidSrc gives the video. While the page plays a video (VIDS: its src -> a <video>), photo spots
+   showing it draw the frame showing now instead (getImg(slot, true) still gives the still: the layout reads that, so text doesn't jump). */
+const VIDS = new Map();
+const isVid = x => !!(x && typeof x === "object" && (x.vid || x.kind === "video"));
 function srcOf(slot) {
   if (!slot) return null;
-  if (slot.asset) return window.__ASSET_URL__ ? window.__ASSET_URL__(slot.asset) : "/_blob/" + slot.asset;
+  if (isVid(slot)) return slot.poster ? assetUrl(slot.poster) : slot.pfile || null;
+  if (slot.asset) return assetUrl(slot.asset);
   return slot.file || null;
+}
+const vidSrc = x => isVid(x) ? (x.asset ? assetUrl(x.asset) : x.file || null) : null;
+function vidFrame(slot) {   /* the frame a playing video shows now, on a canvas (up to 1920 px) the caches skip */
+  const v = VIDS.get(vidSrc(slot)); if (!v || v.readyState < 2 || !v.videoWidth) return null;
+  let c = v._fc;
+  if (!c) { c = v._fc = document.createElement("canvas"); c.live = true; c.src = "live:" + vidSrc(slot); c.t = -1; }
+  const k = Math.min(1, 1920 / Math.max(v.videoWidth, v.videoHeight)), w = Math.max(1, Math.round(v.videoWidth * k)), h = Math.max(1, Math.round(v.videoHeight * k));
+  if (c.width !== w || c.height !== h) { c.width = w; c.height = h; c.t = -1; }
+  if (c.t !== v.currentTime || v._dirty) { c.getContext("2d").drawImage(v, 0, 0, w, h); c.t = v.currentTime; v._dirty = false; }
+  return c;
 }
 /* a photo turned: slot.turn in degrees (clockwise). Quarter turns are exact; anything in between (straightening) is cut to the
    biggest upright rectangle inside the turned picture, so no corners ever show. The result stands in for the photo everywhere. */
@@ -1524,17 +1556,19 @@ function inscribed(w, h, a) {   /* the largest axis-aligned rectangle inside a w
 }
 const turnCache = new Map();
 function turnedImg(img, tn, src) {
-  const key = src + "#turn" + tn; let c = turnCache.get(key); if (c) return c;
+  const key = src && src + "#turn" + tn; let c = key && turnCache.get(key); if (c) return c;
   const iw = img.naturalWidth || img.width, ih = img.naturalHeight || img.height, q = Math.round(tn / 90), f = (tn - q * 90) * Math.PI / 180;
   const w1 = q % 2 ? ih : iw, h1 = q % 2 ? iw : ih, [wr, hr] = inscribed(w1, h1, f), k = Math.min(1, 4096 / Math.max(wr, hr));
   c = document.createElement("canvas"); c.width = Math.max(1, Math.round(wr * k)); c.height = Math.max(1, Math.round(hr * k));
   const x = c.getContext("2d"); x.imageSmoothingQuality = "high";
   x.translate(c.width / 2, c.height / 2); x.rotate(q * Math.PI / 2 + f); x.scale(k, k); x.drawImage(img, -iw / 2, -ih / 2);
-  c.src = key;   /* the caches key on .src */
+  c.src = key || img.src; c.live = img.live;   /* the caches key on .src; a video's frame isn't kept */
+  if (!key) return c;
   if (turnCache.size >= 6) turnCache.delete(turnCache.keys().next().value);
   turnCache.set(key, c); return c;
 }
-function getImg(slot) {
+function getImg(slot, still) {
+  if (!still && VIDS.size && isVid(slot)) { const f = vidFrame(slot); if (f) { const tn = normTurn(slot.turn); return tn ? turnedImg(f, tn, null) : f; } }
   const src = srcOf(slot);
   if (!src) return null;
   let e = imgCache.get(src);
@@ -1750,6 +1784,7 @@ function editedCopy(img, a, edge) {
 /* the element to draw for a photo: the original, or an edited copy just big enough for this render */
 function photoFor(slot, img, need) {
   if (!slot || !hasAdj(slot.adj)) return img;
+  if (img.live) return editedCopy(img, slot.adj, Math.min(1280, Math.max(160, need)));   /* a video frame: edited fresh every frame */
   const full = Math.max(img.naturalWidth || img.width, img.naturalHeight || img.height);
   const edge = Math.min(full, Math.ceil((need * 1.08) / 160) * 160);
   const key = img.src + "|" + adjKey(slot.adj) + "|" + edge;
@@ -1767,7 +1802,7 @@ const anaCache = new Map();
 const DARK = { mean: 18, p90: 26, std: 4, edge: 2 };
 function analyze(slot, rw, rh) {
   if (BG) return null;   /* a plain or gradient background: no photo to read */
-  const img0 = getImg(slot);
+  const img0 = getImg(slot, true);
   if (!img0) return null;
   const img = photoFor(slot, img0, 640);
   const key = img0.src + "|" + adjKey(slot.adj) + "|" + rw + "x" + rh + "|" + (slot.fx ?? 0.5) + "|" + (slot.fy ?? 0.5) + "|" + (slot.zoom ?? 1);
@@ -2085,7 +2120,7 @@ function designSpecs(ctx, post, s) {
   if (LAND) {   /* landscape: the table goes in a column on one side: on a solid panel, or over the photo where white type reads */
     const pick = L.side === "left" || L.side === "right" ? L.side : null, colSt = sd => { setCol(sd); return AD ? AD.stats(CX0 - 30, 110, CX1 + 30, H - 200) : DARK; };
     const stL = colSt("left"), stR = colSt("right"), calm = zoneScore(stR) < zoneScore(stL) ? "right" : "left";
-    const pi = A && getImg(s.img), narrow = !!pi && (pi.naturalWidth || pi.width) / (pi.naturalHeight || pi.height) < 0.9 * W / H;   /* a photo narrower than the slide gets cropped hard: give it its own side */
+    const pi = A && getImg(s.img, true), narrow = !!pi && (pi.naturalWidth || pi.width) / (pi.naturalHeight || pi.height) < 0.9 * W / H;   /* a photo narrower than the slide gets cropped hard: give it its own side */
     const style0 = BG ? "overlay" : L.style || "auto";   /* a plain or gradient background needs no panel */
     landMode = style0 === "panel" ? "panel" : style0 === "overlay" || !A ? "overlay" : (!narrow && okZone(calm === "right" ? stR : stL)) ? "overlay" : "panel";
     side = pick || (landMode === "overlay" ? calm : "left");
@@ -3242,6 +3277,8 @@ function drawNow() {
     if (n) n.innerHTML = d.note ? "Auto layout: " + d.note : "";
     const warn = card.querySelector(".warn");
     if (warn) warn.textContent = s.overlay ? "" : upscaleWarning(s, d);
+    const fr = card.querySelector(".frame"), vs = hasVideo(s) && FRAME_SLOTS.map(k => s[k]).find(isVid);   /* a video slide: ▶ and its length on the card */
+    if (fr) { if (vs) fr.dataset.vid = "▶ " + fmtDur(vs.dur); else delete fr.dataset.vid; }
   }
   pendingDraw.clear();
   for (const sid of cardLater) if (!gesturing(sid)) { cardLater.delete(sid); pendingDraw.add(sid); if (!drawQueued) { drawQueued = true; requestAnimationFrame(drawNow); } }
@@ -3329,7 +3366,7 @@ async function drawAllGear(sids) {
   for (const [sid, i] of todo) if (await drawGear(sid, i, true)) ok++;
   toast(ok ? `${ok} gear picture${ok === 1 ? "" : "s"} drawn. Swap any for a photo or a cut-out` : "Claude couldn't draw the gear this time. Try Draw the missing pictures again");
 }
-function setGearPic(it, def) { delete it.img; delete it.vec; delete it.color; delete it.t; if (def.vec) it.vec = clone(def.vec); else if (def.src) it.img = clone(def.src); else if (def.asset || def.file) it.img = def.asset ? { asset: def.asset } : { file: def.file }; }
+function setGearPic(it, def) { delete it.img; delete it.vec; delete it.color; delete it.t; if (def.vec) it.vec = clone(def.vec); else if (def.src) it.img = clone(def.src); else if (def.asset || def.file) it.img = stillOf(def); }
 /* ---------- breakdown slides: the items under the photo ----------
    Each item: a section (items with the same one sit together under its heading), a bold name, a regular subtext, and a picture: a
    photo cut out automatically (and saved to My stickers), one of My stickers, Claude's drawing, or a color swatch; or text only (a
@@ -3498,7 +3535,7 @@ async function bdPhotoTo(sid, i, p) {   /* the Photo button on an item: a librar
       if (bdAutoName(plainText(cur.name)) || plainText(cur.name) === "ITEM") { const nm = await bdName(r.canvas); if (nm) { cur.name = nm.name; if (!cur.note) cur.note = nm.note; } }
       addMine({ name: plainText(cur.name) || bdNice(p.name), ar: out.ar, src: out.src });
       toast("Cut out, and saved to My stickers");
-    } else { cur.img = p.asset ? { asset: p.asset } : { file: p.file }; delete cur.cut; toast("The background is too busy to cut out on its own, so the photo is used as it is. To cut it by hand: My stickers, then From a photo"); }
+    } else { cur.img = stillOf(p); delete cur.cut; toast("The background is too busy to cut out on its own, so the photo is used as it is. To cut it by hand: My stickers, then From a photo"); }
     saveSlide(sid); renderBoard(new Set([sid]));
   } catch (e) { toast("That photo couldn't be cut out. Try another"); }
   finally { S.busy.delete(key); }
@@ -3578,7 +3615,7 @@ $("#frDlg").addEventListener("click", e => {
 });
 $("#frDlg").addEventListener("change", e => { if (e.target.id === "frRatio") { FRD.ratio = e.target.value; renderFrames(); } });
 function framesGo() {
-  const F = FRAMES[FRD.kind], per = F.n, ids = FRD.ids.filter(id => S.photos.has(id)), slot = id => { const p = S.photos.get(id); return { ...(p.asset ? { asset: p.asset } : { file: p.file }), fx: 0.5, fy: 0.5, zoom: 1 }; };
+  const F = FRAMES[FRD.kind], per = F.n, ids = FRD.ids.filter(id => S.photos.has(id)), slot = id => slotOf(S.photos.get(id));
   if (FRD.sid) {
     const s = S.slides[FRD.sid]; if (!s) return; remember(FRD.sid);
     s.frame = { ...(s.frame || {}), kind: FRD.kind, color: FRD.color }; if (FRD.ratio) s.ratio = FRD.ratio;
@@ -3667,7 +3704,7 @@ async function bdAddGo() {
       if (e.k === "mine") { const d = S.mine.get(e.id); if (d) made.push({ group, name: bdNice(d.name) || "ITEM", note: "", ar: d.ar || 1, ...(d.vec ? { vec: clone(d.vec) } : { img: clone(d.src), cut: true }) }); continue; }
       const p = e.k === "photo" ? S.photos.get(e.id) : null;
       const r = await bdItemFrom(p ? srcOf(p) : e.url, e.name, cut, group, e.k === "file" ? e.file : null);
-      if (p && !r.it.img) r.it.img = p.asset ? { asset: p.asset } : { file: p.file };
+      if (p && !r.it.img) r.it.img = stillOf(p);
       made.push({ ...r.it, ar: r.ar }); if (r.cutFailed) noCut.push(r.it.name);
     } catch (err) { failed++; }
   }
@@ -4094,7 +4131,7 @@ function renderMain() {
       <div class="actions"><button class="btn sm" id="copyAll">Copy all comments</button></div></div></section>
     <section class="section" id="libSec">
       <div class="sec-h"><h2>Photo library</h2><span class="grow"></span><button class="btn sm" id="tagBtn" hidden>Tag photos</button><button class="btn sm" id="newFolderBtn">New folder</button>
-        <label class="btn sm primary" id="libUploadLbl">Upload photos<input type="file" id="libUpload" accept="image/*" multiple class="sr"></label></div>
+        <label class="btn sm primary" id="libUploadLbl">Upload photos or videos<input type="file" id="libUpload" accept="image/*,video/*" multiple class="sr"></label></div>
       <p class="hint">Shared by all your posts. Tap photos to select several, then move them into a folder or delete them. New uploads get a short description and tags from Claude, so search finds them by what's in them.</p>
       <div class="searchrow"><label class="sr" for="libSearch">Search photos</label><input type="search" class="ctl" id="libSearch" placeholder="Search photos, e.g. wing, flat lay, red" autocomplete="off"><span class="hint" id="tagNote" role="status"></span></div>
       <form class="inline-form" id="folderForm" hidden><label class="sr" for="folderName">Folder name</label><input class="ctl" id="folderName" placeholder="Folder name" maxlength="60"><span class="hint" id="folderWhere"></span>
@@ -4656,7 +4693,7 @@ function renderQuick() {
   const q = $("#qIn").value.trim(), words = q.toLowerCase().split(/\s+/).filter(Boolean), hit = str => words.every(w => str.toLowerCase().includes(w));
   const mine = [...S.mine.entries()].sort((a, b) => (b[1].addedAt || 0) - (a[1].addedAt || 0)).filter(([, d]) => hit(`${d.name} my sticker`)).map(([id, d]) => ({ t: "mine", id, name: d.name, d }));
   const built = Object.entries(STICKERS).filter(([k, P]) => P.type !== "custom" && hit(`${P.label} ${k} sticker`)).map(([k, P]) => ({ t: "stick", id: k, name: P.label }));
-  const ph = q ? photosIn("*").filter(([, p]) => matches(p, q)) : [...S.photos.entries()].sort((a, b) => (b[1].addedAt || 0) - (a[1].addedAt || 0));
+  const ph = (q ? photosIn("*").filter(([, p]) => matches(p, q)) : [...S.photos.entries()].sort((a, b) => (b[1].addedAt || 0) - (a[1].addedAt || 0))).filter(([, p]) => !isVid(p));   /* videos go in photo spots, not on top */
   const photos = ph.slice(0, 40).map(([id, p]) => ({ t: "photo", id, name: p.name, p }));
   qItems = [...mine, ...built, ...photos]; qSel = clamp(qSel, 0, Math.max(0, qItems.length - 1));
   let n = 0;
@@ -6734,8 +6771,8 @@ function deleteRowSel() {
 }
 
 /* ---------- photo library: one shared library, folders and subfolders ---------- */
-const realFolder = f => (f === "*" || f === "" || f === "~sim" || f == null) ? "" : f;
-const folderLabel = f => f === "*" ? "All photos" : f === "" ? "Unsorted" : f === "~sim" ? "Look-alikes" : f.split("/").pop();
+const realFolder = f => (f === "*" || f === "" || f === "~sim" || f === "~vid" || f == null) ? "" : f;
+const folderLabel = f => f === "*" ? "All photos" : f === "" ? "Unsorted" : f === "~sim" ? "Look-alikes" : f === "~vid" ? "Videos" : f.split("/").pop();
 const depth = f => (f && f !== "*") ? f.split("/").length - 1 : 0;
 const parentOf = f => f.includes("/") ? f.slice(0, f.lastIndexOf("/")) : "";
 function folderTree() {
@@ -6755,9 +6792,9 @@ function usedMap() {
   return used;
 }
 /* search: every word has to appear in the photo's name, folder, description or tags */
-const hay = p => [p.name, p.folder || "unsorted", p.desc, (p.tags || []).join(" ")].join(" ").toLowerCase();
+const hay = p => [p.name, p.folder || "unsorted", p.desc, (p.tags || []).join(" "), isVid(p) ? "video clip" : ""].join(" ").toLowerCase();
 const matches = (p, q) => String(q || "").toLowerCase().split(/[\s,]+/).filter(Boolean).every(w => hay(p).includes(w));
-const visiblePhotos = () => S.libQuery.trim() ? photosIn("*").filter(([, p]) => matches(p, S.libQuery)) : S.libFolder === "~sim" ? simPhotos() : photosIn(S.libFolder);
+const visiblePhotos = () => S.libQuery.trim() ? photosIn("*").filter(([, p]) => matches(p, S.libQuery)) : S.libFolder === "~sim" ? simPhotos() : S.libFolder === "~vid" ? photosIn("*").filter(([, p]) => isVid(p)) : photosIn(S.libFolder);
 /* Look-alikes: each photo gets a 64-bit difference hash of its grayscale picture (`ph`), so the same shot still matches
    after a different filter, grade or text on top. Photos whose hashes differ in ≤ SIM_BITS bits, or with the same file name, are grouped. */
 const SIM_BITS = 6;
@@ -6805,19 +6842,21 @@ const SIMICON = `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" w
 function renderLibrary() {
   const lib = $("#lib"); if (!lib) return;
   const tree = folderTree(), q = S.libQuery.trim(), sim = lookAlikes();
-  if (S.libFolder === "~sim" ? !sim.size : (S.libFolder !== "*" && S.libFolder !== "" && !tree.includes(S.libFolder))) S.libFolder = "*";
-  const nSim = sim.size;
+  const nSim = sim.size, nVid = [...S.photos.values()].filter(isVid).length;
+  if (S.libFolder === "~sim" ? !sim.size : S.libFolder === "~vid" ? !nVid : (S.libFolder !== "*" && S.libFolder !== "" && !tree.includes(S.libFolder))) S.libFolder = "*";
   $("#folders").innerHTML = ["*", "", ...tree].map(f => `<button type="button" data-folder="${esc(f)}" aria-current="${!q && S.libFolder === f}" style="padding-left:${10 + depth(f) * 16}px">${esc(folderLabel(f))}<span>${photosIn(f).length}</span></button>`).join("")
+    + (nVid ? `<button type="button" class="simf" data-folder="~vid" aria-current="${!q && S.libFolder === "~vid"}" style="padding-left:10px">Videos<span>${nVid}</span></button>` : "")
     + (nSim ? `<button type="button" class="simf" data-folder="~sim" aria-current="${!q && S.libFolder === "~sim"}" style="padding-left:10px">Look-alikes<span>${nSim}</span></button>` : "");
   const ft = $("#folderTools"), used = usedMap(), items = visiblePhotos();
   if (q) ft.innerHTML = `<span class="path">${items.length} result${items.length === 1 ? "" : "s"} for “${esc(q)}”</span><button type="button" class="btn ghost sm" data-lib="clearsearch">Clear search</button>`;
   else if (S.libFolder === "~sim") ft.innerHTML = `<span class="path">Look-alikes</span><span class="hint" style="margin:0">Photos that look like another one: the same shot or file name, even with a different filter or text on top. Most likely duplicates: keep the one you use and delete the rest.</span>`;
+  else if (S.libFolder === "~vid") ft.innerHTML = `<span class="path">Videos</span><span class="hint" style="margin:0">Every video, from all folders. Hover one to play it; put it in a photo spot with Replace on a slide.</span>`;
   else if (S.libFolder === "*" || S.libFolder === "") ft.innerHTML = `<span class="path">${esc(folderLabel(S.libFolder))}</span>`;
   else if (S.folderForm && S.folderForm.mode === "rename") ft.innerHTML = `<span class="path">Rename folder</span>`;
   else ft.innerHTML = `<span class="path">${esc(S.libFolder.split("/").join(" / "))}</span><button type="button" class="btn ghost sm" data-lib="newsub">New subfolder</button><button type="button" class="btn ghost sm" data-lib="renamefolder">Rename</button><button type="button" class="btn ghost sm danger" data-lib="delfolder">Delete folder</button>`;
   const others = id => (sim.get(id) || []).map(x => (S.photos.get(x) || {}).name).filter(Boolean);
-  lib.innerHTML = items.map(([id, p]) => `<button type="button" class="tile" data-id="${esc(id)}" aria-pressed="${S.selected.has(id)}" aria-label="${esc(p.name)}${p.desc ? ": " + esc(p.desc) : ""}${sim.has(id) ? `, looks like ${others(id).length} other photo${others(id).length === 1 ? "" : "s"}` : ""}${S.selected.has(id) ? ", selected" : ""}" title="${esc([sim.has(id) ? "Looks like: " + others(id).join(", ") : "", p.desc, (p.tags || []).join(", ")].filter(Boolean).join(" · "))}"><img loading="lazy" src="${esc(srcOf(p))}" alt=""><span class="tick" aria-hidden="true">${S.selected.has(id) ? "✓" : ""}</span>${sim.has(id) ? `<span class="sim">${SIMICON}</span>` : ""}<span class="nm">${esc(p.name)}</span><span class="ds">${esc(p.desc || "")}</span><span class="use">${used.has(id) ? "On slide " + used.get(id).join(", ") : (S.libFolder === "*" || S.libFolder === "~sim" || q ? esc(p.folder ? p.folder.split("/").join(" / ") : "Unsorted") : "Not on this post")}</span></button>`).join("")
-    || `<p class="hint">${q ? `No photos match “${esc(q)}”. Try another word, or clear the search.` : S.photos.size ? "No photos in this folder yet. Select photos in All photos and move them here." : "No photos yet. Upload some to start."}</p>`;
+  lib.innerHTML = items.map(([id, p]) => `<button type="button" class="tile" data-id="${esc(id)}" aria-pressed="${S.selected.has(id)}" aria-label="${esc(p.name)}${p.desc ? ": " + esc(p.desc) : ""}${sim.has(id) ? `, looks like ${others(id).length} other photo${others(id).length === 1 ? "" : "s"}` : ""}${S.selected.has(id) ? ", selected" : ""}" title="${esc([sim.has(id) ? "Looks like: " + others(id).join(", ") : "", p.desc, (p.tags || []).join(", ")].filter(Boolean).join(" · "))}"><img loading="lazy" src="${esc(srcOf(p))}" alt="">${isVid(p) ? `<span class="vdur" aria-label="video, ${fmtDur(p.dur)}">▶ ${fmtDur(p.dur)}</span>` : ""}<span class="tick" aria-hidden="true">${S.selected.has(id) ? "✓" : ""}</span>${sim.has(id) ? `<span class="sim">${SIMICON}</span>` : ""}<span class="nm">${esc(p.name)}</span><span class="ds">${esc(p.desc || "")}</span><span class="use">${used.has(id) ? "On slide " + used.get(id).join(", ") : (S.libFolder === "*" || S.libFolder === "~sim" || S.libFolder === "~vid" || q ? esc(p.folder ? p.folder.split("/").join(" / ") : "Unsorted") : "Not on this post")}</span></button>`).join("")
+    || `<p class="hint">${q ? `No photos match “${esc(q)}”. Try another word, or clear the search.` : S.photos.size ? "No photos in this folder yet. Select photos in All photos and move them here." : "No photos yet. Upload photos or videos to start."}</p>`;
   $$(".tile", lib).forEach(t => { const id = t.dataset.id, p = S.photos.get(id), img = t.querySelector("img"); if (p && !p.ph && img) { if (img.complete) hashFromTile(id, img); else img.addEventListener("load", () => hashFromTile(id, img), { once: true }); } });
   renderSelTools();
   renderTagUI();
@@ -6920,6 +6959,7 @@ async function doDelete(ids) {
     const p = S.photos.get(id); if (!p) continue;
     try {
       if (p.asset && S.assets && !S.local) await S.assets.delete(p.asset);
+      if (p.poster && S.assets && !S.local) try { await S.assets.delete(p.poster); } catch (e) {}   /* a video's still */
       for (const u of plan.used.get(p.asset) || []) {   /* empty the photo spots that showed it */
         if (u.pid === S.pid) { const s = S.slides[u.sid]; if (s && s[u.slot] && s[u.slot].asset === p.asset) { s[u.slot] = null; s.layout = {}; forget(u.sid); saveSlide(u.sid); emptied++; } }
         else if (S.db && !S.local) { try { await S.db.doc(`posts/${u.pid}/slides/${u.sid}`).update({ [u.slot]: null, layout: {}, updatedAt: Date.now() }); emptied++; } catch (e) {} }
@@ -6968,7 +7008,7 @@ async function tagPhotos(ids, manual) {
       if (b) { b.hidden = false; b.disabled = true; b.textContent = `Tagging ${Math.min(i + per, ids.length)} of ${ids.length}…`; }
       for (const id of batch) { try { const bl = await photoJpeg(id); if (bl) { blobs.push(bl); keep.push(id); } } catch (e) {} }
       if (!keep.length) continue;
-      const list = keep.map((id, j) => `${j + 1}. "${S.photos.get(id).name}"`).join("\n");
+      const list = keep.map((id, j) => `${j + 1}. "${S.photos.get(id).name}"${isVid(S.photos.get(id)) ? " (a still from a video: describe what the video shows)" : ""}`).join("\n");
       const res = await S.sample.json(`${TAG_RULES}\n\nThe ${keep.length === 1 ? "photo" : keep.length + " photos, in order"} (file names for reference only):\n${list}\n\nReply with only a JSON array with one object per photo, in the same order: [{"n":1,"desc":"...","tags":["...","..."]}]`, { images: blobs, modelTier: "quick" });
       (Array.isArray(res) ? res : []).forEach((r, j) => {
         const k = r && Number.isInteger(+r.n) ? +r.n - 1 : j, id = keep[k], p = id && S.photos.get(id);
@@ -7062,7 +7102,7 @@ function renderPicker() {
   $("#pickFolders").innerHTML = ["*", "", ...tree].map(f => `<button type="button" data-pf="${esc(f)}" aria-current="${S.pickFolder === f}">${esc(f === "*" || f === "" ? folderLabel(f) : f.split("/").join(" / "))}</button>`).join("");
   const q = S.pickQuery.trim(), items = q ? photosIn("*").filter(([, p]) => matches(p, q)) : photosIn(S.pickFolder);
   $("#pickFolders").hidden = !!q;
-  $("#pickGrid").innerHTML = items.map(([id, p]) => `<button type="button" data-pick="${esc(id)}" title="${esc(p.desc || p.name)}"><img loading="lazy" src="${esc(srcOf(p))}" alt=""><span>${esc(p.name)}</span>${p.desc ? `<span>${esc(p.desc)}</span>` : ""}</button>`).join("") || `<p>${q ? `No photos match “${esc(q)}”.` : "No photos here yet."}</p>`;
+  $("#pickGrid").innerHTML = items.map(([id, p]) => `<button type="button" data-pick="${esc(id)}" title="${esc(p.desc || p.name)}"><img loading="lazy" src="${esc(srcOf(p))}" alt="">${isVid(p) ? `<b class="vdur">▶ ${fmtDur(p.dur)}</b>` : ""}<span>${esc(p.name)}</span>${p.desc ? `<span>${esc(p.desc)}</span>` : ""}</button>`).join("") || `<p>${q ? `No photos match “${esc(q)}”.` : "No photos here yet."}</p>`;
 }
 $("#pickGrid").addEventListener("click", e => { const b = e.target.closest("[data-pick]"); if (b) usePhoto(b.dataset.pick); });
 function usePhoto(id) {
@@ -7073,21 +7113,23 @@ function usePhoto(id) {
   if (slot.startsWith("bd:")) { $("#pickDlg").close(); bdPhotoTo(sid, +slot.slice(3), p); return; }
   if (slot.startsWith("gear:")) { const it = s.text.items[+slot.slice(5)]; if (it) { remember(sid); setGearPic(it, p); saveSlide(sid); renderBoard(new Set([sid])); } $("#pickDlg").close(); toast("Gear picture set. A cut-out on a plain background looks cleanest"); return; }
   remember(sid);
-  s[slot] = { ...(p.asset ? { asset: p.asset } : { file: p.file }), fx: 0.5, fy: 0.5, zoom: 1 };
+  s[slot] = slotOf(p);
   if (s.type !== "breakdown" && s.type !== "frame") s.layout = {};   /* a breakdown keeps its items where they are */
   saveSlide(sid);
   $("#pickDlg").close();
   renderBoard(new Set([sid])); renderLibrary();
-  toast("Photo replaced. Text re-fitted to it");
+  toast(isVid(p) ? "Video in. It plays in the large view; Download has Download video (MP4)" : "Photo replaced. Text re-fitted to it");
 }
 async function fileHash(f) { try { const bm = await createImageBitmap(f); const h = dhash(bm); if (bm.close) bm.close(); return h; } catch (e) { return null; } }
 function imageSize(src) { return new Promise(res => { const im = new Image(); im.onload = () => res([im.naturalWidth, im.naturalHeight]); im.onerror = () => res([0, 0]); im.src = src; }); }
 async function uploadFiles(files, folder) {
   const added = [];
   for (const f of files) {
-    if (!/^image\/(png|jpeg|webp|gif)$/.test(f.type)) { toast(`${f.name}: use a JPG, PNG or WebP photo`); continue; }
+    const vid = /^video\//.test(f.type) || (!f.type && /\.(mp4|mov|m4v|webm)$/i.test(f.name));
+    if (!vid && !/^image\/(png|jpeg|webp|gif)$/.test(f.type)) { toast(`${f.name}: use a JPG, PNG or WebP photo, or a video`); continue; }
     toast(`Uploading ${f.name}…`);
     try {
+      if (vid) { added.push(await addVideo(f, folder)); continue; }
       const name = f.name.replace(/\.[^.]+$/, "").slice(0, 80);
       if (S.assets) {
         const r = await S.assets.upload(f); const [w, h] = await imageSize(r.url), ph = await fileHash(f);
@@ -7097,14 +7139,306 @@ async function uploadFiles(files, folder) {
         S.photos.set(id, { file: url, name, w, h, folder, addedAt: Date.now(), ...(ph ? { ph } : {}) }); added.push(id);
       }
     } catch (e) {
-      const why = { too_large: "it's over 20 MB", unsupported_type: "that file type isn't supported", quota_or_state: "the board's storage is full", rate_limited: "too many uploads at once, try again in a moment" }[e && e.code] || "the upload failed";
+      const why = { too_large: "it's over 20 MB", unsupported_type: "that file type isn't supported", quota_or_state: "the board's storage is full", rate_limited: "too many uploads at once, try again in a moment",
+        read: "this browser can't play it. On a computer try Chrome or Safari, or save it from your phone as Most Compatible (H.264)", long: "it's over 3 minutes: trim it first", toobig: "it's still over 20 MB after making it smaller: trim it to a shorter clip", nocodec: "it's over 20 MB and this browser can't make it smaller: use Chrome or Safari, or trim it", nomuxer: "the video maker didn't load: check the connection and try again" }[e && e.code] || "the upload failed";
       toast(`${f.name} wasn't added: ${why}`);
     }
   }
   if (folder && !S.folders.includes(folder)) { S.folders.push(folder); saveFolders(); }
-  if (added.length) { renderLibrary(); if ($("#pickDlg").open) renderPicker(); toast(`${added.length} photo${added.length > 1 ? "s" : ""} added`); tagPhotos(added); }
+  if (added.length) { const nv = added.filter(id => isVid(S.photos.get(id))).length, np = added.length - nv; renderLibrary(); if ($("#pickDlg").open) renderPicker(); toast([np ? `${np} photo${np > 1 ? "s" : ""}` : "", nv ? `${nv} video${nv > 1 ? "s" : ""}` : ""].filter(Boolean).join(" and ") + " added"); tagPhotos(added); }
   return added;
 }
+
+/* ---------- videos ----------
+   A video goes into the library like a photo: folders, search, Claude's tags (from its still), look-alikes, Download, Delete, and any photo
+   spot on a slide. On upload the board takes a still (a frame near the start, uploaded as a JPG next to it): tiles, the layout, tags, PNGs
+   and the PDF use it. A video over 19.5 MB, or one the board can't store as it is, is made smaller first, in this browser: an MP4 up to
+   1920 px with its bitrate set to fit (H.264 where the browser can make it). The large view plays a slide's video (muted until you turn
+   the sound on); Download video renders the slide over its video, frame by frame, into an MP4 with the video's sound. */
+const VMAX = 19.5 * 1048576, MUXER_URL = "https://cdn.jsdelivr.net/npm/mp4-muxer@5.2.2/build/mp4-muxer.js";
+const fmtDur = d => { d = Math.max(0, Math.round(+d || 0)); return Math.floor(d / 60) + ":" + String(d % 60).padStart(2, "0"); };
+const fmtT = d => { d = Math.max(0, Math.floor(+d || 0)); return Math.floor(d / 60) + ":" + String(d % 60).padStart(2, "0"); };
+const even = x => Math.max(2, Math.round(x / 2) * 2);
+const vErr = code => Object.assign(new Error(code), { code });
+/* a library item as a photo spot's slot; stillOf: just its picture (for item pictures, cut-outs and stickers) */
+const slotOf = p => ({ ...(p.asset ? { asset: p.asset } : { file: p.file }), ...(isVid(p) ? { vid: 1, ...(p.poster ? { poster: p.poster } : { pfile: p.pfile }), dur: p.dur } : {}), fx: 0.5, fy: 0.5, zoom: 1 });
+const stillOf = p => isVid(p) ? (p.poster ? { asset: p.poster } : { file: p.pfile }) : p.asset ? { asset: p.asset } : { file: p.file };
+const hasVideo = s => !!s && !s.overlay && FRAME_SLOTS.some(k => isVid(s[k]));
+function vidHost() {
+  let h = document.getElementById("vidHost");
+  if (!h) { h = document.createElement("div"); h.id = "vidHost"; h.setAttribute("aria-hidden", "true"); h.style.cssText = "position:fixed;left:0;top:0;width:2px;height:2px;overflow:hidden;opacity:0;pointer-events:none"; document.body.appendChild(h); }
+  return h;
+}
+function loadVideoEl(src) {
+  return new Promise((res, rej) => {
+    const v = document.createElement("video"); v.muted = true; v.playsInline = true; v.preload = "auto";
+    const off = () => { v.removeEventListener("loadeddata", ok); v.removeEventListener("error", bad); clearTimeout(tm); };
+    const ok = () => { off(); if (v.videoWidth) res(v); else { dropVideo(v); rej(vErr("read")); } }, bad = () => { off(); dropVideo(v); rej(vErr("read")); };
+    const tm = setTimeout(bad, 30000);
+    v.addEventListener("loadeddata", ok); v.addEventListener("error", bad);
+    v.src = src; vidHost().appendChild(v);
+  });
+}
+function dropVideo(v) { try { v.pause(); v.removeAttribute("src"); v.load(); v.remove(); } catch (e) {} }
+const seekTo = (v, t) => new Promise(res => {
+  if (Math.abs(v.currentTime - t) < 1e-3 && v.readyState >= 2) return res();
+  const on = () => { v.removeEventListener("seeked", on); clearTimeout(tm); res(); }, tm = setTimeout(on, 5000);
+  v.addEventListener("seeked", on); v.currentTime = t;
+});
+async function frameJpeg(v) {
+  const k = Math.min(1, 1920 / Math.max(v.videoWidth, v.videoHeight)), c = document.createElement("canvas");
+  c.width = Math.max(1, Math.round(v.videoWidth * k)); c.height = Math.max(1, Math.round(v.videoHeight * k));
+  c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
+  return await new Promise(r => c.toBlob(r, "image/jpeg", 0.9));
+}
+async function videoStill(v) { const d = isFinite(v.duration) ? v.duration : 0; await seekTo(v, clamp(Math.min(1, d * 0.1), 0, Math.max(0, d - 0.05))); return frameJpeg(v); }
+/* MP4 writing: WebCodecs encodes, mp4-muxer (loaded when first needed) puts it in an MP4 */
+let muxerP = null;
+function loadMuxer() {
+  if (window.Mp4Muxer) return Promise.resolve(window.Mp4Muxer);
+  return muxerP || (muxerP = new Promise((res, rej) => {
+    const sc = document.createElement("script"); sc.src = MUXER_URL;
+    sc.onload = () => window.Mp4Muxer ? res(window.Mp4Muxer) : rej(vErr("nocodec")); sc.onerror = () => { muxerP = null; sc.remove(); rej(vErr("nomuxer")); };
+    document.head.appendChild(sc);
+  }));
+}
+const canMakeVideo = () => typeof VideoEncoder === "function" && typeof VideoFrame === "function";
+async function videoCodec(w, h, bitrate, cbr) {
+  for (const [m, codec] of [["avc", "avc1.640028"], ["avc", "avc1.4d0028"], ["avc", "avc1.640033"], ["vp9", "vp09.00.40.08"], ["av1", "av01.0.08M.08"]]) {
+    for (const mode of cbr ? ["constant", null] : [null]) {
+      const cfg = { codec, width: w, height: h, bitrate, framerate: 30, ...(mode ? { bitrateMode: mode } : {}), ...(m === "avc" ? { avc: { format: "avc" } } : {}) };
+      try { if ((await VideoEncoder.isConfigSupported(cfg)).supported) return { m, cfg }; } catch (e) {}
+    }
+  }
+  return null;
+}
+async function audioCodec() {
+  if (typeof AudioEncoder !== "function" || typeof AudioData !== "function") return null;
+  for (const [m, codec] of [["aac", "mp4a.40.2"], ["opus", "opus"]]) {
+    const cfg = { codec, sampleRate: 48000, numberOfChannels: 2, bitrate: 128000 };
+    try { if ((await AudioEncoder.isConfigSupported(cfg)).supported) return { m, cfg }; } catch (e) {}
+  }
+  return null;
+}
+async function audioTrack(src) {   /* the video's sound as 48 kHz stereo; null when it has none or it can't be read */
+  try { const buf = await (await fetch(src)).arrayBuffer(); const a = await new OfflineAudioContext(2, 1, 48000).decodeAudioData(buf); return a && a.length ? a : null; } catch (e) { return null; }
+}
+async function mp4Writer(w, h, bitrate, audio, cbr) {
+  if (!canMakeVideo()) throw vErr("nocodec");
+  const M = await loadMuxer(), vc = await videoCodec(w, h, bitrate, cbr); if (!vc) throw vErr("nocodec");
+  const ac = audio ? await audioCodec() : null;
+  const muxer = new M.Muxer({ target: new M.ArrayBufferTarget(), video: { codec: vc.m, width: w, height: h }, ...(ac ? { audio: { codec: ac.m, numberOfChannels: 2, sampleRate: 48000 } } : {}), fastStart: "in-memory", firstTimestampBehavior: "offset" });
+  let err = null, n = 0;
+  const ve = new VideoEncoder({ output: (c, m) => muxer.addVideoChunk(c, m), error: e => { err = e; } }); ve.configure(vc.cfg);
+  return {
+    h264: vc.m === "avc", sound: !!ac, lost: !!audio && !ac,
+    async frame(cv, t) {   /* t: seconds */
+      if (err) throw err;
+      while (ve.encodeQueueSize > 6) await new Promise(r => setTimeout(r, 4));
+      const f = new VideoFrame(cv, { timestamp: Math.round(t * 1e6) }); ve.encode(f, { keyFrame: n++ % 60 === 0 }); f.close();
+    },
+    async finish(dur) {
+      await ve.flush(); ve.close(); if (err) throw err;
+      if (ac) {
+        let aerr = null; const ae = new AudioEncoder({ output: (c, m) => muxer.addAudioChunk(c, m), error: e => { aerr = e; } }); ae.configure(ac.cfg);
+        const sr = 48000, total = Math.min(audio.length, Math.round(dur * sr)), L = audio.getChannelData(0), R = audio.numberOfChannels > 1 ? audio.getChannelData(1) : L;
+        for (let i = 0; i < total; i += 4800) {
+          const k = Math.min(4800, total - i), data = new Float32Array(k * 2); data.set(L.subarray(i, i + k), 0); data.set(R.subarray(i, i + k), k);
+          const a = new AudioData({ format: "f32-planar", sampleRate: sr, numberOfFrames: k, numberOfChannels: 2, timestamp: Math.round(i / sr * 1e6), data }); ae.encode(a); a.close();
+          if (ae.encodeQueueSize > 20) await new Promise(r => setTimeout(r, 2));
+        }
+        await ae.flush(); ae.close(); if (aerr) throw aerr;
+      }
+      muxer.finalize(); return new Blob([muxer.target.buffer], { type: "video/mp4" });
+    }
+  };
+}
+/* plays v once from the start at `rate` and calls draw(t) for each frame it shows (t: seconds into it). Frames that come while one is
+   still being drawn are skipped (the MP4 keeps the real times), so the playback slows down to the speed the frames get drawn at.
+   A hidden tab stops it, so the toast says to keep the tab open. */
+function pumpFrames(v, rate, draw, prog) {
+  return new Promise((res, rej) => {
+    let last = -1, stop = false, busy = Promise.resolve(), gap = 1 / 30, avg = 0;
+    const timed = t => async () => { const t0 = performance.now(); await draw(t); const ms = performance.now() - t0; avg = avg ? avg * 0.7 + ms * 0.3 : ms; const r = clamp(Math.floor(0.8 * gap * 1000 / avg * 20) / 20, 0.05, rate); if (Math.abs(r - v.playbackRate) > 0.04) v.playbackRate = r; };
+    const rvfc = typeof v.requestVideoFrameCallback === "function", next = f => rvfc ? v.requestVideoFrameCallback(f) : requestAnimationFrame(() => f(0, null));
+    const end = () => { if (stop) return; stop = true; v.pause(); busy.then(res, rej); };
+    const cb = (now, meta) => {
+      if (stop) return;
+      const t = meta ? meta.mediaTime : v.currentTime;
+      if (t > last + 1e-4) { if (last >= 0 && t - last > 0.004) gap = Math.min(gap, t - last); last = t; busy = busy.then(timed(t)); busy.catch(e => { stop = true; v.pause(); rej(e); }); if (prog) prog(v.duration ? t / v.duration : 0); }
+      busy.then(() => { if (!stop && !v.ended) next(cb); }, () => {});
+    };
+    v.addEventListener("ended", () => setTimeout(end, 30), { once: true });
+    v.loop = false; v.muted = true;
+    seekTo(v, 0).then(() => { v.playbackRate = rate; next(cb); return v.play(); }).catch(e => { stop = true; rej(e); });
+  });
+}
+async function shrinkVideo(f, prog) {
+  if (!canMakeVideo()) throw vErr("nocodec");
+  const url = URL.createObjectURL(f);
+  let v = null;
+  try {
+    v = await loadVideoEl(url); const dur = v.duration;
+    if (!isFinite(dur) || dur <= 0) throw vErr("read");
+    if (dur > 180) throw vErr("long");
+    const k = Math.min(1, 1920 / Math.max(v.videoWidth, v.videoHeight)), w = even(v.videoWidth * k), h = even(v.videoHeight * k);
+    const audio = await audioTrack(url), cv = document.createElement("canvas"); cv.width = w; cv.height = h; const cx = cv.getContext("2d");
+    let bitrate = clamp(Math.floor(17 * 8 * 1048576 / dur - (audio ? 140000 : 0)), 400000, 8000000), blob = null;
+    for (let tries = 0; tries < 3; tries++) {   /* an encoder that overshoots gets a lower bitrate and another pass */
+      const out = await mp4Writer(w, h, bitrate, audio, true);
+      await pumpFrames(v, 1, async t => { cx.drawImage(v, 0, 0, w, h); await out.frame(cv, t); }, prog);
+      blob = await out.finish(dur);
+      if (blob.size <= VMAX) break;
+      bitrate = Math.max(250000, Math.floor(bitrate * VMAX / blob.size * 0.8));
+    }
+    if (blob.size > VMAX) throw vErr("toobig");
+    return new File([blob], f.name.replace(/\.[^.]+$/, "") + ".mp4", { type: "video/mp4" });
+  } finally { if (v) dropVideo(v); URL.revokeObjectURL(url); }
+}
+const progToast = label => { let last = -1; return p => { const q = Math.floor(clamp(p, 0, 1) * 10); if (q !== last) { last = q; toast(`${label}: ${q * 10}%`); } }; };
+async function addVideo(f, folder) {
+  const name = f.name.replace(/\.[^.]+$/, "").slice(0, 80);
+  let file = f;
+  const shrink = async why => { toast(`${f.name} ${why}, so it's being made smaller here. Keep this tab open`); file = await shrinkVideo(f, progToast(`Making ${name} smaller`)); };
+  if (f.size > VMAX) await shrink("is over 20 MB");
+  let url = URL.createObjectURL(file), v;
+  try { v = await loadVideoEl(url); }
+  catch (e) { URL.revokeObjectURL(url); if (file !== f || !canMakeVideo()) throw e; await shrink("can't be read as it is"); url = URL.createObjectURL(file); v = await loadVideoEl(url); }
+  const info = { dur: Math.round((isFinite(v.duration) ? v.duration : 0) * 100) / 100, w: v.videoWidth, h: v.videoHeight }, still = await videoStill(v);
+  dropVideo(v);
+  const ph = still ? await fileHash(still) : null, base = { kind: "video", name, ...info, folder, addedAt: Date.now(), ...(ph ? { ph } : {}) };
+  if (S.assets) {
+    URL.revokeObjectURL(url);
+    let r;
+    try { r = await S.assets.upload(file); }
+    catch (e) { if (e && e.code === "unsupported_type" && file === f && canMakeVideo()) { await shrink("can't be stored as it is"); r = await S.assets.upload(file); } else throw e; }
+    const pr = await S.assets.upload(new File([still], slug(name || "video") + "-still.jpg", { type: "image/jpeg" }));
+    S.photos.set(r.id, { asset: r.id, poster: pr.id, ...base }); savePhoto(r.id, 200);
+    return r.id;
+  }
+  const id = "local-v" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+  S.photos.set(id, { file: url, pfile: URL.createObjectURL(still), ...base });
+  return id;
+}
+
+/* the large view plays the slide's videos (VP.on: playing; muted until the sound button); the first one drives the redraws */
+const VP = { on: true, muted: true, exp: 0, tick: false };
+const vidKeys = s => hasVideo(s) ? FRAME_SLOTS.filter(k => isVid(s[k])) : [];
+function mainVid() { const s = focusSid && S.slides[focusSid], k = vidKeys(s)[0]; return k ? VIDS.get(vidSrc(s[k])) || null : null; }
+function syncFocusVideo() {
+  if (VP.exp) return;
+  const s = focusSid && $("#focusDlg").open ? S.slides[focusSid] : null, want = new Set(vidKeys(s).map(k => vidSrc(s[k])).filter(Boolean)), first = [...want][0];
+  for (const [src, v] of VIDS) if (!want.has(src)) { VIDS.delete(src); dropVideo(v); }
+  for (const src of want) if (!VIDS.has(src)) {
+    const v = document.createElement("video"); v.loop = true; v.playsInline = true; v.preload = "auto"; v.muted = VP.muted || src !== first;
+    v.addEventListener("loadeddata", () => { v._dirty = true; drawFocus(true); vidBar(); });
+    v.addEventListener("seeked", () => { v._dirty = true; if (VIDS.get(src) === v) { drawFocus(true); vidBar(true); } });
+    v.addEventListener("play", () => { vidTick(); vidBar(); }); v.addEventListener("pause", () => vidBar());
+    v.src = src; vidHost().appendChild(v); VIDS.set(src, v);
+    if (VP.on) v.play().catch(() => { VP.on = false; vidBar(); });
+  }
+  vidBar();
+}
+function vidTick() {
+  const m = mainVid(); if (!m || m.paused || VP.tick) return;
+  VP.tick = true;
+  const next = f => typeof m.requestVideoFrameCallback === "function" ? m.requestVideoFrameCallback(f) : requestAnimationFrame(f);
+  const step = () => { VP.tick = false; if (VP.exp || mainVid() !== m || m.paused) return; drawFocus(true); vidBar(true); VP.tick = true; next(step); };
+  next(step);
+}
+const PLAY_I = `<svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z" fill="currentColor"/></svg>`, PAUSE_I = `<svg viewBox="0 0 24 24"><path d="M7 5v14M17 5v14" stroke-width="3.2"/></svg>`;
+const SND_I = on => `<svg viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/>${on ? `<path d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11"/>` : `<path d="M16 9.5l5 5M21 9.5l-5 5"/>`}</svg>`;
+const STILL_I = `<svg viewBox="0 0 24 24"><rect x="3" y="6.5" width="18" height="13" rx="2.5"/><circle cx="12" cy="13" r="3.5"/><path d="M8.5 6.5l1.5-2.5h4l1.5 2.5"/></svg>`;
+function vidBar(fast) {
+  const bar = $("#fVid"); if (!bar) return;
+  const v = mainVid(); bar.hidden = !v; if (!v) return;
+  const d = isFinite(v.duration) ? v.duration : 0, r = $("#fVidR");
+  $("#fVidT").textContent = `${fmtT(v.currentTime)} / ${fmtT(d)}`;
+  if (!VP.scrub) r.value = d ? Math.round(v.currentTime / d * 1000) : 0;
+  if (fast) return;
+  const pb = bar.querySelector('[data-vid="play"]'), sb = bar.querySelector('[data-vid="snd"]'), playing = !v.paused;
+  bar.classList.toggle("paused", !playing);
+  pb.innerHTML = playing ? PAUSE_I : PLAY_I; pb.setAttribute("aria-label", playing ? "Pause" : "Play"); pb.title = playing ? "Pause" : "Play";
+  sb.innerHTML = SND_I(!VP.muted); sb.setAttribute("aria-label", VP.muted ? "Sound on" : "Sound off"); sb.title = VP.muted ? "Sound on" : "Sound off";
+  const st = bar.querySelector('[data-vid="still"]'); if (!st.innerHTML) st.innerHTML = STILL_I;
+}
+$("#fVid").addEventListener("pointerdown", e => e.stopPropagation());
+$("#fVid").addEventListener("click", e => {
+  const b = e.target.closest("[data-vid]"); if (!b) return;
+  e.stopPropagation();
+  const k = b.dataset.vid, m = mainVid();
+  if (k === "play") { const go = !m || m.paused; VP.on = go; for (const v of VIDS.values()) { if (go) v.play().catch(() => {}); else v.pause(); } }
+  else if (k === "snd") { VP.muted = !VP.muted; for (const v of VIDS.values()) v.muted = VP.muted || v !== m; if (!VP.muted && m && m.paused) { VP.on = true; m.play().catch(() => {}); } }
+  else if (k === "still") useFrameAsStill(focusSid);
+  vidBar();
+});
+$("#fVidR").addEventListener("input", e => { const v = mainVid(); VP.scrub = true; if (v && isFinite(v.duration)) v.currentTime = e.target.value / 1000 * v.duration; });
+$("#fVidR").addEventListener("change", () => { VP.scrub = false; });
+/* the frame showing now becomes the slide's still (the card, PNG, PDF and Claude see it); the library item keeps its own */
+async function useFrameAsStill(sid) {
+  const s = S.slides[sid], k = vidKeys(s)[0], v = k && VIDS.get(vidSrc(s[k])); if (!v || v.readyState < 2 || S.readOnly) return;
+  const at = v.currentTime, b = await frameJpeg(v); if (!b) return;
+  let src;
+  try { src = S.assets && !S.local ? { poster: (await S.assets.upload(new File([b], "still.jpg", { type: "image/jpeg" }))).id } : { pfile: URL.createObjectURL(b) }; }
+  catch (e) { toast("Couldn't save that frame. Try again"); return; }
+  const sl = S.slides[sid] && S.slides[sid][k]; if (!sl || !isVid(sl)) return;
+  remember(sid); delete sl.poster; delete sl.pfile; Object.assign(sl, src); sl.at = Math.round(at * 100) / 100;
+  saveSlide(sid); renderBoard(new Set([sid]));
+  toast(`The still is the frame at ${fmtT(at)} now: the card, PNG and PDF show it`);
+}
+/* the slide over its video, as an MP4 up to 1080 px across (the short side): every frame of the first video, the others looping with it */
+async function slideVideo(sid, prog) {
+  const s = S.slides[sid], keys = vidKeys(s); if (!keys.length) return null;
+  if (!canMakeVideo()) throw vErr("nocodec");
+  const g = geoOf(sid), x = numOf(sid), k = Math.min(1, 1080 / Math.min(g.w, g.h)), w = even(g.w * k), h = even(g.h * k);
+  await waitImages(s);
+  const srcs = [...new Set(keys.map(kk => vidSrc(s[kk])))], els = [], saved = new Map(VIDS);
+  VP.exp++; for (const v of saved.values()) v.pause(); VIDS.clear();
+  try {
+    for (const src of srcs) { const v = await loadVideoEl(src); v.loop = src !== srcs[0]; VIDS.set(src, v); els.push(v); }
+    const main = els[0], dur = main.duration; if (!isFinite(dur) || dur <= 0) throw vErr("read");
+    const audio = await audioTrack(srcs[0]), cv = document.createElement("canvas"); cv.width = w; cv.height = h;
+    renderSlide(cv, S.post, s, x.n, x.total, w / g.w, true);
+    const t0 = performance.now(); for (let i = 0; i < 3; i++) { for (const v of els) v._dirty = true; renderSlide(cv, S.post, s, x.n, x.total, w / g.w, true); new VideoFrame(cv, { timestamp: 0 }).close(); }
+    const ms = (performance.now() - t0) / 3, rate = clamp(Math.floor(24 / Math.max(1, ms * 1.5) * 20) / 20, 0.05, 1);   /* slower than real time when a frame takes long to draw, so none are skipped */
+    const out = await mp4Writer(w, h, clamp(Math.round(w * h * 30 * 0.12), 4e6, 12e6), audio);
+    for (const v of els.slice(1)) { v.playbackRate = rate; v.play().catch(() => {}); }
+    let nf = 0;
+    await pumpFrames(main, rate, async t => { for (const v of els) v._dirty = true; renderSlide(cv, S.post, S.slides[sid] || s, x.n, x.total, w / g.w, true); await out.frame(cv, t); nf++; }, prog);
+    S.lastVideo = { ms: Math.round(ms), rate, frames: nf, dur };
+    return { blob: await out.finish(dur), h264: out.h264, lost: out.lost, w, h };
+  } finally {
+    els.forEach(dropVideo); VIDS.clear(); for (const [kk, v] of saved) VIDS.set(kk, v); VP.exp--;
+    if (VP.on) for (const v of VIDS.values()) v.play().catch(() => {});
+    syncFocusVideo();
+  }
+}
+const vidWhy = e => ({ nocodec: "this browser can't make videos: use Chrome, Edge or Safari", nomuxer: "the video maker didn't load: check the connection and try again", read: "this browser can't read the video", long: "the video is over 3 minutes: trim it first" })[e && e.code] || "something went wrong: try again";
+async function exportVideo(sid) {
+  if (S.vbusy) { toast("A video is already being made. Wait for it to finish"); return; }
+  S.vbusy = true;
+  try {
+    toast("Making the video. It plays through once, so keep this tab open");
+    const r = await slideVideo(sid, progToast("Making the video")); if (!r) return;
+    const ok = await offer(fileName(sid).replace(/\.png$/, ".mp4"), r.blob);
+    if (ok && !r.h264) toast("Saved, but this browser can only make VP9 or AV1 video, which Instagram may not take. Chrome or Safari make H.264");
+    else if (ok && r.lost) toast("Saved without sound: this browser can't encode it. Chrome adds the sound");
+  } catch (e) { toast("The video couldn't be made: " + vidWhy(e)); }
+  finally { S.vbusy = false; }
+}
+/* the library: a video tile plays (muted) while the mouse is over it */
+document.addEventListener("pointerover", e => {
+  if (e.pointerType !== "mouse" || !e.target.closest) return;
+  const t = e.target.closest("#lib .tile"); if (!t || t.querySelector("video")) return;
+  const p = S.photos.get(t.dataset.id), img = t.querySelector("img"); if (!isVid(p) || !img) return;
+  const v = document.createElement("video"); v.className = "tvid"; v.muted = true; v.loop = true; v.playsInline = true; v.src = vidSrc(p);
+  img.after(v); v.play().catch(() => {});
+});
+document.addEventListener("pointerout", e => {
+  if (!e.target.closest) return;
+  const t = e.target.closest("#lib .tile"); if (!t || (e.relatedTarget && t.contains(e.relatedTarget))) return;
+  const v = t.querySelector("video.tvid"); if (v) dropVideo(v);
+});
 
 /* ---------- apply comments with Claude ---------- */
 const COPY_STYLE = `- All copy is UPPERCASE, short and plain. A settings row has a label (what it is), a value (the setting itself, short, like "1/50", "24FPS", "D-LOG M") and a note (one line on why, 4 to 12 words).
@@ -7154,7 +7488,7 @@ const FORMAT = `Reply with only this JSON object:
 {"slides":[{"id":"<slide id>","text":{<the complete text object>},"layout":"keep","photo":"keep","photo2":"keep","edits":"keep","edits2":"keep","overlay":"keep","bg":"keep","ink":"keep","hl":"keep","stickers":"keep","summary":"<what you changed, one short sentence>"}],
 "newSlides":[{"after":"<slide id>","type":"specs","text":{<the complete text object>},"photo":null,"summary":"<one short sentence>"}],
 "notes":""}
-Include only slides you changed. "layout" is "keep", "auto" or an object of layout values. "photo" and "photo2" are "keep", null or a photo id from the library. "edits" and "edits2" are "keep" or the complete object of photo edit values ({} removes all edits). "overlay" is "keep", true or false. "bg" is "keep", null or {c1, c2, dir}; "ink" is "keep", "auto", "white" or "black"; "hl" is "keep", null or a hex color. "newSlides" may be empty. "notes" says anything you couldn't do, or is empty.`;
+Include only slides you changed. "layout" is "keep", "auto" or an object of layout values. "photo" and "photo2" are "keep", null or a photo id from the library (a library item with "video" is a video clip of that length: it plays in the photo spot, described by its still). "edits" and "edits2" are "keep" or the complete object of photo edit values ({} removes all edits). "overlay" is "keep", true or false. "bg" is "keep", null or {c1, c2, dir}; "ink" is "keep", "auto", "white" or "black"; "hl" is "keep", null or a hex color. "newSlides" may be empty. "notes" says anything you couldn't do, or is empty.`;
 function pendingSlides() { return order().filter(sid => String(S.slides[sid].comment || "").trim()); }
 function updateApplyAll() {
   const b = $("#applyAll"); if (!b) return;
@@ -7180,7 +7514,7 @@ function slideItem(sid, withComment) {   /* a slide as Claude reads it */
 function buildPrompt(targets, overall) {
   const o = order();
   const nm = numbering(), outline = o.map(sid => { const x = numOf(sid, nm); return `${pad2(x.n)}${x.of > 1 ? ` (version ${x.v} of ${x.of})` : ""} id=${sid} type=${S.slides[sid].type} "${slideName(S.slides[sid])}"`; }).join("\n");
-  const photos = ownPhotos().slice(-200).map(([id, p]) => ({ id, name: p.name, folder: p.folder || "", shape: p.w > p.h ? "landscape" : p.w < p.h ? "portrait" : "square", ...(p.desc ? { desc: p.desc } : {}) }));
+  const photos = ownPhotos().slice(-200).map(([id, p]) => ({ id, name: p.name, folder: p.folder || "", shape: p.w > p.h ? "landscape" : p.w < p.h ? "portrait" : "square", ...(p.desc ? { desc: p.desc } : {}), ...(isVid(p) ? { video: Math.round(p.dur || 0) + "s" } : {}) }));
   const items = targets.map(sid => slideItem(sid, true));
   return [RULES,
     `POST: ${S.post.title || ""}\nHANDLE: ${S.post.handle || ""}\nHEADER: ${S.post.series || ""} / ${S.post.subject || ""}\nSLIDES IN ORDER:\n${outline}`,
@@ -7253,7 +7587,7 @@ function cleanPhoto(raw, prev) {
   if (raw === null) return { v: null, changed: !!prev };
   const id = String(raw), p = S.photos.get(id);
   if (!p) return { v: prev, changed: false };
-  return { v: { ...(p.asset ? { asset: p.asset } : { file: p.file }), fx: 0.5, fy: 0.5, zoom: 1 }, changed: !prev || prev.asset !== p.asset };
+  return { v: slotOf(p), changed: !prev || prev.asset !== p.asset };
 }
 function cleanBg(raw) {   /* {c1, c2, dir} or null (the photo) */
   if (!raw || typeof raw !== "object" || !HEXCOL.test(raw.c1)) return null;
@@ -7559,7 +7893,7 @@ Make it the creator's own, so nobody can call it a copy:
 - When the references break a shot down into its gear (a setup photo, a numbered step heading, then product pictures with names, like "01 LIGHTING – STEP ONE"), use "gear" slides: one per step or category (lighting, camera, audio, editing / color…), in the references' order, and a cover and a save slide around them as the references do. Name the gear from the creator's note only; where the note doesn't say, write a placeholder like "YOUR KEY LIGHT" and say so in notes. Leave the gear pictures to the creator (the board draws them afterwards).
 {PHOTOS}`;
 function genPrompt(ids, note, own, ratio) {
-  const photos = ownPhotos().filter(([id]) => !ids.includes(id)).slice(-200).map(([id, p]) => ({ id, name: p.name, shape: p.w > p.h ? "landscape" : p.w < p.h ? "portrait" : "square", ...(p.desc ? { desc: p.desc } : {}), ...(Array.isArray(p.tags) && p.tags.length ? { tags: p.tags } : {}) }));
+  const photos = ownPhotos().filter(([id]) => !ids.includes(id)).slice(-200).map(([id, p]) => ({ id, name: p.name, shape: p.w > p.h ? "landscape" : p.w < p.h ? "portrait" : "square", ...(p.desc ? { desc: p.desc } : {}), ...(isVid(p) ? { video: Math.round(p.dur || 0) + "s" } : {}), ...(Array.isArray(p.tags) && p.tags.length ? { tags: p.tags } : {}) }));
   const base = S.post || {}, titles = S.posts.map(x => x.data && x.data.title).filter(Boolean).slice(0, 8);
   const ph = own ? `- The reference images are the creator's own photos: put them on the slides as "photo": "ref:N" (N is the image's number). Library photos can go on slides too, by id.`
     : `- Never put a reference image on a slide. For "photo", pick the creator's own photo from the library by id when one fits the slide (go by its description and tags), or null to leave the spot for the creator. A slide that works without a photo can use a plain or gradient background ("bg") instead.`;
@@ -7596,7 +7930,7 @@ function makePostFromRefs(res, ids, own, ratio) {
   const meta = { title: clip(res.title, 80) || "Carousel from references", series: up(clip(res.series, 40) || base.series || "STEAL MY SETTINGS"), subject: up(clip(res.subject, 40)), handle: base.handle || "", ratio, order: [], overall: "", refs: ids.slice(), updatedAt: now };
   const photoOf = v => {
     const m = String(v ?? "").match(/^ref:(\d+)$/);
-    if (m) { const p = own && S.photos.get(ids[+m[1] - 1]); return p ? { ...(p.asset ? { asset: p.asset } : { file: p.file }), fx: 0.5, fy: 0.5, zoom: 1 } : null; }
+    if (m) { const p = own && S.photos.get(ids[+m[1] - 1]); return p ? slotOf(p) : null; }
     const p = S.photos.get(String(v ?? "")); if (!p || (!own && (isRefPhoto(p) || ids.includes(String(v))))) return null;   /* other creators' photos never go on a slide */
     return cleanPhoto(v, null).v || null;
   };
@@ -7628,7 +7962,7 @@ function openFocus(sid) {
   document.documentElement.classList.add("modal-open");
   renderFPanel(); drawFocus();
 }
-$("#focusDlg").addEventListener("close", () => { if (S.crop) { S.crop = null; saveSlide(focusSid); } S.psel = null; closeOverlays(); focusSid = null; S.fsel = null; S.ftsel = null; hideArr(); S.ftfield = null; fpts.clear(); fg = null; xg = null; lpts.clear(); lg = null; $("#fTrash").hidden = true; hideBubble(); layoutLite(); document.documentElement.classList.remove("modal-open"); });
+$("#focusDlg").addEventListener("close", () => { if (S.crop) { S.crop = null; saveSlide(focusSid); } S.psel = null; closeOverlays(); focusSid = null; syncFocusVideo(); S.fsel = null; S.ftsel = null; hideArr(); S.ftfield = null; fpts.clear(); fg = null; xg = null; lpts.clear(); lg = null; $("#fTrash").hidden = true; hideBubble(); layoutLite(); document.documentElement.classList.remove("modal-open"); });
 /* Esc closes a preview first, then the text editor, then the large view */
 $("#focusDlg").addEventListener("cancel", e => {
   if (!histPop.hidden) { e.preventDefault(); closeHist(); return; }
@@ -7638,7 +7972,7 @@ $("#focusDlg").addEventListener("cancel", e => {
   else if (S.fpanel === "text" && S.ftfield) { e.preventDefault(); closeTextEditor(); }
 });
 const g0w = () => geoOf(focusSid).w, g0h = () => geoOf(focusSid).h;
-function drawFocus() {
+function drawFocus(fast) {
   const dlg = $("#focusDlg"), s = S.slides[focusSid]; if (!s || !dlg.open) return;
   const x = numOf(focusSid), g = geoOf(focusSid), dpr = window.devicePixelRatio || 1, box = $("#fWrap").getBoundingClientRect(), lite = dlg.classList.contains("lite");
   const css = Math.max(0.05, lite ? box.width / g.w * S.lz : Math.min(box.width / g.w, box.height / g.h)), sc = clamp(css * dpr, 0.1, 1);   /* fit the slide to the space left (edit mode: to the width, times its zoom) */
@@ -7657,6 +7991,8 @@ function drawFocus() {
   }
   if (S.psel && !(S.fphotos || []).some(f => f.key === S.psel)) S.psel = null;
   S.focusBoxes = d.boxes || []; S.ftboxes = d.tboxes || {}; S.frows = d.rowBoxes || [];
+  if (fast === true) return;   /* a video frame: just the picture */
+  syncFocusVideo();
   if (lite) placeLite(); else $("#fStage").style.transform = "";
   $("#focusTitle").textContent = `${pad2(x.n)}/${pad2(x.total)}${x.of > 1 ? ` · V${x.v}` : ""} ${slideName(s)}${RATIOS[s.ratio] && s.ratio !== ratioKey(S.post) ? " · " + s.ratio : ""}`;
   const touch = TOUCH(), grp = S.ftsel && moveGroup(s, S.ftsel), row = grp && grp.startsWith("rows."), H2 = (l, sh) => `<span class="long">${l}</span><span class="short">${sh || l}</span>`;
@@ -7844,7 +8180,7 @@ function waitImages(s) {
   const slots = [...(s.overlay && !s.overlayKeep ? [] : FRAME_SLOTS.map(k => s[k])), ...(s.stickers || []).map(t => t.kind === "custom" && t.src), ...(s.stickers || []).flatMap(t => t.kind === "bdrow" ? (t.items || []).map(it => it && it.src) : []), ...((s.text || {}).items || []).map(t => t && t.img)];
   return Promise.all(slots.map(slot => new Promise(res => {
     const src = srcOf(slot || null); if (!src) return res();
-    getImg(slot); const e = imgCache.get(src);
+    getImg(slot, true); const e = imgCache.get(src); if (!e) return res();
     if (e.ok || e.err) return res();
     e.img.addEventListener("load", res, { once: true }); e.img.addEventListener("error", res, { once: true });
   })));
@@ -7862,9 +8198,9 @@ const fileName = sid => { const x = numOf(sid), s = S.slides[sid], own = RATIOS[
 /* the library's Download: the photos as uploaded (one as it is, several in a zip), named after the photo */
 async function downloadPhotos(ids, btn) {
   const list = ids.map(id => S.photos.get(id)).filter(p => p && srcOf(p)); if (!list.length) return;
-  const ext = t => ({ "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/heic": "heic", "image/gif": "gif", "image/svg+xml": "svg" })[t] || "jpg";
-  const base = p => String(p.name || "photo").replace(/[\\/:*?"<>|]+/g, "-").replace(/\.(jpe?g|png|webp|heic)$/i, "").slice(0, 80) || "photo";
-  const get = async p => { const r = await fetch(srcOf(p)); if (!r.ok) throw new Error("fetch " + r.status); return r.blob(); };
+  const ext = t => ({ "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/heic": "heic", "image/gif": "gif", "image/svg+xml": "svg", "video/mp4": "mp4", "video/quicktime": "mov", "video/webm": "webm", "video/x-m4v": "m4v" })[String(t).split(";")[0]] || "jpg";
+  const base = p => String(p.name || "photo").replace(/[\\/:*?"<>|]+/g, "-").replace(/\.(jpe?g|png|webp|heic|mp4|mov|webm)$/i, "").slice(0, 80) || "photo";
+  const get = async p => { const r = await fetch(vidSrc(p) || srcOf(p)); if (!r.ok) throw new Error("fetch " + r.status); return r.blob(); };
   const label = btn && btn.textContent; if (btn) btn.disabled = true;
   try {
     if (list.length === 1) { const b = await get(list[0]); await offer(`${base(list[0])}.${ext(b.type)}`, b); return; }
@@ -7910,7 +8246,8 @@ function dlMenuHTML(sid = focusSid, card = false) {
   const photo = !s.overlay && TEMPLATES[s.type].slots.some(k => s[k]), fit = (k, l) => `<button type="button" ${A.f}="${k}" aria-pressed="${(k === "whole") === !!s.whole}">${l}</button>`;
   return `<div class="mratio"><small>Ratio for this slide</small><div class="fchips" role="group" aria-label="Ratio for this slide">${chip("post", `Post (${ratioKey(S.post)})`, !own)}${Object.entries(RATIOS).map(([k, r]) => chip(k, r[2], own === k)).join("")}</div>`
     + (photo ? `<small>Photo</small><div class="fchips" role="group" aria-label="Photo">${fit("fill", "Fill the slide")}${fit("whole", "Whole photo")}</div>${cutNote(s, g)}` : "") + `</div>`
-    + `<button type="button" ${A.dl}="png">Download PNG<small>Full quality, ${g.w} × ${g.h}</small></button><button type="button" ${A.dl}="jpg">Download JPG<small>Best quality, smaller file</small></button>`
+    + (hasVideo(s) ? `<button type="button" ${A.dl}="mp4">Download video (MP4)<small>The slide over its video, with sound, ${even(g.w * Math.min(1, 1080 / Math.min(g.w, g.h)))} × ${even(g.h * Math.min(1, 1080 / Math.min(g.w, g.h)))}</small></button>` : "")
+    + `<button type="button" ${A.dl}="png">Download PNG<small>${hasVideo(s) ? "The video's still" : "Full quality"}, ${g.w} × ${g.h}</small></button><button type="button" ${A.dl}="jpg">Download JPG<small>Best quality, smaller file</small></button>`
     + `<small class="mhead">For Edits, CapCut or any video editor</small><button type="button" ${A.dl}="ovkeep">Overlay PNG: ${s.type === "frame" || (s.pframe && s.pframe.kind) ? "frame and text" : "the slide"}, photo see-through<small>Put it on top of your video: it shows through the ${s.type === "frame" ? "windows" : "photo spot"}</small></button><button type="button" ${A.dl}="ovtext">Overlay PNG: text only<small>Just the words${(s.stickers || []).length ? " and stickers" : ""}, see-through everywhere else</small></button>`;
 }
 function pvMenuHTML(card = false) {
@@ -7938,6 +8275,7 @@ function cardMenuAction(b, sid) {
   if (act === "dlk") {
     const k = b.dataset.k; closeMenus();
     if (k === "png") exportOne(sid);
+    else if (k === "mp4") exportVideo(sid);
     else if (k === "ovkeep" || k === "ovtext") exportOverlay(sid, k === "ovkeep" ? "keep" : "text");
     else if (k === "jpg") { toast("Rendering JPG…"); slideBlob(sid, "image/jpeg", 1).then(bl => { if (bl) offer(fileName(sid).replace(/\.png$/, ".jpg"), bl); }); }
     else { openFocus(sid); requestAnimationFrame(() => focusDownload(k)); }
@@ -8012,6 +8350,7 @@ $("#focusDlg").addEventListener("click", e => {
 function focusDownload(kind) {
   const sid = focusSid; if (!sid) return;
   if (kind === "png") return exportOne(sid);
+  if (kind === "mp4") return exportVideo(sid);
   if (kind === "ovkeep" || kind === "ovtext") return exportOverlay(sid, kind === "ovkeep" ? "keep" : "text");
   if (kind === "jpg") { toast("Rendering JPG…"); return slideBlob(sid, "image/jpeg", 1).then(b => { if (b) offer(fileName(sid).replace(/\.png$/, ".jpg"), b); }); }
   if (kind === "phone" || kind === "grid") { S.pview = kind === "grid" ? "grid" : "feed"; return openOverlay("phone"); }
@@ -8249,7 +8588,14 @@ async function exportAll() {
   try {
     if (!window.JSZip) { toast("ZIP isn't available. Use PNG on each slide"); return; }
     const zip = new window.JSZip();
-    for (let i = 0; i < o.length; i++) { btn.textContent = `Rendering ${i + 1}/${o.length}`; zip.file(fileName(o[i]), await slideBlob(o[i])); }
+    let vfail = 0;
+    for (let i = 0; i < o.length; i++) {
+      btn.textContent = `Rendering ${i + 1}/${o.length}`; zip.file(fileName(o[i]), await slideBlob(o[i]));
+      if (hasVideo(S.slides[o[i]])) {   /* a video slide: its MP4 too (it plays through once) */
+        try { const r = await slideVideo(o[i], p => { btn.textContent = `Video ${i + 1}/${o.length}: ${Math.round(p * 100)}%`; }); if (r) zip.file(fileName(o[i]).replace(/\.png$/, ".mp4"), r.blob); } catch (e) { vfail++; }
+      }
+    }
+    if (vfail) toast(`${vfail} video${vfail > 1 ? "s" : ""} couldn't be made here, so ${vfail > 1 ? "those slides come" : "that slide comes"} as a still. Download video on the slide tells you why`);
     btn.textContent = "Zipping…";
     const blob = await zip.generateAsync({ type: "blob" });
     await offer(`${slug(S.post.title)}.zip`, blob);
@@ -8262,7 +8608,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { S, order, MK, applyWithClaude, drawFocus, updateFocusUI, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
+window.__t = { S, order, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
