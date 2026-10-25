@@ -339,6 +339,15 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .fmt .gi{font-style:italic;font-weight:400;font-family:Georgia,serif}
 .fmt .gu{text-decoration:underline;text-underline-offset:2px}
 .fmt .gh{background:#f3eeeb;color:#131111;padding:1px 4px;border-radius:2px}
+.fmt{max-width:100%;flex-wrap:wrap;row-gap:2px}
+.fmt .fsep{flex:0 0 1px;align-self:stretch;margin:4px 3px;background:#3a3432}
+.fmt button.fcase span{font:700 12px/1 var(--ui);letter-spacing:.02em}
+.fmt button.fall{width:auto;padding:0 9px;font:600 12px/1 var(--ui);white-space:nowrap;border:1px solid #3a3432}
+.fhead{flex-wrap:wrap;row-gap:6px;min-width:0}
+.fone .fhead .fmt{order:3;flex:1 1 100%;min-width:0;width:0}
+.fone{min-width:0}
+.fmt>*{flex:0 0 auto}
+.fmt .fmtfont{max-width:118px}
 .fmt .hc i{display:block;width:16px;height:16px;border-radius:50%;border:2px solid #f3eeeb;box-shadow:0 0 0 1px #0f0d0c}
 .fmt[data-scope="part"]{border-color:var(--accent)}
 .lhead{display:flex;align-items:center;gap:8px;min-height:36px}
@@ -1301,7 +1310,10 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 const clone = o => o == null ? o : JSON.parse(JSON.stringify(o));
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const pad2 = n => String(n).padStart(2, "0");
-const up = s => String(s ?? "").toUpperCase();
+/* every text prints in capitals, except one whose case was set on the board (UPPER / lower / Proper): TYPED holds those texts
+   (as stored, and with {handle} filled in) for the slide being drawn, and they print as typed */
+let TYPED = null;
+const up = s => { s = String(s ?? ""); return TYPED && TYPED.has(s) ? s : s.toUpperCase(); };
 const slug = s => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "slide";
 const fill = (s, post) => String(s ?? "").replace(/\{handle\}/gi, (post && post.handle) || "");
 const capH = size => (FK ? FAMS[FK].cap : CAPR) * size;
@@ -3099,6 +3111,11 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
   }
   PFR = s.type !== "frame" && s.pframe && FRAMES[s.pframe.kind] && s.img ? { slot: s.img, f: frameOf({ frame: s.pframe }), inkAuto: s.ink !== "white" && s.ink !== "black" } : null;
   NUMOFF = s0.num === "hide" || (s0.num !== "show" && !!post && post.num === "hide");
+  TYPED = new Set();
+  { const pick = (o, p) => p.split(".").reduce((a, k) => a == null ? a : a[k], o), add = v => { if (v == null || typeof v === "object") return; TYPED.add(String(v)); TYPED.add(fillR(v, post)); };
+    for (const [p, on] of Object.entries(s0.tcase || {})) if (on) add(pick(s0, p));
+    for (const [p, on] of Object.entries((post && post.tcase) || {})) if (on) add(pick({ post }, p));
+    for (const st of s0.stickers || []) if (st && st.tcase) add(st.label); }
   OVERLAY = !!s0.overlay; KEEP = keep; PH = []; WHOLE = !!s.whole; RENDER_SCALE = forExport ? 1 : scale; TB = {}; TF = null; EXPORTING = !!forExport;
   BG = bgOf(s); HL = HEXCOL.test(s.hl) ? s.hl : null; DISP = famOf(post, s); FOV = s.fonts && typeof s.fonts === "object" ? s.fonts : null; TST = s.tstyle && typeof s.tstyle === "object" ? s.tstyle : null; LSY = {};
   INK = s.ink === "black" ? "#111111" : s.ink === "white" ? "#ffffff" : BG ? inkOn(BG.c2 ? mixHex(BG.c1, BG.c2) : BG.c1) : "#ffffff";   /* auto: dark text on a light background */
@@ -5315,6 +5332,20 @@ function stickerAt(s, boxes, x, y) {
 }
 const overEl = (el, e, pad = 14) => { if (!el || el.hidden) return false; const r = el.getBoundingClientRect(); return e.clientX >= r.left - pad && e.clientX <= r.right + pad && e.clientY >= r.top - pad && e.clientY <= r.bottom + pad; };
 const snapX = (nx, w) => Math.abs(nx - 0.5) * w < 18 ? 0.5 : nx;
+/* while dragging in the large view, a centre that comes within 18 slide px of the slide's middle (left to right, top to bottom, or both)
+   locks on, like a magnet, and a dashed guide shows the line (S.guides, drawn over the slide until the finger or mouse lets go) */
+const SNAP = 18;
+function snapMid(cx, cy, g) {
+  const v = Math.abs(cx - g.w / 2) < SNAP, h = Math.abs(cy - g.h / 2) < SNAP;
+  S.guides = v || h ? { v, h } : null;
+  return [v ? g.w / 2 - cx : 0, h ? g.h / 2 - cy : 0];
+}
+function drawGuides(cv, sc) {
+  const gd = S.guides; if (!gd || !focusSid) return;
+  const g = geoOf(focusSid), c = cv.getContext("2d"), px = (window.devicePixelRatio || 1) / sc;
+  c.save(); c.setTransform(sc, 0, 0, sc, 0, 0); c.lineWidth = 1.6 * px; c.setLineDash([9 * px, 7 * px]); c.strokeStyle = "#ff3ea5"; c.shadowColor = "rgba(0,0,0,.35)"; c.shadowBlur = 2 * px;
+  c.beginPath(); if (gd.v) { c.moveTo(g.w / 2, 0); c.lineTo(g.w / 2, g.h); } if (gd.h) { c.moveTo(0, g.h / 2); c.lineTo(g.w, g.h / 2); } c.stroke(); c.restore();
+}
 const sizeOf = st => +st.size || STICKERS[st.kind].size;
 
 /* a slide someone is dragging, pinching, turning or resizing right now: kept as it is on screen (a save coming back from the
@@ -5429,7 +5460,7 @@ fcv.addEventListener("pointermove", e => {
   if (fg.mode === "drag" && fpts.size === 1) {
     if (!fg.dragged && Math.hypot(e.clientX - fg.c0[0], e.clientY - fg.c0[1]) < 6) return;
     fRemember(); fg.dragged = fg.moved = true;
-    st.x = clamp(snapX((p[0] - fg.ox) / fg.g.w, fg.g.w), 0, 1); st.y = clamp((p[1] - fg.oy) / fg.g.h, 0, 1);
+    { const cx = p[0] - fg.ox, cy = p[1] - fg.oy, [sx, sy] = snapMid(cx, cy, fg.g); st.x = clamp((cx + sx) / fg.g.w, 0, 1); st.y = clamp((cy + sy) / fg.g.h, 0, 1); }
     const tr = $("#fTrash"); tr.hidden = false; tr.classList.toggle("hot", overEl(tr, e, 18));
   } else if (fg.mode === "pinch" && fpts.size >= 2) {
     const [a, b] = [...fpts.values()];
@@ -5438,7 +5469,7 @@ fcv.addEventListener("pointermove", e => {
     let r = fg.r0 + (ang - fg.a0) * 180 / Math.PI;
     r = ((r % 360) + 540) % 360 - 180; if (Math.abs(r) < 4) r = 0;
     st.size = Math.round(clamp(fg.s0 * d / fg.d0, 40, MAX_SIZE(st))); st.rot = Math.round(r);
-    st.x = clamp(snapX((fg.c0[0] + (a[0] + b[0]) / 2 - fg.m0[0]) / fg.g.w, fg.g.w), 0, 1); st.y = clamp((fg.c0[1] + (a[1] + b[1]) / 2 - fg.m0[1]) / fg.g.h, 0, 1);
+    { const cx = fg.c0[0] + (a[0] + b[0]) / 2 - fg.m0[0], cy = fg.c0[1] + (a[1] + b[1]) / 2 - fg.m0[1], [sx, sy] = snapMid(cx, cy, fg.g); st.x = clamp((cx + sx) / fg.g.w, 0, 1); st.y = clamp((cy + sy) / fg.g.h, 0, 1); }
     fg.moved = true;
   } else return;
   scheduleDraw(focusSid);
@@ -5447,6 +5478,7 @@ function fUp(e) {
   if (lpts.has(e.pointerId)) return liteUp(e);
   if (!fpts.has(e.pointerId)) return;
   fpts.delete(e.pointerId);
+  if (S.guides && !fpts.size) { S.guides = null; requestAnimationFrame(() => drawFocus(true)); }
   if (!fg) return;
   const st = fg.st, sid = focusSid, tr = $("#fTrash");
   if (fpts.size === 1 && fg.mode === "pinch") { fDragFrom(st, [...fpts.values()][0], null); return; }   /* one finger lifted: keep dragging with the other */
@@ -5722,7 +5754,11 @@ function moveGroup(s, f) {
 function textGrab(s, grp, tf, p, e) {
   const g = { mode: "tmove", grp, field: tf, p0: p, c0: [e.clientX, e.clientY], moved: false };
   if (grp.startsWith("rows.")) { const i = +grp.slice(5), b = (S.frows || [])[i]; g.row = i; g.cy0 = b ? (b.y0 + b.y1) / 2 : p[1]; }
-  else g.base = ((s.layout || {}).move || {})[grp] || [0, 0];
+  else {
+    g.base = ((s.layout || {}).move || {})[grp] || [0, 0];
+    const bs = editorRefs(s, tf).map(r => (S.ftboxes || {})[fieldPath(s, r)]).filter(b => b && Number.isFinite(b.x0) && b.x1 > b.x0);   /* the block as drawn now, for snapping its centre */
+    if (bs.length) g.c0b = [(Math.min(...bs.map(b => b.x0)) + Math.max(...bs.map(b => b.x1))) / 2, (Math.min(...bs.map(b => b.y0)) + Math.max(...bs.map(b => b.y1))) / 2];
+  }
   return g;
 }
 function moveText(fg, p) {
@@ -5736,8 +5772,10 @@ function moveText(fg, p) {
     const b = boxes[fg.row];
     ROWDRAG = { s, i: fg.row, dy: b ? Math.round(at - (b.y0 + b.y1) / 2) : 0 };
   } else {
-    const nx = fg.base[0] + dx;
-    s.layout = s.layout || {}; s.layout.move = { ...(s.layout.move || {}), [fg.grp]: [Math.round(Math.abs(nx) < 18 ? 0 : nx), Math.round(fg.base[1] + dy)] };   /* snaps back to center */
+    let nx = fg.base[0] + dx, ny = fg.base[1] + dy;
+    if (fg.c0b) { const [sx, sy] = snapMid(fg.c0b[0] + dx, fg.c0b[1] + dy, geoOf(focusSid)); nx += sx; ny += sy; if (!sx && Math.abs(nx) < 18) nx = 0; }   /* the slide's middle, else back where auto-fit put it */
+    else if (Math.abs(nx) < 18) nx = 0;
+    s.layout = s.layout || {}; s.layout.move = { ...(s.layout.move || {}), [fg.grp]: [Math.round(nx), Math.round(ny)] };
   }
   scheduleDraw(focusSid);
 }
@@ -6235,19 +6273,59 @@ function setSel(el, a, z = a) {
    box's focus and selection (no tap reaches the box), so the keyboard stays up. Highlight color: one per slide, the swatch cycles it. */
 const FMTS = [["b", "Bold"], ["i", "Italic"], ["u", "Underline"], ["h", "Highlight"]];
 const HL_COLORS = [null, "#e02d12", "#ffd23f", "#111111", "#ffffff"], HL_NAMES = { "#e02d12": "cover red", "#ffd23f": "yellow", "#111111": "black", "#ffffff": "white" };
-const fmtBarHTML = () => `<div class="fmt" role="toolbar" aria-label="Text style">${FMTS.map(([k, l]) => `<button type="button" data-fmt="${k}" aria-pressed="false" aria-label="${l}" title="${l}"><span class="g${k}">${l[0]}</span></button>`).join("")}<button type="button" data-fmt="hc" class="hc" aria-label="Highlight color" title="Highlight color"><i></i></button>${fontSpanSel()}</div>`;
+/* Case: UPPERCASE, lowercase or Proper Case for the selected words (or the whole text). Slides print text in capitals, so a text whose
+   case is set here prints as typed (slide.tcase[path]; a text layer's own tcase; the header's post.tcase); the rest of it keeps the
+   capitals it showed. Back to all capitals, it goes back to the default. */
+const CASES = [["upper", "UPPERCASE", "AB"], ["lower", "lowercase", "ab"], ["proper", "Proper Case", "Ab"]];
+/* scope: with "Whole row" on (a block of several boxes, like a settings row), every button styles all its boxes, whole */
+const fmtBarHTML = scope => `<div class="fmt" role="toolbar" aria-label="Text style">${FMTS.map(([k, l]) => `<button type="button" data-fmt="${k}" aria-pressed="false" aria-label="${l}" title="${l}"><span class="g${k}">${l[0]}</span></button>`).join("")}<button type="button" data-fmt="hc" class="hc" aria-label="Highlight color" title="Highlight color"><i></i></button><i class="fsep" aria-hidden="true"></i>${CASES.map(([k, l, g]) => `<button type="button" data-fmt="${k}" class="fcase" aria-label="${l}" title="${l}"><span>${g}</span></button>`).join("")}${fontSpanSel()}${scope ? `<button type="button" data-fmt="all" class="fall" aria-pressed="${!!S.fmtAll}" title="B, I, U, H, case and font style every box in this ${scope}">${scope === "row" ? "Whole row" : "All boxes"}</button>` : ""}</div>`;
 /* a font for the selected words (or the whole text): different fonts in one text */
 const fontSpanSel = () => `<select class="ctl fmtfont" data-fmtfont aria-label="Font for the selected words" title="Font for the selected words"><option value="">Font…</option><option value="-">The text's own font</option><option value="nimbus">Nimbus Sans</option>${FAM_CATS.map(c => { const fs = Object.entries(FAMS).filter(([, f]) => f.cat === c); return fs.length ? `<optgroup label="${c}">${fs.map(([k, f]) => `<option value="${k}">${esc(f.label)}</option>`).join("")}</optgroup>` : ""; }).join("")}</select>`;
 function applyFontSpan(key) {
   const snap = fmtSnap; fmtSnap = null;
-  const el = curRich(); if (!el || !key) return;
-  const ch = richChars(el, true), r = fmtRange(el, ch, snap), head = !!HEAD_FIELDS[el.dataset.ff];
-  if (r.z <= r.a) { toast("Type some text first"); return; }
-  for (let i = r.a; i < r.z; i++) { if (key === "-") delete ch[i].f; else ch[i].f = key; }
-  setRich(el, toMarked(oneLine(el.dataset.ff, ch)));
-  if (r.sel) { el.focus({ preventScroll: true }); if (r.part) setSel(el, r.sel[0], r.sel[1]); else setSel(el, r.sel[1]); }
-  if (!head) remember(focusSid);
-  onFF(el, true); updateFmtBar();
+  if (!key) return;
+  const T = fmtTargets(snap).filter(t => t.r.z > t.r.a); if (!T.length) { toast("Type some text first"); return; }
+  if (T.some(t => !HEAD_FIELDS[t.el.dataset.ff])) remember(focusSid);
+  for (const t of T) {
+    for (let i = t.r.a; i < t.r.z; i++) { if (key === "-") delete t.ch[i].f; else t.ch[i].f = key; }
+    setRich(t.el, toMarked(oneLine(t.el.dataset.ff, t.ch))); onFF(t.el, true);
+  }
+  refocusFmt(T); updateFmtBar();
+  if (T.length > 1) toast(`${key === "-" ? "The text's own font" : (FAMS[key] || {}).label || "Nimbus Sans"} on the whole ${S.ftfield && /^text\.rows\./.test(S.ftfield) ? "row" : "block"}`);
+}
+/* what the style buttons act on: the open box (its selected words, else all of it), or with Whole row on every box of the block, whole */
+function fmtTargets(snap) {
+  const el = curRich(); if (!el) return [];
+  const all = S.fmtAll ? $$("#fPanel .fone .fgrid [contenteditable][data-ff]") : [];
+  if (all.length > 1) return all.map(b => { const ch = richChars(b, true); let a = 0, z = ch.length; while (a < z && /\s/.test(ch[a].c)) a++; while (z > a && /\s/.test(ch[z - 1].c)) z--; return { el: b, ch, r: { a, z, part: false, sel: b === el && document.activeElement === el ? selIn(el) : null } }; });
+  const ch = richChars(el, true); return [{ el, ch, r: fmtRange(el, ch, snap) }];
+}
+function refocusFmt(T) {   /* the box that had the focus gets it back, with the same selection */
+  const t = T.find(x => x.r.sel); if (!t) return;
+  if (document.activeElement !== t.el) t.el.focus({ preventScroll: true });
+  if (t.r.part) setSel(t.el, t.r.sel[0], t.r.sel[1]); else setSel(t.el, t.r.sel[1]);
+}
+const typedOf = (s, path) => { const m = path.match(/^stickers\.(\d+)\./); return m ? !!((s.stickers || [])[+m[1]] || {}).tcase : HEAD_FIELDS[path] ? !!((S.post || {}).tcase || {})[path] : !!(s.tcase || {})[path]; };
+function setTyped(s, path, on) {
+  const m = path.match(/^stickers\.(\d+)\./);
+  if (m) { const st = (s.stickers || [])[+m[1]]; if (st) { if (on) st.tcase = 1; else delete st.tcase; } return; }
+  if (HEAD_FIELDS[path]) { const tc = { ...((S.post || {}).tcase || {}) }; if (on) tc[path] = 1; else delete tc[path]; if (Object.keys(tc).length) S.post.tcase = tc; else delete S.post.tcase; saveMeta(); return; }
+  const tc = { ...(s.tcase || {}) }; if (on) tc[path] = 1; else delete tc[path];
+  if (Object.keys(tc).length) s.tcase = tc; else delete s.tcase;
+}
+function applyCase(mode, snap) {
+  const s = S.slides[focusSid]; if (!s) return;
+  const T = fmtTargets(snap).filter(t => t.r.z > t.r.a); if (!T.length) { toast("Type some text first"); return; }
+  const word = c => /[\p{L}\p{N}'’]/u.test(c);
+  if (T.some(t => !HEAD_FIELDS[t.el.dataset.ff])) remember(focusSid);
+  for (const t of T) {
+    const path = t.el.dataset.ff;
+    if (!typedOf(s, path)) for (const c of t.ch) c.c = c.c.toUpperCase();   /* it showed in capitals: the rest keeps that look */
+    for (let i = t.r.a; i < t.r.z; i++) { const c = t.ch[i].c; t.ch[i].c = mode === "upper" ? c.toUpperCase() : mode === "lower" ? c.toLowerCase() : (i === 0 || !word(t.ch[i - 1].c)) ? c.toUpperCase() : c.toLowerCase(); }
+    const all = t.ch.map(c => c.c).join(""); setTyped(s, path, all !== all.toUpperCase());
+    setRich(t.el, toMarked(oneLine(path, t.ch))); onFF(t.el, true);
+  }
+  refocusFmt(T); updateFmtBar();
 }
 document.addEventListener("pointerdown", e => { const sel = e.target.closest && e.target.closest("[data-fmtfont]"); if (!sel) return; const el = curRich(); fmtSnap = el ? { el, sel: document.activeElement === el ? selIn(el) : (lastRich === el ? fmtSnap && fmtSnap.sel : null), t: Date.now() } : null; }, true);
 document.addEventListener("change", e => { const sel = e.target.closest && e.target.closest("[data-fmtfont]"); if (!sel) return; const v = sel.value; sel.value = ""; applyFontSpan(v); });
@@ -6270,7 +6348,9 @@ function updateFmtBar() {
   $$("button", bar).forEach(b => { b.disabled = !el; b.title = b.getAttribute("aria-label"); });
   const hc = bar.querySelector(".hc"); hc.querySelector("i").style.background = s.hl || ""; hc.setAttribute("aria-label", `Highlight color: ${s.hl ? HL_NAMES[s.hl] || s.hl : "the text's own color"}`);
   const fp = $("#fPanel"); fp.style.setProperty("--hl", s.hl || "#f3eeeb"); fp.style.setProperty("--hlInk", inkOn(s.hl || "#f3eeeb"));   /* the boxes show highlights in the slide's color */
+  const fa = bar.querySelector(".fall"); if (fa) { fa.setAttribute("aria-pressed", String(!!S.fmtAll)); fa.disabled = false; }
   if (!el) { bar.dataset.scope = "none"; return; }
+  if (S.fmtAll && fa) { for (const [k] of FMTS) bar.querySelector(`[data-fmt="${k}"]`).setAttribute("aria-pressed", "false"); bar.dataset.scope = "all"; return; }
   const ch = richChars(el), r = fmtRange(el, ch), bold = baseWeight(s, el.dataset.ff) === 700;
   for (const [k] of FMTS) {
     const b = bar.querySelector(`[data-fmt="${k}"]`), on = (k === "b" && bold) || (r.z > r.a && ch.slice(r.a, r.z).every(c => /\s/.test(c.c) || c[k]));
@@ -6283,19 +6363,18 @@ function applyFmt(k, fromButton) {
   const snap = fromButton ? fmtSnap : null; fmtSnap = null;
   const s = S.slides[focusSid]; if (!s) return;
   if (k === "hc") return cycleHL();
-  const el = curRich(); if (!el) return;
-  if (k === "b" && baseWeight(s, el.dataset.ff) === 700) { toast("This text is bold already"); return; }
-  const ch = richChars(el, true), r = fmtRange(el, ch, snap), head = !!HEAD_FIELDS[el.dataset.ff];
-  if (r.z <= r.a) { toast("Type some text first"); return; }
-  const on = ch.slice(r.a, r.z).every(c => /\s/.test(c.c) || c[k]);
-  for (let i = r.a; i < r.z; i++) ch[i][k] = on ? 0 : 1;
-  setRich(el, toMarked(oneLine(el.dataset.ff, ch)));
-  if (r.sel) {   /* it had the focus: give it back with the same selection */
-    if (document.activeElement !== el) el.focus({ preventScroll: true });
-    if (r.part) setSel(el, r.sel[0], r.sel[1]); else setSel(el, r.sel[1]);
+  if (k === "all") { S.fmtAll = !S.fmtAll; updateFmtBar(); toast(S.fmtAll ? "Style buttons, case and font now change every box here" : "Style buttons change the open box again"); return; }
+  if (CASES.some(([c]) => c === k)) return applyCase(k, snap);
+  let T = fmtTargets(snap).filter(t => t.r.z > t.r.a);
+  if (!T.length) { toast("Type some text first"); return; }
+  if (k === "b") { T = T.filter(t => baseWeight(s, t.el.dataset.ff) !== 700); if (!T.length) { toast("This text is bold already"); return; } }
+  const on = T.every(t => t.ch.slice(t.r.a, t.r.z).every(c => /\s/.test(c.c) || c[k]));
+  if (T.some(t => !HEAD_FIELDS[t.el.dataset.ff])) remember(focusSid);   /* each style change is its own Undo step (the header isn't part of a slide's history) */
+  for (const t of T) {
+    for (let i = t.r.a; i < t.r.z; i++) t.ch[i][k] = on ? 0 : 1;
+    setRich(t.el, toMarked(oneLine(t.el.dataset.ff, t.ch))); onFF(t.el, true);
   }
-  if (!head) remember(focusSid);   /* each style change is its own Undo step (the header isn't part of a slide's history) */
-  onFF(el, true); updateFmtBar();
+  refocusFmt(T); updateFmtBar();
 }
 function cycleHL() {
   const s = S.slides[focusSid], next = HL_COLORS[(HL_COLORS.indexOf(s.hl || null) + 1) % HL_COLORS.length];
@@ -6376,7 +6455,7 @@ function textPanelHTML(s) {
       return `<div class="ff${r === S.ftfield ? " cur" : ""}${NARROW.test(path) ? "" : " wide"}" data-ref="${esc(r)}">${ffInput(s, path, m ? short[m[1]] : null)}</div>`
         + (st ? `<div class="ff wide lay"><div class="rowhead">${layerOpts(st, i)}<span class="grow"></span></div></div>` : ""); };
     const tabs = refs.length > 1 ? `<div class="ftabs" role="group" aria-label="Boxes in this block">${refs.map(r => `<button type="button" data-ftab="${esc(r)}" aria-pressed="${r === S.ftfield}">${esc(tabLabel(s, r))}</button>`).join("")}</div>` : "";
-    return `<div class="fone${refs.length > 1 ? " tabbed" : ""}"><div class="fhead"><b>${esc(editorTitle(s, S.ftfield))}</b><span class="grow"></span>${fmtBarHTML()}<button type="button" class="btn primary sm" data-fact="done">Done</button></div>
+    return `<div class="fone${refs.length > 1 ? " tabbed" : ""}"><div class="fhead"><b>${esc(editorTitle(s, S.ftfield))}</b><span class="grow"></span>${fmtBarHTML(refs.length > 1 ? (/^text\.rows\./.test(S.ftfield) ? "row" : "block") : null)}<button type="button" class="btn primary sm" data-fact="done">Done</button></div>
       ${tabs}<div class="fgrid">${refs.map(cell).join("")}</div>
       ${spacingHTML(s, S.ftfield)}
       <div class="actions"><button type="button" class="btn sm" data-fact="dup">${DUP_I}Duplicate</button><button type="button" class="btn sm" data-fact="all">All text</button></div></div>`;
@@ -8057,6 +8136,7 @@ function drawFocus(fast) {
     if (!g) S.crop = null;
     else { const c = cv.getContext("2d"); c.save(); c.setTransform(sc, 0, 0, sc, 0, 0); c.beginPath(); c.rect(0, 0, g0w(), g0h()); c.rect(g.f.x, g.f.y, g.f.w, g.f.h); c.clip("evenodd"); c.globalAlpha = 0.4; c.drawImage(g.img, g.x, g.y, g.w, g.h); c.restore(); }
   }
+  drawGuides(cv, sc);
   if (S.psel && !(S.fphotos || []).some(f => f.key === S.psel)) S.psel = null;
   S.focusBoxes = d.boxes || []; S.ftboxes = d.tboxes || {}; S.frows = d.rowBoxes || [];
   if (fast === true) return;   /* a video frame: just the picture */
