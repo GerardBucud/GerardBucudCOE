@@ -778,6 +778,12 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .inline-form .hint{margin:0;color:var(--muted);font-size:13px}
 .lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
 .tile{position:relative;display:grid;gap:4px;min-width:0;border:0;background:none;padding:0;text-align:left;cursor:pointer;font-size:12px;color:var(--muted)}
+.tile .newb{position:absolute;right:6px;top:6px;padding:2px 7px;border-radius:999px;background:#1f6feb;color:#fff;font:700 10px/1.5 system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;pointer-events:none;z-index:2}
+#libSec.dropping{outline:3px dashed #1f6feb;outline-offset:6px;border-radius:8px}
+#libSec.dropping .lib{opacity:.6}
+#libSort{width:auto;flex:0 0 auto}
+.tile .vdur{top:36px!important}
+.tile:has(.sim) .newb{right:38px}
 .tile .vdur,#pickGrid .vdur{position:absolute;left:6px;top:6px;padding:2px 7px;border-radius:999px;background:rgba(0,0,0,.66);color:#fff;font:600 11px/1.5 system-ui,sans-serif;pointer-events:none;z-index:2}
 #pickGrid button{position:relative}
 .tile video.tvid{position:absolute;left:0;top:0;width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;pointer-events:none;z-index:1}
@@ -977,7 +983,7 @@ details.gsec[open]{padding-bottom:14px}
 
 <dialog id="pickDlg" aria-labelledby="pickTitle">
   <div class="dlg-h"><h3 id="pickTitle">Replace image</h3><span class="grow"></span>
-    <label class="btn primary sm" id="pickUploadLbl"><span id="pickUploadTxt">Upload new photo</span><input type="file" id="pickUpload" accept="image/*,video/*" class="sr"></label>
+    <label class="btn primary sm" id="pickUploadLbl"><span id="pickUploadTxt">Upload new photo</span><input type="file" id="pickUpload" accept="image/*,video/*" multiple class="sr"></label>
     <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="dlg-b"><p id="pickHint" style="margin:0 0 12px;color:var(--muted)">Pick a photo from your library. The text design re-fits to the photo you choose.</p>
     <div class="searchrow"><label class="sr" for="pickSearch">Search photos</label><input type="search" class="ctl" id="pickSearch" placeholder="Search by name, folder or what's in it" autocomplete="off"></div>
@@ -4132,14 +4138,14 @@ function renderMain() {
     <section class="section" id="libSec">
       <div class="sec-h"><h2>Photo library</h2><span class="grow"></span><button class="btn sm" id="tagBtn" hidden>Tag photos</button><button class="btn sm" id="newFolderBtn">New folder</button>
         <label class="btn sm primary" id="libUploadLbl">Upload photos or videos<input type="file" id="libUpload" accept="image/*,video/*" multiple class="sr"></label></div>
-      <p class="hint">Shared by all your posts. Tap photos to select several, then move them into a folder or delete them. New uploads get a short description and tags from Claude, so search finds them by what's in them.</p>
-      <div class="searchrow"><label class="sr" for="libSearch">Search photos</label><input type="search" class="ctl" id="libSearch" placeholder="Search photos, e.g. wing, flat lay, red" autocomplete="off"><span class="hint" id="tagNote" role="status"></span></div>
+      <p class="hint">Shared by all your posts. Upload as many photos and videos as you like at once (or drop them here); the newest show first. Tap photos to select several, then move them into a folder or delete them. New uploads get a short description and tags from Claude, so search finds them by what's in them.</p>
+      <div class="searchrow"><label class="sr" for="libSearch">Search photos</label><input type="search" class="ctl" id="libSearch" placeholder="Search photos, e.g. wing, flat lay, red" autocomplete="off"><label class="sr" for="libSort">Order</label><select class="ctl" id="libSort" title="Order"><option value="new">Newest first</option><option value="old">Oldest first</option><option value="name">Name A–Z</option></select><span class="hint" id="tagNote" role="status"></span></div>
       <form class="inline-form" id="folderForm" hidden><label class="sr" for="folderName">Folder name</label><input class="ctl" id="folderName" placeholder="Folder name" maxlength="60"><span class="hint" id="folderWhere"></span>
         <button class="btn sm primary" type="submit" id="folderOk">Create folder</button><button class="btn sm ghost" type="button" id="folderCancel">Cancel</button></form>
       <div class="libwrap"><nav class="folders" id="folders" aria-label="Folders"></nav>
         <div class="libmain"><div class="foldertools" id="folderTools"></div><div class="seltools" id="selTools" hidden></div><div class="lib" id="lib"></div></div></div>
     </section>`;
-  $("#libSearch").value = S.libQuery;
+  $("#libSearch").value = S.libQuery; $("#libSort").value = S.libSort;
   renderMeta();
   renderBoard(new Set(Object.keys(S.slides)));
   renderLibrary();
@@ -4217,6 +4223,7 @@ document.addEventListener("input", e => {
     const t = $(`.tile[data-id="${CSS.escape(id)}"]`);
     if (t) { t.querySelector(".nm").textContent = p.name; t.querySelector(".ds").textContent = p.desc || ""; }
   } else if (el.id === "libSearch") { S.libQuery = el.value; S.lastTile = null; renderLibrary(); }
+  else if (el.id === "libSort") { S.libSort = LIB_SORTS[el.value] ? el.value : "new"; try { localStorage.setItem("carousel.libSort", S.libSort); } catch (e) {} S.lastTile = null; renderLibrary(); if ($("#pickDlg").open) renderPicker(); }
   else if (el.id === "pickSearch") { S.pickQuery = el.value; renderPicker(); }
 });
 document.addEventListener("change", e => {
@@ -4260,7 +4267,7 @@ document.addEventListener("change", e => {
   else if (el.id === "postSel") selectPost(el.value);
   else if (el.id === "ratioSel") setPostRatio(el.value);
   else if (el.id === "libUpload") { uploadFiles([...el.files], realFolder(S.libFolder)); el.value = ""; }
-  else if (el.id === "pickUpload") { const f = el.files[0]; el.value = ""; if (f) uploadFiles([f], pickFor && pickFor.slot === "ref" ? REF_FOLDER : realFolder(S.pickFolder)).then(ids => { if (ids[0]) usePhoto(ids[0]); }); }
+  else if (el.id === "pickUpload") { const fs = [...el.files]; el.value = ""; if (fs.length) uploadFiles(fs, pickFor && pickFor.slot === "ref" ? REF_FOLDER : realFolder(S.pickFolder)).then(ids => { if (ids[0]) usePhoto(ids[0]); }); }   /* several: the first goes in the spot, all go in the library */
   else if (el.id === "refUpload") { const fs = [...el.files]; el.value = ""; uploadFiles(fs, REF_FOLDER).then(ids => { ids.forEach(id => { if (!S.refSel.includes(id) && S.refSel.length < refMax()) S.refSel.push(id); }); S.refFolder = REF_FOLDER; renderRefs(); }); }
   else if (el.id === "moveTo") {
     const v = el.value; el.value = "";
@@ -6771,8 +6778,8 @@ function deleteRowSel() {
 }
 
 /* ---------- photo library: one shared library, folders and subfolders ---------- */
-const realFolder = f => (f === "*" || f === "" || f === "~sim" || f === "~vid" || f == null) ? "" : f;
-const folderLabel = f => f === "*" ? "All photos" : f === "" ? "Unsorted" : f === "~sim" ? "Look-alikes" : f === "~vid" ? "Videos" : f.split("/").pop();
+const realFolder = f => (f === "*" || f === "" || f === "~sim" || f === "~vid" || f === "~new" || f == null) ? "" : f;
+const folderLabel = f => f === "*" ? "All photos" : f === "" ? "Unsorted" : f === "~sim" ? "Look-alikes" : f === "~vid" ? "Videos" : f === "~new" ? "Recent uploads" : f.split("/").pop();
 const depth = f => (f && f !== "*") ? f.split("/").length - 1 : 0;
 const parentOf = f => f.includes("/") ? f.slice(0, f.lastIndexOf("/")) : "";
 function folderTree() {
@@ -6782,9 +6789,17 @@ function folderTree() {
   return [...set].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
 }
 const inFolder = (p, f) => f === "*" ? true : f === "" ? !p.folder : (p.folder === f || String(p.folder || "").startsWith(f + "/"));
+/* the library's order (S.libSort, kept in this browser): newest uploads first by default, oldest first, or by name */
+const byName = (a, b) => String(a[1].name).localeCompare(String(b[1].name), undefined, { numeric: true, sensitivity: "base" });
+const LIB_SORTS = { new: (a, b) => (b[1].addedAt || 0) - (a[1].addedAt || 0) || byName(a, b), old: (a, b) => (a[1].addedAt || 0) - (b[1].addedAt || 0) || byName(a, b), name: (a, b) => byName(a, b) || (b[1].addedAt || 0) - (a[1].addedAt || 0) };
+S.libSort = (() => { try { const v = localStorage.getItem("carousel.libSort"); return LIB_SORTS[v] ? v : "new"; } catch (e) { return "new"; } })();
 function photosIn(f) {
-  return [...S.photos.entries()].filter(([, p]) => inFolder(p, f))
-    .sort((a, b) => String(a[1].folder || "").localeCompare(String(b[1].folder || "")) || (a[1].addedAt || 0) - (b[1].addedAt || 0) || String(a[1].name).localeCompare(String(b[1].name)));
+  return [...S.photos.entries()].filter(([, p]) => inFolder(p, f)).sort(LIB_SORTS[S.libSort] || LIB_SORTS.new);
+}
+/* Recent uploads: the 40 newest (and everything from the last upload), newest first */
+function recentPhotos() {
+  const all = [...S.photos.entries()].sort(LIB_SORTS.new), jr = S.justAdded || new Set();
+  return all.filter(([id], i) => i < 40 || jr.has(id));
 }
 function usedMap() {
   const used = new Map(), nm = numbering();
@@ -6794,7 +6809,7 @@ function usedMap() {
 /* search: every word has to appear in the photo's name, folder, description or tags */
 const hay = p => [p.name, p.folder || "unsorted", p.desc, (p.tags || []).join(" "), isVid(p) ? "video clip" : ""].join(" ").toLowerCase();
 const matches = (p, q) => String(q || "").toLowerCase().split(/[\s,]+/).filter(Boolean).every(w => hay(p).includes(w));
-const visiblePhotos = () => S.libQuery.trim() ? photosIn("*").filter(([, p]) => matches(p, S.libQuery)) : S.libFolder === "~sim" ? simPhotos() : S.libFolder === "~vid" ? photosIn("*").filter(([, p]) => isVid(p)) : photosIn(S.libFolder);
+const visiblePhotos = () => S.libQuery.trim() ? photosIn("*").filter(([, p]) => matches(p, S.libQuery)) : S.libFolder === "~sim" ? simPhotos() : S.libFolder === "~vid" ? photosIn("*").filter(([, p]) => isVid(p)) : S.libFolder === "~new" ? recentPhotos() : photosIn(S.libFolder);
 /* Look-alikes: each photo gets a 64-bit difference hash of its grayscale picture (`ph`), so the same shot still matches
    after a different filter, grade or text on top. Photos whose hashes differ in ≤ SIM_BITS bits, or with the same file name, are grouped. */
 const SIM_BITS = 6;
@@ -6843,19 +6858,20 @@ function renderLibrary() {
   const lib = $("#lib"); if (!lib) return;
   const tree = folderTree(), q = S.libQuery.trim(), sim = lookAlikes();
   const nSim = sim.size, nVid = [...S.photos.values()].filter(isVid).length;
-  if (S.libFolder === "~sim" ? !sim.size : S.libFolder === "~vid" ? !nVid : (S.libFolder !== "*" && S.libFolder !== "" && !tree.includes(S.libFolder))) S.libFolder = "*";
-  $("#folders").innerHTML = ["*", "", ...tree].map(f => `<button type="button" data-folder="${esc(f)}" aria-current="${!q && S.libFolder === f}" style="padding-left:${10 + depth(f) * 16}px">${esc(folderLabel(f))}<span>${photosIn(f).length}</span></button>`).join("")
+  if (S.libFolder === "~sim" ? !sim.size : S.libFolder === "~vid" ? !nVid : S.libFolder === "~new" ? !S.photos.size : (S.libFolder !== "*" && S.libFolder !== "" && !tree.includes(S.libFolder))) S.libFolder = "*";
+  $("#folders").innerHTML = (S.photos.size ? `<button type="button" class="simf" data-folder="~new" aria-current="${!q && S.libFolder === "~new"}" style="padding-left:10px">Recent uploads<span>${Math.min(S.photos.size, Math.max(40, (S.justAdded || new Set()).size))}</span></button>` : "") + ["*", "", ...tree].map(f => `<button type="button" data-folder="${esc(f)}" aria-current="${!q && S.libFolder === f}" style="padding-left:${10 + depth(f) * 16}px">${esc(folderLabel(f))}<span>${photosIn(f).length}</span></button>`).join("")
     + (nVid ? `<button type="button" class="simf" data-folder="~vid" aria-current="${!q && S.libFolder === "~vid"}" style="padding-left:10px">Videos<span>${nVid}</span></button>` : "")
     + (nSim ? `<button type="button" class="simf" data-folder="~sim" aria-current="${!q && S.libFolder === "~sim"}" style="padding-left:10px">Look-alikes<span>${nSim}</span></button>` : "");
   const ft = $("#folderTools"), used = usedMap(), items = visiblePhotos();
   if (q) ft.innerHTML = `<span class="path">${items.length} result${items.length === 1 ? "" : "s"} for “${esc(q)}”</span><button type="button" class="btn ghost sm" data-lib="clearsearch">Clear search</button>`;
   else if (S.libFolder === "~sim") ft.innerHTML = `<span class="path">Look-alikes</span><span class="hint" style="margin:0">Photos that look like another one: the same shot or file name, even with a different filter or text on top. Most likely duplicates: keep the one you use and delete the rest.</span>`;
+  else if (S.libFolder === "~new") ft.innerHTML = `<span class="path">Recent uploads</span><span class="hint" style="margin:0">Your newest photos and videos, from every folder, newest first.${S.justAdded && S.justAdded.size ? ` The ${S.justAdded.size === 1 ? "one" : S.justAdded.size} marked New just went up.` : ""}</span>`;
   else if (S.libFolder === "~vid") ft.innerHTML = `<span class="path">Videos</span><span class="hint" style="margin:0">Every video, from all folders. Hover one to play it; put it in a photo spot with Replace on a slide.</span>`;
   else if (S.libFolder === "*" || S.libFolder === "") ft.innerHTML = `<span class="path">${esc(folderLabel(S.libFolder))}</span>`;
   else if (S.folderForm && S.folderForm.mode === "rename") ft.innerHTML = `<span class="path">Rename folder</span>`;
   else ft.innerHTML = `<span class="path">${esc(S.libFolder.split("/").join(" / "))}</span><button type="button" class="btn ghost sm" data-lib="newsub">New subfolder</button><button type="button" class="btn ghost sm" data-lib="renamefolder">Rename</button><button type="button" class="btn ghost sm danger" data-lib="delfolder">Delete folder</button>`;
   const others = id => (sim.get(id) || []).map(x => (S.photos.get(x) || {}).name).filter(Boolean);
-  lib.innerHTML = items.map(([id, p]) => `<button type="button" class="tile" data-id="${esc(id)}" aria-pressed="${S.selected.has(id)}" aria-label="${esc(p.name)}${p.desc ? ": " + esc(p.desc) : ""}${sim.has(id) ? `, looks like ${others(id).length} other photo${others(id).length === 1 ? "" : "s"}` : ""}${S.selected.has(id) ? ", selected" : ""}" title="${esc([sim.has(id) ? "Looks like: " + others(id).join(", ") : "", p.desc, (p.tags || []).join(", ")].filter(Boolean).join(" · "))}"><img loading="lazy" src="${esc(srcOf(p))}" alt="">${isVid(p) ? `<span class="vdur" aria-label="video, ${fmtDur(p.dur)}">▶ ${fmtDur(p.dur)}</span>` : ""}<span class="tick" aria-hidden="true">${S.selected.has(id) ? "✓" : ""}</span>${sim.has(id) ? `<span class="sim">${SIMICON}</span>` : ""}<span class="nm">${esc(p.name)}</span><span class="ds">${esc(p.desc || "")}</span><span class="use">${used.has(id) ? "On slide " + used.get(id).join(", ") : (S.libFolder === "*" || S.libFolder === "~sim" || S.libFolder === "~vid" || q ? esc(p.folder ? p.folder.split("/").join(" / ") : "Unsorted") : "Not on this post")}</span></button>`).join("")
+  lib.innerHTML = items.map(([id, p]) => `<button type="button" class="tile" data-id="${esc(id)}" aria-pressed="${S.selected.has(id)}" aria-label="${esc(p.name)}${p.desc ? ": " + esc(p.desc) : ""}${sim.has(id) ? `, looks like ${others(id).length} other photo${others(id).length === 1 ? "" : "s"}` : ""}${S.selected.has(id) ? ", selected" : ""}" title="${esc([sim.has(id) ? "Looks like: " + others(id).join(", ") : "", p.desc, (p.tags || []).join(", ")].filter(Boolean).join(" · "))}"><img loading="lazy" src="${esc(srcOf(p))}" alt="">${isVid(p) ? `<span class="vdur" aria-label="video, ${fmtDur(p.dur)}">▶ ${fmtDur(p.dur)}</span>` : ""}${S.justAdded && S.justAdded.has(id) ? `<span class="newb">New</span>` : ""}<span class="tick" aria-hidden="true">${S.selected.has(id) ? "✓" : ""}</span>${sim.has(id) ? `<span class="sim">${SIMICON}</span>` : ""}<span class="nm">${esc(p.name)}</span><span class="ds">${esc(p.desc || "")}</span><span class="use">${used.has(id) ? "On slide " + used.get(id).join(", ") : (S.libFolder === "*" || S.libFolder === "~sim" || S.libFolder === "~vid" || S.libFolder === "~new" || q ? esc(p.folder ? p.folder.split("/").join(" / ") : "Unsorted") : "Not on this post")}</span></button>`).join("")
     || `<p class="hint">${q ? `No photos match “${esc(q)}”. Try another word, or clear the search.` : S.photos.size ? "No photos in this folder yet. Select photos in All photos and move them here." : "No photos yet. Upload photos or videos to start."}</p>`;
   $$(".tile", lib).forEach(t => { const id = t.dataset.id, p = S.photos.get(id), img = t.querySelector("img"); if (p && !p.ph && img) { if (img.complete) hashFromTile(id, img); else img.addEventListener("load", () => hashFromTile(id, img), { once: true }); } });
   renderSelTools();
@@ -7122,31 +7138,67 @@ function usePhoto(id) {
 }
 async function fileHash(f) { try { const bm = await createImageBitmap(f); const h = dhash(bm); if (bm.close) bm.close(); return h; } catch (e) { return null; } }
 function imageSize(src) { return new Promise(res => { const im = new Image(); im.onload = () => res([im.naturalWidth, im.naturalHeight]); im.onerror = () => res([0, 0]); im.src = src; }); }
-async function uploadFiles(files, folder) {
-  const added = [];
-  for (const f of files) {
-    const vid = /^video\//.test(f.type) || (!f.type && /\.(mp4|mov|m4v|webm)$/i.test(f.name));
-    if (!vid && !/^image\/(png|jpeg|webp|gif)$/.test(f.type)) { toast(`${f.name}: use a JPG, PNG or WebP photo, or a video`); continue; }
-    toast(`Uploading ${f.name}…`);
-    try {
-      if (vid) { added.push(await addVideo(f, folder)); continue; }
-      const name = f.name.replace(/\.[^.]+$/, "").slice(0, 80);
-      if (S.assets) {
-        const r = await S.assets.upload(f); const [w, h] = await imageSize(r.url), ph = await fileHash(f);
-        S.photos.set(r.id, { asset: r.id, name, w, h, folder, addedAt: Date.now(), ...(ph ? { ph } : {}) }); savePhoto(r.id, 200 + added.length * 120); added.push(r.id);
-      } else {
-        const url = URL.createObjectURL(f), [w, h] = await imageSize(url), id = "local-" + Date.now().toString(36) + added.length, ph = await fileHash(f);
-        S.photos.set(id, { file: url, name, w, h, folder, addedAt: Date.now(), ...(ph ? { ph } : {}) }); added.push(id);
-      }
-    } catch (e) {
-      const why = { too_large: "it's over 20 MB", unsupported_type: "that file type isn't supported", quota_or_state: "the board's storage is full", rate_limited: "too many uploads at once, try again in a moment",
-        read: "this browser can't play it. On a computer try Chrome or Safari, or save it from your phone as Most Compatible (H.264)", long: "it's over 3 minutes: trim it first", toobig: "it's still over 20 MB after making it smaller: trim it to a shorter clip", nocodec: "it's over 20 MB and this browser can't make it smaller: use Chrome or Safari, or trim it", nomuxer: "the video maker didn't load: check the connection and try again" }[e && e.code] || "the upload failed";
-      toast(`${f.name} wasn't added: ${why}`);
-    }
+/* Uploading: any number of files at once (the file picker takes several, or drop them on the library). Photos go up three at a time,
+   videos one at a time (a big one plays through to get smaller); a toast counts them and names any that didn't make it. A photo the
+   board can't store as it is (over 20 MB, or HEIC where the browser can open it) goes up as a JPG. New uploads show first. */
+const isVideoFile = f => /^video\//.test(f.type) || (!f.type && /\.(mp4|mov|m4v|webm)$/i.test(f.name));
+const isHeic = f => /^image\/hei[cf]$/.test(f.type) || /\.hei[cf]$/i.test(f.name);
+async function asJpeg(f) {   /* a big or HEIC photo as a JPG up to 6000 px (null: the browser can't open it) */
+  try {
+    const bm = await createImageBitmap(f), k = Math.min(1, 6000 / Math.max(bm.width, bm.height)), c = document.createElement("canvas");
+    c.width = Math.round(bm.width * k); c.height = Math.round(bm.height * k); c.getContext("2d").drawImage(bm, 0, 0, c.width, c.height); if (bm.close) bm.close();
+    for (const q of [0.92, 0.85, 0.75]) { const b = await new Promise(r => c.toBlob(r, "image/jpeg", q)); if (b && b.size <= VMAX) return new File([b], f.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" }); }
+  } catch (e) {}
+  return null;
+}
+const UPLOAD_WHY = { too_large: "it's over 20 MB", unsupported_type: "that file type isn't supported", quota_or_state: "the board's storage is full", rate_limited: "too many uploads at once, try again in a moment", notimage: "use a JPG, PNG, WebP or HEIC photo, or a video", heic: "this browser can't open HEIC photos: try Safari, or export it as JPG",
+  read: "this browser can't play it. On a computer try Chrome or Safari, or save it from your phone as Most Compatible (H.264)", long: "it's over 3 minutes: trim it first", toobig: "it's still over 20 MB after making it smaller: trim it to a shorter clip", nocodec: "it's over 20 MB and this browser can't make it smaller: use Chrome or Safari, or trim it", nomuxer: "the video maker didn't load: check the connection and try again" };
+async function addPhoto(f, folder, addedAt) {
+  if (!/^image\/(png|jpeg|webp|gif)$/.test(f.type) || f.size > VMAX) {
+    const heic = isHeic(f); if (!heic && !/^image\//.test(f.type)) throw vErr("notimage");
+    const j = await asJpeg(f); if (!j) throw vErr(heic ? "heic" : f.size > VMAX ? "too_large" : "notimage");
+    f = j;
   }
+  const name = f.name.replace(/\.[^.]+$/, "").slice(0, 80);
+  if (S.assets) {
+    const r = await S.assets.upload(f); const [w, h] = await imageSize(r.url), ph = await fileHash(f);
+    S.photos.set(r.id, { asset: r.id, name, w, h, folder, addedAt, ...(ph ? { ph } : {}) }); savePhoto(r.id, 200 + Math.random() * 600);
+    return r.id;
+  }
+  const url = URL.createObjectURL(f), [w, h] = await imageSize(url), id = "local-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), ph = await fileHash(f);
+  S.photos.set(id, { file: url, name, w, h, folder, addedAt, ...(ph ? { ph } : {}) });
+  return id;
+}
+async function uploadFiles(files, folder) {
+  const list = [...files]; if (!list.length) return [];
+  const t0 = Date.now(), ids = new Array(list.length).fill(null), fails = [], n = list.length;
+  let done = 0, running = true;
+  const count = () => { if (n > 1 && running) toast(`Uploading ${done} of ${n}…`); };
+  const one = async i => {
+    const f = list[i];
+    try { ids[i] = isVideoFile(f) ? await addVideo(f, folder) : await addPhoto(f, folder, t0 + (n - i)); }   /* the first one picked shows first */
+    catch (e) { fails.push(`${f.name} (${UPLOAD_WHY[e && e.code] || "the upload failed"})`); }
+    done++; count();
+    if (ids[i] && done % 4 === 0) renderLibrary();   /* they appear as they arrive */
+  };
+  toast(n > 1 ? `Uploading ${n} files…` : `Uploading ${list[0].name}…`);
+  const photos = list.map((f, i) => i).filter(i => !isVideoFile(list[i])), vids = list.map((f, i) => i).filter(i => isVideoFile(list[i]));
+  await Promise.all([0, 1, 2].map(async () => { while (photos.length) await one(photos.shift()); }));
+  for (const i of vids) await one(i);
+  running = false;
+  const added = ids.filter(Boolean);
   if (folder && !S.folders.includes(folder)) { S.folders.push(folder); saveFolders(); }
-  if (added.length) { const nv = added.filter(id => isVid(S.photos.get(id))).length, np = added.length - nv; renderLibrary(); if ($("#pickDlg").open) renderPicker(); toast([np ? `${np} photo${np > 1 ? "s" : ""}` : "", nv ? `${nv} video${nv > 1 ? "s" : ""}` : ""].filter(Boolean).join(" and ") + " added"); tagPhotos(added); }
-  return added;
+  if (added.length) {
+    S.justAdded = new Set(added);
+    if (!$("#pickDlg").open && !$("#refDlg")?.open) { S.libQuery = ""; const si = $("#libSearch"); if (si) si.value = ""; if (S.libFolder !== "*" && realFolder(S.libFolder) !== folder) S.libFolder = "~new"; }
+    renderLibrary(); if ($("#pickDlg").open) renderPicker();
+    const lib = $("#lib"); if (lib && !$("dialog[open]")) { const r = lib.getBoundingClientRect(); if (r.top < 0 || r.top > innerHeight - 120) lib.scrollIntoView({ behavior: "smooth", block: "start" }); }
+    tagPhotos(added);
+  }
+  const nv = added.filter(id => isVid(S.photos.get(id))).length, np = added.length - nv;
+  const what = [np ? `${np} photo${np > 1 ? "s" : ""}` : "", nv ? `${nv} video${nv > 1 ? "s" : ""}` : ""].filter(Boolean).join(" and ");
+  toast((what ? what + " added" : "Nothing was added") + (fails.length ? `. Not added: ${fails.slice(0, 3).join("; ")}${fails.length > 3 ? ` and ${fails.length - 3} more` : ""}` : ""));
+  return ids.filter(Boolean);
 }
 
 /* ---------- videos ----------
@@ -7426,6 +7478,18 @@ async function exportVideo(sid) {
   } catch (e) { toast("The video couldn't be made: " + vidWhy(e)); }
   finally { S.vbusy = false; }
 }
+/* drop photos and videos anywhere on the library to upload them (into the folder that's open) */
+const dragFiles = e => !!e.dataTransfer && [...(e.dataTransfer.types || [])].includes("Files");
+document.addEventListener("dragover", e => {
+  const sec = e.target.closest && e.target.closest("#libSec"); if (!sec || !dragFiles(e) || !(S.assets || S.local) || S.readOnly) return;
+  e.preventDefault(); e.dataTransfer.dropEffect = "copy"; sec.classList.add("dropping");
+});
+document.addEventListener("dragleave", e => { const sec = $("#libSec"); if (sec && (!e.relatedTarget || !sec.contains(e.relatedTarget))) sec.classList.remove("dropping"); });
+document.addEventListener("drop", e => {
+  const sec = $("#libSec"); if (sec) sec.classList.remove("dropping");
+  if (!sec || !e.target.closest || !e.target.closest("#libSec") || !dragFiles(e) || !(S.assets || S.local) || S.readOnly) return;
+  e.preventDefault(); const fs = [...e.dataTransfer.files]; if (fs.length) uploadFiles(fs, realFolder(S.libFolder));
+});
 /* the library: a video tile plays (muted) while the mouse is over it */
 document.addEventListener("pointerover", e => {
   if (e.pointerType !== "mouse" || !e.target.closest) return;
