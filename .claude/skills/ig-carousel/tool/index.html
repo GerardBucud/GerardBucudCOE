@@ -26,6 +26,10 @@
 @font-face{font-family:"Anton";src:url("fonts/Anton-Regular.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}
 @font-face{font-family:"League Gothic";src:url("fonts/LeagueGothic.ttf") format("truetype");font-weight:400;font-style:normal;font-display:swap}
 /* the user's own fonts (fonts/user, on the board only) */
+@font-face{font-family:"HV Fitzgerald";src:url("fonts/user/hv-fitzgerald.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"HV Fitzgerald";src:url("fonts/user/hv-fitzgerald-italic.woff2") format("woff2");font-weight:400;font-style:italic;font-display:swap}
+@font-face{font-family:"HV Fitzgerald";src:url("fonts/user/hv-fitzgerald-700.woff2") format("woff2");font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:"HV Fitzgerald";src:url("fonts/user/hv-fitzgerald-700-italic.woff2") format("woff2");font-weight:700;font-style:italic;font-display:swap}
 @font-face{font-family:"Apple Garamond";src:url("fonts/user/apple-garamond-300.woff2") format("woff2");font-weight:300;font-style:normal;font-display:swap}
 @font-face{font-family:"Apple Garamond";src:url("fonts/user/apple-garamond-300-italic.woff2") format("woff2");font-weight:300;font-style:italic;font-display:swap}
 @font-face{font-family:"Apple Garamond";src:url("fonts/user/apple-garamond.woff2") format("woff2");font-weight:400;font-style:normal;font-display:swap}
@@ -704,6 +708,8 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .txi[aria-pressed="false"]{opacity:.55}
 .txedh{margin:0;font-size:12px;opacity:.8}
 .txed{display:grid;gap:8px}
+.fmtfont{max-width:120px;min-height:30px;font-size:12px;padding:4px 6px;margin-left:4px}
+.tspace{margin-top:8px}.tspace summary{cursor:pointer;font-size:12.5px;color:#b9b0ac}
 .txhead2{margin-top:6px;padding-top:10px;border-top:1px solid rgba(128,118,114,.3)}
 .txwhichb{border:1px solid rgba(128,118,114,.45)!important;border-radius:999px!important;padding:5px 10px!important;font-size:12px!important;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis}
 .txwhich{flex-wrap:wrap}
@@ -1223,7 +1229,8 @@ const moveOf = (L, k) => { const m = L && L.move && L.move[k]; return Array.isAr
    anchor (its top, on the side it's aligned to). While TXF is set, txt draws scaled around it and records its boxes scaled. */
 const scaleOf = (L, k) => { const v = L && L.scale && +L.scale[k]; return v > 0 ? clamp(v, 0.5, 2.5) : 1; };
 let TXF = null;
-const withScale = (L, k, ax, ay, fn) => { const sc = scaleOf(L, k); TXF = sc !== 1 ? { ax, ay, k: sc } : null; try { fn(); } finally { TXF = null; } };
+const spreadOf = (L, k) => { const v = L && L.spread && +L.spread[k]; return v > 0 ? clamp(v, 0.5, 3) : 1; };   /* a block's line spacing: its texts spread from its top */
+const withScale = (L, k, ax, ay, fn) => { const sc = scaleOf(L, k), sy = spreadOf(L, k); TXF = sc !== 1 || sy !== 1 ? { ax, ay, k: sc, sy } : null; try { fn(); } finally { TXF = null; } };
 let ROWDRAG = null;   /* {s, i, dy}: draw row i of slide s dy pixels off its place */
 function setCol(side) { CX0 = side === "right" ? W - COLW + M : M; CX1 = CX0 + COLW - 2 * M; }
 const FONT = '"Nimbus Sans","Helvetica Neue",Helvetica,Arial,sans-serif';
@@ -1232,7 +1239,7 @@ let CAPR = 0.729;
    set in a tall condensed font, per post (post.font) or per slide (slide.font), and a text layer per layer (sticker.font). Everything
    else stays Nimbus Sans. Tall fonts have one weight (bold markers don't thicken them), their own tracking, and a title in one fills the
    width like a poster. cap is the cap height per pixel of size (measured once the font loads). */
-/* fonts beyond Nimbus Sans, by kind (cat). The user's own fonts (Druk Wide, Apple Garamond, Joyride, Goodhers Hooney, Jalvair) are
+/* fonts beyond Nimbus Sans, by kind (cat). The user's own fonts (Druk Wide, Apple Garamond, Joyride, Goodhers Hooney, Jalvair, HV Fitzgerald) are
    files they supplied, in fonts/user on the board only (not in the repo: their licences); each falls back to a free one. ws: the weights it has (the nearest one is used); cap: its cap height (measured once it
    loads); trk: its own letter spacing. Paid or Apple-only fonts the user asked for are stood in for by free look-alikes from
    Google Fonts (bundled in fonts/gf, OFL), named as such; SF Pro is the device's own on Apple devices, Inter elsewhere. */
@@ -1251,6 +1258,7 @@ const FAMS = {
   league: { label: "League Gothic (tall, classic)", cat: "Tall", css: '"League Gothic","Arial Narrow",sans-serif', cap: 0.735, trk: 0.01, tall: true },
   bebas: { label: "Bebas Neue (tall)", cat: "Tall", css: '"Bebas Neue","Arial Narrow",sans-serif', cap: 0.7, trk: 0.01, tall: true },
   playfair: { label: "Playfair Display", cat: "Serif", css: '"Playfair Display",Georgia,serif', cap: 0.708, trk: -0.01, ws: [400, 700, 900] },
+  fitz: { label: "HV Fitzgerald (tall serif)", cat: "Serif", css: '"HV Fitzgerald","Playfair Display",Georgia,serif', cap: 0.7, trk: -0.01, ws: [400, 700] },
   garamond: { label: "Apple Garamond", cat: "Serif", css: '"Apple Garamond","EB Garamond",Garamond,Georgia,serif', cap: 0.65, trk: -0.01, ws: [300, 400, 700] },
   nineties: { label: "Perfectly Nineties look-alike (Fraunces)", cat: "Serif", css: '"Fraunces",Georgia,serif', cap: 0.7, trk: -0.02, ws: [400, 700] },
   lore: { label: "Lore look-alike (Pirata One, blackletter)", cat: "Serif", css: '"Pirata One",Georgia,serif', cap: 0.66, trk: 0, ws: [400] },
@@ -1347,16 +1355,20 @@ function positions(ctx, s, size, weight, track, it) {
    They can overlap. Text cut into lines (wrapped, or split at line breaks) is balanced so each line carries the styles open at its start. */
 const MARKS = [["**", "b"], ["__", "i"], ["++", "u"], ["==", "h"]];
 const MARK_RE = /\*\*|__|\+\+|==/g;
-const plainText = s => String(s ?? "").replace(MARK_RE, "").replace(/\u200b/g, "");
+/* a font for part of a text: \uE000<font key>\uE001 … \uE002 (the key is read in any case, as titles are put in capitals) */
+const FONT_RE = /\uE000[^\uE001]*\uE001|\uE002/g, TOK_RE = /\*\*|__|\+\+|==|\uE000[^\uE001]*\uE001|\uE002/g;
+const plainText = s => String(s ?? "").replace(MARK_RE, "").replace(FONT_RE, "").replace(/\u200b/g, "");
 /* A zero-width space between two marker characters keeps them literal ("_\u200b_" draws "__"); the page writes one wherever typed
    text would otherwise read as a marker. The handle gets the same, so @the__lens stays as it is. */
 const fillR = (s, post) => String(s ?? "").replace(/\{handle\}/gi, () => String((post && post.handle) || "").replace(/([*_+=])(?=\1)/g, "$1\u200b"));
 function parseRich(str, baseW) {
-  const out = [], s = String(str), f = { b: 0, i: 0, u: 0, h: 0 };
+  const out = [], s = String(str), f = { b: 0, i: 0, u: 0, h: 0 }, fams = [];
   let t = "";
-  const push = () => { if (t) out.push({ t, b: !!f.b, w: f.b ? 700 : baseW, it: !!f.i, u: !!f.u, h: !!f.h }); t = ""; };
+  const push = () => { if (t) out.push({ t, b: !!f.b, w: f.b ? 700 : baseW, it: !!f.i, u: !!f.u, h: !!f.h, ...(fams.length ? { fam: fams[fams.length - 1] } : {}) }); t = ""; };
   for (let i = 0; i < s.length;) {
     if (s.charCodeAt(i) === 0x200b) { i++; continue; }
+    if (s.charCodeAt(i) === 0xe000) { const j = s.indexOf("\uE001", i); if (j > i) { push(); const k = s.slice(i + 1, j).toLowerCase(); fams.push(k === "nimbus" ? null : FAMS[k] ? k : undefined); i = j + 1; continue; } }
+    if (s.charCodeAt(i) === 0xe002) { push(); fams.pop(); i++; continue; }
     const m = s.charCodeAt(i + 1) === s.charCodeAt(i) && MARKS.find(([k]) => s.startsWith(k, i));
     if (m) { push(); f[m[1]] ^= 1; i += 2; } else t += s[i++];
   }
@@ -1366,17 +1378,22 @@ function parseRich(str, baseW) {
 /* the markers still open at the end of s, in the order they opened */
 function marksOpen(s) {
   const on = [];
-  for (const m of String(s).match(MARK_RE) || []) { const i = on.indexOf(m); if (i >= 0) on.splice(i, 1); else on.push(m); }
+  for (const m of String(s).match(TOK_RE) || []) {
+    if (m.charCodeAt(0) === 0xe000) { on.push(m); continue; }
+    if (m === "\uE002") { for (let i = on.length - 1; i >= 0; i--) if (on[i].charCodeAt(0) === 0xe000) { on.splice(i, 1); break; } continue; }
+    const i = on.indexOf(m); if (i >= 0) on.splice(i, 1); else on.push(m);
+  }
   return on;
 }
 function balance(lines) {
   let carry = [];
-  return lines.map(ln => { const s = carry.join("") + ln; carry = marksOpen(s); return s + [...carry].reverse().join(""); });
+  return lines.map(ln => { const s = carry.join("") + ln; carry = marksOpen(s); return s + [...carry].reverse().map(m => m.charCodeAt(0) === 0xe000 ? "\uE002" : m).join(""); });
 }
+const segFam = (sg, fn) => sg.fam !== undefined ? inFam(sg.fam, fn) : fn();   /* a part of a text in its own font */
 function richW(ctx, str, size, baseW, track) {
   const segs = parseRich(str, baseW); track = trk(track);
   let w = 0;
-  segs.forEach((sg, i) => { w += measureW(ctx, sg.t, size, sg.w, track, sg.it) + (i ? track * size : 0); });
+  segs.forEach((sg, i) => { w += segFam(sg, () => measureW(ctx, sg.t, size, sg.w, track, sg.it)) + (i ? track * size : 0); });
   return w;
 }
 /* While a slide renders, TF names the field being drawn ("text.title", "text.rows.0.value", "post.series") and TB collects
@@ -1396,6 +1413,9 @@ function flushUnder(ctx) {
 /* FOV: the slide's own font for single texts (slide.fonts = {field path: font key, "nimbus" for Nimbus Sans}), chosen in the large
    view; a font wider than the one the layout measured is sized down to the same width, so the layout holds */
 let FOV = null;
+/* TST: slide.tstyle = {field path: {ls: line spacing ×, cs: extra letter spacing (× size), ws: extra word spacing (× size)}}; LSY: each
+   text's first line's top while a slide renders (its other lines spread from it) */
+let TST = null, LSY = null;
 function txt(ctx, str, x, capTop, o) {
   if (UNDER) flushUnder(ctx);
   if (FOV && TF && FOV[TF] && !o.fov && str) {
@@ -1412,12 +1432,19 @@ function txt(ctx, str, x, capTop, o) {
     return txt(t, str, x, capTop, o);
   }
   if (o.fam !== undefined && (FAMS[o.fam] ? o.fam : null) !== FK) return inFam(o.fam, () => txt(ctx, str, x, capTop, { ...o, fam: undefined }));
-  const size = o.size, track = trk(o.track ?? -0.05), baseW = o.weight ?? 700;
+  if (!o.sp) {   /* spacing: this text's own line spacing (its lines spread from its first), then its block's (the texts spread from the block's top) */
+    const ts = TST && TF && TST[TF], ls = ts && +ts.ls > 0 ? +ts.ls : 1;
+    if (TF && LSY) { if (LSY[TF] == null) LSY[TF] = capTop; else if (ls !== 1) capTop = LSY[TF] + (capTop - LSY[TF]) * ls; }
+    if (TXF && TXF.sy && TXF.sy !== 1) capTop = TXF.ay + (capTop - TXF.ay) * TXF.sy;
+    o = { ...o, sp: 1, cs: o.cs ?? (ts && +ts.cs) ?? 0, ws: o.ws ?? (ts && +ts.ws) ?? 0 };
+  }
+  const size = o.size, track = trk(o.track ?? -0.05) + (+o.cs || 0), baseW = o.weight ?? 700, wsp = (+o.ws || 0) * size;
   str = String(str ?? "");
   if (!str) return 0;
   const segs = parseRich(str, baseW);
   if (!segs.length) return 0;
-  const widths = segs.map(sg => measureW(ctx, sg.t, size, sg.w, track, sg.it));
+  const sps = segs.map(sg => (sg.t.match(/[ \u00a0]/g) || []).length);   /* word spacing: extra after each space */
+  const widths = segs.map((sg, i) => segFam(sg, () => measureW(ctx, sg.t, size, sg.w, track, sg.it)) + sps[i] * wsp);
   const total = widths.reduce((a, b) => a + b, 0) + Math.max(0, segs.length - 1) * track * size;
   let x0 = x;
   if (o.align === "right") x0 = x - total; else if (o.align === "center") x0 = x - total / 2;
@@ -1438,10 +1465,10 @@ function txt(ctx, str, x, capTop, o) {
     i = j;
   }
   segs.forEach((sg, i) => {
-    const p = positions(ctx, sg.t, size, sg.w, track, sg.it);
-    ctx.font = font(size, sg.w, sg.it);
+    const p = segFam(sg, () => positions(ctx, sg.t, size, sg.w, track, sg.it));
+    ctx.font = segFam(sg, () => font(size, sg.w, sg.it));
     ctx.fillStyle = sg.h ? inkOn(box) : ink; ctx.globalAlpha = sg.h ? 1 : (o.alpha ?? 1);
-    p.chars.forEach((ch, j) => { if (ch !== " " && ch !== "\u00a0") ctx.fillText(ch, xs[i] + p.xs[j], base); });
+    let ex = 0; p.chars.forEach((ch, j) => { if (ch !== " " && ch !== "\u00a0") ctx.fillText(ch, xs[i] + p.xs[j] + ex, base); else ex += wsp; });
     if (sg.u) ctx.fillRect(xs[i], base + size * 0.09, widths[i] + (i < segs.length - 1 && segs[i + 1].u ? track * size : 0), Math.max(2, size * 0.055));   /* underline */
   });
   ctx.restore();
@@ -1978,14 +2005,14 @@ function drawStickers(ctx, post, s, hiliteId) {
       if (icon) { drawIcon(ctx, icon, x + is / 2, 0, is, fg, false); x += is + gap; }
       txt(ctx, label, x, -capH(fs) / 2, { size: fs, weight: 700, track: -0.05, color: fg });
     } else if (P.type === "text") {
-      const wt = +st.w === 400 ? 400 : 700, lines = balance(up(fillR(st.label ?? P.text, post)).split(/\n/).map(x => x.trim())).filter(x => plainText(x).trim()), lh = size * 1.06;
-      const fk = FAMS[st.font] ? st.font : null;   /* a text layer's own font (Nimbus Sans unless set) */
+      const wt = +st.w === 400 ? 400 : 700, lines = balance(up(fillR(st.label ?? P.text, post)).split(/\n/).map(x => x.trim())).filter(x => plainText(x).trim()), lh = size * 1.06 * (+st.lh > 0 ? clamp(+st.lh, 0.5, 3) : 1);   /* lh: its line spacing */
+      const fk = FAMS[st.font] ? st.font : null, ws = Number.isFinite(+st.ws) ? clamp(+st.ws, -0.3, 1.5) : 0;   /* ws: extra word spacing (× size) */   /* a text layer's own font (Nimbus Sans unless set) */
       bh = inFam(fk, () => capH(size)) + Math.max(0, lines.length - 1) * lh;
       ctx.shadowColor = "rgba(0,0,0,.3)"; ctx.shadowBlur = size * 0.12;
-      const tr = Number.isFinite(+st.tr) ? clamp(+st.tr, -0.15, 0.1) : -0.05, al = st.al === "left" || st.al === "right" ? st.al : "center";
-      bw = Math.max(size, ...lines.map(l => inFam(fk, () => richW(ctx, l, size, wt, tr))));
+      const tr = Number.isFinite(+st.tr) ? clamp(+st.tr, -0.15, 0.5) : -0.05, al = st.al === "left" || st.al === "right" ? st.al : "center";
+      bw = Math.max(size, ...lines.map(l => inFam(fk, () => richW(ctx, l, size, wt, tr)) + (plainText(l).match(/ /g) || []).length * ws * size));
       const ax = al === "left" ? -bw / 2 : al === "right" ? bw / 2 : 0;   /* lines line up inside the box; the box stays centered on x, y */
-      TXK = "st:" + st.id; lines.forEach((l, i) => txt(ctx, l, ax, -bh / 2 + i * lh, { size, weight: wt, track: tr, align: al, color: st.color || INK, fam: fk })); TXK = null;
+      TXK = "st:" + st.id; lines.forEach((l, i) => txt(ctx, l, ax, -bh / 2 + i * lh, { size, weight: wt, track: tr, align: al, color: st.color || INK, fam: fk, ws })); TXK = null;
     } else if (P.type === "bdrow") {   /* size is the pictures' height */
       const g = bdRowGeo(ctx, post, st, size); bw = g.w; bh = g.h; bdRowDraw(ctx, st, g);
     } else if (P.type === "custom") {   /* size is its longer side */
@@ -3029,7 +3056,7 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
   }
   PFR = s.type !== "frame" && s.pframe && FRAMES[s.pframe.kind] && s.img ? { slot: s.img, f: frameOf({ frame: s.pframe }), inkAuto: s.ink !== "white" && s.ink !== "black" } : null;
   OVERLAY = !!s0.overlay; KEEP = keep; PH = []; WHOLE = !!s.whole; RENDER_SCALE = forExport ? 1 : scale; TB = {}; TF = null; EXPORTING = !!forExport;
-  BG = bgOf(s); HL = HEXCOL.test(s.hl) ? s.hl : null; DISP = famOf(post, s); FOV = s.fonts && typeof s.fonts === "object" ? s.fonts : null;
+  BG = bgOf(s); HL = HEXCOL.test(s.hl) ? s.hl : null; DISP = famOf(post, s); FOV = s.fonts && typeof s.fonts === "object" ? s.fonts : null; TST = s.tstyle && typeof s.tstyle === "object" ? s.tstyle : null; LSY = {};
   INK = s.ink === "black" ? "#111111" : s.ink === "white" ? "#ffffff" : BG ? inkOn(BG.c2 ? mixHex(BG.c1, BG.c2) : BG.c1) : "#ffffff";   /* auto: dark text on a light background */
   if (OVERLAY && !KEEP) { if (!forExport) checker(ctx); } else if (BG) paintBg(ctx, 0, 0, W, H); else { ctx.fillStyle = "#100c0b"; ctx.fillRect(0, 0, W, H); }
   const d = design(ctx, post, s);
@@ -3103,7 +3130,7 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
   }
   d.photos = PH.map(p => ({ key: (p.slot && FRAME_SLOTS.find(k => s[k] === p.slot)) || null, x: p.x, y: p.y, w: p.w, h: p.h, contain: p.contain })).filter(p => p.key);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  OVERLAY = false; KEEP = false; PH = []; WHOLE = false; BG = null; HL = null; INK = "#ffffff"; DISP = null; EXPORTING = false; TXR = null; STK = false; NOTX = false; FOV = null;
+  OVERLAY = false; KEEP = false; PH = []; WHOLE = false; BG = null; HL = null; INK = "#ffffff"; DISP = null; EXPORTING = false; TXR = null; STK = false; NOTX = false; FOV = null; TST = null; LSY = null;
   return d;
 }
 
@@ -5991,6 +6018,14 @@ $("#fPanel").addEventListener("click", e => {
   else if (b.hasAttribute("data-frowadd")) { if (focusSid && S.frow) openBdAdd(focusSid, S.frow); }
   else if (b.hasAttribute("data-frowdone")) { S.fpanel = false; renderFPanel(); drawFocus(); }
   else if (b.dataset.frowdel != null) { const s = S.slides[focusSid], st = s && (s.stickers || []).find(t => t.id === S.frow); if (!st) return; remember(focusSid); st.items.splice(+b.dataset.frowdel, 1); if (!st.items.length) { s.stickers = s.stickers.filter(t => t !== st); S.fsel = null; S.fpanel = false; } saveSlide(focusSid); renderBoard(new Set([focusSid])); renderFPanel(); drawFocus(); }
+  else if (b.hasAttribute("data-tspreset")) {
+    const s = S.slides[focusSid], o = s && spacingOf(s, S.ftfield); if (!o) return;
+    remember(focusSid);
+    if (o.st) { delete o.st.lh; delete o.st.tr; delete o.st.ws; }
+    else if (o.path && s.tstyle) { delete s.tstyle[o.path]; if (!Object.keys(s.tstyle).length) delete s.tstyle; }
+    if (o.grp && s.layout && s.layout.spread) { delete s.layout.spread[o.grp]; if (!Object.keys(s.layout.spread).length) delete s.layout.spread; }
+    saveSlide(focusSid); scheduleDraw(focusSid); renderFPanel(); renderBoard(new Set([focusSid]));
+  }
   else if (b.dataset.ffr) frameSet(b.dataset.ffr === "none" ? null : { kind: b.dataset.ffr });
   else if (b.dataset.ffrc) frameSet({ color: b.dataset.ffrc });
   else if (b.dataset.fadj) { S.fadj = b.dataset.fadj; renderFPanel(); }
@@ -6010,6 +6045,7 @@ $("#fPanel").addEventListener("input", e => {
     saveSlide(focusSid); scheduleDraw(focusSid); clearTimeout(texCardT); const sid = focusSid; texCardT = setTimeout(() => renderBoard(new Set([sid])), 500);
     return;
   }
+  if (e.target.dataset.tsp) { setSpacing(e.target.dataset.tsp, +e.target.value); showBubble(e.target); return; }
   if (e.target.dataset.ffrs || e.target.hasAttribute("data-ffrcol")) {   /* Frame: rounding, thickness, gap, or any color */
     const s = S.slides[focusSid]; if (!s) return;
     const k = e.target.dataset.ffrs || "color", v = e.target.dataset.ffrs ? +e.target.value : e.target.value, key = s.type === "frame" ? "frame" : "pframe";
@@ -6079,7 +6115,11 @@ function baseWeight(s, path) {   /* how heavy the slide sets this text before an
   return /^(tip|note|aNote|bNote|big)$/.test(k) || (k === "sub" && s.type === "save") ? 400 : 700;
 }
 function richHTML(v) {
-  const h = parseRich(String(v ?? ""), 400).map(sg => { const c = [sg.b && "b", sg.it && "i", sg.u && "u", sg.h && "h"].filter(Boolean).join(" "), t = esc(sg.t).replace(/\n/g, "<br>"); return c ? `<span class="${c}">${t}</span>` : t; }).join("");
+  const h = parseRich(String(v ?? ""), 400).map(sg => {
+    const c = [sg.b && "b", sg.it && "i", sg.u && "u", sg.h && "h"].filter(Boolean).join(" "), t = esc(sg.t).replace(/\n/g, "<br>"), fk = "fam" in sg ? sg.fam || "nimbus" : null;
+    const fa = fk ? ` data-font="${fk}" style="font-family:${esc(fk === "nimbus" ? '"Nimbus Sans",Arial,sans-serif' : FAMS[fk].css)}"` : "";
+    return c || fa ? `<span${c ? ` class="${c}"` : ""}${fa}>${t}</span>` : t;
+  }).join("");
   return /\n$/.test(plainText(v)) ? h + "<br>" : h;   /* a line break at the very end only shows with a second one */
 }
 function richChars(el, keepEnd) {   /* the box's text, one entry per character, with its styles (keepEnd: keep line breaks at the end) */
@@ -6093,6 +6133,7 @@ function richChars(el, keepEnd) {   /* the box's text, one entry per character, 
         if (t === "B" || t === "STRONG" || cl.contains("b") || /^(bold|[6-9]00)$/.test(st.fontWeight)) g.b = 1;
         if (t === "I" || t === "EM" || cl.contains("i") || st.fontStyle === "italic") g.i = 1;
         if (t === "U" || t === "INS" || cl.contains("u") || /underline/.test(st.textDecoration + " " + st.textDecorationLine)) g.u = 1;
+        if (c.dataset && c.dataset.font) g.f = c.dataset.font;   /* a part in its own font */
         if (t === "MARK" || cl.contains("h") || (!!st.backgroundColor && !/^(transparent|rgba\(0, 0, 0, 0\)|initial|inherit)$/.test(st.backgroundColor))) g.h = 1;
         if ((t === "DIV" || t === "P") && out.length && out[out.length - 1].c !== "\n") out.push({ c: "\n", ...f });   /* a new block starts a new line */
         walk(c, g);
@@ -6106,12 +6147,16 @@ function toMarked(chars) {   /* characters with styles back to text with markers
   const mk = Object.fromEntries(MARKS.map(([m, k]) => [k, m])), open = [];
   let out = "";
   const put = t => { if (/[*_+=]/.test(t[0]) && out.endsWith(t[0])) out += "\u200b"; out += t; };   /* "*" + "**" would read as a marker: a zero-width space keeps them apart */
+  let fam = null;   /* a font for part of the text: the styles close around it and open again inside */
   for (const ch of chars) {
+    const nf = ch.f || null;
+    if (nf !== fam) { for (const k of [...open].reverse()) put(mk[k]); open.length = 0; if (fam) put("\uE002"); if (nf) put("\uE000" + nf + "\uE001"); fam = nf; }
     for (const k of [...open].reverse()) if (!ch[k]) { put(mk[k]); open.splice(open.indexOf(k), 1); }
     for (const [, k] of MARKS) if (ch[k] && !open.includes(k)) { put(mk[k]); open.push(k); }
     put(ch.c);
   }
   for (const k of open.reverse()) put(mk[k]);
+  if (fam) put("\uE002");
   return out;
 }
 const oneLine = (path, ch) => MULTI(path) ? ch : ch.map(c => c.c === "\n" ? { ...c, c: " " } : c);
@@ -6141,7 +6186,22 @@ function setSel(el, a, z = a) {
    box's focus and selection (no tap reaches the box), so the keyboard stays up. Highlight color: one per slide, the swatch cycles it. */
 const FMTS = [["b", "Bold"], ["i", "Italic"], ["u", "Underline"], ["h", "Highlight"]];
 const HL_COLORS = [null, "#e02d12", "#ffd23f", "#111111", "#ffffff"], HL_NAMES = { "#e02d12": "cover red", "#ffd23f": "yellow", "#111111": "black", "#ffffff": "white" };
-const fmtBarHTML = () => `<div class="fmt" role="toolbar" aria-label="Text style">${FMTS.map(([k, l]) => `<button type="button" data-fmt="${k}" aria-pressed="false" aria-label="${l}" title="${l}"><span class="g${k}">${l[0]}</span></button>`).join("")}<button type="button" data-fmt="hc" class="hc" aria-label="Highlight color" title="Highlight color"><i></i></button></div>`;
+const fmtBarHTML = () => `<div class="fmt" role="toolbar" aria-label="Text style">${FMTS.map(([k, l]) => `<button type="button" data-fmt="${k}" aria-pressed="false" aria-label="${l}" title="${l}"><span class="g${k}">${l[0]}</span></button>`).join("")}<button type="button" data-fmt="hc" class="hc" aria-label="Highlight color" title="Highlight color"><i></i></button>${fontSpanSel()}</div>`;
+/* a font for the selected words (or the whole text): different fonts in one text */
+const fontSpanSel = () => `<select class="ctl fmtfont" data-fmtfont aria-label="Font for the selected words" title="Font for the selected words"><option value="">Font…</option><option value="-">The text's own font</option><option value="nimbus">Nimbus Sans</option>${FAM_CATS.map(c => { const fs = Object.entries(FAMS).filter(([, f]) => f.cat === c); return fs.length ? `<optgroup label="${c}">${fs.map(([k, f]) => `<option value="${k}">${esc(f.label)}</option>`).join("")}</optgroup>` : ""; }).join("")}</select>`;
+function applyFontSpan(key) {
+  const snap = fmtSnap; fmtSnap = null;
+  const el = curRich(); if (!el || !key) return;
+  const ch = richChars(el, true), r = fmtRange(el, ch, snap), head = !!HEAD_FIELDS[el.dataset.ff];
+  if (r.z <= r.a) { toast("Type some text first"); return; }
+  for (let i = r.a; i < r.z; i++) { if (key === "-") delete ch[i].f; else ch[i].f = key; }
+  setRich(el, toMarked(oneLine(el.dataset.ff, ch)));
+  if (r.sel) { el.focus({ preventScroll: true }); if (r.part) setSel(el, r.sel[0], r.sel[1]); else setSel(el, r.sel[1]); }
+  if (!head) remember(focusSid);
+  onFF(el, true); updateFmtBar();
+}
+document.addEventListener("pointerdown", e => { const sel = e.target.closest && e.target.closest("[data-fmtfont]"); if (!sel) return; const el = curRich(); fmtSnap = el ? { el, sel: document.activeElement === el ? selIn(el) : (lastRich === el ? fmtSnap && fmtSnap.sel : null), t: Date.now() } : null; }, true);
+document.addEventListener("change", e => { const sel = e.target.closest && e.target.closest("[data-fmtfont]"); if (!sel) return; const v = sel.value; sel.value = ""; applyFontSpan(v); });
 let lastRich = null, fmtSnap = null;
 function curRich() {
   const a = document.activeElement, p = $("#fPanel");
@@ -6237,6 +6297,29 @@ function editorTitle(s, ref) {
 }
 const NARROW = /^(text\.rows\.\d+\.(label|value)|text\.(left|right|section|foot|[ab](Value|Label))|post\.\w+)$/;
 const layerOpts = (st, i) => `<select class="ctl" id="ff-stickers-${i}-w" data-ff="stickers.${i}.w" aria-label="Weight" style="width:auto"><option value="700"${+st.w === 400 ? "" : " selected"}>Bold</option><option value="400"${+st.w === 400 ? " selected" : ""}>Regular</option></select>${alignSel(`ff-stickers-${i}-al`, `data-ff="stickers.${i}.al" aria-label="Align" style="width:auto"`, st.al)}`;
+/* Spacing (the open text): its line spacing, letter spacing and word spacing (slide.tstyle[field path], a text layer its own lh, tr,
+   ws), and its block's line spacing: how far apart the texts of the block it's in sit (layout.spread[group]) */
+function spacingOf(s, ref) {
+  const st = ref && ref.startsWith("layer:") ? (s.stickers || []).find(t => t.id === ref.slice(6)) : null, path = st ? null : fieldPath(s, ref), ts = path ? (s.tstyle || {})[path] || {} : {};
+  const grp = !st && path ? moveGroup(s, ref) : null;
+  return { st, path, grp: grp && !String(grp).startsWith("rows.") ? grp : null, ls: st ? +st.lh || 1 : +ts.ls || 1, cs: st ? (Number.isFinite(+st.tr) ? +st.tr : -0.05) : +ts.cs || 0, ws: st ? +st.ws || 0 : +ts.ws || 0 };
+}
+function spacingHTML(s, ref) {
+  const o = spacingOf(s, ref); if (!o.st && !o.path) return "";
+  const sl = (k, l, min, max, step, v, fmt) => `<label class="frowsl"><span>${l}</span><input type="range" data-tsp="${k}" min="${min}" max="${max}" step="${step}" value="${v}" data-fmt="${fmt}" aria-label="${l}"></label>`;
+  const sy = o.grp ? spreadOf(s.layout || {}, o.grp) : 1;
+  return `<details class="tspace"${S.tspOpen ? " open" : ""}><summary>Spacing</summary><div class="frowsls">${sl("ls", "Line spacing", 0.6, 2.5, 0.05, o.ls, "x")}${sl("cs", "Letter spacing", o.st ? -0.15 : -0.1, 0.5, 0.005, o.cs, "pct")}${sl("ws", "Word spacing", -0.3, 1.5, 0.01, o.ws, "pct")}${o.grp ? sl("sy", "Lines of this block", 0.5, 3, 0.05, sy, "x") : ""}</div>
+    <div class="frow"><button type="button" class="btn ghost sm" data-tspreset>Reset spacing</button><span class="hint" style="margin:0">${o.grp ? "Lines of this block spreads all the texts in it apart (or closer)." : ""}</span></div></details>`;
+}
+function setSpacing(k, v) {
+  const s = S.slides[focusSid], o = s && spacingOf(s, S.ftfield); if (!o || (!o.st && !o.path)) return;
+  remember(focusSid, "tsp." + k);
+  if (k === "sy") { if (!o.grp) return; s.layout = s.layout || {}; const sp = { ...(s.layout.spread || {}) }; if (v === 1) delete sp[o.grp]; else sp[o.grp] = v; if (Object.keys(sp).length) s.layout.spread = sp; else delete s.layout.spread; }
+  else if (o.st) { const f = { ls: "lh", cs: "tr", ws: "ws" }[k], d = { ls: 1, cs: -0.05, ws: 0 }[k]; if (v === d) delete o.st[f]; else o.st[f] = v; }
+  else { const t = { ...(s.tstyle || {}) }, c = { ...(t[o.path] || {}) }; if (v === (k === "ls" ? 1 : 0)) delete c[k]; else c[k] = v; if (Object.keys(c).length) t[o.path] = c; else delete t[o.path]; if (Object.keys(t).length) s.tstyle = t; else delete s.tstyle; }
+  saveSlide(focusSid); scheduleDraw(focusSid); clearTimeout(texCardT); const sid = focusSid; texCardT = setTimeout(() => renderBoard(new Set([sid])), 500);
+}
+document.addEventListener("toggle", e => { if (e.target.classList && e.target.classList.contains("tspace")) S.tspOpen = e.target.open; }, true);
 function textPanelHTML(s) {
   if (S.ftfield) {
     const short = { label: "Label", value: "Big value", note: "Why (small text)" }, refs = editorRefs(s, S.ftfield).filter(r => fieldPath(s, r));
@@ -6246,6 +6329,7 @@ function textPanelHTML(s) {
     const tabs = refs.length > 1 ? `<div class="ftabs" role="group" aria-label="Boxes in this block">${refs.map(r => `<button type="button" data-ftab="${esc(r)}" aria-pressed="${r === S.ftfield}">${esc(tabLabel(s, r))}</button>`).join("")}</div>` : "";
     return `<div class="fone${refs.length > 1 ? " tabbed" : ""}"><div class="fhead"><b>${esc(editorTitle(s, S.ftfield))}</b><span class="grow"></span>${fmtBarHTML()}<button type="button" class="btn primary sm" data-fact="done">Done</button></div>
       ${tabs}<div class="fgrid">${refs.map(cell).join("")}</div>
+      ${spacingHTML(s, S.ftfield)}
       <div class="actions"><button type="button" class="btn sm" data-fact="dup">${DUP_I}Duplicate</button><button type="button" class="btn sm" data-fact="all">All text</button></div></div>`;
   }
   const touch = TOUCH(), t = s.text || {}, fld = (ref, label) => touch ? ffPreview(s, ref, label) : ffInput(s, fieldPath(s, ref), label);
@@ -7159,7 +7243,7 @@ function cleanStickers(raw, prev) {
     if (x.solid === true || x.solid === false) out.solid = x.solid;
     if (x.under === true) out.under = true;
     if (P.type === "pill") { if (x.label != null) out.label = String(x.label).slice(0, 40); if (HEX.test(x.bg)) out.bg = x.bg; }
-    if (P.type === "text") { out.label = String(x.label ?? P.text).slice(0, 160); out.w = +x.w === 400 ? 400 : 700; if (x.tr != null && Number.isFinite(+x.tr)) out.tr = clamp(+x.tr, -0.15, 0.1); if (x.al === "left" || x.al === "right") out.al = x.al; }
+    if (P.type === "text") { out.label = String(x.label ?? P.text).slice(0, 160); out.w = +x.w === 400 ? 400 : 700; if (x.tr != null && Number.isFinite(+x.tr)) out.tr = clamp(+x.tr, -0.15, 0.5); if (x.al === "left" || x.al === "right") out.al = x.al; if (+x.lh > 0) out.lh = clamp(+x.lh, 0.5, 3); if (Number.isFinite(+x.ws) && +x.ws) out.ws = clamp(+x.ws, -0.3, 1.5); }
     return out;
   }).filter(Boolean);
 }
