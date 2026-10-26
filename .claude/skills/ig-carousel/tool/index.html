@@ -699,7 +699,10 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .krow kbd.own{border-color:var(--accent)}
 .krow.fixed{grid-template-columns:1fr auto auto}
 #fFind{display:none}   /* search lives in the ⋮ menu */
-@media (pointer:fine) and (min-width:761px){#fPrev,#fNext{display:none}}   /* computers: the round ‹ › by the slide and the arrow keys */
+#fPrev,#fNext{display:none}   /* the round ‹ › by the slide, a swipe and the arrow keys change slides */
+.livet{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:#d9d2ce;margin:8px 0 2px;cursor:pointer}
+.livet input{width:18px;height:18px;accent-color:var(--accent)}
+.livet small{color:#9a918d;font-size:12px}
 .dlmenu .mitem{display:grid;gap:2px;width:100%;text-align:left}
 #dupRatio{display:flex;flex-wrap:wrap;gap:6px}
 #dupRatio button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -1303,7 +1306,11 @@ let FK = null;   /* the family being measured or drawn: null = Nimbus Sans */
 const inFam = (k, fn) => { const was = FK; FK = FAMS[k] ? k : null; try { return fn(); } finally { FK = was; } };
 let DISP = null;   /* this slide's big-text font, while it renders */
 const famOf = (post, s) => s && s.font === "nimbus" ? null : FAMS[s && s.font] ? s.font : FAMS[post && post.font] ? post.font : null;   /* "nimbus" on a slide: Nimbus Sans even if the post uses a tall font */
-const trk = t => FK ? FAMS[FK].trk : t;
+/* tracking: a font of its own uses its own letter spacing; CSX is the extra letter spacing (× size) of the text being drawn (the
+   Spacing slider), added on top in every font, a part of the text in another font included */
+let CSX = 0;
+const trk = t => (FK ? FAMS[FK].trk : t) + CSX;
+const withCS = (v, f) => { const p = CSX; CSX = +v || 0; try { return f(); } finally { CSX = p; } };
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -1424,9 +1431,9 @@ function balance(lines) {
 }
 const segFam = (sg, fn) => sg.fam !== undefined ? inFam(sg.fam, fn) : fn();   /* a part of a text in its own font */
 function richW(ctx, str, size, baseW, track) {
-  const segs = parseRich(str, baseW); track = trk(track);
+  const segs = parseRich(str, baseW), tg = trk(track);   /* measureW resolves the tracking in each part's own font */
   let w = 0;
-  segs.forEach((sg, i) => { w += segFam(sg, () => measureW(ctx, sg.t, size, sg.w, track, sg.it)) + (i ? track * size : 0); });
+  segs.forEach((sg, i) => { w += segFam(sg, () => measureW(ctx, sg.t, size, sg.w, track, sg.it)) + (i ? tg * size : 0); });
   return w;
 }
 /* While a slide renders, TF names the field being drawn ("text.title", "text.rows.0.value", "post.series") and TB collects
@@ -1471,13 +1478,14 @@ function txt(ctx, str, x, capTop, o) {
     if (TXF && TXF.sy && TXF.sy !== 1) capTop = TXF.ay + (capTop - TXF.ay) * TXF.sy;
     o = { ...o, sp: 1, cs: o.cs ?? (ts && +ts.cs) ?? 0, ws: o.ws ?? (ts && +ts.ws) ?? 0 };
   }
-  const size = o.size, track = trk(o.track ?? -0.05) + (+o.cs || 0), baseW = o.weight ?? 700, wsp = (+o.ws || 0) * size;
+  const tr0 = o.track ?? -0.05, csPrev = CSX; CSX = +o.cs || 0;
+  const size = o.size, track = trk(tr0), baseW = o.weight ?? 700, wsp = (+o.ws || 0) * size;
   str = String(str ?? "");
-  if (!str) return 0;
+  if (!str) { CSX = csPrev; return 0; }
   const segs = parseRich(str, baseW);
-  if (!segs.length) return 0;
+  if (!segs.length) { CSX = csPrev; return 0; }
   const sps = segs.map(sg => (sg.t.match(/[ \u00a0]/g) || []).length);   /* word spacing: extra after each space */
-  const widths = segs.map((sg, i) => segFam(sg, () => measureW(ctx, sg.t, size, sg.w, track, sg.it)) + sps[i] * wsp);
+  const widths = segs.map((sg, i) => segFam(sg, () => measureW(ctx, sg.t, size, sg.w, tr0, sg.it)) + sps[i] * wsp);
   const total = widths.reduce((a, b) => a + b, 0) + Math.max(0, segs.length - 1) * track * size;
   let x0 = x;
   if (o.align === "right") x0 = x - total; else if (o.align === "center") x0 = x - total / 2;
@@ -1498,7 +1506,7 @@ function txt(ctx, str, x, capTop, o) {
     i = j;
   }
   segs.forEach((sg, i) => {
-    const p = segFam(sg, () => positions(ctx, sg.t, size, sg.w, track, sg.it));
+    const p = segFam(sg, () => positions(ctx, sg.t, size, sg.w, tr0, sg.it));
     ctx.font = segFam(sg, () => font(size, sg.w, sg.it));
     ctx.fillStyle = sg.h ? inkOn(box) : ink; ctx.globalAlpha = sg.h ? 1 : (o.alpha ?? 1);
     let ex = 0; p.chars.forEach((ch, j) => { if (ch !== " " && ch !== "\u00a0") ctx.fillText(ch, xs[i] + p.xs[j] + ex, base); else ex += wsp; });
@@ -1509,8 +1517,9 @@ function txt(ctx, str, x, capTop, o) {
     const b = TB[TF] || (TB[TF] = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity, size: 0, w: baseW, lines: [], al: o.align || "left" });
     const f = TXF ? (v, a) => a + (v - a) * TXF.k : v => v, ax = TXF && TXF.ax, ay = TXF && TXF.ay, sz = TXF ? size * TXF.k : size;
     b.lines.push(str); b.x0 = Math.min(b.x0, f(x0, ax)); b.x1 = Math.max(b.x1, f(x0 + total, ax)); b.y0 = Math.min(b.y0, f(capTop, ay)); b.y1 = Math.max(b.y1, f(capTop + capH(size), ay));
-    if (sz > b.size) { b.size = sz; b.w = baseW; b.tr = track; if (FK) b.fam = FK; else delete b.fam; }
+    if (sz > b.size) { b.size = sz; b.w = baseW; b.tr = (FK ? -0.05 : tr0) + CSX; if (FK) b.fam = FK; else delete b.fam; }   /* tr: as a text layer's letter spacing (Duplicate) */
   }
+  CSX = csPrev;
   return total;
 }
 function wrap(ctx, str, maxW, size, weight, track) {
@@ -2065,9 +2074,9 @@ function drawStickers(ctx, post, s, hiliteId) {
       bh = inFam(fk, () => capH(size)) + Math.max(0, lines.length - 1) * lh;
       ctx.shadowColor = "rgba(0,0,0,.3)"; ctx.shadowBlur = size * 0.12;
       const tr = Number.isFinite(+st.tr) ? clamp(+st.tr, -0.15, 0.5) : -0.05, al = st.al === "left" || st.al === "right" ? st.al : "center";
-      bw = Math.max(size, ...lines.map(l => inFam(fk, () => richW(ctx, l, size, wt, tr)) + (plainText(l).match(/ /g) || []).length * ws * size));
+      bw = Math.max(size, ...lines.map(l => inFam(fk, () => withCS(tr + 0.05, () => richW(ctx, l, size, wt, -0.05))) + (plainText(l).match(/ /g) || []).length * ws * size));   /* tr: -0.05 is the font's own spacing, the rest is extra */
       const ax = al === "left" ? -bw / 2 : al === "right" ? bw / 2 : 0;   /* lines line up inside the box; the box stays centered on x, y */
-      TXK = "st:" + st.id; lines.forEach((l, i) => txt(ctx, l, ax, -bh / 2 + i * lh, { size, weight: wt, track: tr, align: al, color: st.color || INK, fam: fk, ws })); TXK = null;
+      TXK = "st:" + st.id; lines.forEach((l, i) => txt(ctx, l, ax, -bh / 2 + i * lh, { size, weight: wt, track: -0.05, cs: tr + 0.05, align: al, color: st.color || INK, fam: fk, ws })); TXK = null;
     } else if (P.type === "bdrow") {   /* size is the pictures' height */
       const g = bdRowGeo(ctx, post, st, size); bw = g.w; bh = g.h; bdRowDraw(ctx, st, g);
     } else if (P.type === "custom") {   /* size is its longer side */
@@ -3307,7 +3316,7 @@ function drawNow() {
   }
   pendingDraw.clear();
   for (const sid of cardLater) if (!gesturing(sid)) { cardLater.delete(sid); pendingDraw.add(sid); if (!drawQueued) { drawQueued = true; requestAnimationFrame(drawNow); } }
-  if (focusSid) drawFocus();
+  if (focusSid) drawFocus(S.sliding ? true : undefined);
 }
 function upscaleWarning(s, d) {
   if (bgOf(s) || s.whole || s.type === "frame") return "";
@@ -5350,7 +5359,13 @@ const sizeOf = st => +st.size || STICKERS[st.kind].size;
 
 /* a slide someone is dragging, pinching, turning or resizing right now: kept as it is on screen (a save coming back from the
    board doesn't replace it mid-gesture, and in the large view the card waits until the gesture ends) */
-const gesturing = sid => (!!drag && drag.sid === sid && drag.moved) || (sid === focusSid && !!((fg && fg.mode !== "swipe") || xg || cg || railDrag || rotDrag));
+const gesturing = sid => (!!drag && drag.sid === sid && drag.moved) || (sid === focusSid && !!((fg && fg.mode !== "swipe") || xg || cg || railDrag || rotDrag || S.sliding));
+/* a slider held in the large view: the slide redraws there only, lighter (fewer pixels, no panel updates), and the card catches up when
+   it's let go, so dragging stays smooth on a phone */
+document.addEventListener("pointerdown", e => { if (e.target.matches && e.target.matches('#focusDlg input[type="range"]')) S.sliding = true; }, true);
+const slideEnd = () => { if (!S.sliding) return; S.sliding = false; if (focusSid) { scheduleDraw(focusSid); requestAnimationFrame(() => drawFocus()); } };
+["pointerup", "pointercancel"].forEach(t => document.addEventListener(t, slideEnd, true));
+document.addEventListener("change", e => { if (e.target.matches && e.target.matches('#focusDlg input[type="range"]')) slideEnd(); }, true);
 /* cards: mouse only, so a finger on a card still scrolls the page */
 let drag = null;
 document.addEventListener("pointerdown", e => {
@@ -6006,6 +6021,7 @@ xf.addEventListener("pointerup", xfEnd); xf.addEventListener("pointercancel", xf
    Edit photo: pick an adjustment, move its slider (or type the value), see it on the big slide. */
 S.fpanel = false; S.fslot = "img"; S.fadj = "exposure";
 function renderFPanel() {
+  commitTyping();
   const el = $("#fPanel"), s = S.slides[focusSid];
   $("#fEdit").setAttribute("aria-pressed", String(S.fpanel === "photo"));
   $("#fTex").setAttribute("aria-pressed", String(S.fpanel === "tex"));
@@ -6123,6 +6139,7 @@ $("#fPanel").addEventListener("input", e => {
   if (el.dataset.ff) {
     /* text that came in with its own markup (the phone's Format menu, a dictation, an old browser's Enter): back to the box's own */
     if (el.isContentEditable && !e.isComposing && el.querySelector("div,p,b,strong,i,em,u,ins,mark,font,[style]")) { const sel = selIn(el); setRich(el, toMarked(oneLine(el.dataset.ff, richChars(el, true)))); if (sel) setSel(el, sel[0], sel[1]); }
+    if (!liveType() && el.isContentEditable) { el.dataset.dirty = "1"; return; }   /* the slide catches up on Done (or when you leave the box) */
     return onFF(el);
   }
   if (e.target.dataset.frow || e.target.dataset.frows) {   /* Edit row: a name or subtext, or one of the row's sizes */
@@ -6457,6 +6474,7 @@ function textPanelHTML(s) {
     const tabs = refs.length > 1 ? `<div class="ftabs" role="group" aria-label="Boxes in this block">${refs.map(r => `<button type="button" data-ftab="${esc(r)}" aria-pressed="${r === S.ftfield}">${esc(tabLabel(s, r))}</button>`).join("")}</div>` : "";
     return `<div class="fone${refs.length > 1 ? " tabbed" : ""}"><div class="fhead"><b>${esc(editorTitle(s, S.ftfield))}</b><span class="grow"></span>${fmtBarHTML(refs.length > 1 ? (/^text\.rows\./.test(S.ftfield) ? "row" : "block") : null)}<button type="button" class="btn primary sm" data-fact="done">Done</button></div>
       ${tabs}<div class="fgrid">${refs.map(cell).join("")}</div>
+      <label class="livet"><input type="checkbox" data-livetype${liveType() ? " checked" : ""}> Show on the slide as I type<small>Off: type, then tap Done</small></label>
       ${spacingHTML(s, S.ftfield)}
       <div class="actions"><button type="button" class="btn sm" data-fact="dup">${DUP_I}Duplicate</button><button type="button" class="btn sm" data-fact="all">All text</button></div></div>`;
   }
@@ -6512,7 +6530,19 @@ function onFF(el, remembered) {
   if (path === "text.section") renderLibrary();
   if (w) { const box = $(`#fPanel [data-ff="${path.replace(/\.w$/, ".label")}"]`); if (box) box.classList.toggle("bw", v === 700); updateFmtBar(); }
 }
+/* Typing: with "Show on the slide as I type" off (the default on phones), the slide doesn't redraw at every letter; what you typed
+   goes on when you tap Done, Enter on a one-line text, another box, or anywhere off the box. Kept in this browser (carousel.liveType). */
+const liveType = () => { try { const v = localStorage.getItem("carousel.liveType"); return v ? v === "1" : !TOUCH(); } catch (e) { return !TOUCH(); } };
+function commitTyping() { $$("#fPanel [data-ff][data-dirty]").forEach(el => { delete el.dataset.dirty; onFF(el); }); }
+document.addEventListener("focusout", e => { const el = e.target; if (el && el.dataset && el.dataset.dirty && el.closest && el.closest("#fPanel")) { delete el.dataset.dirty; onFF(el); } }, true);
+document.addEventListener("change", e => {
+  if (!e.target.matches || !e.target.matches("[data-livetype]")) return;
+  try { localStorage.setItem("carousel.liveType", e.target.checked ? "1" : "0"); } catch (err) {}
+  if (e.target.checked) commitTyping();
+  toast(e.target.checked ? "The slide changes as you type" : "Type, then tap Done: the slide changes then");
+});
 function closeTextEditor(keepSel) {
+  commitTyping();
   S.fpanel = false; S.ftfield = null;
   if (!keepSel) { S.ftsel = null; const st = selSticker(); if (st && st.kind === "text") S.fsel = null; }
   renderFPanel(); drawFocus();
@@ -6530,6 +6560,7 @@ function markCur(cell) {
 /* the editor moves to other text: in the same block it just moves to that box; another block gets its own editor. While typing the
    new box takes the focus before the old one goes, so the keyboard stays up. On a computer the box always gets the focus. */
 function switchEditor(nf) {
+  commitTyping();
   const s = S.slides[focusSid], el = $("#fPanel"); if (!fieldPath(s, nf)) return;
   const a = document.activeElement, typing = el.contains(a) && !!(a.dataset && a.dataset.ff), cell = $$("#fPanel .fone .ff[data-ref]").find(x => x.dataset.ref === nf);
   S.ftfield = nf; S.lcenter = S.lglide = true;
@@ -8109,7 +8140,7 @@ function openFocus(sid) {
   document.documentElement.classList.add("modal-open");
   renderFPanel(); drawFocus();
 }
-$("#focusDlg").addEventListener("close", () => { if (S.crop) { S.crop = null; saveSlide(focusSid); } S.psel = null; closeOverlays(); focusSid = null; syncFocusVideo(); S.fsel = null; S.ftsel = null; hideArr(); S.ftfield = null; fpts.clear(); fg = null; xg = null; lpts.clear(); lg = null; $("#fTrash").hidden = true; hideBubble(); layoutLite(); document.documentElement.classList.remove("modal-open"); });
+$("#focusDlg").addEventListener("close", () => { commitTyping(); if (S.crop) { S.crop = null; saveSlide(focusSid); } S.psel = null; closeOverlays(); focusSid = null; syncFocusVideo(); S.fsel = null; S.ftsel = null; hideArr(); S.ftfield = null; fpts.clear(); fg = null; xg = null; lpts.clear(); lg = null; $("#fTrash").hidden = true; hideBubble(); layoutLite(); document.documentElement.classList.remove("modal-open"); });
 /* Esc closes a preview first, then the text editor, then the large view */
 $("#focusDlg").addEventListener("cancel", e => {
   if (!histPop.hidden) { e.preventDefault(); closeHist(); return; }
@@ -8121,7 +8152,7 @@ $("#focusDlg").addEventListener("cancel", e => {
 const g0w = () => geoOf(focusSid).w, g0h = () => geoOf(focusSid).h;
 function drawFocus(fast) {
   const dlg = $("#focusDlg"), s = S.slides[focusSid]; if (!s || !dlg.open) return;
-  const x = numOf(focusSid), g = geoOf(focusSid), dpr = window.devicePixelRatio || 1, box = $("#fWrap").getBoundingClientRect(), lite = dlg.classList.contains("lite");
+  const x = numOf(focusSid), g = geoOf(focusSid), dpr = S.sliding ? Math.min(1.25, window.devicePixelRatio || 1) : window.devicePixelRatio || 1, box = $("#fWrap").getBoundingClientRect(), lite = dlg.classList.contains("lite");
   const css = Math.max(0.05, lite ? box.width / g.w * S.lz : Math.min(box.width / g.w, box.height / g.h)), sc = clamp(css * dpr, 0.1, 1);   /* fit the slide to the space left (edit mode: to the width, times its zoom) */
   const cv = $("#focusCv"), cw = Math.round(g.w * sc), ch = Math.round(g.h * sc);
   if (cv.width !== cw || cv.height !== ch) { cv.width = cw; cv.height = ch; }
@@ -8165,6 +8196,7 @@ $("#fWrap").addEventListener("click", e => { const b = e.target.closest("[data-f
 function stepFocus(d) {
   const o = order(), i = o.indexOf(focusSid), j = clamp(i + d, 0, o.length - 1);
   if (j === i) return;
+  commitTyping();
   if (S.crop) exitCrop();
   focusSid = o[j]; S.fsel = null; S.ftsel = null; S.psel = null; ROWDRAG = null; fg = null;
   if (S.ftfield) { S.ftfield = null; S.fpanel = false; }   /* the small editor was for the other slide's text */
@@ -8765,7 +8797,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { S, order, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
+window.__t = { S, order, renderSlide, geoOf, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
