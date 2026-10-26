@@ -340,6 +340,14 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .fmt .gu{text-decoration:underline;text-underline-offset:2px}
 .fmt .gh{background:#f3eeeb;color:#131111;padding:1px 4px;border-radius:2px}
 .fmt{max-width:100%;flex-wrap:wrap;row-gap:2px}
+.fmt button.fmtfontb{width:auto;padding:0 10px;font:600 13px/1 var(--ui);border:1px solid #3a3432}
+.fmt button.fmtfontb[aria-expanded="true"]{background:#3a3432}
+.lhead{flex-wrap:wrap}
+.fspan{flex:1 1 100%;order:4;display:grid;gap:2px;max-height:min(300px,42vh);overflow:auto;overscroll-behavior:contain;background:#0f0d0c;border:1px solid #3a3432;border-radius:10px;padding:6px}
+.fspan button{display:block;width:100%;text-align:left;border:0;border-radius:7px;background:none;color:#f3eeeb;font-size:19px;line-height:1.25;padding:7px 10px;cursor:pointer}
+.fspan button:hover{background:#2a2524}
+.fspan button[aria-checked="true"]{background:var(--accent);color:#fff}
+.fspan p.fcat{margin:8px 8px 2px;font:600 11px/1.2 var(--ui);text-transform:uppercase;letter-spacing:.05em;color:#9a918d}
 .fmt .fsep{flex:0 0 1px;align-self:stretch;margin:4px 3px;background:#3a3432}
 .fmt button.fcase span{font:700 12px/1 var(--ui);letter-spacing:.02em}
 .fmt button.fall{width:auto;padding:0 9px;font:600 12px/1 var(--ui);white-space:nowrap;border:1px solid #3a3432}
@@ -6297,9 +6305,21 @@ const CASES = [["upper", "UPPERCASE", "AB"], ["lower", "lowercase", "ab"], ["pro
 /* scope: with "Whole row" on (a block of several boxes, like a settings row), every button styles all its boxes, whole */
 const fmtBarHTML = scope => `<div class="fmt" role="toolbar" aria-label="Text style">${FMTS.map(([k, l]) => `<button type="button" data-fmt="${k}" aria-pressed="false" aria-label="${l}" title="${l}"><span class="g${k}">${l[0]}</span></button>`).join("")}<button type="button" data-fmt="hc" class="hc" aria-label="Highlight color" title="Highlight color"><i></i></button><i class="fsep" aria-hidden="true"></i>${CASES.map(([k, l, g]) => `<button type="button" data-fmt="${k}" class="fcase" aria-label="${l}" title="${l}"><span>${g}</span></button>`).join("")}${fontSpanSel()}${scope ? `<button type="button" data-fmt="all" class="fall" aria-pressed="${!!S.fmtAll}" title="B, I, U, H, case and font style every box in this ${scope}">${scope === "row" ? "Whole row" : "All boxes"}</button>` : ""}</div>`;
 /* a font for the selected words (or the whole text): different fonts in one text */
-const fontSpanSel = () => `<select class="ctl fmtfont" data-fmtfont aria-label="Font for the selected words" title="Font for the selected words"><option value="">Font…</option><option value="-">The text's own font</option><option value="nimbus">Nimbus Sans</option>${FAM_CATS.map(c => { const fs = Object.entries(FAMS).filter(([, f]) => f.cat === c); return fs.length ? `<optgroup label="${c}">${fs.map(([k, f]) => `<option value="${k}">${esc(f.label)}</option>`).join("")}</optgroup>` : ""; }).join("")}</select>`;
-function applyFontSpan(key) {
-  const snap = fmtSnap; fmtSnap = null;
+const fontSpanSel = () => `<button type="button" data-fmt="fontlist" class="fmtfontb" aria-haspopup="menu" aria-expanded="false" title="Font for the selected words (or the whole text)">Font…</button>`;
+/* the list under the style bar: every font, its name written in it; a tap puts it on the selected words (or the whole text) */
+function toggleSpanFonts(force) {
+  const btn = $("#fPanel [data-fmt=fontlist]"), open = $("#fPanel .fspan"); if (!btn) return;
+  if (open || force === false) { if (open) open.remove(); btn.setAttribute("aria-expanded", "false"); return; }
+  const el = curRich(), ch = el ? richChars(el, true) : [], r = el ? fmtRange(el, ch, fmtSnap) : null, cur = r && r.z > r.a ? (ch[r.a].f || "-") : null;
+  const o = (k, l, css) => `<button type="button" role="menuitemradio" data-fmt="span:${k}" aria-checked="${cur === k}"${css ? ` style="font-family:${esc(css)}"` : ""}>${esc(l)}</button>`;
+  const list = document.createElement("div"); list.className = "fspan"; list.setAttribute("role", "menu"); list.setAttribute("aria-label", "Font for the selected words");
+  list.innerHTML = o("-", "The text's own font") + o("nimbus", "Nimbus Sans", '"Nimbus Sans",Arial,sans-serif')
+    + FAM_CATS.map(c => { const fs = Object.entries(FAMS).filter(([, f]) => f.cat === c); return fs.length ? `<p class="fcat">${c}</p>` + fs.map(([k, f]) => o(k, f.label, f.css)).join("") : ""; }).join("");
+  btn.closest(".fmt").after(list); btn.setAttribute("aria-expanded", "true");
+  const c = list.querySelector('[aria-checked="true"]'); if (c) list.scrollTop = Math.max(0, c.offsetTop - list.offsetTop - 30);
+}
+function applyFontSpan(key, snap0) {
+  const snap = snap0 !== undefined ? snap0 : fmtSnap; fmtSnap = null;
   if (!key) return;
   const T = fmtTargets(snap).filter(t => t.r.z > t.r.a); if (!T.length) { toast("Type some text first"); return; }
   if (T.some(t => !HEAD_FIELDS[t.el.dataset.ff])) remember(focusSid);
@@ -6380,6 +6400,8 @@ function applyFmt(k, fromButton) {
   const snap = fromButton ? fmtSnap : null; fmtSnap = null;
   const s = S.slides[focusSid]; if (!s) return;
   if (k === "hc") return cycleHL();
+  if (k === "fontlist") { fmtSnap = snap; toggleSpanFonts(); return; }
+  if (k.startsWith("span:")) { toggleSpanFonts(false); return applyFontSpan(k.slice(5), snap); }
   if (k === "all") { S.fmtAll = !S.fmtAll; updateFmtBar(); toast(S.fmtAll ? "Style buttons, case and font now change every box here" : "Style buttons change the open box again"); return; }
   if (CASES.some(([c]) => c === k)) return applyCase(k, snap);
   let T = fmtTargets(snap).filter(t => t.r.z > t.r.a);
@@ -6719,11 +6741,14 @@ function openFontPop() {
   if (again) el.scrollTop = top; else { const c = el.querySelector('[aria-checked="true"]'); if (c) el.scrollTop = Math.max(0, c.offsetTop - 40); }
 }
 function hideFontPop() { const el = $("#fFontPop"); if (el) el.hidden = true; }
-function placeFontPop() {
+function placeFontPop() {   /* in the part of the slide that shows (on a phone the toolbar and the editor cover the rest), above or below the bar, whichever has more room; it scrolls inside */
   const el = $("#fFontPop"), bar = $("#fBar"); if (!el || el.hidden || bar.hidden) return;
-  const sw = fcv.clientWidth, sh = fcv.clientHeight, w = el.offsetWidth, h = el.offsetHeight, bt = bar.offsetTop, bh = bar.offsetHeight;
+  const sw = fcv.clientWidth, w = el.offsetWidth, bt = bar.offsetTop, bh = bar.offsetHeight;
+  const wr = $("#fWrap").getBoundingClientRect(), br = bar.getBoundingClientRect(), below = wr.bottom - br.bottom - 12, above = br.top - wr.top - 12, down = below >= Math.min(320, above);
+  el.style.maxHeight = Math.max(150, Math.min(360, down ? below : above)) + "px";
+  const h = el.offsetHeight;
   el.style.left = clamp(bar.offsetLeft - w / 2, 4, Math.max(4, sw - w - 4)) + "px";
-  el.style.top = (bt + bh + 6 + h <= sh - 4 ? bt + bh + 6 : Math.max(4, bt - 6 - h)) + "px";
+  el.style.top = (down ? bt + bh + 6 : bt - 6 - h) + "px";
 }
 $("#fFontPop").addEventListener("click", e => {
   const b = e.target.closest("[data-ffont]"), t = fontTarget(); if (!b || !t) return;
