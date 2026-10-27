@@ -340,6 +340,19 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .fmt .gu{text-decoration:underline;text-underline-offset:2px}
 .fmt .gh{background:#f3eeeb;color:#131111;padding:1px 4px;border-radius:2px}
 .fmt{max-width:100%;flex-wrap:wrap;row-gap:2px}
+.fmt button.fmtcolb{display:grid;place-items:center;gap:0;padding:0 8px;width:auto}
+.fmt button.fmtcolb span{font:700 15px/1 var(--ui)}
+.fmt button.fmtcolb i{display:block;width:16px;height:3px;border-radius:2px;background:linear-gradient(90deg,#e02d12,#ffd23f,#145a6e)}
+.fmt button.fmtcolb[aria-expanded="true"]{background:#3a3432}
+.fcolwrap{flex:1 1 100%;order:4}
+.fcolors{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#0f0d0c;border:1px solid #3a3432;border-radius:10px;padding:8px}
+.fcolors button{width:34px;height:34px;border-radius:50%;border:2px solid #3a3432;background:var(--sw);cursor:pointer;padding:0}
+.fcolors button[aria-pressed="true"]{box-shadow:0 0 0 2px #0f0d0c,0 0 0 4px #f3eeeb}
+.fcolors button.own{width:auto;border-radius:999px;padding:0 12px;background:none;color:#f3eeeb;font:600 12px/1 var(--ui)}
+.fcolors .cpick{display:inline-flex;align-items:center;gap:6px;color:#d9d2ce;font:600 12px/1 var(--ui);cursor:pointer}
+.fcolors .cpick input{width:34px;height:34px;border:0;padding:0;background:none;border-radius:50%;cursor:pointer}
+.fcolpop{max-width:300px}
+.fcolpop .fcolors{border:0;padding:4px}
 .fmt button.fmtfontb{width:auto;padding:0 10px;font:600 13px/1 var(--ui);border:1px solid #3a3432}
 .fmt button.fmtfontb[aria-expanded="true"]{background:#3a3432}
 .lhead{flex-wrap:wrap}
@@ -1145,6 +1158,7 @@ details.gsec[open]{padding-bottom:14px}
       <div class="fbar" id="fBar" role="toolbar" aria-label="Selected text" hidden></div>
       <div class="farr" id="fArr" role="menu" aria-label="Layer order" hidden></div>
       <div class="farr ffont" id="fFontPop" role="menu" aria-label="Font for this text" hidden></div>
+      <div class="farr fcolpop" id="fColPop" role="group" aria-label="Color for this text" hidden></div>
       <div class="fpad" id="fPad" role="group" aria-label="Position" hidden><button type="button" class="px" data-padx title="Close" aria-label="Close position pad"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="dpad"><button type="button" class="nb u" data-nudge="u" title="Move up" aria-label="Move up"><svg viewBox="0 0 24 24"><path d="M12 5l7 11H5z"/></svg></button><button type="button" class="nb l" data-nudge="l" title="Move left" aria-label="Move left"><svg viewBox="0 0 24 24"><path d="M5 12l11-7v14z"/></svg></button><button type="button" class="nb r" data-nudge="r" title="Move right" aria-label="Move right"><svg viewBox="0 0 24 24"><path d="M19 12L8 19V5z"/></svg></button><button type="button" class="nb d" data-nudge="d" title="Move down" aria-label="Move down"><svg viewBox="0 0 24 24"><path d="M12 19L5 8h14z"/></svg></button></div><div class="al"><button type="button" data-align="h" title="Centre left to right" aria-label="Centre left to right"><svg viewBox="0 0 24 24"><path d="M12 4v16M2 12h7M6 9l3 3-3 3M22 12h-7M18 9l-3 3 3 3"/></svg></button><button type="button" data-align="v" title="Centre top to bottom" aria-label="Centre top to bottom"><svg viewBox="0 0 24 24"><path d="M4 12h16M12 2v7M9 6l3 3 3-3M12 22v-7M9 18l3-3 3 3"/></svg></button><button type="button" data-align="c" title="Centre on the slide" aria-label="Centre on the slide"><svg viewBox="0 0 24 24"><path d="M4 20l6-6M6 14h4v4M20 4l-6 6M18 10h-4V6"/></svg></button></div></div>
       <button type="button" class="fdel" id="fDel" aria-label="Delete this sticker" hidden><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
       <div class="psel" id="fPsel" hidden></div>
@@ -1403,20 +1417,26 @@ function positions(ctx, s, size, weight, track, it) {
    They can overlap. Text cut into lines (wrapped, or split at line breaks) is balanced so each line carries the styles open at its start. */
 const MARKS = [["**", "b"], ["__", "i"], ["++", "u"], ["==", "h"]];
 const MARK_RE = /\*\*|__|\+\+|==/g;
-/* a font for part of a text: \uE000<font key>\uE001 … \uE002 (the key is read in any case, as titles are put in capitals) */
+/* a font for part of a text: \uE000<font key>\uE001 … \uE002 (the key is read in any case, as titles are put in capitals); the same
+   with a color, \uE000#rrggbb\uE001 … \uE002, colors that part (inside a font's span when both are set) */
 const FONT_RE = /\uE000[^\uE001]*\uE001|\uE002/g, TOK_RE = /\*\*|__|\+\+|==|\uE000[^\uE001]*\uE001|\uE002/g;
 const plainText = s => String(s ?? "").replace(MARK_RE, "").replace(FONT_RE, "").replace(/\u200b/g, "");
 /* A zero-width space between two marker characters keeps them literal ("_\u200b_" draws "__"); the page writes one wherever typed
    text would otherwise read as a marker. The handle gets the same, so @the__lens stays as it is. */
 const fillR = (s, post) => String(s ?? "").replace(/\{handle\}/gi, () => String((post && post.handle) || "").replace(/([*_+=])(?=\1)/g, "$1\u200b"));
+const HEX6 = /^#[0-9a-f]{6}$/;
 function parseRich(str, baseW) {
-  const out = [], s = String(str), f = { b: 0, i: 0, u: 0, h: 0 }, fams = [];
+  const out = [], s = String(str), f = { b: 0, i: 0, u: 0, h: 0 }, spans = [];   /* spans: the open font and color spans, innermost last */
   let t = "";
-  const push = () => { if (t) out.push({ t, b: !!f.b, w: f.b ? 700 : baseW, it: !!f.i, u: !!f.u, h: !!f.h, ...(fams.length ? { fam: fams[fams.length - 1] } : {}) }); t = ""; };
+  const push = () => {
+    if (!t) return;
+    let fam, col; for (const sp of spans) { if (sp.fam !== undefined) fam = sp.fam; if (sp.col) col = sp.col; }
+    out.push({ t, b: !!f.b, w: f.b ? 700 : baseW, it: !!f.i, u: !!f.u, h: !!f.h, ...(spans.some(sp => "fam" in sp) ? { fam } : {}), ...(col ? { col } : {}) }); t = "";
+  };
   for (let i = 0; i < s.length;) {
     if (s.charCodeAt(i) === 0x200b) { i++; continue; }
-    if (s.charCodeAt(i) === 0xe000) { const j = s.indexOf("\uE001", i); if (j > i) { push(); const k = s.slice(i + 1, j).toLowerCase(); fams.push(k === "nimbus" ? null : FAMS[k] ? k : undefined); i = j + 1; continue; } }
-    if (s.charCodeAt(i) === 0xe002) { push(); fams.pop(); i++; continue; }
+    if (s.charCodeAt(i) === 0xe000) { const j = s.indexOf("\uE001", i); if (j > i) { push(); const k = s.slice(i + 1, j).toLowerCase(); spans.push(HEX6.test(k) ? { col: k } : { fam: k === "nimbus" ? null : FAMS[k] ? k : undefined }); i = j + 1; continue; } }
+    if (s.charCodeAt(i) === 0xe002) { push(); spans.pop(); i++; continue; }
     const m = s.charCodeAt(i + 1) === s.charCodeAt(i) && MARKS.find(([k]) => s.startsWith(k, i));
     if (m) { push(); f[m[1]] ^= 1; i += 2; } else t += s[i++];
   }
@@ -1516,7 +1536,7 @@ function txt(ctx, str, x, capTop, o) {
   segs.forEach((sg, i) => {
     const p = segFam(sg, () => positions(ctx, sg.t, size, sg.w, tr0, sg.it));
     ctx.font = segFam(sg, () => font(size, sg.w, sg.it));
-    ctx.fillStyle = sg.h ? inkOn(box) : ink; ctx.globalAlpha = sg.h ? 1 : (o.alpha ?? 1);
+    ctx.fillStyle = sg.col || (sg.h ? inkOn(box) : ink); ctx.globalAlpha = sg.h ? 1 : (o.alpha ?? 1);   /* a part with its own color keeps it, highlighted or not */
     let ex = 0; p.chars.forEach((ch, j) => { if (ch !== " " && ch !== "\u00a0") ctx.fillText(ch, xs[i] + p.xs[j] + ex, base); else ex += wsp; });
     if (sg.u) ctx.fillRect(xs[i], base + size * 0.09, widths[i] + (i < segs.length - 1 && segs[i + 1].u ? track * size : 0), Math.max(2, size * 0.055));   /* underline */
   });
@@ -6229,7 +6249,8 @@ function baseWeight(s, path) {   /* how heavy the slide sets this text before an
 function richHTML(v) {
   const h = parseRich(String(v ?? ""), 400).map(sg => {
     const c = [sg.b && "b", sg.it && "i", sg.u && "u", sg.h && "h"].filter(Boolean).join(" "), t = esc(sg.t).replace(/\n/g, "<br>"), fk = "fam" in sg ? sg.fam || "nimbus" : null;
-    const fa = fk ? ` data-font="${fk}" style="font-family:${esc(fk === "nimbus" ? '"Nimbus Sans",Arial,sans-serif' : FAMS[fk].css)}"` : "";
+    const css = [fk ? `font-family:${fk === "nimbus" ? '"Nimbus Sans",Arial,sans-serif' : FAMS[fk].css}` : "", sg.col ? `color:${sg.col}${lum(sg.col) < 0.25 ? ";text-shadow:0 0 2px #fff,0 0 1px #fff" : ""}` : ""].filter(Boolean).join(";");   /* a dark color stays readable on the dark editor */
+    const fa = (fk ? ` data-font="${fk}"` : "") + (sg.col ? ` data-color="${sg.col}"` : "") + (css ? ` style="${esc(css)}"` : "");
     return c || fa ? `<span${c ? ` class="${c}"` : ""}${fa}>${t}</span>` : t;
   }).join("");
   return /\n$/.test(plainText(v)) ? h + "<br>" : h;   /* a line break at the very end only shows with a second one */
@@ -6246,6 +6267,7 @@ function richChars(el, keepEnd) {   /* the box's text, one entry per character, 
         if (t === "I" || t === "EM" || cl.contains("i") || st.fontStyle === "italic") g.i = 1;
         if (t === "U" || t === "INS" || cl.contains("u") || /underline/.test(st.textDecoration + " " + st.textDecorationLine)) g.u = 1;
         if (c.dataset && c.dataset.font) g.f = c.dataset.font;   /* a part in its own font */
+        if (c.dataset && c.dataset.color && /^#[0-9a-f]{6}$/i.test(c.dataset.color)) g.k = c.dataset.color.toLowerCase();   /* in its own color */
         if (t === "MARK" || cl.contains("h") || (!!st.backgroundColor && !/^(transparent|rgba\(0, 0, 0, 0\)|initial|inherit)$/.test(st.backgroundColor))) g.h = 1;
         if ((t === "DIV" || t === "P") && out.length && out[out.length - 1].c !== "\n") out.push({ c: "\n", ...f });   /* a new block starts a new line */
         walk(c, g);
@@ -6259,15 +6281,21 @@ function toMarked(chars) {   /* characters with styles back to text with markers
   const mk = Object.fromEntries(MARKS.map(([m, k]) => [k, m])), open = [];
   let out = "";
   const put = t => { if (/[*_+=]/.test(t[0]) && out.endsWith(t[0])) out += "\u200b"; out += t; };   /* "*" + "**" would read as a marker: a zero-width space keeps them apart */
-  let fam = null;   /* a font for part of the text: the styles close around it and open again inside */
+  let fam = null, col = null;   /* a font and a color for part of the text (the color's span inside the font's): the styles close around them and open again inside */
   for (const ch of chars) {
-    const nf = ch.f || null;
-    if (nf !== fam) { for (const k of [...open].reverse()) put(mk[k]); open.length = 0; if (fam) put("\uE002"); if (nf) put("\uE000" + nf + "\uE001"); fam = nf; }
+    const nf = ch.f || null, nk = ch.k || null;
+    if (nf !== fam || nk !== col) {
+      for (const k of [...open].reverse()) put(mk[k]); open.length = 0;
+      if (col) put("\uE002"); if (fam && nf !== fam) put("\uE002");
+      if (nf && nf !== fam) put("\uE000" + nf + "\uE001"); if (nk) put("\uE000" + nk + "\uE001");
+      fam = nf; col = nk;
+    }
     for (const k of [...open].reverse()) if (!ch[k]) { put(mk[k]); open.splice(open.indexOf(k), 1); }
     for (const [, k] of MARKS) if (ch[k] && !open.includes(k)) { put(mk[k]); open.push(k); }
     put(ch.c);
   }
   for (const k of open.reverse()) put(mk[k]);
+  if (col) put("\uE002");
   if (fam) put("\uE002");
   return out;
 }
@@ -6305,7 +6333,32 @@ const CASES = [["upper", "UPPERCASE", "AB"], ["lower", "lowercase", "ab"], ["pro
 /* scope: with "Whole row" on (a block of several boxes, like a settings row), every button styles all its boxes, whole */
 const fmtBarHTML = scope => `<div class="fmt" role="toolbar" aria-label="Text style">${FMTS.map(([k, l]) => `<button type="button" data-fmt="${k}" aria-pressed="false" aria-label="${l}" title="${l}"><span class="g${k}">${l[0]}</span></button>`).join("")}<button type="button" data-fmt="hc" class="hc" aria-label="Highlight color" title="Highlight color"><i></i></button><i class="fsep" aria-hidden="true"></i>${CASES.map(([k, l, g]) => `<button type="button" data-fmt="${k}" class="fcase" aria-label="${l}" title="${l}"><span>${g}</span></button>`).join("")}${fontSpanSel()}${scope ? `<button type="button" data-fmt="all" class="fall" aria-pressed="${!!S.fmtAll}" title="B, I, U, H, case and font style every box in this ${scope}">${scope === "row" ? "Whole row" : "All boxes"}</button>` : ""}</div>`;
 /* a font for the selected words (or the whole text): different fonts in one text */
-const fontSpanSel = () => `<button type="button" data-fmt="fontlist" class="fmtfontb" aria-haspopup="menu" aria-expanded="false" title="Font for the selected words (or the whole text)">Font…</button>`;
+/* Color: the selected words (or the whole text) in a color of their own: the brand's colors, or any color */
+const TEXT_COLORS = [["#ffffff", "White"], ["#f3eeeb", "Cream"], ["#111111", "Black"], ["#e02d12", "Cover red"], ["#ffd23f", "Yellow"], ["#ff9a3c", "Orange"], ["#145a6e", "Teal"], ["#9a918d", "Grey"]];
+const lum = h => { const n = parseInt(String(h).slice(1), 16); return (0.2126 * (n >> 16 & 255) + 0.7152 * (n >> 8 & 255) + 0.0722 * (n & 255)) / 255; };
+const colorBtnHTML = () => `<button type="button" data-fmt="colorlist" class="fmtcolb" aria-haspopup="menu" aria-expanded="false" aria-label="Text color" title="Color for the selected words (or the whole text)"><span>A</span><i></i></button>`;
+const colorListHTML = (cur, attr) => `<div class="fcolors" role="group" aria-label="Text color"><button type="button" ${attr}="-" class="own" aria-pressed="${!cur}" title="The text's own color">Own</button>${TEXT_COLORS.map(([h, l]) => `<button type="button" ${attr}="${h}" aria-pressed="${cur === h}" title="${l}" aria-label="${l}" style="--sw:${h}"></button>`).join("")}<label class="cpick" title="Any color"><input type="color" data-colpick value="${cur || "#e02d12"}" aria-label="Any color"><span>Any</span></label></div>`;
+function toggleSpanColors(force) {
+  const btn = $("#fPanel [data-fmt=colorlist]"), open = $("#fPanel .fcolwrap"); if (!btn) return;
+  if (open || force === false) { if (open) open.remove(); btn.setAttribute("aria-expanded", "false"); return; }
+  toggleSpanFonts(false);
+  const el = curRich(), ch = el ? richChars(el, true) : [], r = el ? fmtRange(el, ch, fmtSnap) : null, cur = r && r.z > r.a ? ch[r.a].k || null : null;
+  const w = document.createElement("div"); w.className = "fcolwrap"; w.innerHTML = colorListHTML(cur, "data-fmt").replace(/data-fmt="(#[0-9a-f]{6}|-)"/g, 'data-fmt="col:$1"');
+  btn.closest(".fmt").after(w); btn.setAttribute("aria-expanded", "true");
+}
+function applyColorSpan(hex, snap0) {
+  const snap = snap0 !== undefined ? snap0 : fmtSnap; fmtSnap = null;
+  const T = fmtTargets(snap).filter(t => t.r.z > t.r.a); if (!T.length) { toast("Type some text first"); return; }
+  if (T.some(t => !HEAD_FIELDS[t.el.dataset.ff])) remember(focusSid, "tcol");
+  for (const t of T) {
+    for (let i = t.r.a; i < t.r.z; i++) { if (hex === "-") delete t.ch[i].k; else t.ch[i].k = hex; }
+    setRich(t.el, toMarked(oneLine(t.el.dataset.ff, t.ch))); onFF(t.el, true);
+  }
+  refocusFmt(T); updateFmtBar();
+}
+document.addEventListener("pointerdown", e => { if (!e.target.closest || !e.target.closest("#fPanel [data-colpick]")) return; const el = curRich(); fmtSnap = el ? { el, sel: document.activeElement === el ? selIn(el) : null, t: 9e15 } : null; }, true);   /* the color picker takes a while: its selection doesn't run out */
+document.addEventListener("input", e => { if (e.target.matches && e.target.matches("#fPanel [data-colpick]")) applyColorSpan(e.target.value.toLowerCase(), fmtSnap ? { ...fmtSnap } : null); });
+const fontSpanSel = () => `${colorBtnHTML()}<button type="button" data-fmt="fontlist" class="fmtfontb" aria-haspopup="menu" aria-expanded="false" title="Font for the selected words (or the whole text)">Font…</button>`;
 /* the list under the style bar: every font, its name written in it; a tap puts it on the selected words (or the whole text) */
 function toggleSpanFonts(force) {
   const btn = $("#fPanel [data-fmt=fontlist]"), open = $("#fPanel .fspan"); if (!btn) return;
@@ -6400,7 +6453,9 @@ function applyFmt(k, fromButton) {
   const snap = fromButton ? fmtSnap : null; fmtSnap = null;
   const s = S.slides[focusSid]; if (!s) return;
   if (k === "hc") return cycleHL();
-  if (k === "fontlist") { fmtSnap = snap; toggleSpanFonts(); return; }
+  if (k === "fontlist") { fmtSnap = snap; toggleSpanColors(false); toggleSpanFonts(); return; }
+  if (k === "colorlist") { fmtSnap = snap; toggleSpanColors(); return; }
+  if (k.startsWith("col:")) { toggleSpanColors(false); return applyColorSpan(k.slice(4), snap); }
   if (k.startsWith("span:")) { toggleSpanFonts(false); return applyFontSpan(k.slice(5), snap); }
   if (k === "all") { S.fmtAll = !S.fmtAll; updateFmtBar(); toast(S.fmtAll ? "Style buttons, case and font now change every box here" : "Style buttons change the open box again"); return; }
   if (CASES.some(([c]) => c === k)) return applyCase(k, snap);
@@ -6676,7 +6731,7 @@ let barKey = "";
 const selRef = () => { const st = selSticker(); return st ? (st.kind === "text" ? "layer:" + st.id : null) : S.ftsel; };
 function updateTextUI() {
   const tsel = $("#fTsel"), bar = $("#fBar"), st = focusSid && selSticker(), k = focusSid ? fcv.clientWidth / geoOf(focusSid).w : 0;
-  if (!$("#fFontPop").hidden && fontFor !== fontKey()) hideFontPop();   /* the Font list belongs to the text it was opened for */
+  if ((!$("#fFontPop").hidden || !$("#fColPop").hidden) && fontFor !== fontKey()) hideFontPop();   /* the Font and Color lists belong to the text they were opened for */
   const layer = st && st.kind === "text" ? st : null;
   if (st) { stickerBar(st); tsel.hidden = true; return; }
   const box = layer ? (S.focusBoxes || []).find(b => b.id === layer.id) : st ? null : (S.ftboxes || {})[S.ftsel];
@@ -6689,7 +6744,7 @@ function updateTextUI() {
   const row = /^text\.rows\./.test(ref), movable = !row && !!moveGroup(S.slides[focusSid], S.ftsel), key = row ? "row" : movable ? "text" : "textfix";
   if (barKey !== key) {
     barKey = key;
-    bar.innerHTML = `<button type="button" data-fbar="edit">${PEN_I}Edit</button><button type="button" data-fbar="font" title="Font for this text">${FONT_I}Font</button><button type="button" data-fbar="dup">${DUP_I}${row ? "Duplicate row" : "Duplicate"}</button>${row ? `<button type="button" class="del" data-fbar="delrow">${TRASH}Delete row</button>` : ""}${movable ? `<button type="button" data-fbar="pos" title="Nudge and centre">${POS_I}Position</button>` : ""}`;
+    bar.innerHTML = `<button type="button" data-fbar="edit">${PEN_I}Edit</button><button type="button" data-fbar="font" title="Font for this text">${FONT_I}Font</button><button type="button" data-fbar="color" title="Color for this text">${COLOR_I}Color</button><button type="button" data-fbar="dup">${DUP_I}${row ? "Duplicate row" : "Duplicate"}</button>${row ? `<button type="button" class="del" data-fbar="delrow">${TRASH}Delete row</button>` : ""}${movable ? `<button type="button" data-fbar="pos" title="Nudge and centre">${POS_I}Position</button>` : ""}`;
   }
   bar.hidden = false;
   const gb = layer ? null : xfBox(), at = gb ? { x0: gb.cx - gb.w / 2, x1: gb.cx + gb.w / 2, y0: gb.cy - gb.h / 2, y1: gb.cy + gb.h / 2 } : box, gp = gb ? pad + 10 : pad;   /* under the whole block when its frame shows */
@@ -6706,7 +6761,7 @@ function stickerBar(st) {
   if (!box || !k || liteOn() || (fg && fg.moved) || railDrag || rotDrag || xg || (S.fpanel === "text" && S.ftfield === "layer:" + st.id)) { bar.hidden = true; hideArr(); return; }
   const custom = st.kind === "custom", text = st.kind === "text", save = custom && !(st.pool && S.mine.has(st.pool)), key = `st:${st.kind}:${save}`;
   const btn = (a, ic, l, t) => `<button type="button" data-fbar="${a}"${t ? ` title="${t}"` : ""}>${ic}${l}</button>`;
-  if (barKey !== key) { barKey = key; bar.innerHTML = (text ? btn("edit", PEN_I, "Edit") + btn("font", FONT_I, "Font", "Font for this text") : custom ? btn("mkedit", PEN_I, "Edit", "Edit or enhance this sticker") : st.kind === "bdrow" ? btn("rowedit", PEN_I, "Edit row", "Names, subtext, sizes, and more stickers") : "") + btn(text ? "dup" : "dupst", DUP_I, "Duplicate", "Duplicate (Ctrl+D)") + btn("arr", LAYER_I, "Arrange", "Layer order") + btn("pos", POS_I, "Position", "Nudge and centre") + (save ? btn("savemine", STAR_I, "Save", "Save to My stickers") : ""); }
+  if (barKey !== key) { barKey = key; bar.innerHTML = (text ? btn("edit", PEN_I, "Edit") + btn("font", FONT_I, "Font", "Font for this text") + btn("color", COLOR_I, "Color", "Color for this text") : custom ? btn("mkedit", PEN_I, "Edit", "Edit or enhance this sticker") : st.kind === "bdrow" ? btn("rowedit", PEN_I, "Edit row", "Names, subtext, sizes, and more stickers") : "") + btn(text ? "dup" : "dupst", DUP_I, "Duplicate", "Duplicate (Ctrl+D)") + btn("arr", LAYER_I, "Arrange", "Layer order") + btn("pos", POS_I, "Position", "Nudge and centre") + (save ? btn("savemine", STAR_I, "Save", "Save to My stickers") : ""); }
   if (S.arrOpen && S.arrOpen !== st.id) hideArr();
   bar.hidden = false;
   const bw = bar.offsetWidth, bh = bar.offsetHeight, sw = fcv.clientWidth, sh = fcv.clientHeight;
@@ -6740,9 +6795,33 @@ function openFontPop() {
   el.hidden = false; placeFontPop();
   if (again) el.scrollTop = top; else { const c = el.querySelector('[aria-checked="true"]'); if (c) el.scrollTop = Math.max(0, c.offsetTop - 40); }
 }
-function hideFontPop() { const el = $("#fFontPop"); if (el) el.hidden = true; }
-function placeFontPop() {   /* in the part of the slide that shows (on a phone the toolbar and the editor cover the rest), above or below the bar, whichever has more room; it scrolls inside */
-  const el = $("#fFontPop"), bar = $("#fBar"); if (!el || el.hidden || bar.hidden) return;
+function hideFontPop() { const el = $("#fFontPop"); if (el) el.hidden = true; hideColorPop(); }
+/* Color on the bar of a selected text: the whole text in one color (a text layer: its own color; a slide's text: a color span around it all) */
+const COLOR_I = `<svg viewBox="0 0 24 24"><path d="M6 17L11.2 4h1.6L18 17M8 12.5h8"/><rect x="4" y="19" width="16" height="2.6" rx="1" fill="currentColor" stroke="none"/></svg>`;
+function colorTarget() { const t = fontTarget(); if (!t) return null; if (t.st) return { ...t, cur: HEX6.test(String(t.st.color || "").toLowerCase()) ? t.st.color.toLowerCase() : null }; const v = fieldInfo(t.s, t.path).value, sg = parseRich(String(v ?? ""), 400); const cs = [...new Set(sg.map(x => x.col || null))]; return { ...t, v, cur: cs.length === 1 ? cs[0] : null }; }
+function openColorPop() {
+  const t = colorTarget(), el = $("#fColPop"); if (!t) return;
+  fontFor = fontKey();
+  el.innerHTML = `<p>Color for this text</p>` + colorListHTML(t.cur, "data-fcol");
+  el.hidden = false; placeFontPop(el);
+}
+function hideColorPop() { const el = $("#fColPop"); if (el) el.hidden = true; }
+function setTextColor(hex) {
+  const t = colorTarget(); if (!t) return;
+  remember(focusSid, "tcolor");
+  if (t.st) { if (hex === "-") delete t.st.color; else t.st.color = hex; }
+  else {
+    const tmp = document.createElement("div"); tmp.innerHTML = richHTML(t.v); const ch = richChars(tmp, true);
+    ch.forEach(c => { if (hex === "-") delete c.k; else c.k = hex; });
+    const v = toMarked(ch);
+    if (HEAD_FIELDS[t.path]) { S.post[t.path.slice(5)] = v; saveMeta(); scheduleDraw(); } else setPath(t.s, t.path, v);
+  }
+  saveSlide(focusSid); scheduleDraw(focusSid); renderBoard(new Set([focusSid])); openColorPop();
+}
+$("#fColPop").addEventListener("click", e => { const b = e.target.closest("[data-fcol]"); if (b) setTextColor(b.dataset.fcol); });
+$("#fColPop").addEventListener("input", e => { if (e.target.matches("[data-colpick]")) setTextColor(e.target.value.toLowerCase()); });
+function placeFontPop(el0) {   /* in the part of the slide that shows (on a phone the toolbar and the editor cover the rest), above or below the bar, whichever has more room; it scrolls inside */
+  const el = el0 && el0.nodeType ? el0 : $("#fFontPop"), bar = $("#fBar"); if (!el || el.hidden || bar.hidden) return;
   const sw = fcv.clientWidth, w = el.offsetWidth, bt = bar.offsetTop, bh = bar.offsetHeight;
   const wr = $("#fWrap").getBoundingClientRect(), br = bar.getBoundingClientRect(), below = wr.bottom - br.bottom - 12, above = br.top - wr.top - 12, down = below >= Math.min(320, above);
   el.style.maxHeight = Math.max(150, Math.min(360, down ? below : above)) + "px";
@@ -6777,7 +6856,8 @@ $("#fBar").addEventListener("click", e => {
   const b = e.target.closest("[data-fbar]"); if (!b || !focusSid) return;
   if (b.dataset.fbar === "savemine") { saveToMine(focusSid, selSticker()); updateTextUI(); return; }
   if (b.dataset.fbar === "crop") { enterCrop(S.psel); return; }
-  if (b.dataset.fbar === "font") { if ($("#fFontPop").hidden) openFontPop(); else hideFontPop(); return; }
+  if (b.dataset.fbar === "font") { hideColorPop(); if ($("#fFontPop").hidden) openFontPop(); else hideFontPop(); return; }
+  if (b.dataset.fbar === "color") { hideFontPop(); if ($("#fColPop").hidden) openColorPop(); else hideColorPop(); return; }
   if (b.dataset.fbar === "pos") { S.padOn = !S.padOn; hideArr(); updateFocusUI(); return; }
   if (b.dataset.fbar === "rowedit") { const st = selSticker(); if (!st) return; S.frow = st.id; S.fpanel = "row"; hideArr(); renderFPanel(); drawFocus(); return; }
   if (b.dataset.fbar === "preplace") { const k = S.psel; S.psel = null; openPicker(focusSid, k); return; }
