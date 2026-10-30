@@ -9157,7 +9157,17 @@ function rrect(x, X0, Y0, w, h, r) { x.beginPath(); x.moveTo(X0 + r, Y0); x.arcT
 async function appTile(ap, n) {   /* an app tile: its logo on white, or its initials on near-black */
   const cv = document.createElement("canvas"); cv.width = cv.height = n; const x = cv.getContext("2d"), r = n * 0.22, im = ap.logo ? await loadPic(srcOf(ap.logo)) : null;
   rrect(x, 1, 1, n - 2, n - 2, r); x.save(); x.clip();
-  if (im) { x.fillStyle = "#ffffff"; x.fillRect(0, 0, n, n); const k = Math.min(n * 0.8 / im.naturalWidth, n * 0.8 / im.naturalHeight); x.drawImage(im, (n - im.naturalWidth * k) / 2, (n - im.naturalHeight * k) / 2, im.naturalWidth * k, im.naturalHeight * k); }
+  if (im) {   /* a logo is an app icon already: as it is, edge to edge (a plain white or see-through border around it is trimmed) */
+    x.restore();
+    const t = document.createElement("canvas"), tk = Math.min(1, 400 / Math.max(im.naturalWidth, im.naturalHeight)); t.width = Math.round(im.naturalWidth * tk); t.height = Math.round(im.naturalHeight * tk);
+    const tx = t.getContext("2d", { willReadFrequently: true }); tx.drawImage(im, 0, 0, t.width, t.height);
+    let bx = [0, 0, t.width, t.height];
+    try { const d = tx.getImageData(0, 0, t.width, t.height).data, ink = (i) => d[i + 3] > 24 && !(d[i] > 244 && d[i + 1] > 244 && d[i + 2] > 244); let x0 = t.width, y0 = t.height, x1 = -1, y1 = -1;
+      for (let yy = 0; yy < t.height; yy++) for (let xx = 0; xx < t.width; xx++) if (ink((yy * t.width + xx) * 4)) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (yy < y0) y0 = yy; if (yy > y1) y1 = yy; }
+      if (x1 > x0 && y1 > y0) bx = [x0, y0, x1 - x0 + 1, y1 - y0 + 1]; } catch (e) {}
+    const k = Math.min(n / bx[2], n / bx[3]); x.imageSmoothingQuality = "high"; x.drawImage(t, bx[0], bx[1], bx[2], bx[3], (n - bx[2] * k) / 2, (n - bx[3] * k) / 2, bx[2] * k, bx[3] * k);
+    return cv;
+  }
   else { x.fillStyle = "#161211"; x.fillRect(0, 0, n, n); x.fillStyle = "#ffffff"; x.font = `700 ${Math.round(n * 0.36)}px ${FONT}`; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(appInitials(ap.name), n / 2, n / 2 + n * 0.02); }
   x.restore(); rrect(x, 1, 1, n - 2, n - 2, r); x.strokeStyle = "#ddd6d1"; x.lineWidth = n * 0.02; x.stroke();
   return cv;
