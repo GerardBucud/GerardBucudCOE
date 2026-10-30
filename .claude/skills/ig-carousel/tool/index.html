@@ -359,6 +359,7 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .gapps .gapplist{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
 .gapp{display:inline-flex;align-items:center;gap:6px}
 .gapp input.ctl{width:150px}
+.gsocial .gapp{flex-wrap:wrap}.gapp input.gurl{width:240px;max-width:calc(100vw - 120px)}
 .glogo{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:#161211;color:#fff;display:grid;place-items:center;padding:0;overflow:hidden;cursor:pointer;font:700 13px/1 var(--ui)}
 .glogo img{width:100%;height:100%;object-fit:contain;background:#fff}
 .fspan{flex:1 1 100%;order:4;display:grid;gap:2px;max-height:min(300px,42vh);overflow:auto;overscroll-behavior:contain;background:#0f0d0c;border:1px solid #3a3432;border-radius:10px;padding:6px}
@@ -7370,12 +7371,12 @@ let pickFor = null;
 function openPicker(sid, slot) {
   pickFor = { sid, slot };
   const s = S.slides[sid], ref = slot === "ref";
-  const layer = slot === "layer", glogo = slot.startsWith("glogo:");
-  $("#pickTitle").textContent = glogo ? "App logo" : layer ? "Add an image" : ref ? "Reference image" : slot.startsWith("gear:") ? "Gear picture" : slot.startsWith("bd:") ? "Item picture (cut out automatically)" : slot === "img2" && s.type === "breakdown" ? "Panel photo" : s.type === "beforeafter" ? (slot === "img" ? "Replace before photo" : "Replace after photo") : "Replace image";
+  const layer = slot === "layer", slogo = slot.startsWith("slogo:"), glogo = slot.startsWith("glogo:") || slogo;
+  $("#pickTitle").textContent = slogo ? "Link icon" : glogo ? "App logo" : layer ? "Add an image" : ref ? "Reference image" : slot.startsWith("gear:") ? "Gear picture" : slot.startsWith("bd:") ? "Item picture (cut out automatically)" : slot === "img2" && s.type === "breakdown" ? "Panel photo" : s.type === "beforeafter" ? (slot === "img" ? "Replace before photo" : "Replace after photo") : "Replace image";
   $("#pickUploadLbl").hidden = !(S.assets || S.local);
   $("#pickUploadTxt").textContent = ref ? "Upload a reference" : layer ? "Upload images" : "Upload new photo";
   const tl = $("#pickTimeline"); if (tl) tl.hidden = !layer;
-  $("#pickHint").textContent = glogo ? "Pick the app's logo from your library, or upload it (a PNG with a see-through background looks best). It shows in a tile at the top of the guide page." : layer ? "Pick a photo from your library, or upload images (a PNG with see-through parts stays see-through). It goes on top of the slide: drag it, resize it, turn it, or use Arrange to put it behind the text. Uploads go in your library too." : ref ? "Pick a post you like (a screenshot works), from your library or a new upload. Claude matches this slide's layout, text styling and photo look to it and keeps your own words and photo. Tweak anything afterwards, or Undo. New uploads go to the References folder."
+  $("#pickHint").textContent = slogo ? "Pick the icon for this link from your library, or upload it (a PNG with a see-through background looks best). It shows on the guide's last page, and tapping it in the PDF opens the link." : glogo ? "Pick the app's logo from your library, or upload it (a PNG with a see-through background looks best). It shows in a tile at the top of the guide page." : layer ? "Pick a photo from your library, or upload images (a PNG with see-through parts stays see-through). It goes on top of the slide: drag it, resize it, turn it, or use Arrange to put it behind the text. Uploads go in your library too." : ref ? "Pick a post you like (a screenshot works), from your library or a new upload. Claude matches this slide's layout, text styling and photo look to it and keeps your own words and photo. Tweak anything afterwards, or Undo. New uploads go to the References folder."
     : (S.assets || S.local) ? "Pick a photo from your library or upload a new one. The text design re-fits to the photo you choose." : "Pick a photo from your library. Only editors of this board can upload new ones.";
   if (ref && [...S.photos.values()].some(isRefPhoto)) S.pickFolder = REF_FOLDER; else if (!ref && S.pickFolder === REF_FOLDER) S.pickFolder = "*";
   S.pickQuery = ""; $("#pickSearch").value = "";
@@ -7394,15 +7395,19 @@ $("#pickGrid").addEventListener("click", e => { const b = e.target.closest("[dat
 $("#pickTimeline").addEventListener("click", () => addTimelineLayer());
 function usePhoto(id) {
   if (!pickFor || !S.photos.has(id)) return;
-  const { sid, slot } = pickFor, s = S.slides[sid];
+  const { sid, slot } = pickFor, s = S.slides[sid], p = S.photos.get(id);
   if (slot === "layer") { addImageLayers([id]); return; }
+  if (slot.startsWith("slogo:")) {   /* a guide follow link's icon */
+    const sl = S.guide && (S.guide.socials || [])[+slot.slice(6)];
+    $("#pickDlg").close(); if (!sl) return;
+    sl.logo = stillOf(p); saveGuide(); renderGuide(); toast(`Icon set for ${sl.name || "the link"}`); return;
+  }
   if (slot.startsWith("glogo:")) {   /* a guide section's app logo */
     const [, i, j] = slot.split(":").map(Number), ap = S.guide && ((S.guide.sections || [])[i] || {}).apps && S.guide.sections[i].apps[j];
     $("#pickDlg").close(); if (!ap) return;
     ap.logo = stillOf(p); saveGuide(); renderGuide(); toast(`Logo set for ${ap.name || "the app"}`); return;
   }
   if (slot === "ref") { $("#pickDlg").close(); referenceSlide(sid, id); return; }
-  const p = S.photos.get(id);
   if (slot.startsWith("bd:")) { $("#pickDlg").close(); bdPhotoTo(sid, +slot.slice(3), p); return; }
   if (slot.startsWith("gear:")) { const it = s.text.items[+slot.slice(5)]; if (it) { remember(sid); setGearPic(it, p); saveSlide(sid); renderBoard(new Set([sid])); } $("#pickDlg").close(); toast("Gear picture set. A cut-out on a plain background looks cleanest"); return; }
   remember(sid);
@@ -9003,7 +9008,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { S, order, renderSlide, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
+window.__t = { S, order, renderSlide, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
@@ -9069,6 +9074,7 @@ function renderGuide() {
     <div class="actions"><button class="btn sm" data-gact="addsec">Add section</button></div>
     ${part("closing", `<div><label class="lbl" for="g-outro">Closing</label><textarea class="ctl" id="g-outro" data-g="outro" rows="3">${esc(g.outro)}</textarea></div>
       <div><label class="lbl" for="g-cta">Last line, big ({handle} = your handle)</label><input class="ctl" id="g-cta" data-g="cta" value="${esc(g.cta)}"></div>
+      <div class="gapps gsocial"><span class="lbl">Follow links, under the closing text</span><div class="gapplist">${(g.socials || []).map((sl, j) => `<span class="gapp"><button type="button" class="glogo" data-gact="slogo" data-j="${j}" title="Pick its icon from your library">${sl.logo ? `<img src="${esc(srcOf(sl.logo))}" alt="">` : `<b>${esc(appInitials(sl.name))}</b>`}</button><input class="ctl" data-g="socials.${j}.name" value="${esc(sl.name || "")}" aria-label="Name" placeholder="Instagram"><input class="ctl gurl" type="url" inputmode="url" data-g="socials.${j}.url" value="${esc(sl.url || "")}" aria-label="Link" placeholder="https://…"><button type="button" class="btn ghost sm" data-gact="sdel" data-j="${j}" aria-label="Remove this link">×</button></span>`).join("")}<button type="button" class="btn ghost sm" data-gact="sadd">Add link</button></div><p class="hint" style="margin:4px 0 0">Each icon sits on the last page with your handle under the row; tapping it in the PDF opens the link. Tap a tile to pick its icon (upload it to your library first).</p></div>
       <label class="check"><input type="checkbox" id="g-cheat" data-g="cheatsheet" data-bool${g.cheatsheet !== false ? " checked" : ""}><span>Add a cheat sheet page<small>Every setting from your slides on one page.</small></span></label>`)}
     ${part("comment", `<label class="lbl" for="g-comment">Comment on the whole guide</label><textarea class="ctl" id="g-comment" data-g="comment" rows="3" placeholder="e.g. make the intro shorter, add a tip about audio">${esc(g.comment)}</textarea>`)}
   </div>`;
@@ -9137,6 +9143,9 @@ document.addEventListener("click", e => {
   if (a === "gappadd" && sec) { sec.apps = [...(sec.apps || []), { name: "" }]; S.gOpen.add(sec.id); saveGuide(); renderGuide(); const ins = $$(`#guideSec [data-g^="sections.${i}.apps."]`); if (ins.length) ins[ins.length - 1].focus(); return; }
   if (a === "gappdel" && sec && sec.apps) { sec.apps.splice(j, 1); if (!sec.apps.length) delete sec.apps; saveGuide(); renderGuide(); return; }
   if (a === "glogo" && sec) { S.gOpen.add(sec.id); openPicker(null, `glogo:${i}:${j}`); }
+  if (a === "sadd") { g.socials = [...(g.socials || []), { name: "", url: "" }]; S.gOpen.add("closing"); saveGuide(); renderGuide(); const ins = $$('#guideSec [data-g$=".name"][data-g^="socials."]'); if (ins.length) ins[ins.length - 1].focus(); return; }
+  if (a === "sdel" && g.socials) { g.socials.splice(j, 1); if (!g.socials.length) delete g.socials; saveGuide(); renderGuide(); return; }
+  if (a === "slogo" && g.socials && g.socials[j]) { S.gOpen.add("closing"); openPicker(null, `slogo:${j}`); }
 });
 const appInitials = n => String(n || "").trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase() || "?";
 
@@ -9171,7 +9180,8 @@ function cleanGuide(raw, prev) {
       ...(() => { const old = ((prev && prev.sections) || []).find(o => o.id === x.id); return old ? { ...(old.apps ? { apps: clone(old.apps) } : {}), ...(old.figure ? { figure: old.figure } : {}) } : {}; })()   /* logos and pictures are the creator's: they stay */
     })),
     outro: str(raw.outro, prev && prev.outro), cta: str(raw.cta, (prev && prev.cta) || "FOLLOW {handle}", 120),
-    cheatsheet: prev ? prev.cheatsheet !== false : true, comment: ""
+    cheatsheet: prev ? prev.cheatsheet !== false : true, comment: "",
+    ...(prev && prev.socials ? { socials: clone(prev.socials) } : {})   /* the creator's links and icons stay */
   };
   return out;
 }
@@ -9310,7 +9320,7 @@ async function slideJpeg(sid, w) {
 }
 async function buildGuidePdf(onStep, rec) {   /* rec: optional array that gets each page's drawing, for Preview */
   await loadScript(PDF_LIBS[0]); await loadScript(PDF_LIBS[1]);
-  const { PDFDocument, rgb, pushGraphicsState, popGraphicsState, setCharacterSpacing } = window.PDFLib;
+  const { PDFDocument, rgb, pushGraphicsState, popGraphicsState, setCharacterSpacing, PDFName, PDFString } = window.PDFLib;
   const g = S.guide, post = S.post, o = order();
   const doc = await PDFDocument.create();
   doc.registerFontkit(window.fontkit);
@@ -9344,6 +9354,26 @@ async function buildGuidePdf(onStep, rec) {   /* rec: optional array that gets e
       draw(nm, x0 + j * cell + (cell - tw(nm, B, 5.6)) / 2, top - T - 8, B, 5.6, C.muted);
     }
     return T + 12;
+  };
+  const link = (url, x, yy, w, h) => {   /* a tappable area that opens url */
+    if (!/^https?:\/\/\S+$/i.test(url)) return;
+    const a = doc.context.register(doc.context.obj({ Type: "Annot", Subtype: "Link", Rect: [x, yy, x + w, yy + h], Border: [0, 0, 0], A: { Type: "Action", S: "URI", URI: PDFString.of(url) } }));
+    const k = PDFName.of("Annots"), cur = page.node.lookup(k);
+    if (cur) cur.push(a); else page.node.set(k, doc.context.obj([a]));
+    if (rec) rec[rec.length - 1].push({ k: "a", url, x, y: yy, w, h });
+  };
+  const socialRow = async list => {   /* follow links: icon tiles with their names, each one a link, and the handle under the row */
+    list = (list || []).filter(l => l && (l.logo || String(l.name || "").trim()) && /^https?:\/\/\S+$/i.test(String(l.url || "").trim())).slice(0, 5); if (!list.length) return;
+    const T = 40, cell = 70; y -= 8; ensure(T + 52);
+    for (const [j, l] of list.entries()) {
+      const x = MX + j * cell, url = String(l.url).trim();
+      await putImg(await appTile(l, 200), x, y - T, T, T, false);
+      let nm = up(String(l.name || "").trim()); while (nm && tw(nm, B, 6.5) > cell - 6) nm = nm.slice(0, -2) + "…";
+      draw(nm, x + (T - tw(nm, B, 6.5)) / 2, y - T - 10, B, 6.5, C.muted);
+      link(url, x - 4, y - T - 14, T + 8, T + 16);
+    }
+    y -= T + 24;
+    const h = up(post.handle || ""); if (h) { draw(h, MX, y - 13, B, 15, C.ink, -0.6); link(String(list[0].url).trim(), MX, y - 17, tw(h, B, 15, -0.6), 19); y -= 24; }
   };
   const figure = async (kind, sec) => {   /* a picture under the section's text */
     if (kind !== "timeline") return;
@@ -9466,6 +9496,7 @@ async function buildGuidePdf(onStep, rec) {   /* rec: optional array that gets e
   label("That’s it");
   heading(fill(g.cta || "FOLLOW {handle}", post), 30);
   para(g.outro, 11.5, 16.5, C.ink);
+  await socialRow(g.socials);
   const last = o[o.length - 1];
   if (last && S.slides[last].type === "save" && !slidePages.has(last)) await slidePage(last);
   onStep && onStep("Saving");
