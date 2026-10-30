@@ -1028,7 +1028,7 @@ details.gsec[open]{padding-bottom:14px}
 
 <dialog id="pickDlg" aria-labelledby="pickTitle">
   <div class="dlg-h"><h3 id="pickTitle">Replace image</h3><span class="grow"></span>
-    <label class="btn primary sm" id="pickUploadLbl"><span id="pickUploadTxt">Upload new photo</span><input type="file" id="pickUpload" accept="image/*,video/*" multiple class="sr"></label>
+    <button type="button" class="btn sm" id="pickTimeline" hidden>Editing timeline picture</button><label class="btn primary sm" id="pickUploadLbl"><span id="pickUploadTxt">Upload new photo</span><input type="file" id="pickUpload" accept="image/*,video/*" multiple class="sr"></label>
     <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="dlg-b"><p id="pickHint" style="margin:0 0 12px;color:var(--muted)">Pick a photo from your library. The text design re-fits to the photo you choose.</p>
     <div class="searchrow"><label class="sr" for="pickSearch">Search photos</label><input type="search" class="ctl" id="pickSearch" placeholder="Search by name, folder or what's in it" autocomplete="off"></div>
@@ -4122,7 +4122,7 @@ function cardHTML(sid) {
       <div class="status" role="group" aria-label="Review status">${STATUS.map(([v, l]) => `<button data-act="status" data-v="${v}" aria-pressed="${st === v}">${l}</button>`).join("")}</div>
       <div><label class="lbl" for="${sid}-comment">Comment for Claude</label><textarea class="ctl" id="${sid}-comment" data-f="comment" placeholder="What should change on this slide?">${esc(s.comment)}</textarea></div>
       <div class="applybar">${applyBtnHTML(sid, s)}</div></div></details>
-    <details class="txt"><summary>Edit text</summary><div class="fields">${fieldHTML(sid, s)}${layerHTML(sid, s)}</div></details>
+    ${s.type === "gear" || s.type === "breakdown" ? `<details class="txt"><summary>Items</summary><div class="fields">${fieldHTML(sid, s)}</div></details>` : ""}
     <details class="pho"><summary>Edit photo</summary><div class="fields">${editHTML(sid, s)}</div></details>
     <details class="stk"><summary>Stickers${(s.stickers || []).length ? ` (${s.stickers.length})` : ""}</summary><div class="fields">${stickerHTML(sid, s)}</div></details>
     <details class="lay"><summary>Layout and framing</summary><div class="fields">${layoutHTML(sid, s)}</div></details>
@@ -7347,6 +7347,7 @@ function openPicker(sid, slot) {
   $("#pickTitle").textContent = glogo ? "App logo" : layer ? "Add an image" : ref ? "Reference image" : slot.startsWith("gear:") ? "Gear picture" : slot.startsWith("bd:") ? "Item picture (cut out automatically)" : slot === "img2" && s.type === "breakdown" ? "Panel photo" : s.type === "beforeafter" ? (slot === "img" ? "Replace before photo" : "Replace after photo") : "Replace image";
   $("#pickUploadLbl").hidden = !(S.assets || S.local);
   $("#pickUploadTxt").textContent = ref ? "Upload a reference" : layer ? "Upload images" : "Upload new photo";
+  const tl = $("#pickTimeline"); if (tl) tl.hidden = !layer;
   $("#pickHint").textContent = glogo ? "Pick the app's logo from your library, or upload it (a PNG with a see-through background looks best). It shows in a tile at the top of the guide page." : layer ? "Pick a photo from your library, or upload images (a PNG with see-through parts stays see-through). It goes on top of the slide: drag it, resize it, turn it, or use Arrange to put it behind the text. Uploads go in your library too." : ref ? "Pick a post you like (a screenshot works), from your library or a new upload. Claude matches this slide's layout, text styling and photo look to it and keeps your own words and photo. Tweak anything afterwards, or Undo. New uploads go to the References folder."
     : (S.assets || S.local) ? "Pick a photo from your library or upload a new one. The text design re-fits to the photo you choose." : "Pick a photo from your library. Only editors of this board can upload new ones.";
   if (ref && [...S.photos.values()].some(isRefPhoto)) S.pickFolder = REF_FOLDER; else if (!ref && S.pickFolder === REF_FOLDER) S.pickFolder = "*";
@@ -7363,6 +7364,7 @@ function renderPicker() {
   $("#pickGrid").innerHTML = items.map(([id, p]) => `<button type="button" data-pick="${esc(id)}" title="${esc(p.desc || p.name)}"><img loading="lazy" src="${esc(srcOf(p))}" alt="">${isVid(p) ? `<b class="vdur">▶ ${fmtDur(p.dur)}</b>` : ""}<span>${esc(p.name)}</span>${p.desc ? `<span>${esc(p.desc)}</span>` : ""}</button>`).join("") || `<p>${q ? `No photos match “${esc(q)}”.` : "No photos here yet."}</p>`;
 }
 $("#pickGrid").addEventListener("click", e => { const b = e.target.closest("[data-pick]"); if (b) usePhoto(b.dataset.pick); });
+$("#pickTimeline").addEventListener("click", () => addTimelineLayer());
 function usePhoto(id) {
   if (!pickFor || !S.photos.has(id)) return;
   const { sid, slot } = pickFor, s = S.slides[sid];
@@ -7791,6 +7793,7 @@ Stickers are icons and buttons drawn on top of a slide. "stickers" is the slide'
 - x and y: the sticker's centre as a fraction of the slide's width and height (0 to 1). The header sits near y 0.06 and the footer near y 0.95; keep stickers clear of text and of the main subject.
 - size: pixels on the slide, which is 1800 px across when it's portrait (icons 120 to 240, buttons 80 to 110 tall). rot: degrees (-180 to 180). color: hex (icons default #FFFFFF; for buttons it is the text color). solid: true fills an icon. label: button text in UPPERCASE. bg: the button's hex color.
 Stickers draw in list order on top of the slide's text; under: true puts one behind the text (over the photo). A sticker with kind "custom" is one of the creator's own (an image or drawing): keep it in the list with its name to keep it; you may change its x, y, size (up to 1800), rot and color, but never add a new custom sticker.
+Pictures: {"kind": "photo", "photo": "<an id from the PHOTO LIBRARY>", x, y, size, rot, under} puts that library photo on the slide as a picture (size is its longer side in px, 80 to 1800); use it for logos (the "App logos" folder: one per app, a row of them about 130 to 170 px each) or a picture the creator asks for. {"kind": "timeline", x, y, size} puts the editing-timeline picture on the slide (the one in the PDF guide: the main clip on the lower track, the frame PNG overlay on the track above, arrows naming each, and the result; size is its width, 900 to 1600; it is about 0.56 as tall as it is wide). Leave room for them: keep them clear of the text and of each other.
 Return "stickers": "keep" unless a comment asks to add, move or remove a sticker; then return the slide's complete new list.
 
 Photo edits are the slider settings on a slide's photo. "edits" is {exposure, contrast, whites, blacks, saturation, vibrance, grain, sharpen} for the photo ("edits2" for the after photo of a beforeafter slide): whole numbers from -100 to 100 (grain and sharpen 0 to 100); 0 or missing means unchanged. A light touch is 10 to 25, a clear change 30 to 50. There is no white balance, temperature or tint control; if a comment asks for one, say so in notes.
@@ -7844,7 +7847,33 @@ function buildPrompt(targets, overall) {
     overall ? `OVERALL COMMENT FROM THE CREATOR (applies to the whole post; you may change any slide below):\n${overall}` : "",
     `SLIDES TO EDIT (current content and the creator's comment for each):\n${JSON.stringify(items)}`,
     `PHOTO LIBRARY:\n${JSON.stringify(photos)}`,
+    guideBrief(),
     FORMAT].filter(Boolean).join("\n\n");
+}
+/* the post's PDF guide, for Claude: its sections' text, the apps it names and its pictures, so a comment can refer to "the PDF" */
+function guideBrief() {
+  const g = S.guide; if (!g || !pdfOn() || !(g.sections || []).length) return "";
+  const secs = g.sections.map((x, i) => ({ n: i + 1, heading: x.heading, body: x.body, points: x.points, ...(x.apps && x.apps.length ? { apps: x.apps.map(a => a.name) } : {}), ...(x.figure ? { picture: x.figure === "timeline" ? "editing timeline (main clip + overlay), available as the timeline sticker" : x.figure } : {}) }));
+  return `PDF GUIDE (the long version of this post that followers get; when a comment mentions the PDF, this is it):\n${JSON.stringify({ title: g.title, sections: secs })}`;
+}
+/* pictures Claude asked for that are drawn here: the editing timeline, stored as an image and put in its sticker */
+async function fillPending(sid) {
+  const s = S.slides[sid]; if (!s) return;
+  for (const st of (s.stickers || []).filter(t => t.pending === "timeline")) {
+    try { const src = await timelineSrc(); const cur = (S.slides[sid].stickers || []).find(t => t.id === st.id); if (!cur) continue; delete cur.pending; cur.src = src; saveSlide(sid); scheduleDraw(sid); renderBoard(new Set([sid])); }
+    catch (e) { console.warn(e); }
+  }
+}
+async function timelineSrc() {   /* the timeline picture for slides (see-through, light type), stored: { asset } or a local file */
+  const cv = await timelineFigure(null, { dark: true }), blob = await new Promise(r => cv.toBlob(r, "image/png"));
+  if (S.assets && !S.local) return { asset: (await S.assets.upload(new File([blob], "editing-timeline.png", { type: "image/png" }))).id };
+  return { file: URL.createObjectURL(blob) };
+}
+async function addTimelineLayer() {
+  const sid = pickFor && pickFor.sid; if ($("#pickDlg").open) $("#pickDlg").close(); if (!sid || !S.slides[sid]) return;
+  toast("Drawing the timeline…");
+  try { const src = await timelineSrc(); addCustom(sid, { name: "Editing timeline", ar: TL_AR, src }, null, 1300); toast("Timeline added. Drag it, resize it, or Arrange it"); }
+  catch (e) { toast("Couldn't draw the timeline. Try again"); }
 }
 function cleanText(type, raw, prev) {
   const out = clone(prev || TEMPLATES[type].text);
@@ -7882,7 +7911,12 @@ function cleanStickers(raw, prev) {
   if (raw === null) return [];
   if (!Array.isArray(raw)) return prev || [];
   const mine = (prev || []).filter(t => t.kind === "custom"), rows = (prev || []).filter(t => t.kind === "bdrow"), used = new Set();
-  return raw.slice(0, 12).filter(x => x && STICKERS[x.kind]).map(x => {
+  return raw.slice(0, 16).filter(x => x && (STICKERS[x.kind] || x.kind === "photo" || x.kind === "timeline")).map(x => {
+    if (x.kind === "photo") {   /* a library photo (a logo, a picture) on the slide: an image layer like the Image button's */
+      const p = S.photos.get(String(x.photo || "")); if (!p || isVid(p)) return null;
+      return { id: newStickerId(), kind: "custom", name: String(p.name || "Image").slice(0, 40), ar: p.w && p.h ? clamp(p.w / p.h, 0.05, 20) : 1, src: stillOf(p), x: clamp(num(x.x, 0.5), 0, 1), y: clamp(num(x.y, 0.5), 0, 1), size: clamp(num(x.size, 300), 40, 1800), rot: clamp(num(x.rot, 0), -180, 180), ...(x.under === true ? { under: true } : {}) };
+    }
+    if (x.kind === "timeline") return { id: newStickerId(), kind: "custom", name: "Editing timeline", ar: TL_AR, pending: "timeline", x: clamp(num(x.x, 0.5), 0, 1), y: clamp(num(x.y, 0.6), 0, 1), size: clamp(num(x.size, 1300), 300, 1800), rot: 0 };   /* drawn and stored right after (fillPending) */
     const P = STICKERS[x.kind];
     if (P.type === "bdrow") {   /* a breakdown row stays the slide's own (its pictures and words); Claude can only move or resize it */
       const was = rows.find(t => !used.has(t)); if (!was) return null; used.add(was);
@@ -7946,7 +7980,7 @@ function applyResult(res, targets, commented, overall) {
     [["img", "edits"], ["img2", "edits2"]].forEach(([slot, key]) => { if (!s[slot] || it[key] === undefined) return; const a = cleanAdj(it[key], s[slot].adj); if (a) s[slot].adj = a; else delete s[slot].adj; });
     if (it.overlay === true || it.overlay === false) s.overlay = it.overlay;
     applyLook(s, it);
-    if (it.stickers !== undefined && it.stickers !== "keep") s.stickers = cleanStickers(it.stickers, s.stickers);
+    if (it.stickers !== undefined && it.stickers !== "keep") { s.stickers = cleanStickers(it.stickers, s.stickers); fillPending(sid); }
     s.undo = prev; s.applied = { summary: String(it.summary || "Updated this slide").slice(0, 300), at: now }; forget(sid);
     if (commented.includes(sid) || overall) { s.comment = ""; s.status = "review"; }
     saveSlide(sid); done.push(sid);
@@ -8265,7 +8299,7 @@ function makePostFromRefs(res, ids, own, ratio) {
     [["img", "edits"], ["img2", "edits2"]].forEach(([slot, key]) => { if (s[slot] && it[key] && typeof it[key] === "object") { const a = cleanAdj(it[key]); if (a) s[slot].adj = a; } });
     if (it.overlay === true) s.overlay = true;
     applyLook(s, it);
-    if (Array.isArray(it.stickers)) s.stickers = cleanStickers(it.stickers, []);
+    if (Array.isArray(it.stickers)) { s.stickers = cleanStickers(it.stickers, []); setTimeout(() => fillPending(sid), 0); }
     const r = Math.round(+it.ref); if (r >= 1 && r <= ids.length) s.ref = { photo: ids[r - 1] };
     s.applied = { summary: clip(it.summary, 300) || "Made from your references", at: now, made: true };
     const sid = newId(); S.slides[sid] = s; S.post.order.push(sid); saveSlide(sid);
@@ -8942,7 +8976,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { S, order, renderSlide, geoOf, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
+window.__t = { S, order, renderSlide, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
@@ -9173,14 +9207,15 @@ async function appTile(ap, n) {   /* an app tile: its logo on white, or its init
   return cv;
 }
 /* An editing timeline: the main clip on the lower video track, the frame PNG on the track above it, arrows naming each, and the result */
-async function timelineFigure(sec) {
-  const W = 1800, H = 1008, cv = document.createElement("canvas"); cv.width = W; cv.height = H; const x = cv.getContext("2d");
-  x.fillStyle = "#ffffff"; x.fillRect(0, 0, W, H);
+const TL_AR = 1800 / 1008;
+async function timelineFigure(sec, opt = {}) {   /* opt.dark: for a slide: see-through around the panel, light type, yellow arrows */
+  const W = 1800, H = 1008, cv = document.createElement("canvas"); cv.width = W; cv.height = H; const x = cv.getContext("2d"), dark = !!opt.dark;
+  if (!dark) { x.fillStyle = "#ffffff"; x.fillRect(0, 0, W, H); }
   const o = order(), frameSid = o.find(id => S.slides[id].type === "frame" && S.slides[id].img), cand = [frameSid, sec && sec.slide, ...o.filter(id => S.slides[id].type === "photo"), ...o];
   const withPic = cand.map(id => id && S.slides[id]).find(s => s && (s.img || s.img2)), slot = withPic && (withPic.img || withPic.img2);
   const pic = slot ? await loadPic(srcOf(slot)) : null;
   const frameSlide = o.map(id => S.slides[id]).find(s => s && s.type === "frame"), fk = frameSlide && frameSlide.frame && FRAMES[frameSlide.frame.kind] ? frameSlide.frame.kind : "4x3";
-  const font = (w, n) => `${w} ${n}px ${FONT}`, RED = "#e02d12", INKC = "#161211";
+  const font = (w, n) => `${w} ${n}px ${FONT}`, RED = dark ? "#ffd23f" : "#e02d12", INKC = dark ? "#ffffff" : "#161211";
   const P = { x: 40, y: 130, w: 1240, h: 700 };   /* the editor's panel */
   rrect(x, P.x, P.y, P.w, P.h, 26); x.fillStyle = "#1c1918"; x.fill();
   x.fillStyle = "#2a2524"; x.fillRect(P.x, P.y + 70, P.w, 2);
@@ -9225,7 +9260,7 @@ async function timelineFigure(sec) {
     const g = geoOf(frameSid), k = Math.min(420 / g.w, 520 / g.h), sc = document.createElement("canvas"); sc.width = Math.round(g.w * k); sc.height = Math.round(g.h * k);
     await waitImages(fs); const nx = numOf(frameSid); renderSlide(sc, S.post, fs, nx.n, nx.total, k, true);
     Q = { x: 1340 + (420 - sc.width) / 2, y: P.y + (P.h - sc.height) / 2 - 30, w: sc.width, h: sc.height };
-    x.drawImage(sc, Q.x, Q.y); x.strokeStyle = "#ddd6d1"; x.lineWidth = 2; x.strokeRect(Q.x, Q.y, Q.w, Q.h);
+    x.drawImage(sc, Q.x, Q.y); x.strokeStyle = dark ? "rgba(255,255,255,.55)" : "#ddd6d1"; x.lineWidth = 2; x.strokeRect(Q.x, Q.y, Q.w, Q.h);
   } else {
   x.save(); x.fillStyle = "#0d0b0a"; x.fillRect(Q.x, Q.y, Q.w, Q.h);
   const wn = { x: Q.x + 34, y: Q.y + 30, w: Q.w - 68, h: Q.h - 60 }; rrect(x, wn.x, wn.y, wn.w, wn.h, 14); x.clip();
@@ -9233,7 +9268,7 @@ async function timelineFigure(sec) {
   x.restore();
   }
   x.textAlign = "center"; x.font = font(700, 30); x.fillStyle = INKC; x.fillText("THE RESULT", Q.x + Q.w / 2, Q.y + Q.h + 50);
-  x.font = font(400, 26); x.fillStyle = "#6b625e"; x.fillText("your clip shows through the window", Q.x + Q.w / 2, Q.y + Q.h + 88);
+  x.font = font(400, 26); x.fillStyle = dark ? "rgba(255,255,255,.8)" : "#6b625e"; x.fillText("your clip shows through the window", Q.x + Q.w / 2, Q.y + Q.h + 88);
   arrow(P.x + P.w + 6, P.y + 330, Q.x - 16, Q.y + Q.h / 2);
   return cv;
 }
