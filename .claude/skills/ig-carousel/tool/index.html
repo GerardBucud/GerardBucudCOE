@@ -356,6 +356,11 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .fmt button.fmtfontb{width:auto;padding:0 10px;font:600 13px/1 var(--ui);border:1px solid #3a3432}
 .fmt button.fmtfontb[aria-expanded="true"]{background:#3a3432}
 .lhead{flex-wrap:wrap}
+.gapps .gapplist{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.gapp{display:inline-flex;align-items:center;gap:6px}
+.gapp input.ctl{width:150px}
+.glogo{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:#161211;color:#fff;display:grid;place-items:center;padding:0;overflow:hidden;cursor:pointer;font:700 13px/1 var(--ui)}
+.glogo img{width:100%;height:100%;object-fit:contain;background:#fff}
 .fspan{flex:1 1 100%;order:4;display:grid;gap:2px;max-height:min(300px,42vh);overflow:auto;overscroll-behavior:contain;background:#0f0d0c;border:1px solid #3a3432;border-radius:10px;padding:6px}
 .fspan button{display:block;width:100%;text-align:left;border:0;border-radius:7px;background:none;color:#f3eeeb;font-size:19px;line-height:1.25;padding:7px 10px;cursor:pointer}
 .fspan button:hover{background:#2a2524}
@@ -811,6 +816,13 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .inline-form .hint{margin:0;color:var(--muted);font-size:13px}
 .lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
 .tile{position:relative;display:grid;gap:4px;min-width:0;border:0;background:none;padding:0;text-align:left;cursor:pointer;font-size:12px;color:var(--muted)}
+.tbtn .ts{display:none}
+@media (max-width:480px){.ftools .tbtn .tl{display:none}.ftools .tbtn .ts{display:inline}}
+.seldock{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:8px;padding:8px 10px 8px 16px;border-radius:999px;background:#161211;color:#fff;box-shadow:0 8px 28px rgba(0,0,0,.35);max-width:calc(100vw - 24px);white-space:nowrap}
+.seldock[hidden]{display:none}
+.seldock .count{font:700 13px/1 var(--ui);margin-right:4px}
+.seldock .btn.ghost{color:#fff;border-color:#4a4340}
+body:has(dialog[open]) .seldock{display:none}
 .tile .newb{position:absolute;right:6px;top:6px;padding:2px 7px;border-radius:999px;background:#1f6feb;color:#fff;font:700 10px/1.5 system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;pointer-events:none;z-index:2}
 #libSec.dropping{outline:3px dashed #1f6feb;outline-offset:6px;border-radius:8px}
 #libSec.dropping .lib{opacity:.6}
@@ -1174,11 +1186,12 @@ details.gsec[open]{padding-bottom:14px}
     <div class="fpanel" id="fPanel" hidden></div>
     <div class="ftools">
       <button type="button" class="tbtn" id="fAdd"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="M12 8v8M8 12h8"/></svg>Sticker</button>
+      <button type="button" class="tbtn" id="fImg"><svg viewBox="0 0 24 24"><rect x="3.5" y="4.5" width="17" height="15" rx="3"/><circle cx="9" cy="10" r="1.8"/><path d="M4 17l5-4.5 4 3.5 3-2.5 4.5 3.5"/></svg>Image</button>
       <button type="button" class="tbtn" id="fTextBtn" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg>Text</button>
       <button type="button" class="tbtn hist" id="fHist" disabled aria-haspopup="dialog" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4.5h4.5"/><path d="M12 7.5V12l3 2"/></svg>History</button>
       <button type="button" class="tbtn" id="fTex" aria-pressed="false"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="8.5" cy="8.5" r="1"/><circle cx="13" cy="7.5" r="0.8"/><circle cx="16.5" cy="11" r="1.1"/><circle cx="9.5" cy="13.5" r="0.9"/><circle cx="14" cy="16" r="1"/><circle cx="7.5" cy="17" r="0.7"/></svg>Texture</button>
       <button type="button" class="tbtn" id="fFrame" aria-pressed="false"><svg viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><rect x="7.5" y="7.5" width="9" height="9" rx="1"/></svg>Frame</button>
-      <button type="button" class="tbtn" id="fEdit" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg>Edit photo</button>
+      <button type="button" class="tbtn" id="fEdit" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></svg><span class="tl">Edit photo</span><span class="ts">Adjust</span></button>
     <div class="fhistpop" id="fHistPop" role="dialog" aria-label="History" hidden>
       <div class="hrow"><button type="button" class="tbtn hist" id="fUndo" disabled><svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>Undo</button><button type="button" class="tbtn hist" id="fRedo" disabled><svg viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>Redo</button></div>
       <p class="hnote"><b>Earlier versions</b> <span id="fHistNote"></span></p>
@@ -4325,7 +4338,7 @@ document.addEventListener("change", e => {
   else if (el.id === "postSel") selectPost(el.value);
   else if (el.id === "ratioSel") setPostRatio(el.value);
   else if (el.id === "libUpload") { uploadFiles([...el.files], realFolder(S.libFolder)); el.value = ""; }
-  else if (el.id === "pickUpload") { const fs = [...el.files]; el.value = ""; if (fs.length) uploadFiles(fs, pickFor && pickFor.slot === "ref" ? REF_FOLDER : realFolder(S.pickFolder)).then(ids => { if (ids[0]) usePhoto(ids[0]); }); }   /* several: the first goes in the spot, all go in the library */
+  else if (el.id === "pickUpload") { const fs = [...el.files], layer = pickFor && pickFor.slot === "layer"; el.value = ""; if (fs.length) uploadFiles(fs, pickFor && pickFor.slot === "ref" ? REF_FOLDER : realFolder(S.pickFolder)).then(ids => { if (layer) addImageLayers(ids); else if (ids[0]) usePhoto(ids[0]); }); }   /* several: the first goes in the spot (as images: all of them), all go in the library */
   else if (el.id === "refUpload") { const fs = [...el.files]; el.value = ""; uploadFiles(fs, REF_FOLDER).then(ids => { ids.forEach(id => { if (!S.refSel.includes(id) && S.refSel.length < refMax()) S.refSel.push(id); }); S.refFolder = REF_FOLDER; renderRefs(); }); }
   else if (el.id === "moveTo") {
     const v = el.value; el.value = "";
@@ -7097,10 +7110,19 @@ function renderLibrary() {
   renderTagUI();
   const up1 = $("#libUploadLbl"); if (up1) up1.hidden = !(S.assets || S.local);
 }
+/* with photos selected, a bar stays at the bottom of the screen (the library's own tools can be scrolled away on a phone) */
+function renderSelDock(n) {
+  let d = $("#selDock");
+  if (!d) { d = document.createElement("div"); d.id = "selDock"; d.className = "seldock"; d.setAttribute("role", "toolbar"); d.setAttribute("aria-label", "Selected photos"); document.body.appendChild(d); }
+  const canDel = !!(S.assets || S.local) && !S.readOnly;
+  d.hidden = !n;
+  if (n) d.innerHTML = `<span class="count">${n} selected</span><button type="button" class="btn sm" data-lib="dlphotos">Download</button>${canDel ? `<button type="button" class="btn sm danger" data-lib="delphotos">Delete${n > 1 ? " " + n : ""}</button>` : ""}<button type="button" class="btn ghost sm" data-lib="selnone" aria-label="Clear the selection">Clear</button>`;
+}
 function renderSelTools() {
   const el = $("#selTools"); if (!el) return;
   for (const id of [...S.selected]) if (!S.photos.has(id)) S.selected.delete(id);
   const n = S.selected.size, key = [...S.selected].join(",");
+  renderSelDock(n);
   el.hidden = !n;
   if (!n) { el.innerHTML = ""; el.dataset.key = ""; return; }
   if (el.dataset.key === key && el.contains(document.activeElement) && document.activeElement.tagName === "INPUT") return; /* don't swap out a box you're typing in */
@@ -7321,10 +7343,11 @@ let pickFor = null;
 function openPicker(sid, slot) {
   pickFor = { sid, slot };
   const s = S.slides[sid], ref = slot === "ref";
-  $("#pickTitle").textContent = ref ? "Reference image" : slot.startsWith("gear:") ? "Gear picture" : slot.startsWith("bd:") ? "Item picture (cut out automatically)" : slot === "img2" && s.type === "breakdown" ? "Panel photo" : s.type === "beforeafter" ? (slot === "img" ? "Replace before photo" : "Replace after photo") : "Replace image";
+  const layer = slot === "layer", glogo = slot.startsWith("glogo:");
+  $("#pickTitle").textContent = glogo ? "App logo" : layer ? "Add an image" : ref ? "Reference image" : slot.startsWith("gear:") ? "Gear picture" : slot.startsWith("bd:") ? "Item picture (cut out automatically)" : slot === "img2" && s.type === "breakdown" ? "Panel photo" : s.type === "beforeafter" ? (slot === "img" ? "Replace before photo" : "Replace after photo") : "Replace image";
   $("#pickUploadLbl").hidden = !(S.assets || S.local);
-  $("#pickUploadTxt").textContent = ref ? "Upload a reference" : "Upload new photo";
-  $("#pickHint").textContent = ref ? "Pick a post you like (a screenshot works), from your library or a new upload. Claude matches this slide's layout, text styling and photo look to it and keeps your own words and photo. Tweak anything afterwards, or Undo. New uploads go to the References folder."
+  $("#pickUploadTxt").textContent = ref ? "Upload a reference" : layer ? "Upload images" : "Upload new photo";
+  $("#pickHint").textContent = glogo ? "Pick the app's logo from your library, or upload it (a PNG with a see-through background looks best). It shows in a tile at the top of the guide page." : layer ? "Pick a photo from your library, or upload images (a PNG with see-through parts stays see-through). It goes on top of the slide: drag it, resize it, turn it, or use Arrange to put it behind the text. Uploads go in your library too." : ref ? "Pick a post you like (a screenshot works), from your library or a new upload. Claude matches this slide's layout, text styling and photo look to it and keeps your own words and photo. Tweak anything afterwards, or Undo. New uploads go to the References folder."
     : (S.assets || S.local) ? "Pick a photo from your library or upload a new one. The text design re-fits to the photo you choose." : "Pick a photo from your library. Only editors of this board can upload new ones.";
   if (ref && [...S.photos.values()].some(isRefPhoto)) S.pickFolder = REF_FOLDER; else if (!ref && S.pickFolder === REF_FOLDER) S.pickFolder = "*";
   S.pickQuery = ""; $("#pickSearch").value = "";
@@ -7335,7 +7358,7 @@ function renderPicker() {
   const tree = folderTree();
   if (S.pickFolder !== "*" && S.pickFolder !== "" && !tree.includes(S.pickFolder)) S.pickFolder = "*";
   $("#pickFolders").innerHTML = ["*", "", ...tree].map(f => `<button type="button" data-pf="${esc(f)}" aria-current="${S.pickFolder === f}">${esc(f === "*" || f === "" ? folderLabel(f) : f.split("/").join(" / "))}</button>`).join("");
-  const q = S.pickQuery.trim(), items = q ? photosIn("*").filter(([, p]) => matches(p, q)) : photosIn(S.pickFolder);
+  const q = S.pickQuery.trim(), items = (q ? photosIn("*").filter(([, p]) => matches(p, q)) : photosIn(S.pickFolder)).filter(([, p]) => !(pickFor && pickFor.slot === "layer" && isVid(p)));   /* images on top are pictures; videos go in a photo spot */
   $("#pickFolders").hidden = !!q;
   $("#pickGrid").innerHTML = items.map(([id, p]) => `<button type="button" data-pick="${esc(id)}" title="${esc(p.desc || p.name)}"><img loading="lazy" src="${esc(srcOf(p))}" alt="">${isVid(p) ? `<b class="vdur">▶ ${fmtDur(p.dur)}</b>` : ""}<span>${esc(p.name)}</span>${p.desc ? `<span>${esc(p.desc)}</span>` : ""}</button>`).join("") || `<p>${q ? `No photos match “${esc(q)}”.` : "No photos here yet."}</p>`;
 }
@@ -7343,6 +7366,12 @@ $("#pickGrid").addEventListener("click", e => { const b = e.target.closest("[dat
 function usePhoto(id) {
   if (!pickFor || !S.photos.has(id)) return;
   const { sid, slot } = pickFor, s = S.slides[sid];
+  if (slot === "layer") { addImageLayers([id]); return; }
+  if (slot.startsWith("glogo:")) {   /* a guide section's app logo */
+    const [, i, j] = slot.split(":").map(Number), ap = S.guide && ((S.guide.sections || [])[i] || {}).apps && S.guide.sections[i].apps[j];
+    $("#pickDlg").close(); if (!ap) return;
+    ap.logo = stillOf(p); saveGuide(); renderGuide(); toast(`Logo set for ${ap.name || "the app"}`); return;
+  }
   if (slot === "ref") { $("#pickDlg").close(); referenceSlide(sid, id); return; }
   const p = S.photos.get(id);
   if (slot.startsWith("bd:")) { $("#pickDlg").close(); bdPhotoTo(sid, +slot.slice(3), p); return; }
@@ -7355,6 +7384,17 @@ function usePhoto(id) {
   renderBoard(new Set([sid])); renderLibrary();
   toast(isVid(p) ? "Video in. It plays in the large view; Download has Download video (MP4)" : "Photo replaced. Text re-fitted to it");
 }
+/* Image (in the large view's toolbar): photos from the library or new uploads go on top of the slide as image layers (custom stickers
+   holding the photo, 900 px on its longer side), like a sticker: move, resize, turn, Arrange, Duplicate, Delete */
+function addImageLayers(ids) {
+  const sid = pickFor && pickFor.sid; if ($("#pickDlg").open) $("#pickDlg").close();
+  const list = ids.map(id => S.photos.get(id)).filter(p => p && !isVid(p)); if (!sid || !S.slides[sid] || !list.length) { if (ids.some(id => isVid(S.photos.get(id)))) toast("A video goes in a photo spot: use Replace image on the slide"); return; }
+  let st = null;
+  list.forEach((p, i) => { st = addCustom(sid, { name: p.name, ar: p.w && p.h ? p.w / p.h : 1, src: stillOf(p) }, null, 900); if (st && i) { st.x = clamp(0.5 + 0.06 * i, 0.1, 0.9); st.y = clamp(0.5 + 0.06 * i, 0.1, 0.9); } });
+  if (st) { saveSlide(sid); scheduleDraw(sid); }
+  toast(list.length > 1 ? `${list.length} images added. Drag them where you want them` : "Image added. Drag it, pull a corner to resize, or Arrange to put it behind the text");
+}
+$("#fImg").addEventListener("click", () => { if (focusSid) { dropTextSel(true); openPicker(focusSid, "layer"); } });
 async function fileHash(f) { try { const bm = await createImageBitmap(f); const h = dhash(bm); if (bm.close) bm.close(); return h; } catch (e) { return null; } }
 function imageSize(src) { return new Promise(res => { const im = new Image(); im.onload = () => res([im.naturalWidth, im.naturalHeight]); im.onerror = () => res([0, 0]); im.src = src; }); }
 /* Uploading: any number of files at once (the file picker takes several, or drop them on the library). Photos go up three at a time,
@@ -8961,6 +9001,8 @@ function renderGuide() {
         <div><label class="lbl" for="g${i}-s">Slide shown before it</label><select class="ctl" id="g${i}-s" data-g="sections.${i}.slide">${slideOpts(sec.slide)}</select></div></div>
       <div><label class="lbl" for="g${i}-b">Text</label><textarea class="ctl" id="g${i}-b" data-g="sections.${i}.body" rows="3">${esc(sec.body)}</textarea></div>
       <div><label class="lbl" for="g${i}-p">Points (one per line, **bold** lead-in)</label><textarea class="ctl" id="g${i}-p" data-g="sections.${i}.points" rows="7">${esc(sec.points)}</textarea></div>
+      <div class="gapps"><span class="lbl">App logos, at the top of the page</span><div class="gapplist">${(sec.apps || []).map((ap, j) => `<span class="gapp"><button type="button" class="glogo" data-gact="glogo" data-i="${i}" data-j="${j}" title="Pick its logo from your library">${ap.logo ? `<img src="${esc(srcOf(ap.logo))}" alt="">` : `<b>${esc(appInitials(ap.name))}</b>`}</button><input class="ctl" data-g="sections.${i}.apps.${j}.name" value="${esc(ap.name || "")}" aria-label="App name" placeholder="App name"><button type="button" class="btn ghost sm" data-gact="gappdel" data-i="${i}" data-j="${j}" aria-label="Remove this app">×</button></span>`).join("")}<button type="button" class="btn ghost sm" data-gact="gappadd" data-i="${i}">Add app</button></div>${(sec.apps || []).length ? `<p class="hint" style="margin:4px 0 0">Tap a tile to pick that app's logo (a PNG with a see-through background looks best; upload it to your library first). Without one, the tile shows its name.</p>` : ""}</div>
+      <div><label class="lbl" for="g${i}-f">Picture under the text</label><select class="ctl" id="g${i}-f" data-g="sections.${i}.figure"><option value="">None</option><option value="timeline"${sec.figure === "timeline" ? " selected" : ""}>Editing timeline: main clip and overlay</option></select></div>
       <div><label class="lbl" for="g${i}-c">Comment for Claude</label><textarea class="ctl" id="g${i}-c" data-g="sections.${i}.comment" rows="2" placeholder="What's wrong or missing in this section?">${esc(sec.comment)}</textarea></div>
       ${ai ? `<div class="applybar"><button class="btn accent sm" data-gact="applysec" data-i="${i}"${String(sec.comment || "").trim() && !S.gbusy ? "" : " disabled"}>Apply comment</button></div>` : ""}`)).join("")}
     <div class="actions"><button class="btn sm" data-gact="addsec">Add section</button></div>
@@ -9030,7 +9072,12 @@ document.addEventListener("click", e => {
   if (a === "addsec") { g.sections = g.sections || []; const id = gid(); g.sections.push({ id, slide: null, heading: "NEW SECTION", body: "", points: "", comment: "" }); S.gOpen.add(id); saveGuide(); renderGuide(); return; }
   if (a === "delsec") { if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Tap again to remove"; return; } g.sections.splice(i, 1); saveGuide(); renderGuide(); return; }
   if (a === "up" && i > 0) { const ss = g.sections; [ss[i - 1], ss[i]] = [ss[i], ss[i - 1]]; saveGuide(); renderGuide(); }
+  const sec = (g.sections || [])[i], j = +b.dataset.j;
+  if (a === "gappadd" && sec) { sec.apps = [...(sec.apps || []), { name: "" }]; S.gOpen.add(sec.id); saveGuide(); renderGuide(); const ins = $$(`#guideSec [data-g^="sections.${i}.apps."]`); if (ins.length) ins[ins.length - 1].focus(); return; }
+  if (a === "gappdel" && sec && sec.apps) { sec.apps.splice(j, 1); if (!sec.apps.length) delete sec.apps; saveGuide(); renderGuide(); return; }
+  if (a === "glogo" && sec) { S.gOpen.add(sec.id); openPicker(null, `glogo:${i}:${j}`); }
 });
+const appInitials = n => String(n || "").trim().split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase() || "?";
 
 /* Claude writes or edits the guide */
 const GUIDE_RULES = `You write and edit a short PDF guide that expands an Instagram carousel. Followers get it after commenting a keyword, so it should feel like a bonus: the same settings with more explanation, practical tips and the reasoning behind each choice.
@@ -9059,7 +9106,8 @@ function cleanGuide(raw, prev) {
     title: str(raw.title, prev && prev.title, 200), subtitle: str(raw.subtitle, prev && prev.subtitle, 300), intro: str(raw.intro, prev && prev.intro),
     sections: (Array.isArray(raw.sections) ? raw.sections : ((prev && prev.sections) || [])).slice(0, 14).filter(x => x && typeof x === "object").map(x => ({
       id: ids.has(x.id) ? x.id : gid(), slide: S.slides[x.slide] ? x.slide : null,
-      heading: str(x.heading, "", 120), body: str(x.body, ""), points: str(x.points, "", 4000), comment: ""
+      heading: str(x.heading, "", 120), body: str(x.body, ""), points: str(x.points, "", 4000), comment: "",
+      ...(() => { const old = ((prev && prev.sections) || []).find(o => o.id === x.id); return old ? { ...(old.apps ? { apps: clone(old.apps) } : {}), ...(old.figure ? { figure: old.figure } : {}) } : {}; })()   /* logos and pictures are the creator's: they stay */
     })),
     outro: str(raw.outro, prev && prev.outro), cta: str(raw.cta, (prev && prev.cta) || "FOLLOW {handle}", 120),
     cheatsheet: prev ? prev.cheatsheet !== false : true, comment: ""
@@ -9103,6 +9151,82 @@ function loadScript([src, integrity, global]) {
     document.head.appendChild(s);
   });
 }
+/* ---- pictures for the guide, drawn on a canvas ---- */
+const loadPic = src => new Promise(res => { if (!src) return res(null); const im = new Image(); im.onload = () => res(im); im.onerror = () => res(null); im.src = src; });
+function rrect(x, X0, Y0, w, h, r) { x.beginPath(); x.moveTo(X0 + r, Y0); x.arcTo(X0 + w, Y0, X0 + w, Y0 + h, r); x.arcTo(X0 + w, Y0 + h, X0, Y0 + h, r); x.arcTo(X0, Y0 + h, X0, Y0, r); x.arcTo(X0, Y0, X0 + w, Y0, r); x.closePath(); }
+async function appTile(ap, n) {   /* an app tile: its logo on white, or its initials on near-black */
+  const cv = document.createElement("canvas"); cv.width = cv.height = n; const x = cv.getContext("2d"), r = n * 0.22, im = ap.logo ? await loadPic(srcOf(ap.logo)) : null;
+  rrect(x, 1, 1, n - 2, n - 2, r); x.save(); x.clip();
+  if (im) { x.fillStyle = "#ffffff"; x.fillRect(0, 0, n, n); const k = Math.min(n * 0.8 / im.naturalWidth, n * 0.8 / im.naturalHeight); x.drawImage(im, (n - im.naturalWidth * k) / 2, (n - im.naturalHeight * k) / 2, im.naturalWidth * k, im.naturalHeight * k); }
+  else { x.fillStyle = "#161211"; x.fillRect(0, 0, n, n); x.fillStyle = "#ffffff"; x.font = `700 ${Math.round(n * 0.36)}px ${FONT}`; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(appInitials(ap.name), n / 2, n / 2 + n * 0.02); }
+  x.restore(); rrect(x, 1, 1, n - 2, n - 2, r); x.strokeStyle = "#ddd6d1"; x.lineWidth = n * 0.02; x.stroke();
+  return cv;
+}
+/* An editing timeline: the main clip on the lower video track, the frame PNG on the track above it, arrows naming each, and the result */
+async function timelineFigure(sec) {
+  const W = 1800, H = 1008, cv = document.createElement("canvas"); cv.width = W; cv.height = H; const x = cv.getContext("2d");
+  x.fillStyle = "#ffffff"; x.fillRect(0, 0, W, H);
+  const o = order(), frameSid = o.find(id => S.slides[id].type === "frame" && S.slides[id].img), cand = [frameSid, sec && sec.slide, ...o.filter(id => S.slides[id].type === "photo"), ...o];
+  const withPic = cand.map(id => id && S.slides[id]).find(s => s && (s.img || s.img2)), slot = withPic && (withPic.img || withPic.img2);
+  const pic = slot ? await loadPic(srcOf(slot)) : null;
+  const frameSlide = o.map(id => S.slides[id]).find(s => s && s.type === "frame"), fk = frameSlide && frameSlide.frame && FRAMES[frameSlide.frame.kind] ? frameSlide.frame.kind : "4x3";
+  const font = (w, n) => `${w} ${n}px ${FONT}`, RED = "#e02d12", INKC = "#161211";
+  const P = { x: 40, y: 130, w: 1240, h: 700 };   /* the editor's panel */
+  rrect(x, P.x, P.y, P.w, P.h, 26); x.fillStyle = "#1c1918"; x.fill();
+  x.fillStyle = "#2a2524"; x.fillRect(P.x, P.y + 70, P.w, 2);
+  const L = P.x + 150, R = P.x + P.w - 40;   /* where the tracks run */
+  x.font = font(500, 24); x.fillStyle = "#8f8580"; x.textAlign = "center";
+  for (let i = 0, t = 0; L + i * 135 < R; i++, t += 1) { const tx = L + i * 135; x.fillRect(tx, P.y + 52, 2, 16); x.fillText(`00:${String(t).padStart(2, "0")}`, tx, P.y + 40); for (let j = 1; j < 5; j++) x.fillRect(tx + j * 27, P.y + 60, 1.5, 8); }
+  const rows = [{ k: "V2", y: P.y + 110, h: 150 }, { k: "V1", y: P.y + 300, h: 150 }, { k: "A1", y: P.y + 500, h: 90 }];
+  x.textAlign = "left"; x.font = font(700, 30); x.fillStyle = "#9a918d"; rows.forEach(r => x.fillText(r.k, P.x + 40, r.y + r.h / 2 + 10));
+  const barX = L + 20, barW = R - barX - 40;
+  /* V2: the overlay, the frame PNG (a frame with see-through window, shown on a checkerboard) */
+  const v2 = rows[0]; rrect(x, barX, v2.y, barW, v2.h, 16); x.fillStyle = "#6c4fe0"; x.fill();
+  x.save(); rrect(x, barX, v2.y, barW, v2.h, 16); x.clip();
+  for (let tx = barX + 14; tx < barX + barW; tx += 196) {
+    const fw = 180, fh = v2.h - 28, fy = v2.y + 14;
+    for (let cy = 0; cy < fh; cy += 18) for (let cx = 0; cx < fw; cx += 18) { x.fillStyle = ((cx + cy) / 18) % 2 ? "#cfc8c4" : "#f2eeeb"; x.fillRect(tx + cx, fy + cy, Math.min(18, fw - cx), Math.min(18, fh - cy)); }
+    x.fillStyle = "#0d0b0a"; x.beginPath(); x.rect(tx, fy, fw, fh); const wx = tx + 30, wy = fy + 24, ww = fw - 60, wh = fh - 48; x.moveTo(wx + 10, wy); x.arcTo(wx, wy, wx, wy + 10, 10); x.arcTo(wx, wy + wh, wx + 10, wy + wh, 10); x.arcTo(wx + ww, wy + wh, wx + ww, wy + wh - 10, 10); x.arcTo(wx + ww, wy, wx + ww - 10, wy, 10); x.closePath(); x.fill("evenodd");
+  }
+  x.restore();
+  const tag = (t, tx, ty) => { x.font = font(700, 26); const w = x.measureText(t).width + 28; rrect(x, tx, ty, w, 42, 10); x.fillStyle = "rgba(0,0,0,.62)"; x.fill(); x.fillStyle = "#ffffff"; x.fillText(t, tx + 14, ty + 30); };
+  tag(`frame-${fk.replace(":", "x")}.png`, barX + 14, v2.y + v2.h - 54);
+  /* V1: the main clip, thumbnails of a photo from the post */
+  const v1 = rows[1]; x.save(); rrect(x, barX, v1.y, barW, v1.h, 16); x.clip(); x.fillStyle = "#1e8f8a"; x.fillRect(barX, v1.y, barW, v1.h);
+  for (let tx = barX; tx < barX + barW; tx += 230) { if (pic) { const k = Math.max(230 / pic.naturalWidth, v1.h / pic.naturalHeight); x.drawImage(pic, tx + (230 - pic.naturalWidth * k) / 2, v1.y + (v1.h - pic.naturalHeight * k) / 2, pic.naturalWidth * k, pic.naturalHeight * k); } x.fillStyle = "rgba(0,0,0,.35)"; x.fillRect(tx + 228, v1.y, 2, v1.h); }
+  x.restore(); rrect(x, barX, v1.y, barW, v1.h, 16); x.strokeStyle = "#2fc4bd"; x.lineWidth = 4; x.stroke();
+  tag("my-clip.mp4", barX + 14, v1.y + v1.h - 54);
+  /* A1: its sound */
+  const a1 = rows[2]; rrect(x, barX, a1.y, barW, a1.h, 14); x.fillStyle = "#1f5f3a"; x.fill(); x.fillStyle = "#4fd081";
+  for (let tx = barX + 10, i = 0; tx < barX + barW - 10; tx += 9, i++) { const a = (Math.abs(Math.sin(i * 0.37) * Math.cos(i * 0.11)) * 0.8 + 0.12) * (a1.h - 24); x.fillRect(tx, a1.y + (a1.h - a) / 2, 5, a); }
+  /* the playhead */
+  const px = L + 470; x.fillStyle = "#ffffff"; x.fillRect(px - 2, P.y + 72, 4, P.h - 90); x.beginPath(); x.moveTo(px - 16, P.y + 56); x.lineTo(px + 16, P.y + 56); x.lineTo(px, P.y + 80); x.closePath(); x.fill();
+  /* arrows and their names */
+  const arrow = (x0, y0, x1, y1) => { x.strokeStyle = RED; x.fillStyle = RED; x.lineWidth = 7; x.lineCap = "round"; x.beginPath(); x.moveTo(x0, y0); x.lineTo(x1, y1); x.stroke(); const a = Math.atan2(y1 - y0, x1 - x0); x.beginPath(); x.moveTo(x1, y1); x.lineTo(x1 - 30 * Math.cos(a - 0.45), y1 - 30 * Math.sin(a - 0.45)); x.lineTo(x1 - 30 * Math.cos(a + 0.45), y1 - 30 * Math.sin(a + 0.45)); x.closePath(); x.fill(); };
+  const callout = (big, small, tx, ty) => { x.textAlign = "left"; x.font = font(700, 40); x.fillStyle = RED; x.fillText(big, tx, ty); const w = x.measureText(big + "  ").width; x.font = font(400, 32); x.fillStyle = INKC; x.fillText(small, tx + w, ty); };
+  callout("OVERLAY", "the frame PNG, on the track on top", P.x + 150, 70);
+  arrow(P.x + 330, 88, P.x + 420, v2.y + 10);
+  callout("MAIN CLIP", "your video, on the track below it", P.x + 150, H - 60);
+  arrow(P.x + 360, H - 104, P.x + 470, v1.y + v1.h - 6);
+  /* the result: a frame slide from the post as it comes out (the clip through its window), else a frame drawn here */
+  let Q = { x: 1340, y: 230, w: 420, h: 315 };
+  const fs = frameSid && S.slides[frameSid];
+  if (fs) {
+    const g = geoOf(frameSid), k = Math.min(420 / g.w, 520 / g.h), sc = document.createElement("canvas"); sc.width = Math.round(g.w * k); sc.height = Math.round(g.h * k);
+    await waitImages(fs); const nx = numOf(frameSid); renderSlide(sc, S.post, fs, nx.n, nx.total, k, true);
+    Q = { x: 1340 + (420 - sc.width) / 2, y: P.y + (P.h - sc.height) / 2 - 30, w: sc.width, h: sc.height };
+    x.drawImage(sc, Q.x, Q.y); x.strokeStyle = "#ddd6d1"; x.lineWidth = 2; x.strokeRect(Q.x, Q.y, Q.w, Q.h);
+  } else {
+  x.save(); x.fillStyle = "#0d0b0a"; x.fillRect(Q.x, Q.y, Q.w, Q.h);
+  const wn = { x: Q.x + 34, y: Q.y + 30, w: Q.w - 68, h: Q.h - 60 }; rrect(x, wn.x, wn.y, wn.w, wn.h, 14); x.clip();
+  if (pic) { const k = Math.max(wn.w / pic.naturalWidth, wn.h / pic.naturalHeight); x.drawImage(pic, wn.x + (wn.w - pic.naturalWidth * k) / 2, wn.y + (wn.h - pic.naturalHeight * k) / 2, pic.naturalWidth * k, pic.naturalHeight * k); } else { x.fillStyle = "#1e8f8a"; x.fillRect(wn.x, wn.y, wn.w, wn.h); }
+  x.restore();
+  }
+  x.textAlign = "center"; x.font = font(700, 30); x.fillStyle = INKC; x.fillText("THE RESULT", Q.x + Q.w / 2, Q.y + Q.h + 50);
+  x.font = font(400, 26); x.fillStyle = "#6b625e"; x.fillText("your clip shows through the window", Q.x + Q.w / 2, Q.y + Q.h + 88);
+  arrow(P.x + P.w + 6, P.y + 330, Q.x - 16, Q.y + Q.h / 2);
+  return cv;
+}
 async function slideJpeg(sid, w) {
   const s = S.slides[sid], nx = numOf(sid), g = geoOf(sid);
   await waitImages(s);
@@ -9132,6 +9256,30 @@ async function buildGuidePdf(onStep, rec) {   /* rec: optional array that gets e
     if (tc) page.pushOperators(pushGraphicsState(), setCharacterSpacing(tc));
     page.drawText(t, { x, y: yy, size, font: f, color });
     if (tc) page.pushOperators(popGraphicsState());
+  };
+  const imgOp = (bytes, type, x, yy, w, h) => { if (rec) rec[rec.length - 1].push({ k: "im", b: bytes, type, x, y: yy, w, h }); };
+  const putImg = async (cv, x, yy, w, h, jpg) => {   /* a canvas drawing on the page: x, yy = its bottom left, in points */
+    const blob = await new Promise(r => cv.toBlob(r, jpg ? "image/jpeg" : "image/png", 0.9)), bytes = new Uint8Array(await blob.arrayBuffer());
+    const im = jpg ? await doc.embedJpg(bytes) : await doc.embedPng(bytes); page.drawImage(im, { x, y: yy, width: w, height: h }); imgOp(bytes, blob.type, x, yy, w, h);
+  };
+  const appsRow = async apps => {   /* app tiles at the top right, beside the section label: its logo, else its initials; the name under it */
+    const list = (apps || []).filter(a => a && (String(a.name || "").trim() || a.logo)).slice(0, 5); if (!list.length) return 0;
+    const T = 26, cell = 52, x0 = PW - MX - list.length * cell, top = y;
+    for (const [j, ap] of list.entries()) {
+      const cv = await appTile(ap, 156), x = x0 + j * cell + (cell - T) / 2;
+      await putImg(cv, x, top - T, T, T, false);
+      let nm = String(ap.name || "").trim(); while (nm && tw(nm, B, 5.6) > cell - 4) nm = nm.slice(0, -2) + "…";
+      draw(nm, x0 + j * cell + (cell - tw(nm, B, 5.6)) / 2, top - T - 8, B, 5.6, C.muted);
+    }
+    return T + 12;
+  };
+  const figure = async (kind, sec) => {   /* a picture under the section's text */
+    if (kind !== "timeline") return;
+    let w = TW, h = Math.round(TW * 0.56); y -= 4;
+    if (y - BOTTOM < h && y - BOTTOM >= h * 0.72) { h = Math.floor(y - BOTTOM - 2); w = Math.round(h / 0.56); }   /* a little smaller rather than alone on a new page */
+    ensure(h + 2);
+    const cv = await timelineFigure(sec);
+    await putImg(cv, MX + (TW - w) / 2, y - h, w, h, true); y -= h + 10;
   };
   const slidePages = new Set();
   const slidePage = async sid => {
@@ -9215,11 +9363,14 @@ async function buildGuidePdf(onStep, rec) {   /* rec: optional array that gets e
   for (const [i, sec] of secs.entries()) {
     if (sec.slide) await slidePage(sec.slide);
     newPage();
+    const yTop = y, ah = await appsRow(sec.apps);
     label(sec.slide && S.slides[sec.slide] ? `Slide ${pad2(numOf(sec.slide).n)} · ${slideName(S.slides[sec.slide])}` : `Section ${pad2(i + 1)}`);
+    if (ah) y = Math.min(y, yTop - ah - 6);
     heading(sec.heading, 24);
     para(sec.body, 11.5, 16.5, C.ink);
     y -= 2;
     points(sec.points);
+    await figure(sec.figure, sec);
   }
   // cheat sheet
   const nm = numbering(), specs = o.filter(sid => S.slides[sid].type === "specs" && !numOf(sid, nm).alt); /* versions repeat their slide */
@@ -9288,6 +9439,7 @@ async function drawPdfPage(cv, ops) {
   for (const op of ops) {
     if (op.k === "i") { const bm = await createImageBitmap(new Blob([op.jpg], { type: "image/jpeg" })); ctx.drawImage(bm, 0, 0, cv.width, cv.height); if (bm.close) bm.close(); }
     else if (op.k === "l") { ctx.strokeStyle = col(op.c); ctx.lineWidth = op.w * k; ctx.beginPath(); ctx.moveTo(op.x0 * k, (PH - op.y0) * k); ctx.lineTo(op.x1 * k, (PH - op.y1) * k); ctx.stroke(); }
+    else if (op.k === "im") { const bm = await createImageBitmap(new Blob([op.b], { type: op.type })); ctx.drawImage(bm, op.x * k, (PH - op.y - op.h) * k, op.w * k, op.h * k); if (bm.close) bm.close(); }
     else if (op.k === "c") { ctx.fillStyle = col(op.c); ctx.beginPath(); ctx.arc(op.x * k, (PH - op.y) * k, op.r * k, 0, 2 * Math.PI); ctx.fill(); }
     else if (op.k === "t") {
       ctx.fillStyle = col(op.c); ctx.font = `${op.w} ${op.size * k}px ${FONT}`;
