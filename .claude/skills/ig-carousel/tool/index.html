@@ -820,6 +820,22 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 @media (max-width:480px){.ftools .tbtn .tl{display:none}.ftools .tbtn .ts{display:inline}}
 .seldock{position:fixed;left:50%;bottom:max(14px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;display:flex;align-items:center;gap:8px;padding:8px 10px 8px 16px;border-radius:999px;background:#161211;color:#fff;box-shadow:0 8px 28px rgba(0,0,0,.35);max-width:calc(100vw - 24px);white-space:nowrap}
 .seldock[hidden]{display:none}
+.seldock .hint{color:#bdb3ad;font-size:12px;margin-right:4px}
+.titlerow{display:flex;align-items:center;gap:6px;margin:22px 0 4px}
+.titlerow h1.title{margin:0;min-width:0}
+.titlerow .rename{flex:0 0 auto;opacity:.55}
+.titlerow .rename:hover,.titlerow .rename:focus-visible{opacity:1}
+.titleedit{flex:1;min-width:0;font:800 clamp(20px,3.2vw,32px)/1.1 var(--ui);text-transform:uppercase;letter-spacing:-.04em;padding:6px 10px}
+.card-h .spick{display:none;flex:0 0 auto;width:28px;height:28px;border-radius:50%;border:2px solid var(--line);background:var(--surface);font:700 14px/1 var(--ui);color:#fff;padding:0;cursor:pointer}
+body.picking .card-h .spick{display:inline-grid;place-items:center}
+body.picking .card .card-h{cursor:copy}
+body.picking .card .frame{cursor:copy}
+.card.picked{outline:3px solid var(--accent);outline-offset:2px}
+.card.picked .card-h .spick{background:var(--accent);border-color:var(--accent)}
+body.picking #board{padding-bottom:80px}
+body.picking .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+@media (max-width:560px){#slideDock{flex-wrap:wrap;justify-content:center;white-space:normal;border-radius:20px;width:calc(100vw - 24px);padding:10px 12px}
+#slideDock .count{flex:1 0 auto}body.picking .toast{bottom:calc(124px + env(safe-area-inset-bottom,0px))}body.picking #board{padding-bottom:130px}}
 .seldock .count{font:700 13px/1 var(--ui);margin-right:4px}
 .seldock .btn.ghost{color:#fff;border-color:#4a4340}
 body:has(dialog[open]) .seldock{display:none}
@@ -4110,7 +4126,7 @@ function cardHTML(sid) {
   const g = geoOf(sid), cw = 600, ch = Math.round(cw * g.h / g.w), th = Math.min(102, Math.round(68 * g.h / g.w)), tw = Math.round(th * g.w / g.h);
   const own = RATIOS[s.ratio] && s.ratio !== ratioKey(S.post) ? `<span class="rbadge" title="This slide has its own ratio">${esc(s.ratio)}</span>` : "";
   return `<article class="card${S.folded.has(sid) ? " folded" : ""}" id="card-${sid}" data-sid="${sid}" data-st="${st}" data-geo="${g.key}${own ? "+" : ""}">
-    <header class="card-h"><span class="grip" tabindex="0" role="button" aria-label="Drag to move this slide (or press the up and down arrows)" title="Drag to move">${GRIP_I}</span><button class="icon fold" data-act="fold" aria-expanded="${!S.folded.has(sid)}" aria-label="${S.folded.has(sid) ? "Open" : "Fold"} this slide">${ICON.down}</button><canvas class="thumb" width="${tw}" height="${th}" style="width:${tw / 2}px;height:${th / 2}px" data-act="fold" aria-hidden="true"></canvas><span class="num"></span><span class="kind">${esc(TEMPLATES[s.type].label)}</span>${own}
+    <header class="card-h"><span class="grip" tabindex="0" role="button" aria-label="Drag to move this slide (or press the up and down arrows)" title="Drag to move">${GRIP_I}</span><button class="icon fold" data-act="fold" aria-expanded="${!S.folded.has(sid)}" aria-label="${S.folded.has(sid) ? "Open" : "Fold"} this slide">${ICON.down}</button><canvas class="thumb" width="${tw}" height="${th}" style="width:${tw / 2}px;height:${th / 2}px" data-act="fold" aria-hidden="true"></canvas><span class="num"></span><span class="kind">${esc(TEMPLATES[s.type].label)}</span>${own}<button type="button" class="spick" data-act="pick" aria-pressed="false" aria-label="Pick this slide for a new post"></button>
       <div class="card-tools"><button class="icon" data-act="left" aria-label="Move earlier">${ICON.left}</button><button class="icon" data-act="right" aria-label="Move later">${ICON.right}</button>
       <div class="more"><button class="icon" data-act="cpv" aria-label="Preview" title="Preview" aria-expanded="false">${EYE_I}</button></div><div class="more"><button class="icon" data-act="cdl" aria-label="Download" title="Download" aria-expanded="false">${DL_I}</button></div>
       <div class="more"><button class="icon" data-act="menu" aria-label="More actions" aria-expanded="false">${ICON.more}</button></div></div></header>
@@ -4165,7 +4181,7 @@ function renderBoard(rebuild) {
   }
   $$(".card", board).forEach(c => { if (!S.slides[c.dataset.sid]) c.remove(); });
   o.forEach(sid => board.appendChild(document.getElementById("card-" + sid)));
-  renumber(); updateFoldAll();
+  renumber(); updateFoldAll(); syncPicks();
   scheduleDraw(); queueBar();
   $("#dlAll").disabled = !o.length;
   updateApplyAll();
@@ -4181,7 +4197,7 @@ function renderMain() {
   const main = $("#main");
   if (!S.post) return;
   main.innerHTML = `
-    <h1 class="title" id="postTitle"></h1>
+    <div class="titlerow"><h1 class="title" id="postTitle"></h1><button type="button" class="icon rename" id="renamePost" aria-label="Rename this post" title="Rename this post">${PEN_I}</button></div>
     <p class="sub">Leave a comment on any slide, then tap <b>Apply comment</b> on that slide, or <b>Apply comments</b> at the top to do them all. Swap photos, then download the PNGs. Everything saves as you go.</p>
     <div id="notes"></div>
     <details id="postSettings"><summary>Post settings</summary>
@@ -4194,7 +4210,7 @@ function renderMain() {
         <div><label class="lbl" for="m-num">Slide numbers (01/12)</label><select class="ctl" id="m-num" data-m="num"><option value="">Show on every slide</option><option value="hide">Hide on every slide</option></select></div>
       </div>
       <div class="actions" style="padding-bottom:10px"><button class="btn ghost sm danger" id="delPost">Delete this post</button></div></details>
-    <div class="boardtools"><button class="btn ghost sm" id="foldAll">Fold all slides</button><span class="hint">Tap the arrow on a slide to fold or open just that one. Drag a folded slide by its ⋮⋮ grip to move it.</span></div>
+    <div class="boardtools"><button class="btn ghost sm" id="foldAll">Fold all slides</button><button class="btn ghost sm" id="pickSlides" aria-pressed="false" title="Pick slides (covers, ideas) and start a new post from them">Select slides</button><span class="hint">Tap the arrow on a slide to fold or open just that one. Drag a folded slide by its ⋮⋮ grip to move it.</span></div>
     <section class="board" id="board" aria-label="Slides"></section>
     <div class="actions" style="padding-bottom:26px"><label class="lbl sr" for="addType">Slide type</label>
       <select class="ctl" id="addType" style="width:auto">${Object.entries(TEMPLATES).map(([k, v]) => `<option value="${k}">${v.label}</option>`).join("")}</select>
@@ -4232,6 +4248,8 @@ function renderMeta() {
   ps.hidden = S.posts.length < 2;
   ps.innerHTML = S.posts.map(p => `<option value="${esc(p.id)}"${p.id === S.pid ? " selected" : ""}>${esc(p.data.title || p.id)}</option>`).join("");
   $("#newPost").hidden = !(S.db || S.local);
+  const rn = $("#renamePost"); if (rn) rn.hidden = !!S.readOnly;
+  const pk = $("#pickSlides"); if (pk) pk.hidden = !(S.db || S.local) || !!S.readOnly;
   const od = $("#overallDone"), oa = S.post.overallApplied;
   if (od) od.innerHTML = oa ? `<div class="applied"><p><b>Claude applied your overall comment</b> (${esc(new Date(oa.at).toLocaleString())}): “${esc(String(oa.text).slice(0, 240))}${String(oa.text).length > 240 ? "…" : ""}”</p><div class="actions"><button class="btn ghost sm" id="overallOk">Dismiss</button></div></div>` : "";
   updateApplyAll();
@@ -4279,7 +4297,7 @@ document.addEventListener("input", e => {
   if (el.dataset && el.dataset.f) onField(el);
   else if (el.dataset && el.dataset.m && S.post) {
     S.post[el.dataset.m] = el.value; saveMeta();
-    if (el.dataset.m === "title") $("#postTitle").textContent = el.value || "Untitled post";
+    if (el.dataset.m === "title") { $("#postTitle").textContent = el.value || "Untitled post"; syncPostName(); }
     if (el.dataset.m === "font") { if (!el.value) delete S.post.font; renderBoard(new Set(order())); }
     if (el.dataset.m === "num") { if (!el.value) delete S.post.num; renderBoard(new Set(order())); toast(el.value ? "Slide numbers hidden on every slide. A slide can still show its own (Layout, or ⋮ in the large view)" : "Slide numbers show on every slide"); }
     if (el.dataset.m === "overall") updateApplyAll();
@@ -4357,6 +4375,14 @@ document.addEventListener("click", e => {
   if (pf) { S.pickFolder = pf.dataset.pf; renderPicker(); return; }
   const lb = t.closest("[data-lib]");
   if (lb) return libAction(lb.dataset.lib, lb);
+  if (S.picking) {   /* picking slides: a tap on a card (header, thumbnail or the slide itself) picks it */
+    const pc = t.closest(".card");
+    if (pc && !t.closest(".card-tools,.grip,details,.applyslot,.warn,.ctrash")) { togglePick(pc.dataset.sid); return; }
+  }
+  if (t.closest("#renamePost")) return startRename();
+  if (t.closest("#pickSlides")) return setPicking(!S.picking);
+  const sd = t.closest("[data-spick]");
+  if (sd) { const a = sd.dataset.spick; if (a === "new") return newPostFromPicks(); if (a === "clear") { S.picked = []; syncPicks(); return; } return setPicking(false); }
   const hd = t.closest(".card-h");   /* the card's header row (number, kind, thumbnail) folds and opens it too */
   if (hd && !t.closest("button,.card-tools,.more,input,select,.grip")) { const sid = hd.closest(".card").dataset.sid; setFold(sid, !S.folded.has(sid)); saveFolds(); return; }
   const b = t.closest("[data-act],[data-close],[data-newpost],#dlAll,#applyAll,#addSlide,#copyAll,#newPost,#fPrev,#fNext,#delPost,#notesClose,#overallOk,#newFolderBtn,#folderCancel,#tagBtn,#foldAll");
@@ -4507,6 +4533,7 @@ document.addEventListener("pointerup", e => endReorder(e));
 document.addEventListener("pointercancel", e => endReorder(e, true));
 document.addEventListener("keydown", e => {
   if (rd && e.key === "Escape") { const r = rd; endReorder({ pointerId: r.pid }, true); return; }
+  if (S.picking && e.key === "Escape" && !e.target.closest("input,textarea,dialog")) { setPicking(false); return; }
   const gp = e.target.closest && e.target.closest(".grip"); if (!gp) return;
   const d = { ArrowUp: -1, ArrowLeft: -1, ArrowDown: 1, ArrowRight: 1 }[e.key]; if (!d) return;
   e.preventDefault(); const sid = gp.closest(".card").dataset.sid; move(sid, d);
@@ -8976,7 +9003,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { S, order, renderSlide, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
+window.__t = { S, order, renderSlide, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
@@ -9497,6 +9524,7 @@ window.__guidePDF = async () => { const bytes = await buildGuidePdf(); let s = "
 
 /* ---------- posts ---------- */
 function selectPost(pid) {
+  if (S.picking) { S.picking = false; S.picked = []; }
   if (S.unsubSlides) { S.unsubSlides(); S.unsubSlides = null; }
   S.pid = pid; S.slides = {}; S.notes = ""; loadFolds();
   const p = S.posts.find(x => x.id === pid); S.post = clone(p ? p.data : {}) || {};
@@ -9517,17 +9545,75 @@ function selectPost(pid) {
   }, err => { console.warn(err); S.errors++; setStatus(); });
 }
 const stripTs = o => { const c = { ...o }; delete c.updatedAt; return c; };
-function newPost(mode) {
-  const pid = "post-" + Date.now().toString(36), base = S.post || {};
-  const meta = { title: mode === "copy" ? `${base.title || "Post"} (copy)` : "New carousel", series: base.series || "STEAL MY SETTINGS", subject: base.subject || "", handle: base.handle || "", ratio: mode === "copy" ? ratioKey(base) : DEFAULT_RATIO, order: [], overall: "", updatedAt: Date.now() };
-  const copies = mode === "copy" ? order().map(sid => { const c = clone(S.slides[sid]); delete c.undo; delete c.applied; c.comment = ""; c.status = "review"; return c; }) : null;
+/* mode "blank", "copy" (every slide, versions kept) or "pick" (the slides in sids, in that order: the first becomes slide 1, the cover) */
+function newPost(mode, sids) {
+  const pid = "post-" + Date.now().toString(36), base = S.post || {}, pick = mode === "pick";
+  const meta = { title: mode === "copy" ? `${base.title || "Post"} (copy)` : pick ? `${base.title || "Post"} picks` : "New carousel", series: base.series || "STEAL MY SETTINGS", subject: base.subject || "", handle: base.handle || "", ratio: mode !== "blank" ? ratioKey(base) : DEFAULT_RATIO, order: [], overall: "", updatedAt: Date.now() };
+  if (mode !== "blank") for (const k of ["font", "num", "tcase"]) if (base[k]) meta[k] = clone(base[k]);
+  const copies = mode === "blank" ? null : (pick ? sids : order()).filter(sid => S.slides[sid]).map(sid => { const c = clone(S.slides[sid]); delete c.undo; delete c.applied; c.comment = ""; c.status = "review"; if (pick) delete c.alt; return c; });
   S.posts.push({ id: pid, data: meta });
   selectPost(pid);
   if (copies) { copies.forEach(c => { const sid = newId(); S.slides[sid] = c; S.post.order.push(sid); saveSlide(sid); }); renderBoard(new Set(Object.keys(S.slides))); }
   else ["cover", "specs", "save"].forEach(t => addSlide(t, true));
   saveMeta(); renderMeta(); renderLibrary();
   window.scrollTo({ top: 0 });
-  toast(mode === "copy" ? "Copy made. Swap photos and edit the text" : "New post started. Pick photos from your library");
+  if (pick) { toast(`New post made from ${copies.length} slide${copies.length === 1 ? "" : "s"}. The first is the cover. Give it a name`); startRename(); }
+  else toast(mode === "copy" ? "Copy made. Swap photos and edit the text" : "New post started. Pick photos from your library");
+}
+/* ---------- picking slides for a new post ----------
+   "Select slides" turns on picking: tap cards to pick them (the number on each is its place in the new post, 1 = cover).
+   The bar at the bottom makes a new post from the picks; the slides are copied, this post stays as it is. */
+function setPicking(on) {
+  S.picking = !!on; S.picked = [];
+  if (on && S.selected.size) { S.selected.clear(); renderLibrary(); }
+  syncPicks();
+  if (on) toast("Tap slides to pick them. The first one you pick is the cover");
+}
+function togglePick(sid) {
+  const i = S.picked.indexOf(sid);
+  if (i >= 0) S.picked.splice(i, 1); else S.picked.push(sid);
+  syncPicks();
+}
+function syncPicks() {
+  if (!S.picked) S.picked = [];
+  S.picked = S.picked.filter(sid => S.slides[sid]);
+  document.body.classList.toggle("picking", !!S.picking);
+  const pb = $("#pickSlides"); if (pb) { pb.setAttribute("aria-pressed", String(!!S.picking)); pb.textContent = S.picking ? "Done selecting" : "Select slides"; }
+  $$("#board .card").forEach(c => {
+    const k = S.picked.indexOf(c.dataset.sid), b = c.querySelector(".spick");
+    c.classList.toggle("picked", k >= 0);
+    if (b) { b.setAttribute("aria-pressed", String(k >= 0)); b.textContent = k >= 0 ? String(k + 1) : ""; b.title = k === 0 ? "Cover of the new post" : k > 0 ? `Slide ${k + 1} of the new post` : "Pick this slide"; }
+  });
+  let d = $("#slideDock");
+  if (!d) { d = document.createElement("div"); d.id = "slideDock"; d.className = "seldock"; d.setAttribute("role", "toolbar"); d.setAttribute("aria-label", "Picked slides"); document.body.appendChild(d); }
+  d.hidden = !S.picking;
+  if (!S.picking) return;
+  const n = S.picked.length;
+  d.innerHTML = `<span class="count">${n ? `${n} picked` : "Tap slides to pick"}</span>${n ? `<span class="hint">1st = cover</span>` : ""}<button type="button" class="btn sm primary" data-spick="new"${n ? "" : " disabled"}>New post from these</button>${n ? `<button type="button" class="btn ghost sm" data-spick="clear">Clear</button>` : ""}<button type="button" class="btn ghost sm" data-spick="done" aria-label="Stop picking">Done</button>`;
+}
+function newPostFromPicks() {
+  const sids = (S.picked || []).filter(sid => S.slides[sid]);
+  if (!sids.length) return;
+  setPicking(false);
+  newPost("pick", sids);
+}
+/* ---------- renaming a post ---------- */
+function syncPostName() {
+  const p = S.posts.find(x => x.id === S.pid); if (p && p.data) p.data.title = S.post.title;
+  const o = $("#postSel") && [...$("#postSel").options].find(x => x.value === S.pid); if (o) o.textContent = S.post.title || S.pid;
+}
+function setPostTitle(v) {
+  if (!S.post) return;
+  S.post.title = String(v).slice(0, 80); saveMeta(); syncPostName(); renderMeta();
+}
+function startRename() {
+  const h = $("#postTitle"); if (!h || !S.post || S.readOnly || $("#titleEdit")) return;
+  const inp = document.createElement("input"); inp.id = "titleEdit"; inp.className = "ctl titleedit"; inp.maxLength = 80; inp.value = S.post.title || ""; inp.setAttribute("aria-label", "Post name"); inp.enterKeyHint = "done";
+  h.hidden = true; h.after(inp); inp.focus(); inp.select();
+  let done = false;
+  const finish = keep => { if (done) return; done = true; const v = inp.value.trim(); inp.remove(); h.hidden = false; if (keep && v && v !== S.post.title) { setPostTitle(v); toast("Post renamed"); } };
+  inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); finish(true); } else if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); finish(false); } });
+  inp.addEventListener("blur", () => finish(true));
 }
 async function deletePost(btn) {
   if (btn.dataset.armed !== "1") {
