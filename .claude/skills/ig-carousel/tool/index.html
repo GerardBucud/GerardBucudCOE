@@ -2869,7 +2869,7 @@ function texLayers(s) {
   return [{ id: "t0", name: "Texture", on: layer === "under" ? "bgphoto" : layer === "photo" ? "photo" : "all", fx }];
 }
 const texStack = s => texLayers(s).filter(l => !l.off).map(l => ({ on: TEX_ON.includes(l.on) ? l.on : "all", texts: l.on === "text" && Array.isArray(l.texts) && l.texts.length ? l.texts : null, tx: texOf({ texture: l.fx }) })).filter(l => l.tx);   /* texts: a text layer's chosen texts (field paths, "st:<id>" for a text sticker); none = all the words */
-const TEX_KEYS = ["grain", "scan", "duo", "split", "vhs", "film", "burn", "paper", "half", "dust", "vig", "glow", "hal", "smudge", "ink", "heat", "blur", "rblur"];
+const TEX_KEYS = ["grain", "scan", "duo", "split", "vhs", "film", "burn", "paper", "half", "dust", "vig", "glow", "hal", "smudge", "ink", "heat", "blur", "rblur", "sat", "pix"];
 const TEX_SHAPE = ["smudge", "ink", "heat", "blur", "rblur"];   /* effects that reshape what they're on (see shapeFx) */
 function texOf(s) {
   const t = s && s.texture; if (!t || typeof t !== "object") return null;
@@ -3032,14 +3032,18 @@ function bloom(ctx, src, tx, halo) {
   for (let left = tx.glow * 1.6; left > 0.01; left -= 1) { ctx.globalAlpha = Math.min(1, left); ctx.drawImage(b, 0, 0, cw, ch); }   /* past 60%, a second pass for a strong bloom */
   ctx.restore();
 }
-function applyTexture(ctx, cv, tx, scale) {
+function applyTexture(ctx, cv, tx, scale, solid) {   /* solid: a group's own pixels only (the rest see-through): pixel blocks there come out whole */
   const cw = cv.width, ch = cv.height; if (!cw || !ch) return;
   let keep = null;
   if (OVERLAY) { keep = document.createElement("canvas"); keep.width = cw; keep.height = ch; keep.getContext("2d").drawImage(cv, 0, 0); }   /* see-through parts stay see-through */
   ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0);
   const film = tx.film || 0;
-  if (tx.duo || tx.vhs || tx.split || film) {
+  if (tx.duo || tx.vhs || tx.split || film || tx.sat) {
     const im = ctx.getImageData(0, 0, cw, ch), p = im.data;
+    if (tx.sat) {   /* saturation: richer colors and a touch more contrast, as modern pixel art has */
+      const k = 1 + 1.1 * tx.sat, ct = 1 + 0.18 * tx.sat;
+      for (let i = 0; i < p.length; i += 4) { const l = 0.2126 * p[i] + 0.7152 * p[i + 1] + 0.0722 * p[i + 2]; for (let c = 0; c < 3; c++) p[i + c] = ((l + (p[i + c] - l) * k) - 128) * ct + 128; }
+    }
     if (film) {   /* old film: faded blacks, less color, a warm cast */
       const lift = 26 * film, keep = 1 - 0.2 * film, des = 0.5 * film, warm = [16 * film, 5 * film, -16 * film];
       for (let i = 0; i < p.length; i += 4) { const l = 0.2126 * p[i] + 0.7152 * p[i + 1] + 0.0722 * p[i + 2]; for (let c = 0; c < 3; c++) p[i + c] = lift + (p[i + c] + (l - p[i + c]) * des) * keep + warm[c]; }
@@ -3062,6 +3066,16 @@ function applyTexture(ctx, cv, tx, scale) {
       }
     }
     ctx.putImageData(im, 0, 0);
+  }
+  if (tx.pix) {   /* 8-bit pixels: big square pixels (4 to 44 slide px across) in fewer colors; glow on top then blooms from them */
+    const cell = Math.max(1, (4 + 40 * tx.pix) * scale), sw = Math.max(1, Math.round(cw / cell)), sh = Math.max(1, Math.round(ch / cell));
+    const sm = document.createElement("canvas"); sm.width = sw; sm.height = sh;
+    const sx = sm.getContext("2d", { willReadFrequently: true }); sx.imageSmoothingEnabled = true; sx.imageSmoothingQuality = "medium"; sx.drawImage(cv, 0, 0, sw, sh);
+    const im = sx.getImageData(0, 0, sw, sh), p = im.data, lv = Math.max(4, Math.round(22 - 16 * tx.pix)), st = 255 / (lv - 1);
+    for (let i = 0; i < p.length; i += 4) { for (let c = 0; c < 3; c++) p[i + c] = Math.round(p[i + c] / st) * st; if (solid && p[i + 3]) p[i + 3] = 255; }
+    sx.putImageData(im, 0, 0);
+    ctx.globalCompositeOperation = "copy"; ctx.imageSmoothingEnabled = false; ctx.drawImage(sm, 0, 0, cw, ch);
+    ctx.imageSmoothingEnabled = true; ctx.globalCompositeOperation = "source-over";
   }
   const vig = Math.max(tx.vig, film * 0.4);
   if (vig) {
@@ -3297,7 +3311,9 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
       const rest = TEX_KEYS.some(k => k !== "glow" && k !== "hal" && !TEX_SHAPE.includes(k) && L.tx[k] > 0);
       if (rest && L.on === "all") applyTexture(ctx, cv, L.tx, scale);
       else if (rest) {
-        const tc = blank(), tx = tc.getContext("2d"); tx.drawImage(cv, 0, 0); applyTexture(tx, tc, L.tx, scale);
+        const tc = blank(), tx = tc.getContext("2d"), pre = L.tx.pix > 0; tx.drawImage(cv, 0, 0);
+        if (pre) { tx.globalCompositeOperation = "destination-in"; tx.drawImage(maskFor(L), 0, 0); tx.globalCompositeOperation = "source-over"; }   /* pixels average their neighbours: only the group's own go in, so the words don't smear into the blocks */
+        applyTexture(tx, tc, L.tx, scale, pre);
         tx.globalCompositeOperation = "destination-in"; tx.drawImage(maskFor(L), 0, 0);
         ctx.drawImage(tc, 0, 0);
       }
@@ -3877,7 +3893,7 @@ function onBdColor(el) {   /* Color swatch: the item becomes a color circle */
   const th = el.closest(".gearpic") && el.closest(".gearpic").querySelector(".gthumb"); if (th) th.innerHTML = bdThumb(it);
 }
 /* Texture: the effects, their presets, and the card's controls (the large view has the same in its Texture panel) */
-const TEX_LIST = [["grain", "Grain"], ["film", "Old film"], ["burn", "Film burn"], ["paper", "Paper"], ["half", "Halftone"], ["duo", "Duotone"], ["split", "Split tone"], ["scan", "TV lines"], ["vhs", "VHS"], ["dust", "Dust"], ["vig", "Vignette"], ["glow", "Glow"], ["hal", "Halation"], ["smudge", "Smudge (grainy)"], ["ink", "Ink bleed"], ["heat", "Heat map"], ["blur", "Blur"], ["rblur", "Radial blur"]];
+const TEX_LIST = [["grain", "Grain"], ["film", "Old film"], ["burn", "Film burn"], ["paper", "Paper"], ["half", "Halftone"], ["duo", "Duotone"], ["split", "Split tone"], ["scan", "TV lines"], ["vhs", "VHS"], ["dust", "Dust"], ["vig", "Vignette"], ["glow", "Glow"], ["hal", "Halation"], ["smudge", "Smudge (grainy)"], ["ink", "Ink bleed"], ["heat", "Heat map"], ["blur", "Blur"], ["rblur", "Radial blur"], ["pix", "Pixels (8-bit)"], ["sat", "Saturation"]];
 const TEX_COLORS = { duo: [["c1", "Shadows", "#1a0a06"], ["c2", "Highlights", "#ff7a1a"]], split: [["s1", "Shadows", "#145a6e"], ["s2", "Highlights", "#ff9a3c"]] };
 const TEX_PRE = { film: ["Old film", { film: 0.7, grain: 0.3, dust: 0.3 }], burn: ["Film burn", { burn: 0.6, film: 0.3, grain: 0.25 }], paper: ["Paper", { paper: 0.7, grain: 0.15 }], half: ["Halftone", { half: 0.6 }],
   split: ["Split tone", { split: 0.7, grain: 0.15, s1: "#145a6e", s2: "#ff9a3c" }], duo: ["Duotone: brand", { duo: 0.85, grain: 0.2, c1: "#1a0a06", c2: "#ff7a1a" }], duo2: ["Duotone: cream", { duo: 1, grain: 0.15, c1: "#0e0b0a", c2: "#f2ede6" }],
@@ -3886,13 +3902,14 @@ const TEX_PRE = { film: ["Old film", { film: 0.7, grain: 0.3, dust: 0.3 }], burn
   tblur: ["Soft blur", { blur: 0.2 }, "text", "fx"], trblur: ["Radial blur", { rblur: 0.45 }, "text", "fx"],
   hal: ["Halation", { hal: 0.6, hr: 0.35, ht: 0.7 }], cine: ["CineStill night", { hal: 0.75, hr: 0.4, ht: 0.62, grain: 0.25, film: 0.15, vig: 0.25 }],
   dreamy: ["Dreamy", { glow: 0.5, gr: 0.75, gt: 0.35, grain: 0.15, vig: 0.2 }],
+  pix8: ["8-bit (pixel art)", { pix: 0.25, sat: 0.6, glow: 0.4, gr: 0.3, gt: 0.68, vig: 0.12 }, "bgphoto"],   /* modern 2D pixel art: big pixels, saturated, glowing; the words stay crisp */
   grainy: ["Grain + dust", { grain: 0.35, dust: 0.25, vig: 0.3 }], tv: ["TV lines", { scan: 0.55, grain: 0.2, vig: 0.35 }], vhs: ["VHS", { vhs: 0.6, scan: 0.3, grain: 0.25 }] };
 /* Texture layers (slide.textures, see texLayers in the renderer): a list with the top layer first, as in Canva. Each layer has its
    effects (a preset's several, or one), what it applies to, an eye and a bin; drag its handle to reorder (arrow keys on the handle
    too); tap its name to edit its effects. Layers apply bottom to top, so split tone then TV lines differs from the other way round.
    The card and the large view's Texture panel show the same list. */
 const TEX_ON_L = [["all", "Everything"], ["bg", "Background"], ["photo", "Photos"], ["bgphoto", "Background + photos"], ["text", "Text"], ["sticker", "Stickers"]];
-const TEX_DEF = { smudge: 0.5, ink: 0.55, heat: 0.6, blur: 0.25, rblur: 0.45, hal: 0.6, glow: 0.55, grain: 0.35, film: 0.6, burn: 0.6, paper: 0.6, half: 0.5, duo: 0.85, split: 0.7, scan: 0.5, vhs: 0.5, dust: 0.35, vig: 0.4 };
+const TEX_DEF = { pix: 0.2, sat: 0.5, smudge: 0.5, ink: 0.55, heat: 0.6, blur: 0.25, rblur: 0.45, hal: 0.6, glow: 0.55, grain: 0.35, film: 0.6, burn: 0.6, paper: 0.6, half: 0.5, duo: 0.85, split: 0.7, scan: 0.5, vhs: 0.5, dust: 0.35, vig: 0.4 };
 const texColor = (T, k, def) => HEXCOL.test(T[k]) ? T[k] : def;
 const EYE_OFF_I = `<svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 5.6A10 10 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3.2 3.9M6.3 7.4A16.6 16.6 0 0 0 2.5 12S6 18.5 12 18.5a9.4 9.4 0 0 0 4.4-1.1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>`;
 S.txSel = {}; S.txFx = {};
