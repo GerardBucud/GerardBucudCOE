@@ -5637,6 +5637,13 @@ fcv.addEventListener("pointerdown", e => {
   } else tapStart = null;
   if (S.crop) { cropDown(e, p); return; }
   if (fpts.size === 1 && (e.ctrlKey || e.metaKey)) { fpts.delete(e.pointerId); multiClick(s, p); return; }
+  if (fpts.size === 1) {   /* a press on something in a group: the whole group is the selection */
+    const gr = groupAt(s, p);
+    if (gr && !(multiOn() && S.fmulti.length === gr.items.length && gr.items.every(k => S.fmulti.some(m => m.k === k.k)))) {
+      if (S.fpanel === "text" && S.ftfield) { commitTyping(); S.fpanel = false; S.ftfield = null; renderFPanel(); }
+      S.fmulti = gr.items.map(k => ({ ...k })); S.fsel = null; S.ftsel = null; S.psel = null; hideArr(); drawFocus();
+    }
+  }
   if (fpts.size === 1 && multiOn()) {
     if (multiHit(p)) { fg = { mode: "mmove", p0: p, c0: [e.clientX, e.clientY], moved: false, items: multiItems().map(it => ({ ...it, sx: it.st ? [it.st.x ?? 0.5, it.st.y ?? 0.5] : null, base: it.grp ? [...(((s.layout || {}).move || {})[it.grp] || [0, 0])] : null })) }; fgRem = false; return; }
     S.fmulti = [];
@@ -5831,7 +5838,7 @@ fcv.addEventListener("dblclick", e => {
   const s = S.slides[focusSid]; if (!s || liteOn() || lastPtr === "touch") return;   /* a finger's double tap crops the photo (in pointerdown) */
   const p = frameXY(fcv, e, geoOf(focusSid)), st = stickerAt(s, S.focusBoxes, p[0], p[1]), tf = st ? null : textAt(p[0], p[1]);
   if (S.crop) { exitCrop(); return; }
-  if ((st && st.kind === "text") || tf) { S.fsel = st ? st.id : null; S.ftsel = tf; openTextEditor(); return; }
+  if ((st && st.kind === "text") || tf) { S.fmulti = []; S.fsel = st ? st.id : null; S.ftsel = tf; openTextEditor(); return; }
   const ph = !st && photoAt(p); if (ph) enterCrop(ph.key);
 });
 /* ---------- the slide's photo in the large view (Canva-style) ----------
@@ -7410,6 +7417,43 @@ function multiClick(s, p) {
   if (S.fmulti.length === 1) { const m = S.fmulti[0]; S.fmulti = []; if (m.k.startsWith("st:")) S.fsel = m.k.slice(3); else S.ftsel = m.f; }   /* back to one */
   drawFocus();
 }
+/* Groups (Ctrl+G with several selected; Ctrl+Shift+G or Ungroup to undo): kept with the slide as slide.groups = [{id, items: [{k, f}]}]
+   (k "st:<sticker id>" or "tx:<text block>", f the text a block was picked by). A click on any of a group's things selects them all:
+   a drag moves them together, and align, size, copy, Next slide and Delete work on the lot; a double-click still edits one text. A
+   thing is in one group at most; grouping things already in groups takes them out of those. */
+const GROUP_I = `<svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="13" width="8" height="8" rx="1.5"/><path d="M11 7h4a2 2 0 0 1 2 2v4M13 17H9a2 2 0 0 1-2-2v-4" stroke-dasharray="2 2"/></svg>`;
+function liveGroups(s) {   /* the slide's groups, without things that are gone; a group of fewer than two isn't one */
+  const ok = k => k.startsWith("st:") ? (s.stickers || []).some(t => t.id === k.slice(3)) : !!grpBox(s, k.slice(3)) || !S.ftboxes;
+  return (s.groups || []).map(g => ({ ...g, items: (g.items || []).filter(m => m && ok(m.k)) })).filter(g => g.items.length > 1);
+}
+function groupAt(s, p) {
+  if (!s.groups || !s.groups.length) return null;
+  const st = stickerAt(s, S.focusBoxes, p[0], p[1]), tf = st ? null : textAt(p[0], p[1]), grp = tf && moveGroup(s, tf);
+  const k = st ? "st:" + st.id : grp && !grp.startsWith("rows.") ? "tx:" + grp : null; if (!k) return null;
+  return liveGroups(s).find(g => g.items.some(m => m.k === k)) || null;
+}
+function groupOfSel() {   /* the group the selection is exactly */
+  const s = focusSid && S.slides[focusSid]; if (!s || !multiOn()) return null;
+  return liveGroups(s).find(g => g.items.length === S.fmulti.length && g.items.every(m => S.fmulti.some(x => x.k === m.k))) || null;
+}
+function groupSel() {
+  const sid = focusSid, s = S.slides[sid]; if (!s) return;
+  if (!multiOn()) { toast("Ctrl + click two or more texts or stickers, then Ctrl+G groups them"); return; }
+  if (groupOfSel()) { toast("They're a group already. Ctrl+Shift+G ungroups them"); return; }
+  remember(sid);
+  const keys = S.fmulti.map(m => m.k), rest = liveGroups(s).map(g => ({ ...g, items: g.items.filter(m => !keys.includes(m.k)) })).filter(g => g.items.length > 1);
+  s.groups = [...rest, { id: "g" + Date.now().toString(36), items: S.fmulti.map(m => ({ k: m.k, ...(m.f ? { f: m.f } : {}) })) }];
+  saveSlide(sid); multiKey = ""; drawFocus();
+  toast(`Grouped ${keys.length}. A click on any of them selects the group; double-click a text to edit it`, () => stepHistory(sid, true));
+}
+function ungroupSel() {
+  const sid = focusSid, s = S.slides[sid], g = groupOfSel() || (multiOn() ? liveGroups(s).find(x => x.items.some(m => S.fmulti.some(y => y.k === m.k))) : null);
+  if (!s || !g) { toast("Select a group first: a click on any of its texts or stickers"); return; }
+  remember(sid);
+  s.groups = (s.groups || []).filter(x => x.id !== g.id); if (!s.groups.length) delete s.groups;
+  saveSlide(sid); multiKey = ""; drawFocus();
+  toast("Ungrouped. They stay selected; a click elsewhere lets go", () => stepHistory(sid, true));
+}
 function shiftItem(s, it, dx, dy, g) {
   if (!dx && !dy) return;
   if (it.st) { it.st.x = clamp((it.st.x ?? 0.5) + dx / g.w, 0, 1); it.st.y = clamp((it.st.y ?? 0.5) + dy / g.h, 0, 1); }
@@ -7446,12 +7490,12 @@ function placeMulti() {
   el.querySelector(".mboxes").innerHTML = items.map(it => `<i style="left:${it.x0 * k - pad}px;top:${it.y0 * k - pad}px;width:${(it.x1 - it.x0) * k + 2 * pad}px;height:${(it.y1 - it.y0) * k + 2 * pad}px"></i>`).join("");
   const sizes = [...new Set(items.map(it => Math.round(it.size || 0)).filter(Boolean))].sort((a, b) => a - b);
   const szTxt = sizes.length === 1 ? `Same size · ${sizes[0]} px` : sizes.length ? `Sizes · ${sizes.join(" / ")} px` : "", anySt = items.some(i => i.st), bar = el.querySelector(".mbar");
-  const key = `${items.length}|${szTxt}|${anySt}`;
+  const key = `${items.length}|${szTxt}|${anySt}|${!!groupOfSel()}`;
   if (key !== multiKey) {
     multiKey = key;
     bar.innerHTML = `<span class="mcount">${items.length} selected</span><span class="fsz${sizes.length === 1 ? " same" : ""}" title="Their sizes on the slide, in px">${esc(szTxt)}</span>${sizeFieldHTML("multi")}`
       + ALIGNS.map(([a, l, d]) => `<button type="button" class="ma" data-malign="${a}" title="${l}" aria-label="${l}"><svg viewBox="0 0 24 24"><path d="${d}"/></svg></button>`).join("")
-      + `<button type="button" data-malign="pc" title="Move them together to the slide's centre">Centre on slide</button>${anySt ? `<button type="button" class="del" data-mact="del" title="Delete the stickers and extra text among them" aria-label="Delete">${TRASH}</button>` : ""}`;
+      + `<button type="button" data-malign="pc" title="Move them together to the slide's centre">Centre on slide</button>${groupOfSel() ? `<button type="button" data-mact="ungroup" title="Ungroup (Ctrl+Shift+G)">${GROUP_I}Ungroup</button>` : `<button type="button" data-mact="group" title="Group them (Ctrl+G): a click on any of them then selects them all">${GROUP_I}Group</button>`}${anySt ? `<button type="button" class="del" data-mact="del" title="Delete the stickers and extra text among them" aria-label="Delete">${TRASH}</button>` : ""}`;
   }
   const bw = bar.offsetWidth, bh = bar.offsetHeight, sw = fcv.clientWidth, sh = fcv.clientHeight;
   let y = Y1 * k + pad + 10; if (y + bh > sh - 4) y = Y0 * k - pad - 10 - bh;
@@ -7460,7 +7504,7 @@ function placeMulti() {
 }
 $("#fMulti").addEventListener("click", e => {
   const a = e.target.closest("[data-malign]"), d = e.target.closest("[data-mact]");
-  if (a) alignMulti(a.dataset.malign); else if (d) deleteMulti();
+  if (a) alignMulti(a.dataset.malign); else if (d && d.dataset.mact === "group") groupSel(); else if (d && d.dataset.mact === "ungroup") ungroupSel(); else if (d) deleteMulti();
 });
 fcv.addEventListener("contextmenu", e => { if (e.ctrlKey) e.preventDefault(); });   /* a Mac's Ctrl + click is a selection here, not a menu */
 /* the size of each text open in the editor, next to its Size slider */
@@ -8980,6 +9024,7 @@ const KEYS = [
   ["fwd", "Bring forward", "Mod+]", "Large view"], ["back1", "Send backward", "Mod+[", "Large view"],
   ["front", "Bring to front", "Mod+Shift+]", "Large view"], ["back", "Send to back", "Mod+Shift+[", "Large view"],
   ["copy", "Copy the selected stickers or text", "Mod+C", "Large view"], ["paste", "Paste them onto this slide", "Mod+V", "Large view"],
+  ["group", "Group the selected texts and stickers", "Mod+G", "Large view"], ["ungroup", "Ungroup", "Mod+Shift+G", "Large view"],
   ["dupslide", "Duplicate this slide (a new slide)", "Mod+Shift+D", "Large view"], ["dupver", "Duplicate this slide as a version", "Mod+Alt+Shift+D", "Large view"],
   ["foldall", "Fold or unfold all slides", "Mod+A", "Board"]
 ];
@@ -9045,6 +9090,8 @@ document.addEventListener("keydown", e => {
   if (keyIs(e, "dup")) e.preventDefault();   /* not the browser's bookmark */
   if (keyIs(e, "dupslide") || keyIs(e, "dupver")) { e.preventDefault(); commitTyping(); if (focusSid) duplicate(focusSid, keyIs(e, "dupver")); return; }
   if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable) return;
+  if (keyIs(e, "group")) { e.preventDefault(); groupSel(); return; }
+  if (keyIs(e, "ungroup")) { e.preventDefault(); ungroupSel(); return; }
   if (keyIs(e, "copy")) { if (copySel()) e.preventDefault(); return; }
   if (keyIs(e, "paste")) { if (readClip()) { e.preventDefault(); pasteClip(); } return; }
   if (e.key === "Escape" && multiOn()) { e.preventDefault(); clearMulti(); return; }
@@ -9511,7 +9558,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, setShade, shadeState, smartSnap, copyToNext, sizeHandle, syncSizeFields, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
+window.__t = { S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, groupSel, ungroupSel, groupOfSel, setShade, shadeState, smartSnap, copyToNext, sizeHandle, syncSizeFields, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
