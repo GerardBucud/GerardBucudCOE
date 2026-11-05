@@ -573,6 +573,22 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .fbar button.del{color:#c4260f}
 .fbar .fsz{align-self:center;font:700 11.5px/1 var(--ui);color:#6b625e;background:rgba(0,0,0,.07);border-radius:999px;padding:5px 8px;margin:0 2px;font-variant-numeric:tabular-nums}
 .fbar .fsz:empty{display:none}
+.fbar.two{flex-direction:column;align-items:stretch;border-radius:18px;padding:4px;gap:2px}
+.fbar .fbr{display:flex;gap:2px;justify-content:center;align-items:center}
+.fbar .fbr+.fbr{border-top:1px solid rgba(0,0,0,.1);padding-top:3px}
+.fbar.two{width:max-content;max-width:calc(100vw - 20px)}
+.fbar .fbr{flex-wrap:wrap}
+@media (max-width:620px){   /* a phone: the actions row as small icon buttons with their names under them */
+  .fbar.two .fbr+.fbr button{flex-direction:column;gap:2px;font-size:10.5px;padding:5px 7px;min-width:52px}
+  .fbar.two .fbr+.fbr svg{width:17px;height:17px}
+  .fbar.two .fbr:first-child button{padding:7px 9px}
+}
+.fszw{display:inline-flex;align-items:center;align-self:center;background:rgba(0,0,0,.07);border-radius:999px;padding:2px 2px 2px 8px;margin:0 2px;gap:2px}
+.fszw[hidden]{display:none}
+.fszin{width:46px;border:0;background:transparent;font:700 13px/1 var(--ui);color:#131111;text-align:right;padding:5px 0;font-variant-numeric:tabular-nums}
+.fszin:focus{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
+.fbar .fszu,.fszu{border:0;background:#131111;color:#fff;font:700 11px/1 var(--ui);padding:5px 7px;border-radius:999px;cursor:pointer}
+.fmt .fszw{background:rgba(255,255,255,.1)}.fmt .fszin{color:#f3eeeb}.fmt .fszu{background:#f3eeeb;color:#131111}
 .fbar .fsz.same{color:#1d6b35;background:rgba(29,107,53,.12)}
 .fmulti{position:absolute;inset:0;pointer-events:none;z-index:2}
 .fmulti[hidden]{display:none}
@@ -2124,6 +2140,20 @@ function bdRowDraw(ctx, st, g) {
   }
 }
 /* draws a slide's stickers; returns their boxes (slide pixels) for dragging */
+/* the shade behind extra text: st.shade "off", an amount (0 to 0.9), or auto (missing): the slide's own Darken behind text when that's
+   set by hand, else judged from the photo under it like the slide's text (none on a plain background, or for dark text) */
+function layerShade(s, st, x0, y0, x1, y1) {
+  const v = st.shade;
+  if (v === "off" || v === 0 || v === "0") return 0;
+  if (v != null && v !== "" && v !== "auto" && Number.isFinite(+v)) return clamp(+v, 0, 0.9);
+  const col = st.color || INK; if (/^#/.test(col) && inkOn(col) === "#ffffff") return 0;   /* dark text wants a light place, not a shade */
+  const us = userScrim(s.layout); if (us != null) return us;
+  if (s.overlay) return 0.3;
+  if (BG && !BG.photo) return 0;
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, ph = (PH || []).find(p => p.slot && cx >= p.x && cx <= p.x + p.w && cy >= p.y && cy <= p.y + p.h);
+  const A = ph && analyze(ph.slot, ph.w, ph.h); if (!A) return 0;
+  return scrimFor(A.stats(x0 - ph.x - 40, y0 - ph.y - 40, x1 - ph.x + 40, y1 - ph.y + 40));
+}
 function drawStickers(ctx, post, s, hiliteId) {
   const boxes = [];
   (s.stickers || []).forEach(st => {
@@ -2149,6 +2179,14 @@ function drawStickers(ctx, post, s, hiliteId) {
       ctx.shadowColor = "rgba(0,0,0,.3)"; ctx.shadowBlur = size * 0.12;
       const tr = Number.isFinite(+st.tr) ? clamp(+st.tr, -0.5, 10) : -0.05, al = st.al === "left" || st.al === "right" ? st.al : "center";
       bw = Math.max(size, ...lines.map(l => inFam(fk, () => withCS(tr + 0.05, () => richW(ctx, l, size, wt, -0.05))) + (plainText(l).match(/ /g) || []).length * ws * size));   /* tr: -0.05 is the font's own spacing, the rest is extra */
+      const sa = layerShade(s, st, cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2);
+      if (sa > 0) {   /* a soft dark patch behind it where the photo is bright or busy, as the slide's own text gets */
+        ctx.save(); ctx.shadowColor = "transparent"; ctx.shadowBlur = 0;
+        const rx = bw / 2 + size * 0.9, ry = bh / 2 + size * 0.75; ctx.scale(1, ry / rx);
+        const gr = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
+        gr.addColorStop(0, `rgba(0,0,0,${sa})`); gr.addColorStop(0.55, `rgba(0,0,0,${sa * 0.75})`); gr.addColorStop(1, "rgba(0,0,0,0)");
+        ctx.fillStyle = gr; ctx.fillRect(-rx, -rx, 2 * rx, 2 * rx); ctx.restore();
+      }
       const ax = al === "left" ? -bw / 2 : al === "right" ? bw / 2 : 0;   /* lines line up inside the box; the box stays centered on x, y */
       TXK = "st:" + st.id; lines.forEach((l, i) => txt(ctx, l, ax, -bh / 2 + i * lh, { size, weight: wt, track: -0.05, cs: tr + 0.05, align: al, color: st.color || INK, fam: fk, ws })); TXK = null;
     } else if (P.type === "bdrow") {   /* size is the pictures' height */
@@ -4702,7 +4740,7 @@ function stickerHTML(sid, s) {
       <div class="two">${rng(sid, `stickers.${i}.x`, "Left / right", 0, 1, 0.005, st.x ?? 0.5, "pct")}${rng(sid, `stickers.${i}.y`, "Up / down", 0, 1, 0.005, st.y ?? 0.8, "pct")}</div>
       ${isText ? `<div><label class="lbl" for="${sid}-st${i}-t">Text (**bold**, Enter = new line)</label><textarea class="ctl" id="${sid}-st${i}-t" data-f="stickers.${i}.label">${esc(st.label ?? P.text)}</textarea></div>` : ""}
       <div class="two">${rng(sid, `stickers.${i}.size`, isText ? "Text size" : "Size", MIN_SIZE, 2000, 1, st.size || P.size, "px")}${rng(sid, `stickers.${i}.rot`, "Rotate", -180, 180, 1, st.rot || 0, "deg")}</div>
-      <div class="two">${color}${extra}</div>${rowFoot(sid, i, st)}</div>`;
+      <div class="two">${color}${extra}</div>${isText ? `<div class="two">${sel(sid, `stickers.${i}.shade`, "Shade behind it", SHADES, st.shade == null ? "auto" : String(st.shade))}<div></div></div>` : ""}${rowFoot(sid, i, st)}</div>`;
   }).join("");
   return `${list}<div class="actions" style="margin:0"><button class="btn sm" data-act="addsticker">Add sticker</button><button class="btn sm" data-act="addbdrow" title="Pictures with a bold name and a subtext under each, on any slide">Breakdown row…</button></div><p class="hint" style="margin:0">Drag a sticker on the slide to move it. On a phone, tap the slide to open it large: there you can drag, pinch to resize, twist to rotate, and drop a sticker on the bin to delete it.</p>`;
 }
@@ -5439,11 +5477,70 @@ function snapMid(cx, cy, g) {
   S.guides = v || h ? { v, h } : null;
   return [v ? g.w / 2 - cx : 0, h ? g.h / 2 - cy : 0];
 }
+/* Smart guides, as in Canva: while a sticker, extra text or a text block is dragged, its left / centre / right and top / middle /
+   bottom lock onto the same lines of the other texts and stickers (a yellow guide shows the line), onto the slide's middle (pink), and
+   onto equal spacing: the same gap as the two things next to it have, or the middle between two (yellow gap marks). bx is the box
+   being dragged (slide px); skip: {st: sticker ids, f: text fields} that move with it. */
+function snapTargets(skip) {
+  const out = [];
+  for (const b of S.focusBoxes || []) if (!skip.st.has(b.id)) out.push({ x0: b.x0 + 16, y0: b.y0 + 16, x1: b.x1 - 16, y1: b.y1 - 16 });
+  for (const [f, b] of Object.entries(S.ftboxes || {})) if (!skip.f.has(f) && b && b.x1 > b.x0 && b.y1 > b.y0) out.push({ x0: b.x0, y0: b.y0, x1: b.x1, y1: b.y1 });
+  return out;
+}
+function smartSnap(bx, g, skip) {
+  const T = snapTargets(skip), w = bx.x1 - bx.x0, h = bx.y1 - bx.y0, cx = (bx.x0 + bx.x1) / 2, cy = (bx.y0 + bx.y1) / 2, best = { x: null, y: null };
+  const tryA = (ax, d, info) => { if (Math.abs(d) < SNAP && (!best[ax] || Math.abs(d) < Math.abs(best[ax].d) - 0.5)) best[ax] = { d, ...info }; };
+  tryA("x", g.w / 2 - cx, { mid: 1 }); tryA("y", g.h / 2 - cy, { mid: 1 });
+  for (const o of T) {
+    const ocx = (o.x0 + o.x1) / 2, ocy = (o.y0 + o.y1) / 2;
+    for (const [a, l] of [[bx.x0, o.x0], [bx.x0, o.x1], [cx, ocx], [bx.x1, o.x1], [bx.x1, o.x0]]) tryA("x", l - a, { line: l, o });
+    for (const [a, l] of [[bx.y0, o.y0], [bx.y0, o.y1], [cy, ocy], [bx.y1, o.y1], [bx.y1, o.y0]]) tryA("y", l - a, { line: l, o });
+  }
+  /* equal spacing, down a column (things that overlap it left to right) and along a row */
+  const col = T.filter(o => o.x1 > bx.x0 && o.x0 < bx.x1), row = T.filter(o => o.y1 > bx.y0 && o.y0 < bx.y1);
+  const up1 = col.filter(o => o.y1 <= cy).sort((a, b) => b.y1 - a.y1), dn = col.filter(o => o.y0 >= cy).sort((a, b) => a.y0 - b.y0);
+  if (up1[0] && dn[0] && dn[0].y0 - up1[0].y1 > h) tryA("y", (up1[0].y1 + dn[0].y0 - h) / 2 - bx.y0, { gap: "y", chain: [up1[0], null, dn[0]] });
+  if (up1[0] && up1[1] && up1[0].y0 - up1[1].y1 > 0) tryA("y", up1[0].y1 + (up1[0].y0 - up1[1].y1) - bx.y0, { gap: "y", chain: [up1[1], up1[0], null] });
+  if (dn[0] && dn[1] && dn[1].y0 - dn[0].y1 > 0) tryA("y", dn[0].y0 - (dn[1].y0 - dn[0].y1) - h - bx.y0, { gap: "y", chain: [null, dn[0], dn[1]] });
+  const lf = row.filter(o => o.x1 <= cx).sort((a, b) => b.x1 - a.x1), rt = row.filter(o => o.x0 >= cx).sort((a, b) => a.x0 - b.x0);
+  if (lf[0] && rt[0] && rt[0].x0 - lf[0].x1 > w) tryA("x", (lf[0].x1 + rt[0].x0 - w) / 2 - bx.x0, { gap: "x", chain: [lf[0], null, rt[0]] });
+  if (lf[0] && lf[1] && lf[0].x0 - lf[1].x1 > 0) tryA("x", lf[0].x1 + (lf[0].x0 - lf[1].x1) - bx.x0, { gap: "x", chain: [lf[1], lf[0], null] });
+  if (rt[0] && rt[1] && rt[1].x0 - rt[0].x1 > 0) tryA("x", rt[0].x0 - (rt[1].x0 - rt[0].x1) - w - bx.x0, { gap: "x", chain: [null, rt[0], rt[1]] });
+  const dx = best.x ? best.x.d : 0, dy = best.y ? best.y.d : 0, nb = { x0: bx.x0 + dx, x1: bx.x1 + dx, y0: bx.y0 + dy, y1: bx.y1 + dy };
+  const lines = [], gaps = [];
+  for (const ax of ["x", "y"]) {
+    const b = best[ax]; if (!b || b.mid) continue;
+    if (b.o) lines.push(ax === "x" ? { x: b.line, a: Math.min(nb.y0, b.o.y0) - 24, b: Math.max(nb.y1, b.o.y1) + 24 } : { y: b.line, a: Math.min(nb.x0, b.o.x0) - 24, b: Math.max(nb.x1, b.o.x1) + 24 });
+    if (b.gap) {   /* the chain in order, the dragged box in its empty place; a gap mark between each neighbouring pair */
+      const ch = b.chain.slice(); ch[ch.indexOf(null)] = nb;
+      const seq = ch.filter(Boolean);
+      for (let i = 0; i < seq.length - 1; i++) {
+        const p = seq[i], q = seq[i + 1];
+        if (ax === "y") gaps.push({ x: (Math.max(p.x0, q.x0) + Math.min(p.x1, q.x1)) / 2, a: p.y1, b: q.y0 });
+        else gaps.push({ y: (Math.max(p.y0, q.y0) + Math.min(p.y1, q.y1)) / 2, a: p.x1, b: q.x0 });
+      }
+    }
+  }
+  const v = !!(best.x && best.x.mid), hh = !!(best.y && best.y.mid);
+  S.guides = v || hh || lines.length || gaps.length ? { v, h: hh, lines, gaps } : null;
+  return [dx, dy];
+}
 function drawGuides(cv, sc) {
   const gd = S.guides; if (!gd || !focusSid) return;
   const g = geoOf(focusSid), c = cv.getContext("2d"), px = (window.devicePixelRatio || 1) / sc;
   c.save(); c.setTransform(sc, 0, 0, sc, 0, 0); c.lineWidth = 1.6 * px; c.setLineDash([9 * px, 7 * px]); c.strokeStyle = "#ff3ea5"; c.shadowColor = "rgba(0,0,0,.35)"; c.shadowBlur = 2 * px;
-  c.beginPath(); if (gd.v) { c.moveTo(g.w / 2, 0); c.lineTo(g.w / 2, g.h); } if (gd.h) { c.moveTo(0, g.h / 2); c.lineTo(g.w, g.h / 2); } c.stroke(); c.restore();
+  c.beginPath(); if (gd.v) { c.moveTo(g.w / 2, 0); c.lineTo(g.w / 2, g.h); } if (gd.h) { c.moveTo(0, g.h / 2); c.lineTo(g.w, g.h / 2); } c.stroke();
+  c.strokeStyle = "#ffd23f"; c.beginPath();   /* lined up with another text or sticker */
+  for (const l of gd.lines || []) { if (l.x != null) { c.moveTo(l.x, l.a); c.lineTo(l.x, l.b); } else { c.moveTo(l.a, l.y); c.lineTo(l.b, l.y); } }
+  c.stroke();
+  c.setLineDash([]); c.lineWidth = 2.4 * px; c.fillStyle = c.strokeStyle = "#ffd23f";   /* equal gaps: a bar with end ticks across each */
+  for (const q of gd.gaps || []) {
+    const t = 9 * px; c.beginPath();
+    if (q.x != null) { c.moveTo(q.x, q.a); c.lineTo(q.x, q.b); c.moveTo(q.x - t, q.a); c.lineTo(q.x + t, q.a); c.moveTo(q.x - t, q.b); c.lineTo(q.x + t, q.b); }
+    else { c.moveTo(q.a, q.y); c.lineTo(q.b, q.y); c.moveTo(q.a, q.y - t); c.lineTo(q.a, q.y + t); c.moveTo(q.b, q.y - t); c.lineTo(q.b, q.y + t); }
+    c.stroke();
+  }
+  c.restore();
 }
 const sizeOf = st => +st.size || STICKERS[st.kind].size;
 
@@ -5501,7 +5598,7 @@ function fPinchFrom(st) {
   fg = { mode: "pinch", st, g, moved: !!(fg && fg.moved), d0: Math.max(1, Math.hypot(b[0] - a[0], b[1] - a[1])), a0: Math.atan2(b[1] - a[1], b[0] - a[0]),
     m0: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], s0: sizeOf(st), r0: +st.rot || 0, c0: [(st.x ?? 0.5) * g.w, (st.y ?? 0.5) * g.h] };
 }
-function fDragFrom(st, p, client) { const g = geoOf(focusSid); fg = { mode: "drag", st, g, moved: !!(fg && fg.moved), ox: p[0] - (st.x ?? 0.5) * g.w, oy: p[1] - (st.y ?? 0.5) * g.h, c0: client, dragged: !client }; }
+function fDragFrom(st, p, client) { const g = geoOf(focusSid), b = (S.focusBoxes || []).find(x => x.id === st.id); fg = { mode: "drag", st, g, moved: !!(fg && fg.moved), ox: p[0] - (st.x ?? 0.5) * g.w, oy: p[1] - (st.y ?? 0.5) * g.h, c0: client, dragged: !client, hw: b ? Math.max(1, (b.x1 - b.x0) / 2 - 16) : 0, hh: b ? Math.max(1, (b.y1 - b.y0) / 2 - 16) : 0 }; }
 fcv.addEventListener("pointerdown", e => {
   const s = S.slides[focusSid]; if (!s) return;
   e.preventDefault(); hideArr();
@@ -5573,7 +5670,10 @@ fcv.addEventListener("pointermove", e => {
   if (fg.mode === "mmove") {
     if (fpts.size !== 1 || (!fg.moved && Math.hypot(e.clientX - fg.c0[0], e.clientY - fg.c0[1]) < 4)) return;
     if (!fg.moved) { fRemember(); fg.moved = true; }
-    const s = S.slides[focusSid], g = geoOf(focusSid), dx = p[0] - fg.p0[0], dy = p[1] - fg.p0[1];
+    const s = S.slides[focusSid], g = geoOf(focusSid), its = fg.items;
+    let dx = p[0] - fg.p0[0], dy = p[1] - fg.p0[1];
+    { const U = { x0: Math.min(...its.map(i => i.x0)) + dx, x1: Math.max(...its.map(i => i.x1)) + dx, y0: Math.min(...its.map(i => i.y0)) + dy, y1: Math.max(...its.map(i => i.y1)) + dy };
+      const [sx, sy] = smartSnap(U, g, { st: new Set(its.filter(i => i.st).map(i => i.st.id)), f: new Set(its.filter(i => i.grp).flatMap(i => grpFields(s, i.grp))) }); dx += sx; dy += sy; }
     for (const it of fg.items) {
       if (it.st) { it.st.x = clamp(it.sx[0] + dx / g.w, 0, 1); it.st.y = clamp(it.sx[1] + dy / g.h, 0, 1); }
       else { s.layout = s.layout || {}; s.layout.move = { ...(s.layout.move || {}), [it.grp]: [Math.round(it.base[0] + dx), Math.round(it.base[1] + dy)] }; }
@@ -5588,7 +5688,7 @@ fcv.addEventListener("pointermove", e => {
   if (fg.mode === "drag" && fpts.size === 1) {
     if (!fg.dragged && Math.hypot(e.clientX - fg.c0[0], e.clientY - fg.c0[1]) < 6) return;
     fRemember(); fg.dragged = fg.moved = true;
-    { const cx = p[0] - fg.ox, cy = p[1] - fg.oy, [sx, sy] = snapMid(cx, cy, fg.g); st.x = clamp((cx + sx) / fg.g.w, 0, 1); st.y = clamp((cy + sy) / fg.g.h, 0, 1); }
+    { const cx = p[0] - fg.ox, cy = p[1] - fg.oy, [sx, sy] = fg.hw ? smartSnap({ x0: cx - fg.hw, x1: cx + fg.hw, y0: cy - fg.hh, y1: cy + fg.hh }, fg.g, { st: new Set([st.id]), f: new Set() }) : snapMid(cx, cy, fg.g); st.x = clamp((cx + sx) / fg.g.w, 0, 1); st.y = clamp((cy + sy) / fg.g.h, 0, 1); }
     const tr = $("#fTrash"); tr.hidden = false; tr.classList.toggle("hot", overEl(tr, e, 18));
   } else if (fg.mode === "pinch" && fpts.size >= 2) {
     const [a, b] = [...fpts.values()];
@@ -5920,7 +6020,8 @@ function textGrab(s, grp, tf, p, e) {
   else {
     g.base = ((s.layout || {}).move || {})[grp] || [0, 0];
     const bs = editorRefs(s, tf).map(r => (S.ftboxes || {})[fieldPath(s, r)]).filter(b => b && Number.isFinite(b.x0) && b.x1 > b.x0);   /* the block as drawn now, for snapping its centre */
-    if (bs.length) g.c0b = [(Math.min(...bs.map(b => b.x0)) + Math.max(...bs.map(b => b.x1))) / 2, (Math.min(...bs.map(b => b.y0)) + Math.max(...bs.map(b => b.y1))) / 2];
+    if (bs.length) { g.c0b = [(Math.min(...bs.map(b => b.x0)) + Math.max(...bs.map(b => b.x1))) / 2, (Math.min(...bs.map(b => b.y0)) + Math.max(...bs.map(b => b.y1))) / 2]; g.hb = [(Math.max(...bs.map(b => b.x1)) - Math.min(...bs.map(b => b.x0))) / 2, (Math.max(...bs.map(b => b.y1)) - Math.min(...bs.map(b => b.y0))) / 2]; }
+    g.skipF = new Set(Object.keys(S.ftboxes || {}).filter(f => moveGroup(s, f) === grp));
   }
   return g;
 }
@@ -5936,7 +6037,7 @@ function moveText(fg, p) {
     ROWDRAG = { s, i: fg.row, dy: b ? Math.round(at - (b.y0 + b.y1) / 2) : 0 };
   } else {
     let nx = fg.base[0] + dx, ny = fg.base[1] + dy;
-    if (fg.c0b) { const [sx, sy] = snapMid(fg.c0b[0] + dx, fg.c0b[1] + dy, geoOf(focusSid)); nx += sx; ny += sy; if (!sx && Math.abs(nx) < 18) nx = 0; }   /* the slide's middle, else back where auto-fit put it */
+    if (fg.c0b) { const c = [fg.c0b[0] + dx, fg.c0b[1] + dy], [sx, sy] = fg.hb ? smartSnap({ x0: c[0] - fg.hb[0], x1: c[0] + fg.hb[0], y0: c[1] - fg.hb[1], y1: c[1] + fg.hb[1] }, geoOf(focusSid), { st: new Set(), f: fg.skipF || new Set() }) : snapMid(c[0], c[1], geoOf(focusSid)); nx += sx; ny += sy; if (!sx && Math.abs(nx) < 18) nx = 0; }   /* the slide's middle, else back where auto-fit put it */
     else if (Math.abs(nx) < 18) nx = 0;
     s.layout = s.layout || {}; s.layout.move = { ...(s.layout.move || {}), [fg.grp]: [Math.round(nx), Math.round(ny)] };
   }
@@ -6076,7 +6177,7 @@ function placePsel() {
   if (!f || !k || liteOn()) { el.hidden = true; return; }
   el.hidden = false; Object.assign(el.style, { left: f.x * k + "px", top: f.y * k + "px", width: f.w * k + "px", height: f.h * k + "px" });
   const bar = $("#fBar");
-  if (barKey !== "photo") { barKey = "photo"; bar.innerHTML = `<button type="button" data-fbar="crop">${CROP_I}Crop</button><button type="button" data-fbar="preplace">${SWAP_I}Replace</button><button type="button" data-fbar="pedit">${ADJ_I}Edit photo</button><button type="button" data-fbar="pos" title="Nudge and centre the picture">${POS_I}Position</button>`; }
+  if (barKey !== "photo") { barKey = "photo"; bar.classList.remove("two"); bar.innerHTML = `<button type="button" data-fbar="crop">${CROP_I}Crop</button><button type="button" data-fbar="preplace">${SWAP_I}Replace</button><button type="button" data-fbar="pedit">${ADJ_I}Edit photo</button><button type="button" data-fbar="pos" title="Nudge and centre the picture">${POS_I}Position</button>`; }
   bar.hidden = false;
   const bw = bar.offsetWidth, bh = bar.offsetHeight, sw = fcv.clientWidth, sh = fcv.clientHeight;
   bar.style.left = clamp((f.x + f.w / 2) * k, bw / 2 + 4, Math.max(bw / 2 + 4, sw - bw / 2 - 4)) + "px";
@@ -6490,7 +6591,7 @@ function applyColorSpan(hex, snap0) {
 }
 document.addEventListener("pointerdown", e => { if (!e.target.closest || !e.target.closest("#fPanel [data-colpick]")) return; const el = curRich(); fmtSnap = el ? { el, sel: document.activeElement === el ? selIn(el) : null, t: 9e15 } : null; }, true);   /* the color picker takes a while: its selection doesn't run out */
 document.addEventListener("input", e => { if (e.target.matches && e.target.matches("#fPanel [data-colpick]")) applyColorSpan(e.target.value.toLowerCase(), fmtSnap ? { ...fmtSnap } : null); });
-const fontSpanSel = () => `${colorBtnHTML()}<button type="button" data-fmt="fontlist" class="fmtfontb" aria-haspopup="menu" aria-expanded="false" title="Font for the selected words (or the whole text)">Font…</button><span class="fszb" title="Size of this text on the slide, in px"></span>`;
+const fontSpanSel = () => `${colorBtnHTML()}<button type="button" data-fmt="fontlist" class="fmtfontb" aria-haspopup="menu" aria-expanded="false" title="Font for the selected words (or the whole text)">Font…</button>${sizeFieldHTML("edit")}`;
 /* the list under the style bar: every font, its name written in it; a tap puts it on the selected words (or the whole text) */
 function toggleSpanFonts(force) {
   const btn = $("#fPanel [data-fmt=fontlist]"), open = $("#fPanel .fspan"); if (!btn) return;
@@ -6650,7 +6751,10 @@ function editorTitle(s, ref) {
   return grp ? { title: "Title", tip: "Tip", a: "Before", b: "After", caption: "Caption", gtitle: "Heading", btitle: "Title" }[grp] || "Text" : HEAD_FIELDS[ref] ? "Header (every slide)" : "Footer";
 }
 const NARROW = /^(text\.rows\.\d+\.(label|value)|text\.(left|right|section|foot|[ab](Value|Label))|post\.\w+)$/;
-const layerOpts = (st, i) => `<select class="ctl" id="ff-stickers-${i}-w" data-ff="stickers.${i}.w" aria-label="Weight" style="width:auto"><option value="700"${+st.w === 400 ? "" : " selected"}>Bold</option><option value="400"${+st.w === 400 ? " selected" : ""}>Regular</option></select>${alignSel(`ff-stickers-${i}-al`, `data-ff="stickers.${i}.al" aria-label="Align" style="width:auto"`, st.al)}`;
+/* extra text's shade: Auto (like the slide's own text: only where the photo behind is bright or busy), none, or a set amount */
+const SHADES = [["auto", "Auto"], ["off", "None"], ["0.3", "Light"], ["0.55", "Medium"], ["0.75", "Strong"]];
+const shadeSel = (st, i) => `<select class="ctl" id="ff-stickers-${i}-sh" data-ff="stickers.${i}.shade" aria-label="Shade behind it" title="Shade behind it" style="width:auto">${SHADES.map(([v, l]) => `<option value="${v}"${String(st.shade ?? "auto") === v ? " selected" : ""}>${v === "auto" ? "Shade: auto" : "Shade: " + l.toLowerCase()}</option>`).join("")}</select>`;
+const layerOpts = (st, i) => shadeSel(st, i) + `<select class="ctl" id="ff-stickers-${i}-w" data-ff="stickers.${i}.w" aria-label="Weight" style="width:auto"><option value="700"${+st.w === 400 ? "" : " selected"}>Bold</option><option value="400"${+st.w === 400 ? " selected" : ""}>Regular</option></select>${alignSel(`ff-stickers-${i}-al`, `data-ff="stickers.${i}.al" aria-label="Align" style="width:auto"`, st.al)}`;
 /* Spacing (the open text): its line spacing, letter spacing and word spacing (slide.tstyle[field path], a text layer its own lh, tr,
    ws), and its block's line spacing: how far apart the texts of the block it's in sit (layout.spread[group]) */
 function spacingOf(s, ref) {
@@ -6891,9 +6995,11 @@ function updateTextUI() {
   const row = /^text\.rows\./.test(ref), movable = !row && !!moveGroup(S.slides[focusSid], S.ftsel), key = row ? "row" : movable ? "text" : "textfix";
   if (barKey !== key) {
     barKey = key;
-    bar.innerHTML = `<button type="button" data-fbar="edit">${PEN_I}Edit</button><button type="button" data-fbar="font" title="Font for this text">${FONT_I}Font</button><span class="fsz" title="Size of this text, in px on the slide"></span><button type="button" data-fbar="color" title="Color for this text">${COLOR_I}Color</button><button type="button" data-fbar="dup">${DUP_I}${row ? "Duplicate row" : "Duplicate"}</button>${row ? `<button type="button" class="del" data-fbar="delrow">${TRASH}Delete row</button>` : ""}${movable ? `<button type="button" data-fbar="pos" title="Nudge and centre">${POS_I}Position</button>` : ""}${row ? "" : `<button type="button" class="del" data-fbar="deltext" title="Delete (empties this text)" aria-label="Delete this text">${TRASH}</button>`}`;
+    bar.classList.add("two");
+    bar.innerHTML = `<div class="fbr"><button type="button" data-fbar="edit">${PEN_I}Edit</button><button type="button" data-fbar="font" title="Font for this text">${FONT_I}Font</button><button type="button" data-fbar="color" title="Color for this text">${COLOR_I}Color</button>${sizeFieldHTML("sel")}</div>`
+      + `<div class="fbr"><button type="button" data-fbar="dup">${DUP_I}${row ? "Duplicate row" : "Duplicate"}</button>${movable ? `<button type="button" data-fbar="pos" title="Nudge and centre">${POS_I}Position</button>` : ""}<button type="button" data-fbar="next" title="A copy on the next slide, in the same place">${NEXT_I}Next slide</button>${row ? `<button type="button" class="del" data-fbar="delrow">${TRASH}Delete row</button>` : `<button type="button" class="del" data-fbar="deltext" title="Delete (empties this text)">${TRASH}Delete</button>`}</div>`;
   }
-  { const z = bar.querySelector(".fsz"); if (z) z.textContent = layer ? Math.round(sizeOf(layer)) + " px" : box.size ? Math.round(box.size) + " px" : ""; }
+  syncSizeFields();
   bar.hidden = false;
   const gb = layer ? null : xfBox(), at = gb ? { x0: gb.cx - gb.w / 2, x1: gb.cx + gb.w / 2, y0: gb.cy - gb.h / 2, y1: gb.cy + gb.h / 2 } : box, gp = gb ? pad + 10 : pad;   /* under the whole block when its frame shows */
   const bw = bar.offsetWidth, bh = bar.offsetHeight;
@@ -6909,8 +7015,9 @@ function stickerBar(st) {
   if (!box || !k || liteOn() || (fg && fg.moved) || railDrag || rotDrag || xg || (S.fpanel === "text" && S.ftfield === "layer:" + st.id)) { bar.hidden = true; hideArr(); return; }
   const custom = st.kind === "custom", text = st.kind === "text", save = custom && !(st.pool && S.mine.has(st.pool)), key = `st:${st.kind}:${save}`;
   const btn = (a, ic, l, t) => `<button type="button" data-fbar="${a}"${t ? ` title="${t}"` : ""}>${ic}${l}</button>`;
-  if (barKey !== key) { barKey = key; bar.innerHTML = (text ? btn("edit", PEN_I, "Edit") + btn("font", FONT_I, "Font", "Font for this text") + btn("color", COLOR_I, "Color", "Color for this text") : custom ? btn("mkedit", PEN_I, "Edit", "Edit or enhance this sticker") : st.kind === "bdrow" ? btn("rowedit", PEN_I, "Edit row", "Names, subtext, sizes, and more stickers") : "") + btn(text ? "dup" : "dupst", DUP_I, "Duplicate", "Duplicate (Ctrl+D)") + btn("arr", LAYER_I, "Arrange", "Layer order") + btn("pos", POS_I, "Position", "Nudge and centre") + (save ? btn("savemine", STAR_I, "Save", "Save to My stickers") : "") + `<span class="fsz" title="Size on the slide, in px"></span>`; }
-  { const z = bar.querySelector(".fsz"); if (z) z.textContent = Math.round(sizeOf(st)) + " px"; }
+  if (barKey !== key) { barKey = key; bar.classList.add("two"); bar.innerHTML = `<div class="fbr">` + (text ? btn("edit", PEN_I, "Edit") + btn("font", FONT_I, "Font", "Font for this text") + btn("color", COLOR_I, "Color", "Color for this text") : custom ? btn("mkedit", PEN_I, "Edit", "Edit or enhance this sticker") : st.kind === "bdrow" ? btn("rowedit", PEN_I, "Edit row", "Names, subtext, sizes, and more stickers") : "") + sizeFieldHTML("sel") + (save ? btn("savemine", STAR_I, "Save", "Save to My stickers") : "") + `</div><div class="fbr">`
+    + btn(text ? "dup" : "dupst", DUP_I, "Duplicate", "Duplicate (Ctrl+D)") + btn("arr", LAYER_I, "Arrange", "Layer order") + btn("pos", POS_I, "Position", "Nudge and centre") + btn("next", NEXT_I, "Next slide", "A copy on the next slide, in the same place") + `<button type="button" class="del" data-fbar="delst" title="Delete (Delete key)">${TRASH}Delete</button></div>`; }
+  syncSizeFields();
   if (S.arrOpen && S.arrOpen !== st.id) hideArr();
   bar.hidden = false;
   const bw = bar.offsetWidth, bh = bar.offsetHeight, sw = fcv.clientWidth, sh = fcv.clientHeight;
@@ -7015,6 +7122,8 @@ $("#fBar").addEventListener("click", e => {
   if (b.dataset.fbar === "arr") { const st = selSticker(); if (!st) return; if (S.arrOpen === st.id) hideArr(); else { S.arrOpen = st.id; renderArr(); } return; }
   if (b.dataset.fbar === "mkedit") { const st = selSticker(); if (st) openMaker(focusSid, "photo", { sid: focusSid, id: st.id }); return; }
   if (b.dataset.fbar === "deltext") { const r = selRef(); if (r) deleteTextRef(r); return; }
+  if (b.dataset.fbar === "delst") { const st = selSticker(); if (st) removeSticker(focusSid, st.id); return; }
+  if (b.dataset.fbar === "next") { copyToNext(); return; }
   if (b.dataset.fbar === "edit") openTextEditor();
   else if (b.dataset.fbar === "dup") duplicateText(selRef());
   else deleteRowSel();
@@ -7170,16 +7279,32 @@ const grpFields = (s, grp) => Object.keys(S.ftboxes || {}).filter(f => moveGroup
    same place (a bit lower and to the right on the slide it came from). Kept in this browser, so it works across slides and posts. */
 let CLIP = null;
 function readClip() { if (CLIP) return CLIP; try { const c = JSON.parse(localStorage.getItem("carousel.clip") || "null"); if (c && Array.isArray(c.items) && c.items.length) CLIP = c; } catch (e) {} return CLIP; }
+function selItems() {   /* what's selected, as stickers to paste: several, a sticker, or a slide's text (its whole block when its frame shows) */
+  const s = S.slides[focusSid]; if (!s) return [];
+  if (multiOn()) return multiItems().flatMap(it => it.st ? [clone(it.st)] : grpFields(s, it.grp).map(f => textAsLayer(s, f)).filter(Boolean));
+  const st = selSticker(); if (st) return [clone(st)];
+  if (!S.ftsel) return [];
+  const grp = moveGroup(s, S.ftsel), fields = grp && !grp.startsWith("rows.") ? grpFields(s, grp) : [fieldPath(s, S.ftsel)];
+  return fields.map(f => textAsLayer(s, f)).filter(Boolean);
+}
 function copySel() {
   const sid = focusSid, s = S.slides[sid]; if (!s) return false;
-  let items = [];
-  if (multiOn()) items = multiItems().flatMap(it => it.st ? [clone(it.st)] : grpFields(s, it.grp).map(f => textAsLayer(s, f)).filter(Boolean));
-  else { const st = selSticker(); if (st) items = [clone(st)]; else if (S.ftsel) { const t = textAsLayer(s, fieldPath(s, S.ftsel)); if (t) items = [t]; } }
+  const items = selItems();
   if (!items.length) return false;
   const g = geoOf(sid); CLIP = { from: sid, g: { w: g.w, h: g.h }, items };
   try { localStorage.setItem("carousel.clip", JSON.stringify(CLIP)); } catch (e) {}
   toast(`${items.length === 1 ? (items[0].kind === "text" ? "Text" : (STICKERS[items[0].kind] || { label: "Sticker" }).label) : items.length + " items"} copied. Ctrl+V puts ${items.length === 1 ? "it" : "them"} on any slide`);
   return true;
+}
+/* To next slide (the selection bar): a copy of what's selected on the next slide, in the same place; you stay on this one */
+function copyToNext() {
+  const o = order(), nid = o[o.indexOf(focusSid) + 1], items = selItems();
+  if (!items.length) return;
+  if (!nid) { toast("This is the last slide. Add one, then copy to it"); return; }
+  const t = S.slides[nid], g0 = geoOf(focusSid), g1 = geoOf(nid), tmp = { stickers: items.map(x => ({ ...clone(x), id: newStickerId() })) };
+  if (g0.w !== g1.w || g0.h !== g1.h) remapStickers(tmp, g0, g1);
+  remember(nid); t.stickers = (t.stickers || []).concat(tmp.stickers); saveSlide(nid); renderBoard(new Set([nid]));
+  toast(`${items.length === 1 ? "Copied" : items.length + " copied"} to slide ${numLabel(numOf(nid))}`, () => stepHistory(nid, true));
 }
 function pasteClip() {
   const c = readClip(), sid = focusSid, s = S.slides[sid]; if (!c || !s) return;
@@ -7265,7 +7390,7 @@ function placeMulti() {
   const key = `${items.length}|${szTxt}|${anySt}`;
   if (key !== multiKey) {
     multiKey = key;
-    bar.innerHTML = `<span class="mcount">${items.length} selected</span><span class="fsz${sizes.length === 1 ? " same" : ""}" title="Their sizes on the slide, in px">${esc(szTxt)}</span>`
+    bar.innerHTML = `<span class="mcount">${items.length} selected</span><span class="fsz${sizes.length === 1 ? " same" : ""}" title="Their sizes on the slide, in px">${esc(szTxt)}</span>${sizeFieldHTML("multi")}`
       + ALIGNS.map(([a, l, d]) => `<button type="button" class="ma" data-malign="${a}" title="${l}" aria-label="${l}"><svg viewBox="0 0 24 24"><path d="${d}"/></svg></button>`).join("")
       + `<button type="button" data-malign="pc" title="Move them together to the slide's centre">Centre on slide</button>${anySt ? `<button type="button" class="del" data-mact="del" title="Delete the stickers and extra text among them" aria-label="Delete">${TRASH}</button>` : ""}`;
   }
@@ -7280,16 +7405,61 @@ $("#fMulti").addEventListener("click", e => {
 });
 fcv.addEventListener("contextmenu", e => { if (e.ctrlKey) e.preventDefault(); });   /* a Mac's Ctrl + click is a selection here, not a menu */
 /* the size of each text open in the editor, next to its Size slider */
+/* Size, as a box to type in (the selection bar, the text editor beside Font…, the bar of several): px on the slide, or % of the
+   size it was designed at (a sticker's or extra text's usual size; a slide text's size before Size of this text and its block's
+   resize). The unit button switches (kept in this browser). Enter or leaving the box sets it. */
+S.szUnit = (() => { try { return localStorage.getItem("carousel.szUnit") === "%" ? "%" : "px"; } catch (e) { return "px"; } })();
+const NEXT_I = `<svg viewBox="0 0 24 24"><rect x="3" y="6" width="11" height="12" rx="2"/><path d="M17 9l4 3-4 3M14 12h7"/></svg>`;
+const sizeFieldHTML = where => `<span class="fszw" data-szw="${where}"><input class="fszin" type="text" inputmode="decimal" autocomplete="off" aria-label="Size" title="Size: type a new one, then Enter"><button type="button" class="fszu" data-szunit title="px or %">${S.szUnit}</button></span>`;
+function sizeHandle(where) {   /* {px, pct, set(v, unit)} for the selection ("sel"), the open text ("edit"), or several ("multi") */
+  const s = focusSid && S.slides[focusSid]; if (!s) return null;
+  const forSticker = st => { const base = (STICKERS[st.kind] || {}).size || 100; return { px: sizeOf(st), pct: sizeOf(st) / base * 100, set: (v, u) => { st.size = Math.round(clamp(u === "%" ? base * v / 100 : v, MIN_SIZE, MAX_SIZE(st))); } }; };
+  const forField = ref => {
+    const path = fieldPath(s, ref), b = path && (S.ftboxes || {})[path]; if (!b || !b.size) return null;
+    const grp = moveGroup(s, ref), bk = grp && !grp.startsWith("rows.") ? scaleOf(s.layout, grp) : 1, sz = fieldSz(s, path);
+    return { px: b.size, pct: sz * bk * 100, set: (v, u) => { const k = u === "%" ? v / 100 / bk : sz * v / b.size; setFieldSz(s, path, Math.abs(k - 1) < 0.002 ? 1 : +clamp(k, 0.05, 20).toFixed(4)); } };
+  };
+  if (where === "multi") {
+    const its = multiItems(); if (!its.length) return null;
+    return { px: Math.max(...its.map(i => i.size || 0)), pct: null, set: (v, u) => its.forEach(it => {
+      if (it.st) forSticker(it.st).set(v, u);
+      else if (it.size) { const k = scaleOf(s.layout, it.grp), nk = u === "%" ? v / 100 : k * v / it.size; s.layout = s.layout || {}; s.layout.scale = { ...(s.layout.scale || {}), [it.grp]: +clamp(nk, 0.05, 20).toFixed(4) }; }
+    }) };
+  }
+  const ref = where === "edit" ? S.ftfield : selRef();
+  if (where === "sel") { const st = selSticker(); if (st) return forSticker(st); }
+  if (!ref) return null;
+  if (ref.startsWith("layer:")) { const st = (s.stickers || []).find(t => t.id === ref.slice(6)); return st ? forSticker(st) : null; }
+  return forField(ref);
+}
+function syncSizeFields() {
+  $$("#focusDlg .fszw").forEach(w => {
+    const h = sizeHandle(w.dataset.szw), inp = w.querySelector(".fszin"), u = w.querySelector(".fszu");
+    w.hidden = !h; if (!h) return;
+    const unit = w.dataset.szw === "multi" && S.szUnit === "%" ? "%" : S.szUnit; u.textContent = unit;
+    if (document.activeElement !== inp) inp.value = unit === "%" ? (h.pct == null ? "" : Math.round(h.pct)) : Math.round(h.px);
+  });
+}
+function applySizeField(inp) {
+  const w = inp.closest(".fszw"), h = w && sizeHandle(w.dataset.szw), v = parseFloat(String(inp.value).replace(",", "."));
+  if (!h || !Number.isFinite(v) || v <= 0) { syncSizeFields(); return; }
+  remember(focusSid, "szin"); h.set(v, S.szUnit); saveSlide(focusSid); scheduleDraw(focusSid);
+  clearTimeout(texCardT); const sid = focusSid; texCardT = setTimeout(() => renderBoard(new Set([sid])), 400);
+}
+document.addEventListener("change", e => { if (e.target.classList && e.target.classList.contains("fszin")) applySizeField(e.target); });
+document.addEventListener("keydown", e => { if (e.target.classList && e.target.classList.contains("fszin") && e.key === "Enter") { e.preventDefault(); e.target.blur(); } }, true);   /* leaving the box sets it (once) */
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("[data-szunit]"); if (!b) return;
+  e.preventDefault(); e.stopPropagation(); S.szUnit = S.szUnit === "px" ? "%" : "px"; try { localStorage.setItem("carousel.szUnit", S.szUnit); } catch (err) {}
+  syncSizeFields();
+}, true);
 function syncSizeChips() {
   const s = focusSid && S.slides[focusSid]; if (!s) return;
   $$("#fPanel .fsz[data-szref]").forEach(z => {
     const r = z.dataset.szref, st = r.startsWith("layer:") ? (s.stickers || []).find(t => t.id === r.slice(6)) : null, b = st ? null : (S.ftboxes || {})[fieldPath(s, r)];
     const v = st ? sizeOf(st) : b && b.size; z.textContent = v ? `· ${Math.round(v)} px` : "";
   });
-  $$("#fPanel .fszb").forEach(z => {   /* beside Font… : the open text's size */
-    const r = S.ftfield, st = r && r.startsWith("layer:") ? (s.stickers || []).find(t => t.id === r.slice(6)) : null, b = !r || st ? null : (S.ftboxes || {})[fieldPath(s, r)];
-    const v = st ? sizeOf(st) : b && b.size; z.textContent = v ? `${Math.round(v)} px` : "";
-  });
+  syncSizeFields();
 }
 function deleteRowSel() {
   const sid = focusSid, s = S.slides[sid], m = String(S.ftsel || "").match(/^text\.rows\.(\d+)\./); if (!s || !m) return;
@@ -9282,7 +9452,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
+window.__t = { S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, smartSnap, copyToNext, sizeHandle, syncSizeFields, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
