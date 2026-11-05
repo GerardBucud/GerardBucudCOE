@@ -746,7 +746,10 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .ffont button[aria-checked="true"]{background:var(--accent);color:#fff}
 .ffont p.fcat{margin:8px 8px 2px;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
 .infob svg{width:20px;height:20px}
-#helpDlg,#keysDlg{width:min(620px,calc(100vw - 24px))}
+#helpDlg,#keysDlg,#postsDlg{width:min(620px,calc(100vw - 24px))}
+.prow{display:grid;grid-template-columns:1fr auto auto;grid-template-areas:"name open del" "info info info";gap:4px 8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.prow input{grid-area:name;min-width:0}.prow .hint{grid-area:info;margin:0;font-size:12px}.prow [data-popen]{grid-area:open}.prow [data-pdel]{grid-area:del}
+.prow.cur input{border-color:var(--accent)}
 .helpb h4{margin:14px 0 6px}.helpb h4:first-child{margin-top:0}.helpb ul{margin:0;padding-left:18px;display:grid;gap:6px;line-height:1.45}
 #keysList h4{margin:14px 0 4px}
 .krow{display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
@@ -1059,7 +1062,7 @@ details.gsec[open]{padding-bottom:14px}
   <label class="sr" for="postSel">Post</label>
   <select id="postSel" class="ctl" hidden></select>
   <label class="ratiobox" hidden><span>Ratio</span><select id="ratioSel" class="ctl" title="The size of this post's slides. A slide can have its own in the large view's download menu."></select></label>
-  <div class="more"><button id="newPost" class="btn ghost sm" hidden aria-expanded="false">New post</button></div>
+  <div class="more"><button id="newPost" class="btn ghost sm" hidden aria-expanded="false" title="New post, or rename and delete posts">Posts</button></div>
   <button id="refPost" class="btn ghost sm refb" title="Make a new carousel patterned after posts you like">References</button>
   <button id="capPost" class="btn ghost sm capb" title="Hooky captions with hashtags for your carousels">Captions</button>
   <span class="grow"></span>
@@ -1299,6 +1302,12 @@ details.gsec[open]{padding-bottom:14px}
   </div>
 </dialog>
 
+<dialog id="postsDlg" aria-labelledby="postsTitle">
+  <div class="dlg-h"><h3 id="postsTitle">Your posts</h3><span class="grow"></span>
+    <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="dlg-b"><p class="hint" style="margin:0 0 6px">Type a new name to rename a post (Enter or tap away saves). Delete asks for a second tap; the photos stay in your library.</p>
+    <div id="postsList"></div></div>
+</dialog>
 <dialog id="keysDlg" aria-labelledby="keysTitle">
   <div class="dlg-h"><h3 id="keysTitle">Keyboard shortcuts</h3><span class="grow"></span>
     <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
@@ -4473,7 +4482,7 @@ document.addEventListener("click", e => {
   if (b.id === "foldAll") { const o = order(), all = o.every(id => S.folded.has(id)); o.forEach(id => setFold(id, !all)); saveFolds(); return; }
   if (b.hasAttribute("data-close")) { b.closest("dialog").close(); return; }
   if (b.id === "tagBtn") return tagPhotos([...S.photos.keys()].filter(id => !Array.isArray(S.photos.get(id).tags)), true);
-  if (b.dataset.newpost) { closeMenus(); return newPost(b.dataset.newpost); }
+  if (b.dataset.newpost) { closeMenus(); const k = b.dataset.newpost; if (k === "manage") return openPosts(); if (k === "rename") { window.scrollTo({ top: 0 }); return startRename(); } return newPost(k); }
   if (b.id === "dlAll") return exportAll();
   if (b.id === "applyAll") return applyAll();
   if (b.id === "addSlide") return addSlide($("#addType").value);
@@ -4552,7 +4561,7 @@ function toggleNewMenu(btn) {
   closeMenus();
   if (open) return;
   const m = document.createElement("div"); m.className = "menu"; m.style.right = "auto"; m.style.left = "0";
-  m.innerHTML = `<button data-newpost="blank">Blank post</button>${S.post ? `<button data-newpost="copy">Copy of this post</button>` : ""}`;
+  m.innerHTML = `<button data-newpost="blank">New blank post</button>${S.post ? `<button data-newpost="copy">Copy of this post</button><button data-newpost="rename">Rename this post</button>` : ""}<button data-newpost="manage">All posts: rename, delete…</button>`;
   btn.after(m); btn.setAttribute("aria-expanded", "true");
 }
 /* A slide moves together with its versions. A version moves inside its group; moving it to the front makes it the main one. */
@@ -9558,7 +9567,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, groupSel, ungroupSel, groupOfSel, setShade, shadeState, smartSnap, copyToNext, sizeHandle, syncSizeFields, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
+window.__t = { S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, openPosts, renamePost, removePost, groupSel, ungroupSel, groupOfSel, setShade, shadeState, smartSnap, copyToNext, sizeHandle, syncSizeFields, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
@@ -10202,14 +10211,52 @@ async function deletePost(btn) {
     setTimeout(() => { if (btn.isConnected) { btn.dataset.armed = ""; btn.textContent = "Delete this post"; } }, 5000);
     return;
   }
-  const pid = S.pid, sids = Object.keys(S.slides);
-  if (S.unsubSlides) { S.unsubSlides(); S.unsubSlides = null; }
-  for (const sid of sids) await removeDoc(`posts/${pid}/slides/${sid}`);
-  await removeDoc(`posts/${pid}`);
-  S.posts = S.posts.filter(p => p.id !== pid); S.pid = null; S.post = null; S.slides = {};
-  if (S.posts[0]) selectPost(S.posts[0].id); else renderEmpty();
+  await removePost(S.pid);
   toast("Post deleted. Its photos stay in your library");
 }
+/* a post and its slides, gone (the open one or any other); the photos stay in the library */
+async function removePost(pid) {
+  let sids = [];
+  if (pid === S.pid) { sids = Object.keys(S.slides); if (S.unsubSlides) { S.unsubSlides(); S.unsubSlides = null; } }
+  else if (S.local) sids = Object.keys((window.__LOCAL_STATE__.slides || {})[pid] || {});
+  else { try { const snap = await S.db.collection(`posts/${pid}/slides`).get(); sids = snap.docs.map(d => d.id); } catch (e) { S.errors++; setStatus(); } }
+  for (const sid of sids) await removeDoc(`posts/${pid}/slides/${sid}`);
+  await removeDoc(`posts/${pid}`);
+  S.posts = S.posts.filter(p => p.id !== pid);
+  if (pid === S.pid) { S.pid = null; S.post = null; S.slides = {}; if (S.posts[0]) selectPost(S.posts[0].id); else renderEmpty(); }
+  else renderMeta();
+}
+/* Posts → All posts: every post, newest first, with its name to rename in place, Open and Delete (two taps) */
+function renderPosts() {
+  const list = [...S.posts].sort((a, b) => ((b.id === S.pid ? S.post : b.data).updatedAt || 0) - ((a.id === S.pid ? S.post : a.data).updatedAt || 0));
+  $("#postsList").innerHTML = list.map(p => {
+    const m = (p.id === S.pid ? S.post : p.data) || {}, n = (m.order || []).length, cur = p.id === S.pid;
+    return `<div class="prow${cur ? " cur" : ""}"><input class="ctl" data-pren="${esc(p.id)}" value="${esc(m.title || "")}" maxlength="80" placeholder="Untitled post" aria-label="Post name">
+      <button type="button" class="btn ghost sm" data-popen="${esc(p.id)}"${cur ? " disabled" : ""}>${cur ? "Open now" : "Open"}</button><button type="button" class="btn ghost sm danger" data-pdel="${esc(p.id)}">Delete</button>
+      <p class="hint">${n} slide${n === 1 ? "" : "s"}${m.updatedAt ? " · changed " + new Date(m.updatedAt).toLocaleDateString() : ""}</p></div>`;
+  }).join("") || `<p class="hint">No posts yet.</p>`;
+}
+function openPosts() { renderPosts(); $("#postsDlg").showModal(); }
+function renamePost(pid, v) {
+  v = String(v || "").trim().slice(0, 80);
+  if (!v) { renderPosts(); return; }
+  if (pid === S.pid) { if (v !== S.post.title) { setPostTitle(v); toast("Post renamed"); } return; }
+  const p = S.posts.find(x => x.id === pid); if (!p || p.data.title === v) return;
+  p.data = { ...p.data, title: v }; queueSave(`posts/${pid}`, () => p.data, 200); renderMeta();
+  toast("Post renamed");
+}
+$("#postsDlg").addEventListener("change", e => { const el = e.target.closest("[data-pren]"); if (el) renamePost(el.dataset.pren, el.value); });
+$("#postsDlg").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.matches("[data-pren]")) { e.preventDefault(); e.target.blur(); } });
+$("#postsDlg").addEventListener("click", async e => {
+  const o = e.target.closest("[data-popen]"), d = e.target.closest("[data-pdel]");
+  if (o) { $("#postsDlg").close(); selectPost(o.dataset.popen); window.scrollTo({ top: 0 }); return; }
+  if (!d) return;
+  if (d.dataset.armed !== "1") { d.dataset.armed = "1"; d.textContent = "Tap again to delete"; setTimeout(() => { if (d.isConnected) { d.dataset.armed = ""; d.textContent = "Delete"; } }, 5000); return; }
+  const name = (S.posts.find(x => x.id === d.dataset.pdel) || {}).data;
+  d.disabled = true; d.textContent = "Deleting…";
+  await removePost(d.dataset.pdel); renderPosts();
+  toast(`“${(name && name.title) || "Post"}” deleted. Its photos stay in your library`);
+});
 function renderEmpty() {
   $("#main").innerHTML = `<div class="empty"><h2>No posts yet</h2><p>Start one here, or ask Claude to set up your next carousel.</p><p><button class="btn primary" data-newpost="blank">Start a post</button></p></div>`;
   renderMeta(); updateApplyAll();
