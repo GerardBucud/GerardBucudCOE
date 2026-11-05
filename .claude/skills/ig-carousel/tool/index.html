@@ -1325,9 +1325,9 @@ const COLW = 1800;   /* landscape: the text column is as wide as a portrait slid
 const moveOf = (L, k) => { const m = L && L.move && L.move[k]; return Array.isArray(m) ? [clamp(+m[0] || 0, -W, W), clamp(+m[1] || 0, -H, H)] : [0, 0]; };
 /* ...and resized with the large view's corner handles: layout.scale = {title|tip|a|b|caption: k} (0.5 to 2.5), around the block's
    anchor (its top, on the side it's aligned to). While TXF is set, txt draws scaled around it and records its boxes scaled. */
-const scaleOf = (L, k) => { const v = L && L.scale && +L.scale[k]; return v > 0 ? clamp(v, 0.5, 2.5) : 1; };
+const scaleOf = (L, k) => { const v = L && L.scale && +L.scale[k]; return v > 0 ? clamp(v, 0.1, 10) : 1; };
 let TXF = null;
-const spreadOf = (L, k) => { const v = L && L.spread && +L.spread[k]; return v > 0 ? clamp(v, 0.5, 3) : 1; };   /* a block's line spacing: its texts spread from its top */
+const spreadOf = (L, k) => { const v = L && L.spread && +L.spread[k]; return v > 0 ? clamp(v, 0.1, 10) : 1; };   /* a block's line spacing: its texts spread from its top */
 const withScale = (L, k, ax, ay, fn) => { const sc = scaleOf(L, k), sy = spreadOf(L, k); TXF = sc !== 1 || sy !== 1 ? { ax, ay, k: sc, sy } : null; try { fn(); } finally { TXF = null; } };
 let ROWDRAG = null;   /* {s, i, dy}: draw row i of slide s dy pixels off its place */
 function setCol(side) { CX0 = side === "right" ? W - COLW + M : M; CX1 = CX0 + COLW - 2 * M; }
@@ -1527,7 +1527,7 @@ let FOV = null;
 /* TST: slide.tstyle = {field path: {ls: line spacing ×, cs: extra letter spacing (× size), ws: extra word spacing (× size), sz: the
    text's own size × (one text of a block bigger or smaller, from its alignment point and first line's top)}}; LSY: each
    text's first line's top while a slide renders (its other lines spread from it) */
-let TST = null, LSY = null;
+let TST = null, LSY = null, HIDE = null;   /* HIDE: the header parts this slide leaves out (slide.hide) */
 function txt(ctx, str, x, capTop, o) {
   if (UNDER) flushUnder(ctx);
   if (FOV && TF && FOV[TF] && !o.fov && str) {
@@ -2003,8 +2003,8 @@ function spot(ctx, cx, cy, r, a) {
 
 /* ---------- shared pieces ---------- */
 function drawHeader(ctx, post, x0 = M, x1 = W - M) {
-  TF = "post.series"; txt(ctx, up(post.series), x0, 150, { size: 41, weight: 700, track: -0.05 });
-  TF = "post.subject"; txt(ctx, up(post.subject), x1, 150, { size: 41, weight: 400, track: -0.05, align: "right", alpha: 0.8 });
+  TF = "post.series"; if (!(HIDE && HIDE["post.series"])) txt(ctx, up(post.series), x0, 150, { size: 41, weight: 700, track: -0.05 });
+  TF = "post.subject"; if (!(HIDE && HIDE["post.subject"])) txt(ctx, up(post.subject), x1, 150, { size: 41, weight: 400, track: -0.05, align: "right", alpha: 0.8 });
   TF = null;
 }
 function drawFooter(ctx, post, t, idx, total, x0 = M, x1 = W - M) {
@@ -2096,8 +2096,8 @@ function drawCustom(ctx, st, bw, bh) {
    space between items (× size), st.color = the text color (else the slide's). Each picture keeps its shape inside a box as tall as size. */
 const bdItemAr = it => it.vec && it.vec.vb ? it.vec.vb[0] / it.vec.vb[1] : clamp(+it.ar || 1, 0.2, 5);
 function bdRowGeo(ctx, post, st, size) {
-  const items = (st.items || []).filter(Boolean).slice(0, 12), ts = clamp(+st.ts || 1, 0.5, 2.5), f = clamp(size * 0.16, 18, 90) * ts, fo = f * 0.8;
-  const gap = clamp(st.gap == null ? 0.25 : +st.gap, 0, 2) * size;
+  const items = (st.items || []).filter(Boolean).slice(0, 12), ts = clamp(+st.ts || 1, 0.1, 10), f = clamp(size * 0.16, 6, 600) * ts, fo = f * 0.8;
+  const gap = clamp(st.gap == null ? 0.25 : +st.gap, 0, 10) * size;
   const cells = items.map(it => {
     const pw = size * clamp(bdItemAr(it), 0.5, 1.8), cw = Math.max(pw, size * 0.9);
     const nl = it.name ? wrap(ctx, up(fillR(it.name, post)), cw, f, 700, -0.02).slice(0, 2) : [], ol = it.note ? wrap(ctx, up(fillR(it.note, post)), cw, fo, 400, -0.01).slice(0, 2) : [];
@@ -2129,7 +2129,7 @@ function drawStickers(ctx, post, s, hiliteId) {
   (s.stickers || []).forEach(st => {
     const P = STICKERS[st && st.kind]; if (!P) return;
     const cx = clamp(st.x ?? 0.5, 0, 1) * W, cy = clamp(st.y ?? 0.5, 0, 1) * H;
-    const size = clamp(+st.size || P.size, 30, P.type === "custom" ? 1800 : P.type === "bdrow" ? 900 : 700), rot = clamp(+st.rot || 0, -180, 180) * Math.PI / 180;
+    const size = clamp(+st.size || P.size, 8, P.type === "custom" ? 8000 : 5000), rot = clamp(+st.rot || 0, -180, 180) * Math.PI / 180;
     let bw = size, bh = size;
     ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot);
     if (P.type === "pill") {
@@ -2143,11 +2143,11 @@ function drawStickers(ctx, post, s, hiliteId) {
       if (icon) { drawIcon(ctx, icon, x + is / 2, 0, is, fg, false); x += is + gap; }
       txt(ctx, label, x, -capH(fs) / 2, { size: fs, weight: 700, track: -0.05, color: fg });
     } else if (P.type === "text") {
-      const wt = +st.w === 400 ? 400 : 700, lines = balance(up(fillR(st.label ?? P.text, post)).split(/\n/).map(x => x.trim())).filter(x => plainText(x).trim()), lh = size * 1.06 * (+st.lh > 0 ? clamp(+st.lh, 0.5, 3) : 1);   /* lh: its line spacing */
-      const fk = FAMS[st.font] ? st.font : null, ws = Number.isFinite(+st.ws) ? clamp(+st.ws, -0.3, 1.5) : 0;   /* ws: extra word spacing (× size) */   /* a text layer's own font (Nimbus Sans unless set) */
+      const wt = +st.w === 400 ? 400 : 700, lines = balance(up(fillR(st.label ?? P.text, post)).split(/\n/).map(x => x.trim())).filter(x => plainText(x).trim()), lh = size * 1.06 * (+st.lh > 0 ? clamp(+st.lh, 0.1, 10) : 1);   /* lh: its line spacing */
+      const fk = FAMS[st.font] ? st.font : null, ws = Number.isFinite(+st.ws) ? clamp(+st.ws, -1, 10) : 0;   /* ws: extra word spacing (× size) */   /* a text layer's own font (Nimbus Sans unless set) */
       bh = inFam(fk, () => capH(size)) + Math.max(0, lines.length - 1) * lh;
       ctx.shadowColor = "rgba(0,0,0,.3)"; ctx.shadowBlur = size * 0.12;
-      const tr = Number.isFinite(+st.tr) ? clamp(+st.tr, -0.15, 0.5) : -0.05, al = st.al === "left" || st.al === "right" ? st.al : "center";
+      const tr = Number.isFinite(+st.tr) ? clamp(+st.tr, -0.5, 10) : -0.05, al = st.al === "left" || st.al === "right" ? st.al : "center";
       bw = Math.max(size, ...lines.map(l => inFam(fk, () => withCS(tr + 0.05, () => richW(ctx, l, size, wt, -0.05))) + (plainText(l).match(/ /g) || []).length * ws * size));   /* tr: -0.05 is the font's own spacing, the rest is extra */
       const ax = al === "left" ? -bw / 2 : al === "right" ? bw / 2 : 0;   /* lines line up inside the box; the box stays centered on x, y */
       TXK = "st:" + st.id; lines.forEach((l, i) => txt(ctx, l, ax, -bh / 2 + i * lh, { size, weight: wt, track: -0.05, cs: tr + 0.05, align: al, color: st.color || INK, fam: fk, ws })); TXK = null;
@@ -3200,7 +3200,7 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
     for (const [p, on] of Object.entries((post && post.tcase) || {})) if (on) add(pick({ post }, p));
     for (const st of s0.stickers || []) if (st && st.tcase) add(st.label); }
   OVERLAY = !!s0.overlay; KEEP = keep; PH = []; WHOLE = !!s.whole; RENDER_SCALE = forExport ? 1 : scale; TB = {}; TF = null; EXPORTING = !!forExport;
-  BG = bgOf(s); HL = HEXCOL.test(s.hl) ? s.hl : null; DISP = famOf(post, s); FOV = s.fonts && typeof s.fonts === "object" ? s.fonts : null; TST = s.tstyle && typeof s.tstyle === "object" ? s.tstyle : null; LSY = {};
+  BG = bgOf(s); HL = HEXCOL.test(s.hl) ? s.hl : null; DISP = famOf(post, s); FOV = s.fonts && typeof s.fonts === "object" ? s.fonts : null; TST = s.tstyle && typeof s.tstyle === "object" ? s.tstyle : null; LSY = {}; HIDE = s.hide && typeof s.hide === "object" ? s.hide : null;
   INK = s.ink === "black" ? "#111111" : s.ink === "white" ? "#ffffff" : BG ? inkOn(BG.c2 ? mixHex(BG.c1, BG.c2) : BG.c1) : "#ffffff";   /* auto: dark text on a light background */
   if (OVERLAY && !KEEP) { if (!forExport) checker(ctx); } else if (BG) paintBg(ctx, 0, 0, W, H); else { ctx.fillStyle = "#100c0b"; ctx.fillRect(0, 0, W, H); }
   const d = design(ctx, post, s);
@@ -3272,9 +3272,10 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
     }
     ctx.restore();
   }
-  d.photos = PH.map(p => ({ key: (p.slot && FRAME_SLOTS.find(k => s[k] === p.slot)) || null, x: p.x, y: p.y, w: p.w, h: p.h, contain: p.contain })).filter(p => p.key);
+  const empties = (TEMPLATES[s.type] ? TEMPLATES[s.type].slots : ["img"]).filter(k => !s[k]);   /* empty spots are drawn in their slots' order */
+  d.photos = PH.map(p => p.slot ? { key: FRAME_SLOTS.find(k => s[k] === p.slot) || null, x: p.x, y: p.y, w: p.w, h: p.h, contain: p.contain } : { key: empties.shift() || null, empty: true, x: p.x, y: p.y, w: p.w, h: p.h }).filter(p => p.key);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  OVERLAY = false; KEEP = false; PH = []; WHOLE = false; BG = null; HL = null; INK = "#ffffff"; DISP = null; EXPORTING = false; TXR = null; STK = false; NOTX = false; FOV = null; TST = null; LSY = null;
+  OVERLAY = false; KEEP = false; PH = []; WHOLE = false; BG = null; HL = null; INK = "#ffffff"; DISP = null; EXPORTING = false; TXR = null; STK = false; NOTX = false; FOV = null; TST = null; LSY = null; HIDE = null;
   return d;
 }
 
@@ -4340,7 +4341,9 @@ document.addEventListener("change", e => {
     const r = document.getElementById(el.dataset.for); if (!r) return;
     const n = parseFloat(String(el.value).replace(",", ".").replace(/[−–]/g, "-"));
     if (!Number.isFinite(n)) { el.value = toBox(r.dataset.fmt, +r.value); return; }
-    r.value = clamp(fromBox(r.dataset.fmt, n), +r.min, +r.max);
+    const want = fromBox(r.dataset.fmt, n);
+    if (r.dataset.fmt === "px" || r.dataset.fmt === "x") { if (want > +r.max) r.max = want; if (want < +r.min && +r.min > 0) r.min = Math.max(0.01, want); }   /* a size or spacing typed past the slider's end: the slider reaches it */
+    r.value = clamp(want, +r.min, +r.max);
     el.value = toBox(r.dataset.fmt, +r.value);
     r.dispatchEvent(new Event("input", { bubbles: true }));
     hideBubble();
@@ -4698,7 +4701,7 @@ function stickerHTML(sid, s) {
     return `<div class="rowbox"><div class="rowhead"><span>${esc(P.label)}</span><button class="btn ghost sm" data-act="delsticker" data-i="${i}">Remove</button></div>
       <div class="two">${rng(sid, `stickers.${i}.x`, "Left / right", 0, 1, 0.005, st.x ?? 0.5, "pct")}${rng(sid, `stickers.${i}.y`, "Up / down", 0, 1, 0.005, st.y ?? 0.8, "pct")}</div>
       ${isText ? `<div><label class="lbl" for="${sid}-st${i}-t">Text (**bold**, Enter = new line)</label><textarea class="ctl" id="${sid}-st${i}-t" data-f="stickers.${i}.label">${esc(st.label ?? P.text)}</textarea></div>` : ""}
-      <div class="two">${rng(sid, `stickers.${i}.size`, isText ? "Text size" : "Size", 40, 600, 2, st.size || P.size, "px")}${rng(sid, `stickers.${i}.rot`, "Rotate", -180, 180, 1, st.rot || 0, "deg")}</div>
+      <div class="two">${rng(sid, `stickers.${i}.size`, isText ? "Text size" : "Size", MIN_SIZE, 2000, 1, st.size || P.size, "px")}${rng(sid, `stickers.${i}.rot`, "Rotate", -180, 180, 1, st.rot || 0, "deg")}</div>
       <div class="two">${color}${extra}</div>${rowFoot(sid, i, st)}</div>`;
   }).join("");
   return `${list}<div class="actions" style="margin:0"><button class="btn sm" data-act="addsticker">Add sticker</button><button class="btn sm" data-act="addbdrow" title="Pictures with a bold name and a subtext under each, on any slide">Breakdown row…</button></div><p class="hint" style="margin:0">Drag a sticker on the slide to move it. On a phone, tap the slide to open it large: there you can drag, pinch to resize, twist to rotate, and drop a sticker on the bin to delete it.</p>`;
@@ -4711,8 +4714,8 @@ function bdRowHTML(sid, st, i) {
     ${items.map((it, j) => `<div class="bdrowitem"><i class="bdth">${thumb(it)}</i><div class="two"><div><label class="lbl" for="${sid}-st${i}-r${j}n">Name (bold)</label><input class="ctl" id="${sid}-st${i}-r${j}n" data-f="stickers.${i}.items.${j}.name" value="${esc(it.name)}"></div><div><label class="lbl" for="${sid}-st${i}-r${j}t">Subtext</label><input class="ctl" id="${sid}-st${i}-r${j}t" data-f="stickers.${i}.items.${j}.note" value="${esc(it.note)}"></div></div>
       <div class="bdrowtools"><button class="btn ghost sm" data-act="rowmove" data-i="${i}" data-j="${j}" data-d="-1" aria-label="Move left"${j ? "" : " disabled"}>←</button><button class="btn ghost sm" data-act="rowmove" data-i="${i}" data-j="${j}" data-d="1" aria-label="Move right"${j < items.length - 1 ? "" : " disabled"}>→</button><button class="btn ghost sm" data-act="rowdel" data-i="${i}" data-j="${j}">Remove</button></div></div>`).join("")}
     <div class="actions"><button class="btn sm" data-act="rowadd" data-i="${i}">Add stickers to this row</button></div>
-    <div class="two">${rng(sid, `stickers.${i}.size`, "Picture size (all)", 40, 900, 2, st.size || 240, "px")}${rng(sid, `stickers.${i}.ts`, "Text size", 0.5, 2.5, 0.05, st.ts || 1, "x")}</div>
-    <div class="two">${rng(sid, `stickers.${i}.gap`, "Space between", 0, 2, 0.05, st.gap ?? 0.25, "x")}<div><label class="lbl" for="${sid}-st${i}-c">Text color</label><select class="ctl" id="${sid}-st${i}-c" data-f="stickers.${i}.color"><option value=""${cur ? "" : " selected"}>The slide's</option>${STICKER_COLORS.map(([v, l]) => `<option value="${v}"${cur === v ? " selected" : ""}>${l}</option>`).join("")}</select></div></div>
+    <div class="two">${rng(sid, `stickers.${i}.size`, "Picture size (all)", MIN_SIZE, 2400, 1, st.size || 240, "px")}${rng(sid, `stickers.${i}.ts`, "Text size", 0.1, 6, 0.05, st.ts || 1, "x")}</div>
+    <div class="two">${rng(sid, `stickers.${i}.gap`, "Space between", 0, 6, 0.05, st.gap ?? 0.25, "x")}<div><label class="lbl" for="${sid}-st${i}-c">Text color</label><select class="ctl" id="${sid}-st${i}-c" data-f="stickers.${i}.color"><option value=""${cur ? "" : " selected"}>The slide's</option>${STICKER_COLORS.map(([v, l]) => `<option value="${v}"${cur === v ? " selected" : ""}>${l}</option>`).join("")}</select></div></div>
     <div class="two">${rng(sid, `stickers.${i}.x`, "Left / right", 0, 1, 0.005, st.x ?? 0.5, "pct")}${rng(sid, `stickers.${i}.y`, "Up / down", 0, 1, 0.005, st.y ?? 0.8, "pct")}</div>
     ${rowFoot(sid, i, st)}</div>`;
 }
@@ -4886,7 +4889,8 @@ function dupSticker(sid, id) {
    A custom sticker on a slide carries all it needs ({kind: "custom", name, ar, src | vec}: an image, or vector paths that take the
    sticker's color), so it keeps working even if it's taken out of My stickers. My stickers (db "stickers/{id}") is the pool to add
    them again from; saving to it is optional. */
-const MAX_SIZE = st => st && st.kind === "custom" ? 1800 : st && st.kind === "bdrow" ? 900 : 600;
+const MAX_SIZE = st => st && st.kind === "custom" ? 8000 : 5000;   /* as big as you like: well past the slide's own size */
+const MIN_SIZE = 8;
 const mineDocPath = id => `stickers/${id}`;
 const saveMine = id => queueSave(mineDocPath(id), () => S.mine.get(id), 300);
 const VEC_D = /^[MmLlHhVvCcSsQqTtAaZz0-9eE.,+\-\s]*$/;
@@ -5504,6 +5508,12 @@ fcv.addEventListener("pointerdown", e => {
   if (liteOn()) return liteDown(e);
   try { fcv.setPointerCapture(e.pointerId); } catch (err) {}
   const p = frameXY(fcv, e, geoOf(focusSid)); fpts.set(e.pointerId, p);
+  lastPtr = e.pointerType;
+  if (e.pointerType === "touch" && fpts.size === 1) {   /* a second quick tap here, if it lifts without moving, is a double tap (fUp) */
+    const now = Date.now();
+    tapStart = { id: e.pointerId, x: e.clientX, y: e.clientY, t: now, p, dbl: !S.crop && now - lastTouchTap.t < 360 && Math.hypot(e.clientX - lastTouchTap.x, e.clientY - lastTouchTap.y) < 40 };
+    lastTouchTap.t = 0;
+  } else tapStart = null;
   if (S.crop) { cropDown(e, p); return; }
   if (fpts.size === 1 && (e.ctrlKey || e.metaKey)) { fpts.delete(e.pointerId); multiClick(s, p); return; }
   if (fpts.size === 1 && multiOn()) {
@@ -5518,6 +5528,8 @@ fcv.addEventListener("pointerdown", e => {
     fg = null; fgRem = false; pselPrev = S.psel;
     S.fsel = st ? st.id : null; S.ftsel = tf;
     const ph = !st && !tf ? photoAt(p) : null;   /* the photo under the press, when nothing else is */
+    const em = !st && !tf && !ph ? (S.fphotos || []).find(f => f.empty && p[0] >= f.x && p[0] <= f.x + f.w && p[1] >= f.y && p[1] <= f.y + f.h) : null;
+    if (em && !(S.fpanel === "text" && S.ftfield)) { S.fsel = null; S.ftsel = null; S.psel = null; fg = { mode: "addph", key: em.key, c0: [e.clientX, e.clientY] }; drawFocus(); return; }
     if (!ph || st || tf) S.psel = null;
     if (st) fDragFrom(st, p, [e.clientX, e.clientY]);
     else if (grab) fg = textGrab(s, grp, tf, p, e);
@@ -5584,14 +5596,27 @@ fcv.addEventListener("pointermove", e => {
     fRemember();
     let r = fg.r0 + (ang - fg.a0) * 180 / Math.PI;
     r = ((r % 360) + 540) % 360 - 180; if (Math.abs(r) < 4) r = 0;
-    st.size = Math.round(clamp(fg.s0 * d / fg.d0, 40, MAX_SIZE(st))); st.rot = Math.round(r);
+    st.size = Math.round(clamp(fg.s0 * d / fg.d0, MIN_SIZE, MAX_SIZE(st))); st.rot = Math.round(r);
     { const cx = fg.c0[0] + (a[0] + b[0]) / 2 - fg.m0[0], cy = fg.c0[1] + (a[1] + b[1]) / 2 - fg.m0[1], [sx, sy] = snapMid(cx, cy, fg.g); st.x = clamp((cx + sx) / fg.g.w, 0, 1); st.y = clamp((cy + sy) / fg.g.h, 0, 1); }
     fg.moved = true;
   } else return;
   scheduleDraw(focusSid);
 });
+let lastPtr = "", tapStart = null; const lastTouchTap = { t: 0, x: 0, y: 0 };
 function fUp(e) {
   if (lpts.has(e.pointerId)) return liteUp(e);
+  if (tapStart && tapStart.id === e.pointerId) {
+    const t = tapStart; tapStart = null;
+    if (e.type === "pointerup" && Date.now() - t.t < 320 && Math.hypot(e.clientX - t.x, e.clientY - t.y) < 12 && !(fg && fg.moved) && fpts.size <= 1) {
+      if (t.dbl) {   /* a double tap: crop the main photo (the one under the finger, else the slide's first), and nothing else */
+        const key = (photoAt(t.p) || {}).key || FRAME_SLOTS.find(k => photoGeo(k));
+        fpts.delete(e.pointerId); fg = null; fgRem = false; $("#fTrash").hidden = true;
+        if (key) { if (S.fpanel === "text" && S.ftfield) { commitTyping(); S.fpanel = false; S.ftfield = null; renderFPanel(); } S.fsel = null; S.ftsel = null; S.fmulti = []; S.psel = null; enterCrop(key); }
+        return;
+      }
+      Object.assign(lastTouchTap, { t: Date.now(), x: e.clientX, y: e.clientY });   /* the first half of a double tap */
+    }
+  }
   if (!fpts.has(e.pointerId)) return;
   fpts.delete(e.pointerId);
   if (S.guides && !fpts.size) { S.guides = null; requestAnimationFrame(() => drawFocus(true)); }
@@ -5611,6 +5636,7 @@ function fUp(e) {
     else if (m === "pan" && e.type === "pointerup") photoTap(S.psel, e.pointerType === "mouse");   /* a finger: a second quick tap crops */
     scheduleDraw(sid); return;
   }
+  if (fg.mode === "addph") { const k = fg.key, far = Math.hypot(e.clientX - fg.c0[0], e.clientY - fg.c0[1]) > 12; fg = null; if (e.type === "pointerup" && !far) openPicker(sid, k); return; }
   if (fg.mode === "mmove") { const moved = fg.moved; fg = null; fgRem = false; if (moved) { saveSlide(sid); renderBoard(new Set([sid])); } scheduleDraw(sid); return; }
   if (fg.mode === "tmove") {
     const moved = fg.moved, rows = fg.grp.startsWith("rows."); fg = null; fgRem = false; ROWDRAG = null;
@@ -5657,7 +5683,16 @@ function liteUp(e) {
   if (!lg || lpts.size) return;
   const g = lg; lg = null;
   if (g.mode === "pinch") { S.lz = clamp(g.z0 * g.k, 1, 3); S.lp = g.np; drawFocus(); return; }
-  if (g.mode === "tap" && e.type === "pointerup" && Date.now() - g.t0 < 700) liteTap(e);
+  if (g.mode === "tap" && e.type === "pointerup" && Date.now() - g.t0 < 700) {
+    const now = Date.now();
+    if (e.pointerType === "touch" && now - lastTouchTap.t < 360 && Math.hypot(e.clientX - lastTouchTap.x, e.clientY - lastTouchTap.y) < 40) {   /* a double tap: crop the main photo */
+      lastTouchTap.t = 0; const key = FRAME_SLOTS.find(k => (S.slides[focusSid] || {})[k]);
+      if (key) { commitTyping(); S.fpanel = false; S.ftfield = null; S.fsel = null; S.ftsel = null; renderFPanel(); layoutLite(); setTimeout(() => { drawFocus(); enterCrop(key); }, 60); }
+      return;
+    }
+    if (e.pointerType === "touch") Object.assign(lastTouchTap, { t: now, x: e.clientX, y: e.clientY });
+    liteTap(e);
+  }
 }
 function liteTap(e) {
   const s = S.slides[focusSid]; if (!s) return;
@@ -5669,7 +5704,7 @@ function liteTap(e) {
 }
 /* computer: double-click text to edit it; a sideways two-finger trackpad swipe changes slides */
 fcv.addEventListener("dblclick", e => {
-  const s = S.slides[focusSid]; if (!s || liteOn()) return;
+  const s = S.slides[focusSid]; if (!s || liteOn() || lastPtr === "touch") return;   /* a finger's double tap crops the photo (in pointerdown) */
   const p = frameXY(fcv, e, geoOf(focusSid)), st = stickerAt(s, S.focusBoxes, p[0], p[1]), tf = st ? null : textAt(p[0], p[1]);
   if (S.crop) { exitCrop(); return; }
   if ((st && st.kind === "text") || tf) { S.fsel = st ? st.id : null; S.ftsel = tf; openTextEditor(); return; }
@@ -5916,12 +5951,12 @@ function swipeTo(d) {
 fcv.addEventListener("wheel", e => {
   const st = selSticker(); if (!st || !(e.ctrlKey || e.metaKey)) return;
   e.preventDefault(); remember(focusSid, "wheel");
-  st.size = Math.round(clamp(sizeOf(st) * Math.exp(-e.deltaY * 0.01), 40, MAX_SIZE(st)));
+  st.size = Math.round(clamp(sizeOf(st) * Math.exp(-e.deltaY * 0.01), MIN_SIZE, MAX_SIZE(st)));
   scheduleDraw(focusSid);
   clearTimeout(fWheelT); fWheelT = setTimeout(() => { saveSlide(focusSid); syncStickerControls(focusSid, st); }, 350);
 }, { passive: false });
 /* the size rail on the left edge: top = biggest; finer steps at the small end */
-const RMIN = 40, RMAX = () => MAX_SIZE(selSticker());
+const RMIN = MIN_SIZE, RMAX = () => Math.max(1800, sizeOf(selSticker() || {}) * 1.5, (selSticker() || {}).kind === "custom" ? 2400 : 0);   /* the rail reaches past the sticker's size; the handles and pinch go further */
 const railT = size => Math.sqrt((clamp(size, RMIN, RMAX()) - RMIN) / (RMAX() - RMIN));
 const railSize = t => Math.round(RMIN + (RMAX() - RMIN) * t * t);
 function placeRail(st, withBubble) {
@@ -6117,12 +6152,12 @@ xf.addEventListener("pointermove", e => {
     const h = xg.h, sx = h.includes("e") ? 1 : h.includes("w") ? -1 : 0, sy = h.includes("s") ? 1 : h.includes("n") ? -1 : 0, b = xg.box, g = geoOf(focusSid), rr = (b.rot || 0) * Math.PI / 180;
     const p = frameXY(fcv, e, g), vx = p[0] - b.cx, vy = p[1] - b.cy, ux = vx * Math.cos(-rr) - vy * Math.sin(-rr), uy = vx * Math.sin(-rr) + vy * Math.cos(-rr);
     const Ax = -sx * b.w / 2, Ay = -sy * b.h / 2, Dx = sx * b.w, Dy = sy * b.h;
-    const kk = clamp(((ux - Ax) * Dx + (uy - Ay) * Dy) / (Dx * Dx + Dy * Dy || 1), 40 / xg.s0, MAX_SIZE(st) / xg.s0);
+    const kk = clamp(((ux - Ax) * Dx + (uy - Ay) * Dy) / (Dx * Dx + Dy * Dy || 1), MIN_SIZE / xg.s0, MAX_SIZE(st) / xg.s0);
     const lx = Ax + Dx * kk / 2, ly = Ay + Dy * kk / 2, cx = b.cx + lx * Math.cos(rr) - ly * Math.sin(rr), cy = b.cy + lx * Math.sin(rr) + ly * Math.cos(rr);
     st.size = Math.round(xg.s0 * kk); st.x = clamp(cx / g.w, 0, 1); st.y = clamp(cy / g.h, 0, 1); label = st.size + " px";
   }
-  else if (xg.fz) { const v = clamp(xg.s0 * d / xg.d0, 0.4, 2.5); setFieldSz(s, xg.fz, Math.abs(v - 1) < 0.03 ? 1 : +v.toFixed(3)); label = `${tabLabel(s, S.ftsel)} ${Math.round(fieldSz(s, xg.fz) * 100)}%`; }
-  else { const v = clamp(xg.s0 * d / xg.d0, 0.5, 2.5), k = Math.abs(v - 1) < 0.03 ? 1 : +v.toFixed(3); s.layout = s.layout || {}; s.layout.scale = { ...(s.layout.scale || {}), [xg.grp]: k }; label = Math.round(k * 100) + "%"; }
+  else if (xg.fz) { const v = clamp(xg.s0 * d / xg.d0, 0.1, 10); setFieldSz(s, xg.fz, Math.abs(v - 1) < 0.03 ? 1 : +v.toFixed(3)); label = `${tabLabel(s, S.ftsel)} ${Math.round(fieldSz(s, xg.fz) * 100)}%`; }
+  else { const v = clamp(xg.s0 * d / xg.d0, 0.1, 10), k = Math.abs(v - 1) < 0.03 ? 1 : +v.toFixed(3); s.layout = s.layout || {}; s.layout.scale = { ...(s.layout.scale || {}), [xg.grp]: k }; label = Math.round(k * 100) + "%"; }
   bubbleAt($("#focusDlg"), e.clientX + 18, e.clientY - 18, label, "right");
   scheduleDraw(focusSid);
 });
@@ -6223,7 +6258,7 @@ function rowPanelHTML(s) {
   const items = st.items || [], sl = (k, l, min, max, step, v, fmt) => `<label class="frowsl"><span>${l}</span><input type="range" data-frows="${k}" min="${min}" max="${max}" step="${step}" value="${v}" data-fmt="${fmt}" aria-label="${l}"></label>`;
   return `<div class="fhead"><b>Breakdown row</b><span class="grow"></span><button type="button" class="btn sm" data-frowadd>Add stickers</button><button type="button" class="btn primary sm" data-frowdone>Done</button></div>
     <div class="frowitems">${items.map((it, j) => `<div class="frowitem"><i class="bdth">${it.vec ? minePreview({ vec: it.vec }) : `<img src="${esc(srcOf(it.src))}" alt="">`}</i><input class="ctl" data-frow="${j}.name" value="${esc(it.name)}" aria-label="Item ${j + 1} name" placeholder="Name"><input class="ctl" data-frow="${j}.note" value="${esc(it.note)}" aria-label="Item ${j + 1} subtext" placeholder="Subtext"><button type="button" class="btn ghost sm" data-frowdel="${j}" aria-label="Remove item ${j + 1}">×</button></div>`).join("")}</div>
-    <div class="frowsls">${sl("size", "Picture size", 40, 900, 2, st.size || 240, "px")}${sl("ts", "Text size", 0.5, 2.5, 0.05, st.ts || 1, "x")}${sl("gap", "Space between", 0, 2, 0.05, st.gap ?? 0.25, "x")}</div>`;
+    <div class="frowsls">${sl("size", "Picture size", MIN_SIZE, 2400, 1, st.size || 240, "px")}${sl("ts", "Text size", 0.1, 6, 0.05, st.ts || 1, "x")}${sl("gap", "Space between", 0, 6, 0.05, st.gap ?? 0.25, "x")}</div>`;
 }
 $("#fTextBtn").addEventListener("click", () => {
   dropTextSel(true);
@@ -6627,7 +6662,7 @@ function spacingHTML(s, ref) {
   const o = spacingOf(s, ref); if (!o.st && !o.path) return "";
   const sl = (k, l, min, max, step, v, fmt) => `<label class="frowsl"><span>${l}</span><input type="range" data-tsp="${k}" min="${min}" max="${max}" step="${step}" value="${v}" data-fmt="${fmt}" aria-label="${l}"></label>`;
   const sy = o.grp ? spreadOf(s.layout || {}, o.grp) : 1;
-  return `<details class="tspace"${S.tspOpen ? " open" : ""}><summary>Size and spacing</summary>${sizeRowHTML(s, ref)}<div class="frowsls">${sl("ls", "Line spacing", 0.6, 2.5, 0.05, o.ls, "x")}${sl("cs", "Letter spacing", o.st ? -0.15 : -0.1, 0.5, 0.005, o.cs, "pct")}${sl("ws", "Word spacing", -0.3, 1.5, 0.01, o.ws, "pct")}${o.grp ? sl("sy", "Lines of this block", 0.5, 3, 0.05, sy, "x") : ""}</div>
+  return `<details class="tspace"${S.tspOpen ? " open" : ""}><summary>Size and spacing</summary>${sizeRowHTML(s, ref)}<div class="frowsls">${sl("ls", "Line spacing", 0.1, Math.max(5, o.ls * 1.5), 0.05, o.ls, "x")}${sl("cs", "Letter spacing", -0.3, Math.max(2, o.cs * 1.5), 0.005, o.cs, "pct")}${sl("ws", "Word spacing", -0.5, Math.max(4, o.ws * 1.5), 0.01, o.ws, "pct")}${o.grp ? sl("sy", "Lines of this block", 0.1, Math.max(6, sy * 1.5), 0.05, sy, "x") : ""}</div>
     <div class="frow"><button type="button" class="btn ghost sm" data-tspreset>Reset spacing</button><button type="button" class="btn ghost sm" data-tszreset>Reset size</button><span class="hint" style="margin:0">${o.grp ? "Lines of this block spreads all the texts in it apart (or closer)." : ""}</span></div></details>`;
 }
 function setSpacing(k, v) {
@@ -6652,7 +6687,7 @@ function setFieldSz(s, path, v) {
 function sizeRowHTML(s, ref) {
   const o = spacingOf(s, ref); if (!o.st && !o.path) return "";
   const v = o.st ? sizeOf(o.st) : fieldSz(s, o.path);
-  return `<div class="frowsls tszrow"><label class="frowsl"><span>${o.st ? "Text size" : "Size of this text"} <b class="fsz" data-szref="${esc(ref)}"></b></span><input type="range" data-tsp="sz" min="${o.st ? 20 : 0.4}" max="${o.st ? 600 : 2.5}" step="${o.st ? 1 : 0.01}" value="${v}" data-fmt="${o.st ? "px" : "x"}" aria-label="${o.st ? "Text size" : "Size of this text"}"></label></div>`;
+  return `<div class="frowsls tszrow"><label class="frowsl"><span>${o.st ? "Text size" : "Size of this text"} <b class="fsz" data-szref="${esc(ref)}"></b></span><input type="range" data-tsp="sz" min="${o.st ? MIN_SIZE : 0.1}" max="${o.st ? Math.max(2000, Math.ceil(v * 1.5)) : Math.max(6, Math.ceil(v * 1.5))}" step="${o.st ? 1 : 0.01}" value="${v}" data-fmt="${o.st ? "px" : "x"}" aria-label="${o.st ? "Text size" : "Size of this text"}"></label></div>`;
 }
 function textPanelHTML(s) {
   if (S.ftfield) {
@@ -7112,10 +7147,10 @@ function deleteTextRef(ref) {
   if (editing) { commitTyping(); S.fpanel = false; S.ftfield = null; }
   if (ref.startsWith("layer:")) { removeSticker(sid, ref.slice(6)); if (editing) renderFPanel(); drawFocus(); return; }
   const path = fieldPath(s, ref); if (!path) return;
-  if (/^post\./.test(path)) { toast("The header is the same on every slide: change it in Post settings"); if (editing) { renderFPanel(); drawFocus(); } return; }
   let m = path.match(/^text\.rows\.(\d+)\./), msg;
   remember(sid);
-  if (m) { s.text.rows.splice(+m[1], 1); msg = `Row ${+m[1] + 1} deleted`; }
+  if (/^post\.(series|subject)$/.test(path)) { s.hide = { ...(s.hide || {}), [path]: 1 }; msg = `${path === "post.series" ? "Header, left" : "Header, right"} hidden on this slide. Post settings changes it on every slide`; }
+  else if (m) { s.text.rows.splice(+m[1], 1); msg = `Row ${+m[1] + 1} deleted`; }
   else if ((m = s.type === "breakdown" && path.match(/^text\.items\.(\d+)\./))) { s.text.items.splice(+m[1], 1); bdClearMoves(s); msg = `Item ${+m[1] + 1} deleted`; }
   else { setPath(s, path, ""); msg = `${tabLabel(s, ref)} deleted`; }
   S.ftsel = null; S.fsel = null;
@@ -7598,7 +7633,7 @@ function openPicker(sid, slot) {
   pickFor = { sid, slot };
   const s = S.slides[sid], ref = slot === "ref";
   const layer = slot === "layer", slogo = slot.startsWith("slogo:"), glogo = slot.startsWith("glogo:") || slogo;
-  $("#pickTitle").textContent = slogo ? "Link icon" : glogo ? "App logo" : layer ? "Add an image" : ref ? "Reference image" : slot.startsWith("gear:") ? "Gear picture" : slot.startsWith("bd:") ? "Item picture (cut out automatically)" : slot === "img2" && s.type === "breakdown" ? "Panel photo" : s.type === "beforeafter" ? (slot === "img" ? "Replace before photo" : "Replace after photo") : "Replace image";
+  $("#pickTitle").textContent = slogo ? "Link icon" : glogo ? "App logo" : layer ? "Add an image" : ref ? "Reference image" : slot.startsWith("gear:") ? "Gear picture" : slot.startsWith("bd:") ? "Item picture (cut out automatically)" : slot === "img2" && s.type === "breakdown" ? "Panel photo" : s.type === "beforeafter" ? (slot === "img" ? (s.img ? "Replace before photo" : "Add the before photo") : (s.img2 ? "Replace after photo" : "Add the after photo")) : s && FRAME_SLOTS.includes(slot) && !s[slot] ? "Add a photo" : "Replace image";
   $("#pickUploadLbl").hidden = !(S.assets || S.local);
   $("#pickUploadTxt").textContent = ref ? "Upload a reference" : layer ? "Upload images" : "Upload new photo";
   const tl = $("#pickTimeline"); if (tl) tl.hidden = !layer;
@@ -8193,7 +8228,7 @@ function cleanStickers(raw, prev) {
     if (x.solid === true || x.solid === false) out.solid = x.solid;
     if (x.under === true) out.under = true;
     if (P.type === "pill") { if (x.label != null) out.label = String(x.label).slice(0, 40); if (HEX.test(x.bg)) out.bg = x.bg; }
-    if (P.type === "text") { out.label = String(x.label ?? P.text).slice(0, 160); out.w = +x.w === 400 ? 400 : 700; if (x.tr != null && Number.isFinite(+x.tr)) out.tr = clamp(+x.tr, -0.15, 0.5); if (x.al === "left" || x.al === "right") out.al = x.al; if (+x.lh > 0) out.lh = clamp(+x.lh, 0.5, 3); if (Number.isFinite(+x.ws) && +x.ws) out.ws = clamp(+x.ws, -0.3, 1.5); }
+    if (P.type === "text") { out.label = String(x.label ?? P.text).slice(0, 160); out.w = +x.w === 400 ? 400 : 700; if (x.tr != null && Number.isFinite(+x.tr)) out.tr = clamp(+x.tr, -0.5, 10); if (x.al === "left" || x.al === "right") out.al = x.al; if (+x.lh > 0) out.lh = clamp(+x.lh, 0.1, 10); if (Number.isFinite(+x.ws) && +x.ws) out.ws = clamp(+x.ws, -1, 10); }
     return out;
   }).filter(Boolean);
 }
@@ -9247,7 +9282,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { S, order, renderSlide, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
+window.__t = { S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
