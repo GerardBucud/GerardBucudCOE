@@ -758,6 +758,8 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .livet{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:#d9d2ce;margin:8px 0 2px;cursor:pointer}
 .livet input{width:18px;height:18px;accent-color:var(--accent)}
 .livet small{color:#9a918d;font-size:12px}
+.shrow{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;margin:4px 0 2px;font-size:13px;color:#9a918d}
+.shrow .livet{margin:0}
 .dlmenu .mitem{display:grid;gap:2px;width:100%;text-align:left}
 #dupRatio{display:flex;flex-wrap:wrap;gap:6px}
 #dupRatio button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -1984,8 +1986,13 @@ const scrimFor = s => s.p90 <= 112 ? 0 : clamp(1 - 100 / s.p90, 0.1, 0.72);
 const userScrim = L => (L && L.scrim != null && L.scrim !== "auto" && L.scrim !== "") ? clamp(+L.scrim, 0, 0.9) : null;
 
 /* ---------- scrims ---------- */
+/* NOSH: where this slide has no shade behind its words (slide.noshade = {all} or {main, head, foot, tip}): the header's shade is the
+   top 520 px, the footer's the bottom 640 px, the tip's its spot; every other shade is behind the main text */
+let NOSH = null;
+const shadeOff = z => !!(NOSH && (NOSH.all || NOSH[z]));
 function shade(ctx, y0, y1, a, from, x0 = 0, x1 = W) { // from: 'top' | 'bottom' | 'band'
   if (!(a > 0)) return;
+  if (NOSH && shadeOff(from === "top" && y0 === 0 && y1 === 520 ? "head" : from === "bottom" && y0 === H - 640 && y1 === H ? "foot" : "main")) return;
   ctx.save();
   if (from === "band") {
     const g = ctx.createLinearGradient(0, y0 - 260, 0, y1 + 260);
@@ -2000,7 +2007,7 @@ function shade(ctx, y0, y1, a, from, x0 = 0, x1 = W) { // from: 'top' | 'bottom'
   ctx.restore();
 }
 function sideShade(ctx, side, a) {   /* landscape: darkens the text column's side of the photo, fading out across it */
-  if (!(a > 0)) return;
+  if (!(a > 0) || shadeOff("main")) return;
   const reach = COLW + 520, x0 = side === "right" ? W : 0, x1 = side === "right" ? W - reach : reach;
   ctx.save();
   const g = ctx.createLinearGradient(x0, 0, x1, 0);
@@ -2009,7 +2016,7 @@ function sideShade(ctx, side, a) {   /* landscape: darkens the text column's sid
   ctx.restore();
 }
 function spot(ctx, cx, cy, r, a) {
-  if (!(a > 0)) return;
+  if (!(a > 0) || shadeOff("tip")) return;
   ctx.save();
   const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
   g.addColorStop(0, `rgba(0,0,0,${a})`); g.addColorStop(0.6, `rgba(0,0,0,${a * 0.7})`); g.addColorStop(1, "rgba(0,0,0,0)");
@@ -2143,7 +2150,7 @@ function bdRowDraw(ctx, st, g) {
 /* the shade behind extra text: st.shade "off", an amount (0 to 0.9), or auto (missing): the slide's own Darken behind text when that's
    set by hand, else judged from the photo under it like the slide's text (none on a plain background, or for dark text) */
 function layerShade(s, st, x0, y0, x1, y1) {
-  const v = st.shade;
+  const v = st.shade; if (shadeOff("all") && NOSH.all) return 0;
   if (v === "off" || v === 0 || v === "0") return 0;
   if (v != null && v !== "" && v !== "auto" && Number.isFinite(+v)) return clamp(+v, 0, 0.9);
   const col = st.color || INK; if (/^#/.test(col) && inkOn(col) === "#ffffff") return 0;   /* dark text wants a light place, not a shade */
@@ -3252,7 +3259,7 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
     for (const [p, on] of Object.entries((post && post.tcase) || {})) if (on) add(pick({ post }, p));
     for (const st of s0.stickers || []) if (st && st.tcase) add(st.label); }
   OVERLAY = !!s0.overlay; KEEP = keep; PH = []; WHOLE = !!s.whole; RENDER_SCALE = forExport ? 1 : scale; TB = {}; TF = null; EXPORTING = !!forExport;
-  BG = bgOf(s); HL = HEXCOL.test(s.hl) ? s.hl : null; DISP = famOf(post, s); FOV = s.fonts && typeof s.fonts === "object" ? s.fonts : null; TST = s.tstyle && typeof s.tstyle === "object" ? s.tstyle : null; LSY = {}; HIDE = s.hide && typeof s.hide === "object" ? s.hide : null;
+  BG = bgOf(s); HL = HEXCOL.test(s.hl) ? s.hl : null; DISP = famOf(post, s); FOV = s.fonts && typeof s.fonts === "object" ? s.fonts : null; TST = s.tstyle && typeof s.tstyle === "object" ? s.tstyle : null; LSY = {}; HIDE = s.hide && typeof s.hide === "object" ? s.hide : null; NOSH = s.noshade && typeof s.noshade === "object" ? s.noshade : null;
   INK = s.ink === "black" ? "#111111" : s.ink === "white" ? "#ffffff" : BG ? inkOn(BG.c2 ? mixHex(BG.c1, BG.c2) : BG.c1) : "#ffffff";   /* auto: dark text on a light background */
   if (OVERLAY && !KEEP) { if (!forExport) checker(ctx); } else if (BG) paintBg(ctx, 0, 0, W, H); else { ctx.fillStyle = "#100c0b"; ctx.fillRect(0, 0, W, H); }
   const d = design(ctx, post, s);
@@ -3329,7 +3336,7 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
   const empties = (TEMPLATES[s.type] ? TEMPLATES[s.type].slots : ["img"]).filter(k => !s[k]);   /* empty spots are drawn in their slots' order */
   d.photos = PH.map(p => p.slot ? { key: FRAME_SLOTS.find(k => s[k] === p.slot) || null, x: p.x, y: p.y, w: p.w, h: p.h, contain: p.contain } : { key: empties.shift() || null, empty: true, x: p.x, y: p.y, w: p.w, h: p.h }).filter(p => p.key);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  OVERLAY = false; KEEP = false; PH = []; WHOLE = false; BG = null; HL = null; INK = "#ffffff"; DISP = null; EXPORTING = false; TXR = null; STK = false; NOTX = false; FOV = null; TST = null; LSY = null; HIDE = null;
+  OVERLAY = false; KEEP = false; PH = []; WHOLE = false; BG = null; HL = null; INK = "#ffffff"; DISP = null; EXPORTING = false; TXR = null; STK = false; NOTX = false; FOV = null; TST = null; LSY = null; HIDE = null; NOSH = null;
   return d;
 }
 
@@ -6820,6 +6827,7 @@ function textPanelHTML(s) {
     return `<div class="fone${refs.length > 1 ? " tabbed" : ""}"><div class="fhead"><b>${esc(editorTitle(s, S.ftfield))}</b><span class="grow"></span>${fmtBarHTML(refs.length > 1 ? (/^text\.rows\./.test(S.ftfield) ? "row" : "block") : null)}<button type="button" class="btn primary sm" data-fact="done">Done</button></div>
       ${tabs}<div class="fgrid">${refs.map(cell).join("")}</div>
       <label class="livet"><input type="checkbox" data-livetype${liveType() ? " checked" : ""}> Show on the slide as I type<small>Off: type, then tap Done</small></label>
+      ${shadeRowHTML(s, S.ftfield)}
       ${spacingHTML(s, S.ftfield)}
       <div class="actions"><button type="button" class="btn sm" data-fact="dup">${DUP_I}Duplicate</button><button type="button" class="btn sm" data-fact="all">All text</button></div></div>`;
   }
@@ -6878,6 +6886,40 @@ function onFF(el, remembered) {
 /* Typing: with "Show on the slide as I type" off (the default on phones), the slide doesn't redraw at every letter; what you typed
    goes on when you tap Done, Enter on a one-line text, another box, or anywhere off the box. Kept in this browser (carousel.liveType). */
 const liveType = () => { try { const v = localStorage.getItem("carousel.liveType"); return v ? v === "1" : !TOUCH(); } catch (e) { return !TOUCH(); } };
+/* The dark shade behind the words, off or on from the text editor (LITEMV too): for this text (extra text: its own shade; a slide
+   text: the shade of its part of the slide, slide.noshade[main | head | foot | tip]) or for all the text on this slide (noshade.all) */
+const shadeZone = (s, ref) => { const p = fieldPath(s, ref) || ""; return /^post\./.test(p) ? "head" : /^text\.(section|foot)$/.test(p) ? "foot" : /^text\.(tipK|tip)$/.test(p) ? "tip" : "main"; };
+function shadeState(s, ref) {
+  const ns = s.noshade || {}, st = ref && ref.startsWith("layer:") ? (s.stickers || []).find(t => t.id === ref.slice(6)) : null;
+  const some = ["main", "head", "foot", "tip"].some(z => ns[z]);
+  return { st, all: !ns.all && !some, part: !ns.all && some, mine: ns.all ? false : st ? st.shade !== "off" : !ns[shadeZone(s, ref)] };   /* part: some parts off (the All box shows half) */
+}
+function shadeRowHTML(s, ref) {
+  if (!ref) return "";
+  const o = shadeState(s, ref);
+  return `<div class="shrow" role="group" aria-label="Shade behind the words"><span>Shade behind</span><label class="livet"><input type="checkbox" data-shade="one"${o.mine ? " checked" : ""}> this text</label><label class="livet"><input type="checkbox" data-shade="all"${o.all ? " checked" : ""}> all text on this slide</label></div>`;
+}
+function setShade(which, on) {
+  const sid = focusSid, s = S.slides[sid], ref = S.ftfield; if (!s || !ref) return;
+  remember(sid, "shade");
+  const ns = { ...(s.noshade || {}) }, o = shadeState(s, ref);
+  if (which === "all") { if (on) { delete ns.all; ["main", "head", "foot", "tip"].forEach(z => delete ns[z]); } else ns.all = 1; }
+  else {
+    if (ns.all && on) { delete ns.all; ["main", "head", "foot", "tip"].forEach(z => { ns[z] = 1; }); }   /* all were off: only this one comes back */
+    if (o.st) { if (on) delete o.st.shade; else o.st.shade = "off"; }
+    else { const z = shadeZone(s, ref); if (on) delete ns[z]; else ns[z] = 1; }
+  }
+  if (Object.keys(ns).length) s.noshade = ns; else delete s.noshade;
+  saveSlide(sid); scheduleDraw(sid); renderBoard(new Set([sid]));
+  syncShadeBoxes();
+  toast(which === "all" ? (on ? "Shade back behind the text where the photo needs it" : "No shade behind any text on this slide") : on ? "Shade back behind this text" : "No shade behind this text");
+}
+document.addEventListener("change", e => { const el = e.target; if (el.dataset && el.dataset.shade && el.closest("#fPanel")) setShade(el.dataset.shade, el.checked); });
+function syncShadeBoxes() {   /* the All box shows half when some parts of the slide have no shade */
+  const s = focusSid && S.slides[focusSid], ref = S.ftfield; if (!s || !ref) return;
+  const st = shadeState(s, ref);
+  $$("#fPanel [data-shade]").forEach(x => { if (x.dataset.shade === "all") { x.checked = st.all; x.indeterminate = st.part; } else x.checked = st.mine; });
+}
 function commitTyping() { $$("#fPanel [data-ff][data-dirty]").forEach(el => { delete el.dataset.dirty; onFF(el); }); }
 document.addEventListener("focusout", e => { const el = e.target; if (el && el.dataset && el.dataset.dirty && el.closest && el.closest("#fPanel")) { delete el.dataset.dirty; onFF(el); } }, true);
 document.addEventListener("change", e => {
@@ -7476,7 +7518,7 @@ function syncSizeChips() {
     const r = z.dataset.szref, st = r.startsWith("layer:") ? (s.stickers || []).find(t => t.id === r.slice(6)) : null, b = st ? null : (S.ftboxes || {})[fieldPath(s, r)];
     const v = st ? sizeOf(st) : b && b.size; z.textContent = v ? `· ${Math.round(v)} px` : "";
   });
-  syncSizeFields();
+  syncSizeFields(); syncShadeBoxes();
 }
 function deleteRowSel() {
   const sid = focusSid, s = S.slides[sid], m = String(S.ftsel || "").match(/^text\.rows\.(\d+)\./); if (!s || !m) return;
@@ -9469,7 +9511,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, smartSnap, copyToNext, sizeHandle, syncSizeFields, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
+window.__t = { S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, setShade, shadeState, smartSnap, copyToNext, sizeHandle, syncSizeFields, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
