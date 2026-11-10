@@ -586,6 +586,7 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .fszw{display:inline-flex;align-items:center;align-self:center;background:rgba(0,0,0,.07);border-radius:999px;padding:2px 2px 2px 8px;margin:0 2px;gap:2px}
 .fszw[hidden]{display:none}
 .fszin{width:46px;border:0;background:transparent;font:700 13px/1 var(--ui);color:#131111;text-align:right;padding:5px 0;font-variant-numeric:tabular-nums}
+.fszin{-moz-appearance:textfield;appearance:textfield}.fszin::-webkit-inner-spin-button,.fszin::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 .fszin:focus{outline:2px solid var(--focus);outline-offset:2px;border-radius:4px}
 .fbar .fszu,.fszu{border:0;background:#131111;color:#fff;font:700 11px/1 var(--ui);padding:5px 7px;border-radius:999px;cursor:pointer}
 .fmt .fszw{background:rgba(255,255,255,.1)}.fmt .fszin{color:#f3eeeb}.fmt .fszu{background:#f3eeeb;color:#131111}
@@ -764,6 +765,12 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .livet small{color:#9a918d;font-size:12px}
 .shrow{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;margin:4px 0 2px;font-size:13px;color:#9a918d}
 .shrow .livet{margin:0}
+.shsls{margin:2px 0 6px}.shsls .frowsl span{display:flex;align-items:center;gap:8px}
+.shauto{border:1px solid #4a4341;background:none;color:#cfc7c3;font:600 11px/1 var(--ui);padding:4px 8px;border-radius:999px;cursor:pointer;min-height:24px}
+.shauto[aria-pressed="true"]{background:#f3eeeb;color:#131111;border-color:#f3eeeb}
+.shhint{margin:0 0 6px;font-size:12px}
+.fpillpop{width:min(320px,calc(100% - 8px))}.fpillpop .pillrow{display:flex;gap:8px;padding:0 6px 4px}.fpillpop .pillrow .ctl{flex:1;min-width:0;font-size:16px}
+#focusDlg .fpillpop .pillrow button{width:auto;min-height:40px;justify-content:center;padding:0 16px;background:#f3eeeb;color:#131111;font-weight:700}#focusDlg .fpillpop .pillrow button:hover:not(:disabled){background:#fff}.fpillpop .hint{margin:4px 8px 2px;font-size:12px;color:#9a918d}
 .dlmenu .mitem{display:grid;gap:2px;width:100%;text-align:left}
 #dupRatio{display:flex;flex-wrap:wrap;gap:6px}
 #dupRatio button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -1222,6 +1229,7 @@ details.gsec[open]{padding-bottom:14px}
       <div class="farr" id="fArr" role="menu" aria-label="Layer order" hidden></div>
       <div class="farr ffont" id="fFontPop" role="menu" aria-label="Font for this text" hidden></div>
       <div class="farr fcolpop" id="fColPop" role="group" aria-label="Color for this text" hidden></div>
+      <div class="farr fpillpop" id="fPillPop" role="group" aria-label="Words on this sticker" hidden></div>
       <div class="fpad" id="fPad" role="group" aria-label="Position" hidden><button type="button" class="px" data-padx title="Close" aria-label="Close position pad"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button><div class="dpad"><button type="button" class="nb u" data-nudge="u" title="Move up" aria-label="Move up"><svg viewBox="0 0 24 24"><path d="M12 5l7 11H5z"/></svg></button><button type="button" class="nb l" data-nudge="l" title="Move left" aria-label="Move left"><svg viewBox="0 0 24 24"><path d="M5 12l11-7v14z"/></svg></button><button type="button" class="nb r" data-nudge="r" title="Move right" aria-label="Move right"><svg viewBox="0 0 24 24"><path d="M19 12L8 19V5z"/></svg></button><button type="button" class="nb d" data-nudge="d" title="Move down" aria-label="Move down"><svg viewBox="0 0 24 24"><path d="M12 19L5 8h14z"/></svg></button></div><div class="al"><button type="button" data-align="h" title="Centre left to right" aria-label="Centre left to right"><svg viewBox="0 0 24 24"><path d="M12 4v16M2 12h7M6 9l3 3-3 3M22 12h-7M18 9l-3 3 3 3"/></svg></button><button type="button" data-align="v" title="Centre top to bottom" aria-label="Centre top to bottom"><svg viewBox="0 0 24 24"><path d="M4 12h16M12 2v7M9 6l3 3 3-3M12 22v-7M9 18l3-3 3 3"/></svg></button><button type="button" data-align="c" title="Centre on the slide" aria-label="Centre on the slide"><svg viewBox="0 0 24 24"><path d="M4 20l6-6M6 14h4v4M20 4l-6 6M18 10h-4V6"/></svg></button></div></div>
       <button type="button" class="fdel" id="fDel" aria-label="Delete this sticker" hidden><svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg></button>
       <div class="psel" id="fPsel" hidden></div>
@@ -1998,17 +2006,17 @@ const userScrim = L => (L && L.scrim != null && L.scrim !== "auto" && L.scrim !=
 /* ---------- scrims ---------- */
 /* NOSH: where this slide has no shade behind its words (slide.noshade = {all} or {main, head, foot, tip}): the header's shade is the
    top 520 px, the footer's the bottom 640 px, the tip's its spot; every other shade is behind the main text */
-let NOSH = null;
+let NOSH = null, SCS = 1;   /* SCS: the strength (spread) of the slide's text shades, slide.layout.scrimS */
 const shadeOff = z => !!(NOSH && (NOSH.all || NOSH[z]));
 function shade(ctx, y0, y1, a, from, x0 = 0, x1 = W) { // from: 'top' | 'bottom' | 'band'
   if (!(a > 0)) return;
   if (NOSH && shadeOff(from === "top" && y0 === 0 && y1 === 520 ? "head" : from === "bottom" && y0 === H - 640 && y1 === H ? "foot" : "main")) return;
   ctx.save();
   if (from === "band") {
-    const g = ctx.createLinearGradient(0, y0 - 260, 0, y1 + 260);
-    const t0 = 260 / (y1 - y0 + 520), t1 = 1 - t0;
+    const f = 260 * SCS, g = ctx.createLinearGradient(0, y0 - f, 0, y1 + f);
+    const t0 = f / (y1 - y0 + 2 * f), t1 = 1 - t0;
     g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(t0, `rgba(0,0,0,${a})`); g.addColorStop(t1, `rgba(0,0,0,${a})`); g.addColorStop(1, "rgba(0,0,0,0)");
-    ctx.fillStyle = g; ctx.fillRect(x0, y0 - 260, x1 - x0, y1 - y0 + 520);
+    ctx.fillStyle = g; ctx.fillRect(x0, y0 - f, x1 - x0, y1 - y0 + 2 * f);
   } else {
     const g = from === "top" ? ctx.createLinearGradient(0, y0, 0, y1) : ctx.createLinearGradient(0, y1, 0, y0);
     g.addColorStop(0, `rgba(0,0,0,${a})`); g.addColorStop(0.55, `rgba(0,0,0,${a * 0.75})`); g.addColorStop(1, "rgba(0,0,0,0)");
@@ -2027,7 +2035,7 @@ function sideShade(ctx, side, a) {   /* landscape: darkens the text column's sid
 }
 function spot(ctx, cx, cy, r, a) {
   if (!(a > 0) || shadeOff("tip")) return;
-  ctx.save();
+  ctx.save(); r *= SCS;
   const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
   g.addColorStop(0, `rgba(0,0,0,${a})`); g.addColorStop(0.6, `rgba(0,0,0,${a * 0.7})`); g.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = g; ctx.fillRect(cx - r, cy - r, 2 * r, 2 * r);
@@ -2159,6 +2167,17 @@ function bdRowDraw(ctx, st, g) {
 /* draws a slide's stickers; returns their boxes (slide pixels) for dragging */
 /* the shade behind extra text: st.shade "off", an amount (0 to 0.9), or auto (missing): the slide's own Darken behind text when that's
    set by hand, else judged from the photo under it like the slide's text (none on a plain background, or for dark text) */
+const shadeStr = v => Number.isFinite(+v) && +v > 0 ? clamp(+v, 0.2, 4) : 1;
+/* a soft dark patch the shape of a w x h box (centred on 0, 0 in the current transform): rounded, its edge fading over f px, alpha a at
+   its middle. Drawn small off-screen as a blurred shadow (it's soft anyway), then scaled up, so it turns with the text. */
+function softPatch(ctx, w, h, f, a) {
+  const k = Math.min(0.25, 600 / Math.max(w + 4 * f, h + 4 * f)), pad = f * 2, cw = Math.max(2, Math.ceil((w + 2 * pad) * k)), ch = Math.max(2, Math.ceil((h + 2 * pad) * k));
+  const c = document.createElement("canvas"); c.width = cw; c.height = ch; const x = c.getContext("2d"), off = cw + 10;
+  x.shadowColor = `rgba(0,0,0,${clamp(a, 0, 1)})`; x.shadowBlur = f * k; x.shadowOffsetX = off; x.fillStyle = "#000";
+  const rw = w * k, rh = h * k, r = Math.min(rh / 2, rw / 2, f * k * 0.8);
+  x.beginPath(); if (x.roundRect) x.roundRect(pad * k - off, pad * k, rw, rh, r); else x.rect(pad * k - off, pad * k, rw, rh); x.fill();
+  ctx.save(); ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.drawImage(c, -w / 2 - pad, -h / 2 - pad, w + 2 * pad, h + 2 * pad); ctx.restore();
+}
 function layerShade(s, st, x0, y0, x1, y1) {
   const v = st.shade; if (shadeOff("all") && NOSH.all) return 0;
   if (v === "off" || v === 0 || v === "0") return 0;
@@ -2197,12 +2216,10 @@ function drawStickers(ctx, post, s, hiliteId) {
       const tr = Number.isFinite(+st.tr) ? clamp(+st.tr, -0.5, 10) : -0.05, al = st.al === "left" || st.al === "right" ? st.al : "center";
       bw = Math.max(size, ...lines.map(l => inFam(fk, () => withCS(tr + 0.05, () => richW(ctx, l, size, wt, -0.05))) + (plainText(l).match(/ /g) || []).length * ws * size));   /* tr: -0.05 is the font's own spacing, the rest is extra */
       const sa = layerShade(s, st, cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2);
-      if (sa > 0) {   /* a soft dark patch behind it where the photo is bright or busy, as the slide's own text gets */
-        ctx.save(); ctx.shadowColor = "transparent"; ctx.shadowBlur = 0;
-        const rx = bw / 2 + size * 0.9, ry = bh / 2 + size * 0.75; ctx.scale(1, ry / rx);
-        const gr = ctx.createRadialGradient(0, 0, 0, 0, 0, rx);
-        gr.addColorStop(0, `rgba(0,0,0,${sa})`); gr.addColorStop(0.55, `rgba(0,0,0,${sa * 0.75})`); gr.addColorStop(1, "rgba(0,0,0,0)");
-        ctx.fillStyle = gr; ctx.fillRect(-rx, -rx, 2 * rx, 2 * rx); ctx.restore();
+      if (sa > 0) {   /* a soft dark patch behind it where the photo is bright or busy, as the slide's own text gets: st.shadeS, its strength
+           (how far it spreads past the words, 0.2x to 4x) */
+        const k = shadeStr(st.shadeS), f = size * 0.7 * k;
+        softPatch(ctx, bw + size * 0.5 * k, bh + size * 0.45 * k, f, sa);
       }
       const ax = al === "left" ? -bw / 2 : al === "right" ? bw / 2 : 0;   /* lines line up inside the box; the box stays centered on x, y */
       TXK = "st:" + st.id; lines.forEach((l, i) => txt(ctx, l, ax, -bh / 2 + i * lh, { size, weight: wt, track: -0.05, cs: tr + 0.05, align: al, color: st.color || INK, fam: fk, ws })); TXK = null;
@@ -3269,7 +3286,7 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
     for (const [p, on] of Object.entries((post && post.tcase) || {})) if (on) add(pick({ post }, p));
     for (const st of s0.stickers || []) if (st && st.tcase) add(st.label); }
   OVERLAY = !!s0.overlay; KEEP = keep; PH = []; WHOLE = !!s.whole; RENDER_SCALE = forExport ? 1 : scale; TB = {}; TF = null; EXPORTING = !!forExport;
-  BG = bgOf(s); HL = HEXCOL.test(s.hl) ? s.hl : null; DISP = famOf(post, s); FOV = s.fonts && typeof s.fonts === "object" ? s.fonts : null; TST = s.tstyle && typeof s.tstyle === "object" ? s.tstyle : null; LSY = {}; HIDE = s.hide && typeof s.hide === "object" ? s.hide : null; NOSH = s.noshade && typeof s.noshade === "object" ? s.noshade : null;
+  BG = bgOf(s); HL = HEXCOL.test(s.hl) ? s.hl : null; DISP = famOf(post, s); FOV = s.fonts && typeof s.fonts === "object" ? s.fonts : null; TST = s.tstyle && typeof s.tstyle === "object" ? s.tstyle : null; LSY = {}; HIDE = s.hide && typeof s.hide === "object" ? s.hide : null; NOSH = s.noshade && typeof s.noshade === "object" ? s.noshade : null; SCS = shadeStr(s.layout && s.layout.scrimS);
   INK = s.ink === "black" ? "#111111" : s.ink === "white" ? "#ffffff" : BG ? inkOn(BG.c2 ? mixHex(BG.c1, BG.c2) : BG.c1) : "#ffffff";   /* auto: dark text on a light background */
   if (OVERLAY && !KEEP) { if (!forExport) checker(ctx); } else if (BG) paintBg(ctx, 0, 0, W, H); else { ctx.fillStyle = "#100c0b"; ctx.fillRect(0, 0, W, H); }
   const d = design(ctx, post, s);
@@ -3346,7 +3363,7 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
   const empties = (TEMPLATES[s.type] ? TEMPLATES[s.type].slots : ["img"]).filter(k => !s[k]);   /* empty spots are drawn in their slots' order */
   d.photos = PH.map(p => p.slot ? { key: FRAME_SLOTS.find(k => s[k] === p.slot) || null, x: p.x, y: p.y, w: p.w, h: p.h, contain: p.contain } : { key: empties.shift() || null, empty: true, x: p.x, y: p.y, w: p.w, h: p.h }).filter(p => p.key);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  OVERLAY = false; KEEP = false; PH = []; WHOLE = false; BG = null; HL = null; INK = "#ffffff"; DISP = null; EXPORTING = false; TXR = null; STK = false; NOTX = false; FOV = null; TST = null; LSY = null; HIDE = null; NOSH = null;
+  OVERLAY = false; KEEP = false; PH = []; WHOLE = false; BG = null; HL = null; INK = "#ffffff"; DISP = null; EXPORTING = false; TXR = null; STK = false; NOTX = false; FOV = null; TST = null; LSY = null; HIDE = null; NOSH = null; SCS = 1;
   return d;
 }
 
@@ -4774,7 +4791,7 @@ function stickerHTML(sid, s) {
       <div class="two">${rng(sid, `stickers.${i}.x`, "Left / right", 0, 1, 0.005, st.x ?? 0.5, "pct")}${rng(sid, `stickers.${i}.y`, "Up / down", 0, 1, 0.005, st.y ?? 0.8, "pct")}</div>
       ${isText ? `<div><label class="lbl" for="${sid}-st${i}-t">Text (**bold**, Enter = new line)</label><textarea class="ctl" id="${sid}-st${i}-t" data-f="stickers.${i}.label">${esc(st.label ?? P.text)}</textarea></div>` : ""}
       <div class="two">${rng(sid, `stickers.${i}.size`, isText ? "Text size" : "Size", MIN_SIZE, 2000, 1, st.size || P.size, "px")}${rng(sid, `stickers.${i}.rot`, "Rotate", -180, 180, 1, st.rot || 0, "deg")}</div>
-      <div class="two">${color}${extra}</div>${isText ? `<div class="two">${sel(sid, `stickers.${i}.shade`, "Shade behind it", SHADES, st.shade == null ? "auto" : String(st.shade))}<div></div></div>` : ""}${rowFoot(sid, i, st)}</div>`;
+      <div class="two">${color}${extra}</div>${isText ? `<div class="two">${sel(sid, `stickers.${i}.shade`, "Shade behind it", shadeOpts(st), st.shade == null ? "auto" : String(st.shade))}${rng(sid, `stickers.${i}.shadeS`, "Shade strength", 0.2, 4, 0.05, +st.shadeS || 1, "x")}</div>` : ""}${rowFoot(sid, i, st)}</div>`;
   }).join("");
   return `${list}<div class="actions" style="margin:0"><button class="btn sm" data-act="addsticker">Add sticker</button><button class="btn sm" data-act="addbdrow" title="Pictures with a bold name and a subtext under each, on any slide">Breakdown row…</button></div><p class="hint" style="margin:0">Drag a sticker on the slide to move it. On a phone, tap the slide to open it large: there you can drag, pinch to resize, twist to rotate, and drop a sticker on the bin to delete it.</p>`;
 }
@@ -5749,10 +5766,11 @@ function fUp(e) {
   if (tapStart && tapStart.id === e.pointerId) {
     const t = tapStart; tapStart = null;
     if (e.type === "pointerup" && Date.now() - t.t < 320 && Math.hypot(e.clientX - t.x, e.clientY - t.y) < 12 && !(fg && fg.moved) && fpts.size <= 1) {
-      if (t.dbl) {   /* a double tap: crop the main photo (the one under the finger, else the slide's first), and nothing else */
+      if (t.dbl) {   /* a double tap: select the main photo (the one under the finger, else the slide's first): drag or pinch it, or Crop,
+           Replace, Edit photo from its bar */
         const key = (photoAt(t.p) || {}).key || FRAME_SLOTS.find(k => photoGeo(k));
         fpts.delete(e.pointerId); fg = null; fgRem = false; $("#fTrash").hidden = true;
-        if (key) { if (S.fpanel === "text" && S.ftfield) { commitTyping(); S.fpanel = false; S.ftfield = null; renderFPanel(); } S.fsel = null; S.ftsel = null; S.fmulti = []; S.psel = null; enterCrop(key); }
+        if (key) { if (S.fpanel === "text" && S.ftfield) { commitTyping(); S.fpanel = false; S.ftfield = null; renderFPanel(); } selectPhoto(key); }
         return;
       }
       Object.assign(lastTouchTap, { t: Date.now(), x: e.clientX, y: e.clientY });   /* the first half of a double tap */
@@ -5828,7 +5846,7 @@ function liteUp(e) {
     const now = Date.now();
     if (e.pointerType === "touch" && now - lastTouchTap.t < 360 && Math.hypot(e.clientX - lastTouchTap.x, e.clientY - lastTouchTap.y) < 40) {   /* a double tap: crop the main photo */
       lastTouchTap.t = 0; const key = FRAME_SLOTS.find(k => (S.slides[focusSid] || {})[k]);
-      if (key) { commitTyping(); S.fpanel = false; S.ftfield = null; S.fsel = null; S.ftsel = null; renderFPanel(); layoutLite(); setTimeout(() => { drawFocus(); enterCrop(key); }, 60); }
+      if (key) { commitTyping(); S.fpanel = false; S.ftfield = null; S.fsel = null; S.ftsel = null; renderFPanel(); layoutLite(); setTimeout(() => selectPhoto(key), 60); }
       return;
     }
     if (e.pointerType === "touch") Object.assign(lastTouchTap, { t: now, x: e.clientX, y: e.clientY });
@@ -5874,11 +5892,17 @@ function placePhoto(g, x, y, w) {   /* put the picture at x, y with width w: zoo
 }
 function photoTap(key, mouse) {
   if (!key) return;
+  if (!mouse && lastPtr === "touch") {   /* a finger: one tap doesn't pick up the photo (a double tap does, see fUp), so the slide can be tapped and swiped freely */
+    if (S.psel === key) return;
+    const had = S.fsel || S.ftsel || S.psel || (S.fmulti && S.fmulti.length); S.fsel = null; S.ftsel = null; S.psel = null; S.fmulti = [];
+    if (had) drawFocus(); return;
+  }
   const now = Date.now(), dbl = !mouse && lastPhotoTap.key === key && now - lastPhotoTap.t < 380;
   lastPhotoTap = { t: now, key };
   S.psel = key; S.fsel = null; S.ftsel = null;
   if (dbl) enterCrop(key); else drawFocus();
 }
+function selectPhoto(key) { if (S.crop) exitCrop(); S.fsel = null; S.ftsel = null; S.fmulti = []; S.psel = key; hideArr(); drawFocus(); }
 function enterCrop(key) {
   if (!photoGeo(key)) { toast("Add a photo to this slide first"); return; }
   if (S.fpanel === "text" && S.ftfield) closeTextEditor(true);
@@ -6794,7 +6818,8 @@ function editorTitle(s, ref) {
 const NARROW = /^(text\.rows\.\d+\.(label|value)|text\.(left|right|section|foot|[ab](Value|Label))|post\.\w+)$/;
 /* extra text's shade: Auto (like the slide's own text: only where the photo behind is bright or busy), none, or a set amount */
 const SHADES = [["auto", "Auto"], ["off", "None"], ["0.3", "Light"], ["0.55", "Medium"], ["0.75", "Strong"]];
-const shadeSel = (st, i) => `<select class="ctl" id="ff-stickers-${i}-sh" data-ff="stickers.${i}.shade" aria-label="Shade behind it" title="Shade behind it" style="width:auto">${SHADES.map(([v, l]) => `<option value="${v}"${String(st.shade ?? "auto") === v ? " selected" : ""}>${v === "auto" ? "Shade: auto" : "Shade: " + l.toLowerCase()}</option>`).join("")}</select>`;
+const shadeOpts = st => { const v = st.shade == null ? "auto" : String(st.shade); return SHADES.some(([k]) => k === v) ? SHADES : [...SHADES, [v, `Custom (${Math.round(+v * 100)}%)`]]; };
+const shadeSel = (st, i) => `<select class="ctl" id="ff-stickers-${i}-sh" data-ff="stickers.${i}.shade" aria-label="Shade behind it" title="Shade behind it" style="width:auto">${shadeOpts(st).map(([v, l]) => `<option value="${v}"${String(st.shade ?? "auto") === v ? " selected" : ""}>${v === "auto" ? "Shade: auto" : "Shade: " + l.toLowerCase()}</option>`).join("")}</select>`;
 const layerOpts = (st, i) => shadeSel(st, i) + `<select class="ctl" id="ff-stickers-${i}-w" data-ff="stickers.${i}.w" aria-label="Weight" style="width:auto"><option value="700"${+st.w === 400 ? "" : " selected"}>Bold</option><option value="400"${+st.w === 400 ? " selected" : ""}>Regular</option></select>${alignSel(`ff-stickers-${i}-al`, `data-ff="stickers.${i}.al" aria-label="Align" style="width:auto"`, st.al)}`;
 /* Spacing (the open text): its line spacing, letter spacing and word spacing (slide.tstyle[field path], a text layer its own lh, tr,
    ws), and its block's line spacing: how far apart the texts of the block it's in sit (layout.spread[group]) */
@@ -6914,8 +6939,35 @@ function shadeState(s, ref) {
 function shadeRowHTML(s, ref) {
   if (!ref) return "";
   const o = shadeState(s, ref);
-  return `<div class="shrow" role="group" aria-label="Shade behind the words"><span>Shade behind</span><label class="livet"><input type="checkbox" data-shade="one"${o.mine ? " checked" : ""}> this text</label><label class="livet"><input type="checkbox" data-shade="all"${o.all ? " checked" : ""}> all text on this slide</label></div>`;
+  const v = shadeVals(s, ref);
+  return `<div class="shrow" role="group" aria-label="Shade behind the words"><span>Shade behind</span><label class="livet"><input type="checkbox" data-shade="one"${o.mine ? " checked" : ""}> this text</label><label class="livet"><input type="checkbox" data-shade="all"${o.all ? " checked" : ""}> all text on this slide</label></div>
+    <div class="frowsls shsls"><label class="frowsl"><span>Shade opacity <button type="button" class="shauto" data-shauto aria-pressed="${v.auto}" title="${o.st ? "As dark as the photo behind it needs" : "As dark as the photo needs, for this slide's text"}">Auto</button></span><input type="range" data-shk="o" min="0" max="0.9" step="0.01" value="${v.o}" data-fmt="pct" aria-label="Shade opacity"></label>
+    <label class="frowsl"><span>Shade strength</span><input type="range" data-shk="s" min="0.2" max="4" step="0.05" value="${v.s}" data-fmt="x" aria-label="Shade strength: how far it spreads past the words"></label></div>${o.st ? "" : `<p class="hint shhint">On the slide's own text these set every shade on this slide (Darken behind text).</p>`}`;
 }
+/* the shade's two settings. Extra text: its own (st.shade: an amount, or auto; st.shadeS). A slide's text: the slide's, for all of its
+   text (layout.scrim, the card's Darken behind text; layout.scrimS). Strength is how far the shade spreads past the words. */
+function shadeVals(s, ref) {
+  const o = shadeState(s, ref), L = s.layout || {};
+  const raw = o.st ? o.st.shade : L.scrim, num = raw != null && raw !== "" && raw !== "auto" && raw !== "off" && Number.isFinite(+raw);
+  return { auto: !num, o: num ? +raw : 0.55, s: +(o.st ? o.st.shadeS : L.scrimS) || 1 };
+}
+function setShadeVal(k, v) {
+  const sid = focusSid, s = S.slides[sid], ref = S.ftfield; if (!s || !ref) return;
+  const o = shadeState(s, ref); remember(sid, "shv." + k);
+  if (k === "o") {   /* a set opacity also brings the shade back if it was off */
+    if (o.st) o.st.shade = v == null ? undefined : +v.toFixed(2); else { s.layout = s.layout || {}; if (v == null) delete s.layout.scrim; else s.layout.scrim = +v.toFixed(2); }
+    if (o.st && o.st.shade === undefined) delete o.st.shade;
+    if (v != null && !o.mine) { const ns = { ...(s.noshade || {}) }; if (ns.all) { delete ns.all; ["main", "head", "foot", "tip"].forEach(z => { ns[z] = 1; }); } if (!o.st) delete ns[shadeZone(s, ref)]; if (Object.keys(ns).length) s.noshade = ns; else delete s.noshade; }
+  } else if (o.st) { if (Math.abs(v - 1) < 0.001) delete o.st.shadeS; else o.st.shadeS = +v.toFixed(2); }
+  else { s.layout = s.layout || {}; if (Math.abs(v - 1) < 0.001) delete s.layout.scrimS; else s.layout.scrimS = +v.toFixed(2); }
+  saveSlide(sid); scheduleDraw(sid); syncShadeBoxes();
+  const sv = shadeVals(s, ref), a = $("#fPanel [data-shauto]"); if (a) a.setAttribute("aria-pressed", sv.auto);
+  if (o.st) { const i = s.stickers.indexOf(o.st), se = document.getElementById(`ff-stickers-${i}-sh`); if (se) { se.innerHTML = shadeOpts(o.st).map(([x, l]) => `<option value="${x}">${x === "auto" ? "Shade: auto" : "Shade: " + l.toLowerCase()}</option>`).join(""); se.value = o.st.shade == null ? "auto" : String(o.st.shade); } }
+  clearTimeout(texCardT); texCardT = setTimeout(() => renderBoard(new Set([sid])), 500);
+}
+document.addEventListener("input", e => { const el = e.target; if (el.dataset && el.dataset.shk && el.closest("#fPanel")) { setShadeVal(el.dataset.shk, +el.value); showBubble(el); } });
+document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-shauto]"); if (!b || !b.closest("#fPanel")) return;
+  setShadeVal("o", null); const r = $("#fPanel [data-shk=\"o\"]"); if (r) r.value = 0.55; toast("Shade opacity back to auto: as dark as the photo behind needs"); });
 function setShade(which, on) {
   const sid = focusSid, s = S.slides[sid], ref = S.ftfield; if (!s || !ref) return;
   remember(sid, "shade");
@@ -6923,7 +6975,7 @@ function setShade(which, on) {
   if (which === "all") { if (on) { delete ns.all; ["main", "head", "foot", "tip"].forEach(z => delete ns[z]); } else ns.all = 1; }
   else {
     if (ns.all && on) { delete ns.all; ["main", "head", "foot", "tip"].forEach(z => { ns[z] = 1; }); }   /* all were off: only this one comes back */
-    if (o.st) { if (on) delete o.st.shade; else o.st.shade = "off"; }
+    if (o.st) { if (on) { if (o.st.shade === "off") delete o.st.shade; } else o.st.shade = "off"; }
     else { const z = shadeZone(s, ref); if (on) delete ns[z]; else ns[z] = 1; }
   }
   if (Object.keys(ns).length) s.noshade = ns; else delete s.noshade;
@@ -7058,7 +7110,8 @@ let barKey = "";
 const selRef = () => { const st = selSticker(); return st ? (st.kind === "text" ? "layer:" + st.id : null) : S.ftsel; };
 function updateTextUI() {
   const tsel = $("#fTsel"), bar = $("#fBar"), st = focusSid && selSticker(), k = focusSid ? fcv.clientWidth / geoOf(focusSid).w : 0;
-  if ((!$("#fFontPop").hidden || !$("#fColPop").hidden) && fontFor !== fontKey()) hideFontPop();   /* the Font and Color lists belong to the text they were opened for */
+  if ((!$("#fFontPop").hidden || !$("#fColPop").hidden) && fontFor !== fontKey()) hideFontPop();
+  if (!$("#fPillPop").hidden && pillFor !== S.fsel) hidePillPop();   /* the Font and Color lists belong to the text they were opened for */
   const layer = st && st.kind === "text" ? st : null;
   if (st) { stickerBar(st); tsel.hidden = true; return; }
   const box = layer ? (S.focusBoxes || []).find(b => b.id === layer.id) : st ? null : (S.ftboxes || {})[S.ftsel];
@@ -7089,9 +7142,9 @@ function updateTextUI() {
 function stickerBar(st) {
   const bar = $("#fBar"), box = (S.focusBoxes || []).find(b => b.id === st.id), k = fcv.clientWidth / geoOf(focusSid).w;
   if (!box || !k || liteOn() || (fg && fg.moved) || railDrag || rotDrag || xg || (S.fpanel === "text" && S.ftfield === "layer:" + st.id)) { bar.hidden = true; hideArr(); return; }
-  const custom = st.kind === "custom", text = st.kind === "text", save = custom && !(st.pool && S.mine.has(st.pool)), key = `st:${st.kind}:${save}`;
+  const custom = st.kind === "custom", text = st.kind === "text", pill = (STICKERS[st.kind] || {}).type === "pill", save = custom && !(st.pool && S.mine.has(st.pool)), key = `st:${st.kind}:${save}`;
   const btn = (a, ic, l, t) => `<button type="button" data-fbar="${a}"${t ? ` title="${t}"` : ""}>${ic}${l}</button>`;
-  if (barKey !== key) { barKey = key; bar.classList.add("two"); bar.innerHTML = `<div class="fbr">` + (text ? btn("edit", PEN_I, "Edit") + btn("font", FONT_I, "Font", "Font for this text") + btn("color", COLOR_I, "Color", "Color for this text") : custom ? btn("mkedit", PEN_I, "Edit", "Edit or enhance this sticker") : st.kind === "bdrow" ? btn("rowedit", PEN_I, "Edit row", "Names, subtext, sizes, and more stickers") : "") + sizeFieldHTML("sel") + (save ? btn("savemine", STAR_I, "Save", "Save to My stickers") : "") + `</div><div class="fbr">`
+  if (barKey !== key) { barKey = key; bar.classList.add("two"); bar.innerHTML = `<div class="fbr">` + (text ? btn("edit", PEN_I, "Edit") + btn("font", FONT_I, "Font", "Font for this text") + btn("color", COLOR_I, "Color", "Color for this text") : custom ? btn("mkedit", PEN_I, "Edit", "Edit or enhance this sticker") : pill ? btn("pilledit", PEN_I, "Edit", "Change its words") : st.kind === "bdrow" ? btn("rowedit", PEN_I, "Edit row", "Names, subtext, sizes, and more stickers") : "") + sizeFieldHTML("sel") + (save ? btn("savemine", STAR_I, "Save", "Save to My stickers") : "") + `</div><div class="fbr">`
     + btn(text ? "dup" : "dupst", DUP_I, "Duplicate", "Duplicate (Ctrl+D)") + btn("arr", LAYER_I, "Arrange", "Layer order") + btn("pos", POS_I, "Position", "Nudge and centre") + btn("next", NEXT_I, "Next slide", "A copy on the next slide, in the same place") + `<button type="button" class="del" data-fbar="delst" title="Delete (Delete key)">${TRASH}Delete</button></div>`; }
   syncSizeFields();
   if (S.arrOpen && S.arrOpen !== st.id) hideArr();
@@ -7138,6 +7191,35 @@ function openColorPop() {
   el.hidden = false; placeFontPop(el);
 }
 function hideColorPop() { const el = $("#fColPop"); if (el) el.hidden = true; }
+/* a button sticker's words: st.label ({handle} = your handle, **bold** works). Each edit session is one Undo step. */
+let pillFor = null;
+function openPillPop() {
+  const st = selSticker(), el = $("#fPillPop"), P = st && STICKERS[st.kind]; if (!P || P.type !== "pill") return;
+  hideFontPop(); pillFor = st.id;
+  el.innerHTML = `<p>Words on this sticker</p><div class="pillrow"><input class="ctl" id="fPillIn" type="text" enterkeyhint="done" autocomplete="off" spellcheck="false" maxlength="60" aria-label="Words on this sticker" value="${esc(st.label ?? P.text)}"><button type="button" class="btn primary sm" data-pilldone>Done</button></div><p class="hint">{handle} puts in your handle. It prints in capitals.</p>`;
+  el.hidden = false; placePillPop();
+  const inp = $("#fPillIn"); inp.focus({ preventScroll: true }); inp.select();
+}
+function placePillPop() {
+  const el = $("#fPillPop"); if (!el || el.hidden) return;
+  if (TOUCH()) { el.style.left = Math.max(4, (fcv.clientWidth - el.offsetWidth) / 2) + "px"; const dn = $("#fDone"); el.style.top = (dn && !dn.hidden ? dn.offsetTop + dn.offsetHeight + 8 : 8) + "px"; return; }   /* on a phone, at the top (under the Done pill): clear of the keyboard */
+  placeFontPop(el);
+}
+function hidePillPop() {
+  const el = $("#fPillPop"); if (!el || el.hidden) return;
+  el.hidden = true; const sid = focusSid, was = pillFor; pillFor = null; pillRem = false;
+  if (document.activeElement && document.activeElement.id === "fPillIn") document.activeElement.blur();
+  if (sid && was) renderBoard(new Set([sid]));
+}
+let pillRem = false;
+$("#fPillPop").addEventListener("input", e => {
+  if (e.target.id !== "fPillIn") return;
+  const s = S.slides[focusSid], st = s && (s.stickers || []).find(t => t.id === pillFor); if (!st) return;
+  if (!pillRem) { remember(focusSid, "pill." + st.id); pillRem = true; }
+  st.label = e.target.value; saveSlide(focusSid); scheduleDraw(focusSid);
+});
+$("#fPillPop").addEventListener("keydown", e => { if (e.target.id === "fPillIn" && e.key === "Enter") { e.preventDefault(); hidePillPop(); } else if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); hidePillPop(); } });
+$("#fPillPop").addEventListener("click", e => { if (e.target.closest("[data-pilldone]")) hidePillPop(); });
 function setTextColor(hex) {
   const t = colorTarget(); if (!t) return;
   remember(focusSid, "tcolor");
@@ -7196,6 +7278,7 @@ $("#fBar").addEventListener("click", e => {
   if (b.dataset.fbar === "pedit") { S.fslot = S.psel; S.psel = null; S.fpanel = "photo"; renderFPanel(); drawFocus(); return; }
   if (b.dataset.fbar === "dupst") { const st = selSticker(); if (st) dupSticker(focusSid, st.id); return; }
   if (b.dataset.fbar === "arr") { const st = selSticker(); if (!st) return; if (S.arrOpen === st.id) hideArr(); else { S.arrOpen = st.id; renderArr(); } return; }
+  if (b.dataset.fbar === "pilledit") { if ($("#fPillPop").hidden) openPillPop(); else hidePillPop(); return; }
   if (b.dataset.fbar === "mkedit") { const st = selSticker(); if (st) openMaker(focusSid, "photo", { sid: focusSid, id: st.id }); return; }
   if (b.dataset.fbar === "deltext") { const r = selRef(); if (r) deleteTextRef(r); return; }
   if (b.dataset.fbar === "delst") { const st = selSticker(); if (st) removeSticker(focusSid, st.id); return; }
@@ -7523,7 +7606,7 @@ fcv.addEventListener("contextmenu", e => { if (e.ctrlKey) e.preventDefault(); })
    resize). The unit button switches (kept in this browser). Enter or leaving the box sets it. */
 S.szUnit = (() => { try { return localStorage.getItem("carousel.szUnit") === "%" ? "%" : "px"; } catch (e) { return "px"; } })();
 const NEXT_I = `<svg viewBox="0 0 24 24"><rect x="3" y="6" width="11" height="12" rx="2"/><path d="M17 9l4 3-4 3M14 12h7"/></svg>`;
-const sizeFieldHTML = where => `<span class="fszw" data-szw="${where}"><input class="fszin" type="text" inputmode="decimal" autocomplete="off" aria-label="Size" title="Size: type a new one, then Enter"><button type="button" class="fszu" data-szunit title="px or %">${S.szUnit}</button></span>`;
+const sizeFieldHTML = where => `<span class="fszw" data-szw="${where}"><input class="fszin" type="number" step="any" enterkeyhint="done" autocomplete="off" aria-label="Size" title="Size: type a new one, then Enter"><button type="button" class="fszu" data-szunit title="px or %">${S.szUnit}</button></span>`;
 function sizeHandle(where) {   /* {px, pct, set(v, unit)} for the selection ("sel"), the open text ("edit"), or several ("multi") */
   const s = focusSid && S.slides[focusSid]; if (!s) return null;
   const forSticker = st => { const base = (STICKERS[st.kind] || {}).size || 100; return { px: sizeOf(st), pct: sizeOf(st) / base * 100, set: (v, u) => { st.size = Math.round(clamp(u === "%" ? base * v / 100 : v, MIN_SIZE, MAX_SIZE(st))); } }; };
@@ -7561,6 +7644,19 @@ function applySizeField(inp) {
 }
 document.addEventListener("change", e => { if (e.target.classList && e.target.classList.contains("fszin")) applySizeField(e.target); });
 document.addEventListener("keydown", e => { if (e.target.classList && e.target.classList.contains("fszin") && e.key === "Enter") { e.preventDefault(); e.target.blur(); } }, true);   /* leaving the box sets it (once) */
+/* The on-screen keyboard's Enter key: only LITEMV's text boxes (and other multi-line boxes) keep a real Enter, for a new line or the
+   next line. Every one-line box (a size, an exact slider value, a search, a name) shows Done (Search for a search) and Enter there
+   applies the value and puts the keyboard away. */
+const ONE_LINE = /^(text|search|number|url|email|tel|password)$/;
+document.addEventListener("focusin", e => {
+  const el = e.target; if (!el || el.tagName !== "INPUT" || !ONE_LINE.test(el.type || "text") || el.hasAttribute("enterkeyhint")) return;
+  el.setAttribute("enterkeyhint", el.type === "search" ? "search" : "done");
+});
+document.addEventListener("keydown", e => {
+  const el = e.target; if (e.key !== "Enter" || e.isComposing || !el || el.tagName !== "INPUT" || !ONE_LINE.test(el.type || "text") || !TOUCH()) return;
+  if (el.id === "qIn" || el.closest("form")) return;   /* these do their own thing on Enter (pick the result, submit the form) */
+  setTimeout(() => { if (document.activeElement === el) { el.dispatchEvent(new Event("change", { bubbles: true })); el.blur(); } }, 0);
+});
 document.addEventListener("click", e => {
   const b = e.target.closest && e.target.closest("[data-szunit]"); if (!b) return;
   e.preventDefault(); e.stopPropagation(); S.szUnit = S.szUnit === "px" ? "%" : "px"; try { localStorage.setItem("carousel.szUnit", S.szUnit); } catch (err) {}
@@ -8934,7 +9030,7 @@ function drawFocus(fast) {
   $("#fHint").innerHTML = S.crop
     ? H2(touch ? "Pull a handle to zoom (the opposite side stays), drag the picture to choose what shows, pinch to zoom. Done or a tap around the slide finishes." : "Pull a handle to zoom (the opposite side stays), drag the picture to choose what shows. Done, Esc or a double-click finishes.", "Pull a handle to zoom, drag to move. Done finishes.")
     : S.psel && !S.fsel && !S.ftsel
-    ? H2(touch ? "Drag to move the photo in its frame, pinch to zoom it. Double-tap or Crop for the crop handles." : "Drag to move the photo in its frame. Double-click or Crop for the crop handles.", touch ? "Drag to move, pinch to zoom, double-tap to crop." : "Drag to move, double-click to crop.")
+    ? H2(touch ? "Drag to move the photo in its frame, pinch to zoom it. Crop for the crop handles; Edit photo for its colors." : "Drag to move the photo in its frame. Double-click or Crop for the crop handles.", touch ? "Drag to move, pinch to zoom, Crop for handles." : "Drag to move, double-click to crop.")
     : S.fpanel === "text" && S.ftfield
     ? (touch ? H2("Tap a box to type. Select words and tap B, I, U or H to style them; with nothing selected they style the whole text. Tap other text on the slide to edit that.", "Tap a box to type. B I U H style the selected words, or all of it.") : H2("Type in the boxes; the slide changes as you go. Select words, then B, I, U or H (or Ctrl + B, I, U) to style them; with nothing selected they style the whole text. Click other text to edit that. Enter or Done when you've finished."))
     : S.ftsel
@@ -9568,7 +9664,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, setUploaded, openPosts, renamePost, removePost, groupSel, ungroupSel, groupOfSel, setShade, shadeState, smartSnap, copyToNext, sizeHandle, syncSizeFields, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
+window.__t = { setShadeVal, shadeVals, openPillPop, hidePillPop, selectPhoto, S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, traceSticker, cleanVec, setUploaded, openPosts, renamePost, removePost, groupSel, ungroupSel, groupOfSel, setShade, shadeState, smartSnap, copyToNext, sizeHandle, syncSizeFields, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
