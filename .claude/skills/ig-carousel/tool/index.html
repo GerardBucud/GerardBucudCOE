@@ -1744,7 +1744,7 @@ function hole(ctx, x, y, w, h) {   /* a see-through spot: cleared in the export,
 }
 /* PFR: a frame around this slide's photo on a slide that isn't a frame slide (slide.pframe, same fields as slide.frame); SL: while
    a texture skips the text, the text and the stickers over it are drawn on this separate layer, put back after the texture. */
-let PFR = null, SL = null;
+let PFR = null, SL = null, BASE = null;   /* BASE: the slide's own canvas while SL (the stickers' layer) is in use */
 /* TXR: while texture layers pick out the words, the words are drawn on layers of their own, one per set of text layers that take
    them (so a layer for two chosen texts only reaches those two); TXK: the text sticker being drawn ("st:<id>"); STK: stickers are
    being drawn (only text stickers join the words); NOTX: drawing that stays where it's drawn */
@@ -2218,8 +2218,9 @@ function drawStickers(ctx, post, s, hiliteId) {
       const sa = layerShade(s, st, cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2);
       if (sa > 0) {   /* a soft dark patch behind it where the photo is bright or busy, as the slide's own text gets: st.shadeS, its strength
            (how far it spreads past the words, 0.2x to 4x) */
-        const k = shadeStr(st.shadeS), f = size * 0.7 * k;
-        softPatch(ctx, bw + size * 0.5 * k, bh + size * 0.45 * k, f, sa);
+        const k = shadeStr(st.shadeS), f = size * 0.7 * k, pw = bw + size * 0.5 * k, ph = bh + size * 0.45 * k;
+        if (SL && ctx === SL && BASE) { BASE.save(); BASE.setTransform(ctx.getTransform()); softPatch(BASE, pw, ph, f, sa); BASE.restore(); }   /* while text effects split the slide into layers, the words go on a layer of their own over the stickers' one: the shade goes under them all, on the slide itself, so it never covers its words and the effects don't reach it */
+        else softPatch(ctx, pw, ph, f, sa);
       }
       const ax = al === "left" ? -bw / 2 : al === "right" ? bw / 2 : 0;   /* lines line up inside the box; the box stays centered on x, y */
       TXK = "st:" + st.id; lines.forEach((l, i) => txt(ctx, l, ax, -bh / 2 + i * lh, { size, weight: wt, track: -0.05, cs: tr + 0.05, align: al, color: st.color || INK, fam: fk, ws })); TXK = null;
@@ -3302,9 +3303,9 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
   else renderPhotoSlide(ctx, post, s, idx, total, d);
   d.tboxes = TB; TB = null; TF = null; d.geo = geo; CX0 = M; CX1 = W - M;
   if (UNDER) flushUnder(ctx);   /* a slide with no text */
-  STK = true;
+  STK = true; BASE = SL ? ctx : null;
   d.boxes = ub.concat(drawStickers(SL || ctx, post, { stickers: all.filter(t => !t.under) }, forExport ? null : hiliteId));
-  STK = false; SL = null; PFR = null;
+  STK = false; SL = null; BASE = null; PFR = null;
   const cls = TXR ? [...TXR.cls.entries()] : []; TXR = null;
   const takes = (sig, i) => sig.split(",").includes(String(i));   /* does this set of words go to text layer i */
   if (stack.length) {
