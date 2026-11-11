@@ -765,7 +765,7 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .livet small{color:#9a918d;font-size:12px}
 .shrow{display:flex;align-items:center;gap:6px 14px;flex-wrap:wrap;margin:4px 0 2px;font-size:13px;color:#9a918d}
 .shrow .livet{margin:0}
-.shsls{margin:2px 0 6px}.shsls .frowsl span{display:flex;align-items:center;gap:8px}
+.shdet{margin:0 0 4px;font-size:13px;color:#9a918d}.shdet summary{cursor:pointer;padding:4px 0;min-height:28px}.shsls{margin:2px 0 6px}.shsls .frowsl span{display:flex;align-items:center;gap:8px}
 .shauto{border:1px solid #4a4341;background:none;color:#cfc7c3;font:600 11px/1 var(--ui);padding:4px 8px;border-radius:999px;cursor:pointer;min-height:24px}
 .shauto[aria-pressed="true"]{background:#f3eeeb;color:#131111;border-color:#f3eeeb}
 .shhint{margin:0 0 6px;font-size:12px}
@@ -6845,6 +6845,7 @@ function setSpacing(k, v) {
   saveSlide(focusSid); scheduleDraw(focusSid); clearTimeout(texCardT); const sid = focusSid; texCardT = setTimeout(() => renderBoard(new Set([sid])), 500);
 }
 document.addEventListener("toggle", e => { if (e.target.classList && e.target.classList.contains("tspace")) S.tspOpen = e.target.open; }, true);
+document.addEventListener("toggle", e => { if (e.target.classList && e.target.classList.contains("shdet")) S.shOpen = e.target.open; }, true);
 /* one text's own size (slide.tstyle[path].sz, 0.4× to 2.5×): a title bigger and its line under it smaller, in the same block. Extra
    text (a text layer) has its size in px. */
 const fieldSz = (s, path) => +(((s.tstyle || {})[path] || {}).sz) || 1;
@@ -6941,8 +6942,8 @@ function shadeRowHTML(s, ref) {
   const o = shadeState(s, ref);
   const v = shadeVals(s, ref);
   return `<div class="shrow" role="group" aria-label="Shade behind the words"><span>Shade behind</span><label class="livet"><input type="checkbox" data-shade="one"${o.mine ? " checked" : ""}> this text</label><label class="livet"><input type="checkbox" data-shade="all"${o.all ? " checked" : ""}> all text on this slide</label></div>
-    <div class="frowsls shsls"><label class="frowsl"><span>Shade opacity <button type="button" class="shauto" data-shauto aria-pressed="${v.auto}" title="${o.st ? "As dark as the photo behind it needs" : "As dark as the photo needs, for this slide's text"}">Auto</button></span><input type="range" data-shk="o" min="0" max="0.9" step="0.01" value="${v.o}" data-fmt="pct" aria-label="Shade opacity"></label>
-    <label class="frowsl"><span>Shade strength</span><input type="range" data-shk="s" min="0.2" max="4" step="0.05" value="${v.s}" data-fmt="x" aria-label="Shade strength: how far it spreads past the words"></label></div>${o.st ? "" : `<p class="hint shhint">On the slide's own text these set every shade on this slide (Darken behind text).</p>`}`;
+    <details class="shdet"${S.shOpen ? " open" : ""}><summary>Shade opacity and strength</summary><div class="frowsls shsls"><label class="frowsl"><span>Shade opacity <button type="button" class="shauto" data-shauto aria-pressed="${v.auto}" title="${o.st ? "As dark as the photo behind it needs" : "As dark as the photo needs, for this slide's text"}">Auto</button></span><input type="range" data-shk="o" min="0" max="0.9" step="0.01" value="${v.o}" data-fmt="pct" aria-label="Shade opacity"></label>
+    <label class="frowsl"><span>Shade strength</span><input type="range" data-shk="s" min="0.2" max="4" step="0.05" value="${v.s}" data-fmt="x" aria-label="Shade strength: how far it spreads past the words"></label></div>${o.st ? "" : `<p class="hint shhint">On the slide's own text these set every shade on this slide (Darken behind text).</p>`}</details>`;
 }
 /* the shade's two settings. Extra text: its own (st.shade: an amount, or auto; st.shadeS). A slide's text: the slide's, for all of its
    text (layout.scrim, the card's Darken behind text; layout.scrimS). Strength is how far the shade spreads past the words. */
