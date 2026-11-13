@@ -292,6 +292,7 @@ html.modal-open,html.modal-open body{overflow:hidden}
 .fpanel[hidden]{display:none}
 .fpanel .hint{margin:0;font-size:13px;color:#a8a09c}
 .fchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.fpanel.frp{grid-auto-rows:max-content;align-content:start}   /* the Frame panel (frames + composition guide): its rows keep their height and the panel scrolls, no row squashed to a sliver */
 .fchips::-webkit-scrollbar{display:none}
 .fchips button{flex:0 0 auto;border:1px solid #3a3432;background:#1c1918;color:#d9d2ce;border-radius:999px;padding:7px 11px;font-size:12.5px;cursor:pointer;white-space:nowrap}
 .fchips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
@@ -6431,6 +6432,7 @@ function renderFPanel() {
   el.hidden = !S.fpanel || !s; el.classList.toggle("text", S.fpanel === "text"); el.classList.toggle("one", S.fpanel === "text" && !!S.ftfield);
   $("#focusDlg").classList.toggle("pscroll", !!s && ["tex", "frame", "row"].includes(S.fpanel));   /* phones: the slide keeps 45%, the panel scrolls */
   $("#focusDlg").classList.toggle("withpanel", !!S.fpanel && !!s);
+  el.classList.toggle("frp", S.fpanel === "frame");   /* the Frame panel: rows keep their height, the panel scrolls */
   layoutLite();   /* touch: the edit mode's rows are in place before anything gets the focus */
   if (!S.fpanel || !s) return;
   if (S.fpanel === "text") { el.innerHTML = textPanelHTML(s); updateFmtBar(); return; }
@@ -6502,7 +6504,7 @@ function guidePanelHTML(s) {
   const g = s.guide && GUIDES[s.guide.kind] ? s.guide : null, ratio = geoOf(focusSid).key, col = g && HEXCOL.test(g.color) ? g.color.toLowerCase() : "#ffc400";
   const sl = (k, l, min, max, step, v, fmt) => `<label class="frowsl"><span>${l}</span><input type="range" data-fgds="${k}" min="${min}" max="${max}" step="${step}" value="${v}" data-fmt="${fmt}" aria-label="Guide ${l.toLowerCase()}"></label>`;
   return `<h5 class="gdh">Composition guide</h5><div class="fchips frchips gdchips" role="group" aria-label="Composition guide"><button type="button" data-fgd="none" aria-pressed="${!g}"><i class="frnone">∅</i>No guide</button>${Object.entries(GUIDES).map(([k, G]) => `<button type="button" data-fgd="${k}" aria-pressed="${!!g && g.kind === k}"><img src="${guideThumb(k, RATIOS[ratio] ? ratio : "3:4", "#ffc400")}" alt="">${esc(G.label)}</button>`).join("")}</div>
-    ${g ? `<div class="fchips" role="group" aria-label="Guide color">${GUIDE_COLORS.map(([c, l]) => `<button type="button" data-fgdc="${c}" aria-pressed="${col === c}"><i class="sw" style="background:${c}"></i>${l}</button>`).join("")}<label class="ftexc" title="Any color"><input type="color" data-fgdcol value="${col}" aria-label="Guide color"><span>Any</span></label></div>
+    ${g ? `<div class="fchips gdcfg" role="group" aria-label="Guide color">${GUIDE_COLORS.map(([c, l]) => `<button type="button" data-fgdc="${c}" aria-pressed="${col === c}"><i class="sw" style="background:${c}"></i>${l}</button>`).join("")}<label class="ftexc" title="Any color"><input type="color" data-fgdcol value="${col}" aria-label="Guide color"><span>Any</span></label></div>
     <div class="frowsls">${sl("w", "Thickness", 0.2, 6, 0.05, +g.w || 1, "x")}${sl("op", "Opacity", 0, 1, 0.01, g.op ?? 1, "pct")}</div>
     <div class="frow"><button type="button" class="btn ghost sm" data-fgdm="fx" aria-pressed="${!!g.fx}">⇆ Mirror left–right</button><button type="button" class="btn ghost sm" data-fgdm="fy" aria-pressed="${!!g.fy}">⇅ Mirror top–bottom</button></div>
     <p class="hint" style="margin:0">Over the photo, under the words. For the guide on its own over a video: Download → Overlay PNG: text only.</p>` : ""}`;
@@ -6514,7 +6516,10 @@ function guideSet(o, live) {   /* o: null (no guide), or the fields to change; l
   if (s.guide) { if (!s.guide.fx) delete s.guide.fx; if (!s.guide.fy) delete s.guide.fy; }
   saveSlide(focusSid); scheduleDraw(focusSid);
   if (live) { clearTimeout(texCardT); const sid = focusSid; texCardT = setTimeout(() => renderBoard(new Set([sid])), 500); }
-  else { renderFPanel(); drawFocus(); renderBoard(new Set([focusSid])); }
+  else {
+    renderFPanel(); drawFocus(); renderBoard(new Set([focusSid]));
+    if (o && o.kind) { const pn = $("#fPanel"), c = pn && pn.querySelector("[data-fgdm]"); if (c) pn.scrollTop += c.getBoundingClientRect().bottom - pn.getBoundingClientRect().bottom + 12; }   /* a guide just picked: its color, thickness and opacity come into view */
+  }
 }
 function frameSet(o) {   /* o: null (no frame), or the fields to change */
   const s = S.slides[focusSid]; if (!s) return;
