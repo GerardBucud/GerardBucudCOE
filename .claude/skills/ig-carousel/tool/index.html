@@ -808,6 +808,7 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .ftexl button[aria-pressed="true"]{background:#f3eeeb;border-color:#f3eeeb;color:#111;font-weight:700}
 .frchips button{display:inline-flex;flex-direction:column;align-items:center;gap:4px;border-radius:12px;padding:6px 8px;font-size:11.5px}
 .frchips img{width:46px;height:auto;border-radius:3px;display:block}
+.gdh{margin:14px 0 6px;font:700 13px/1.2 var(--ui);color:#f3eeeb}.gdchips img{width:52px}
 .frchips .frnone{display:grid;place-items:center;width:46px;height:46px;font-style:normal;font-size:20px;margin:0;opacity:.7}
 #focusDlg.lite .fcrop,#focusDlg.lite .psel,#focusDlg.lite .cropbar{display:none!important}
 @media (pointer:coarse){.xf i{width:22px;height:22px;border-radius:50%}.xf i[data-xh=nw]{left:-12px;top:-12px}.xf i[data-xh=ne]{right:-12px;top:-12px}.xf i[data-xh=sw]{left:-12px;bottom:-12px}.xf i[data-xh=se]{right:-12px;bottom:-12px}.xf .xrot{width:36px;height:36px;margin-left:-18px;bottom:-50px}.xf::after{height:16px;bottom:-16px}}
@@ -1564,7 +1565,83 @@ let FOV = null;
    text's own size × (one text of a block bigger or smaller, from its alignment point and first line's top)}}; LSY: each
    text's first line's top while a slide renders (its other lines spread from it) */
 let TST = null, LSY = null, HIDE = null;   /* HIDE: the header parts this slide leaves out (slide.hide) */
+
+/* ---------- composition guides ----------
+   slide.guide = {kind, color, w (line thickness ×), op (opacity), fx / fy (mirror left-right / top-bottom)}: lines over the photo and
+   under the words, sharp at any ratio. Drawn just before the slide's first text (after the photo and its shades). The same drawing
+   makes the overlay PNG pack (window.__guidePNG). */
+const GUIDES = {
+  thirds: { label: "Rule of thirds" }, phi: { label: "Golden ratio" }, spiral: { label: "Fibonacci spiral" }, leading: { label: "Leading lines" },
+  symmetry: { label: "Symmetry" }, center: { label: "Centre" }, dutch: { label: "Dutch angle" }, framein: { label: "Frame within a frame" },
+  triangles: { label: "Golden triangles" }, horizon: { label: "Horizon line" },
+};
+let GUIDE = null;
+const guideOf = s => s && s.guide && GUIDES[s.guide.kind] ? s.guide : null;
+function drawGuide(ctx, g, X, Y, w, h) {
+  const k = g.kind, col = HEXCOL.test(g.color) ? g.color : "#ffc400", lw = Math.max(1, Math.max(w, h) * 0.0042 * clamp(+g.w || 1, 0.2, 6)), op = clamp(g.op ?? 1, 0, 1);
+  const mx = g.fx ? -1 : 1, my = g.fy ? -1 : 1, P = (u, v) => [X + (mx < 0 ? 1 - u : u) * w, Y + (my < 0 ? 1 - v : v) * h];   /* u, v: 0..1 across the frame */
+  const line = pts => { ctx.beginPath(); pts.forEach(([u, v], i) => { const [x, y] = P(u, v); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); ctx.stroke(); };
+  const dot = (u, v, r) => { const [x, y] = P(u, v); ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); };
+  ctx.save(); ctx.beginPath(); ctx.rect(X, Y, w, h); ctx.clip();
+  ctx.globalAlpha *= op; ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = lw; ctx.lineCap = "round"; ctx.lineJoin = "round";
+  ctx.shadowColor = "rgba(0,0,0,.35)"; ctx.shadowBlur = lw * 1.6;
+  if (k === "thirds" || k === "phi") {
+    const a = k === "phi" ? 0.382 : 1 / 3, b = 1 - a;
+    [a, b].forEach(t => { line([[t, 0], [t, 1]]); line([[0, t], [1, t]]); });
+    [[a, a], [b, a], [a, b], [b, b]].forEach(([u, v]) => dot(u, v, lw * 1.8));
+  } else if (k === "spiral") {
+    /* a golden spiral with its squares: built in a phi x 1 rectangle, stretched to the frame (turned on its side on a tall one) */
+    const PHI = (1 + Math.sqrt(5)) / 2, land = w >= h, Q = (x, y) => land ? [x / PHI, y] : [y, x / PHI];
+    let x = 0, y = 0, rw = PHI, rh = 1; const arcs = [], cuts = [];
+    for (let i = 0; i < 12; i++) {
+      const c = i % 4;
+      if (c === 0) { const q = rh; arcs.push([x + q, y + q, q, Math.PI, 1.5 * Math.PI]); cuts.push([[x + q, y], [x + q, y + rh]]); x += q; rw -= q; }
+      else if (c === 1) { const q = rw; arcs.push([x, y + q, q, 1.5 * Math.PI, 2 * Math.PI]); cuts.push([[x, y + q], [x + rw, y + q]]); y += q; rh -= q; }
+      else if (c === 2) { const q = rh; arcs.push([x + rw - q, y, q, 0, 0.5 * Math.PI]); cuts.push([[x + rw - q, y], [x + rw - q, y + rh]]); rw -= q; }
+      else { const q = rw; arcs.push([x + q, y + rh - q, q, 0.5 * Math.PI, Math.PI]); cuts.push([[x, y + rh - q], [x + rw, y + rh - q]]); rh -= q; }
+      if (rw < 1e-4 || rh < 1e-4) break;
+    }
+    ctx.save(); ctx.globalAlpha *= 0.55; ctx.lineWidth = lw * 0.6; cuts.forEach(([a, b]) => line([Q(...a), Q(...b)])); ctx.restore();
+    const pts = []; arcs.forEach(([cx, cy, r, a0, a1]) => { for (let j = 0; j <= 24; j++) { const t = a0 + (a1 - a0) * j / 24; pts.push(Q(cx + r * Math.cos(t), cy + r * Math.sin(t))); } });
+    line(pts);
+  } else if (k === "leading") {
+    const vu = 0.5, vv = 0.42;
+    [[0, 1], [1, 1], [0.3, 1], [0.7, 1], [0, 0.72], [1, 0.72], [0, 0], [1, 0]].forEach(([u, v]) => line([[u, v], [vu, vv]]));
+    ctx.save(); ctx.lineWidth = lw; const [cx, cy] = P(vu, vv); ctx.beginPath(); ctx.arc(cx, cy, Math.min(w, h) * 0.035, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+  } else if (k === "symmetry") {
+    line([[0.5, 0], [0.5, 1]]);
+    for (let i = 1; i < 6; i++) { const v = i / 6, t = 0.018 * Math.min(w, h) / w; line([[0.5 - t, v], [0.5 + t, v]]); }
+  } else if (k === "center") {
+    const r = 0.13 * Math.min(w, h), [cx, cy] = P(0.5, 0.5);
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - r * 1.6, cy); ctx.lineTo(cx - r * 0.35, cy); ctx.moveTo(cx + r * 0.35, cy); ctx.lineTo(cx + r * 1.6, cy);
+    ctx.moveTo(cx, cy - r * 1.6); ctx.lineTo(cx, cy - r * 0.35); ctx.moveTo(cx, cy + r * 0.35); ctx.lineTo(cx, cy + r * 1.6); ctx.stroke();
+    const m = 0.06 * Math.min(w, h), L = m * 1.4; ctx.lineWidth = lw * 1.2;   /* corner marks */
+    [[X + m, Y + m, 1, 1], [X + w - m, Y + m, -1, 1], [X + m, Y + h - m, 1, -1], [X + w - m, Y + h - m, -1, -1]].forEach(([x, y, sx, sy]) => { ctx.beginPath(); ctx.moveTo(x, y + sy * L); ctx.lineTo(x, y); ctx.lineTo(x + sx * L, y); ctx.stroke(); });
+  } else if (k === "dutch") {
+    const a = -12 * Math.PI / 180 * mx * my, len = Math.hypot(w, h);
+    ctx.lineWidth = lw * 1.5;
+    [0.2, 0.8].forEach(v => { const [cx, cy] = P(0.5, v); ctx.beginPath(); ctx.moveTo(cx - Math.cos(a) * len, cy - Math.sin(a) * len); ctx.lineTo(cx + Math.cos(a) * len, cy + Math.sin(a) * len); ctx.stroke(); });
+  } else if (k === "framein") {
+    const m = 0.13 * Math.min(w, h), r = 0.05 * Math.min(w, h), x0 = X + m, y0 = Y + m * (h > w ? 1.6 : 1), ww = w - 2 * m, hh = h - (y0 - Y) * 2;
+    ctx.save(); ctx.shadowColor = "transparent"; ctx.fillStyle = "rgba(0,0,0,.5)"; ctx.beginPath(); ctx.rect(X, Y, w, h); if (ctx.roundRect) ctx.roundRect(x0, y0, ww, hh, r); else ctx.rect(x0, y0, ww, hh); ctx.fill("evenodd"); ctx.restore();
+    ctx.lineWidth = lw * 1.4; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(x0, y0, ww, hh, r); else ctx.rect(x0, y0, ww, hh); ctx.stroke();
+  } else if (k === "triangles") {
+    /* the diagonal, and a line from each other corner meeting it at a right angle */
+    line([[0, 0], [1, 1]]);
+    const foot = (px, py) => { const t = (px * w * w + py * h * h) / (w * w + h * h); return [t, t]; };
+    line([[1, 0], foot(1, 0)]); line([[0, 1], foot(0, 1)]);
+  } else if (k === "horizon") {
+    const v = 2 / 3; line([[0, v], [1, v]]);
+    const t = 0.025 * Math.min(w, h) / h; [0.06, 0.94].forEach(u => line([[u, v - t], [u, v + t]]));
+  }
+  ctx.restore();
+}
+function flushGuide() { const g = GUIDE; GUIDE = null; if (!g) return; const tf = TF; TF = null; drawGuide(g.ctx, g.g, 0, 0, W, H); TF = tf; }   /* always on the slide itself, under the words and the stickers */
+/* the overlay pack: one guide on a see-through canvas of any size */
+window.__guidePNG = (g, w, h) => { const c = document.createElement("canvas"); c.width = w; c.height = h; drawGuide(c.getContext("2d"), g, 0, 0, w, h); return c.toDataURL("image/png"); };
 function txt(ctx, str, x, capTop, o) {
+  if (GUIDE && !NOTX) flushGuide();
   if (UNDER) flushUnder(ctx);
   if (FOV && TF && FOV[TF] && !o.fov && str) {
     const nf = FOV[TF] === "nimbus" ? null : FAMS[FOV[TF]] ? FOV[TF] : undefined;
@@ -3291,6 +3368,7 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
   INK = s.ink === "black" ? "#111111" : s.ink === "white" ? "#ffffff" : BG ? inkOn(BG.c2 ? mixHex(BG.c1, BG.c2) : BG.c1) : "#ffffff";   /* auto: dark text on a light background */
   if (OVERLAY && !KEEP) { if (!forExport) checker(ctx); } else if (BG) paintBg(ctx, 0, 0, W, H); else { ctx.fillStyle = "#100c0b"; ctx.fillRect(0, 0, W, H); }
   const d = design(ctx, post, s);
+  GUIDE = guideOf(s0) ? { g: guideOf(s0), ctx } : null;
   const all = (s.stickers || []).filter(Boolean), under = all.filter(t => t.under), ub = [];
   UNDER = under.length ? { post, list: under, hilite: forExport ? null : hiliteId, boxes: ub } : null;
   if (OVERLAY) d.note = (d.note || "") + (KEEP ? " · <b>transparent photo spot</b>" : " · <b>transparent PNG</b>");
@@ -3302,6 +3380,7 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
   else if (s.type === "frame") renderFrame(ctx, post, s, idx, total, d);
   else renderPhotoSlide(ctx, post, s, idx, total, d);
   d.tboxes = TB; TB = null; TF = null; d.geo = geo; CX0 = M; CX1 = W - M;
+  if (GUIDE) flushGuide();   /* a slide with no text */
   if (UNDER) flushUnder(ctx);   /* a slide with no text */
   STK = true; BASE = SL ? ctx : null;
   d.boxes = ub.concat(drawStickers(SL || ctx, post, { stickers: all.filter(t => !t.under) }, forExport ? null : hiliteId));
@@ -3364,7 +3443,7 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
   const empties = (TEMPLATES[s.type] ? TEMPLATES[s.type].slots : ["img"]).filter(k => !s[k]);   /* empty spots are drawn in their slots' order */
   d.photos = PH.map(p => p.slot ? { key: FRAME_SLOTS.find(k => s[k] === p.slot) || null, x: p.x, y: p.y, w: p.w, h: p.h, contain: p.contain } : { key: empties.shift() || null, empty: true, x: p.x, y: p.y, w: p.w, h: p.h }).filter(p => p.key);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
-  OVERLAY = false; KEEP = false; PH = []; WHOLE = false; BG = null; HL = null; INK = "#ffffff"; DISP = null; EXPORTING = false; TXR = null; STK = false; NOTX = false; FOV = null; TST = null; LSY = null; HIDE = null; NOSH = null; SCS = 1;
+  OVERLAY = false; KEEP = false; PH = []; WHOLE = false; BG = null; HL = null; INK = "#ffffff"; DISP = null; EXPORTING = false; TXR = null; STK = false; NOTX = false; FOV = null; TST = null; LSY = null; HIDE = null; NOSH = null; SCS = 1; GUIDE = null;
   return d;
 }
 
@@ -6400,13 +6479,42 @@ const thumbMemo = new Map();
 const frameThumbM = (kind, ratio, color) => { const k = kind + "|" + ratio + "|" + color; if (!thumbMemo.has(k)) thumbMemo.set(k, frameThumb(kind, 84, ratio, color)); return thumbMemo.get(k); };
 function framePanelHTML(s) {
   const isF = s.type === "frame", on = isF || !!(s.pframe && FRAMES[s.pframe.kind]), f = isF ? frameOf(s) : on ? frameOf({ frame: s.pframe }) : null;
-  if (!isF && !s.img) return `<p class="hint">Add a photo to this slide first, then pick a frame for it. For a frame with several photos, select the photos in the Library and tap Put in frames.</p>`;
+  if (!isF && !s.img) return `<p class="hint">Add a photo to this slide first, then pick a frame for it. For a frame with several photos, select the photos in the Library and tap Put in frames.</p>` + guidePanelHTML(s);
   const ratio = geoOf(focusSid).key, kinds = Object.entries(FRAMES).filter(([, F]) => isF || F.n === 1);
   const sl = (k, l, max, v) => `<label class="frowsl"><span>${l}</span><input type="range" data-ffrs="${k}" min="0" max="${max}" step="0.005" value="${v}" data-fmt="pct" aria-label="${l}"></label>`;
   return `<div class="fchips frchips" role="group" aria-label="Frame">${isF ? "" : `<button type="button" data-ffr="none" aria-pressed="${!on}"><i class="frnone">∅</i>No frame</button>`}${kinds.map(([k, F]) => `<button type="button" data-ffr="${k}" aria-pressed="${!!f && f.kind === k}"><img src="${frameThumbM(k, RATIOS[ratio] ? ratio : "3:4", "#111111")}" alt="">${esc(F.label)}</button>`).join("")}</div>
     ${on ? `<div class="fchips" role="group" aria-label="Frame color">${FRAME_COLORS.map(([c, l]) => `<button type="button" data-ffrc="${c}" aria-pressed="${f.color.toLowerCase() === c}"><i class="sw" style="background:${c}"></i>${l}</button>`).join("")}<label class="ftexc" title="Any color"><input type="color" data-ffrcol value="${f.color}" aria-label="Frame color"><span>Any</span></label></div>
     <div class="frowsls">${sl("r", "Rounding", 0.2, f.r)}${sl("m", "Thickness", 0.2, f.m)}${f.n > 1 ? sl("g", "Gap", 0.1, f.g) : ""}</div>` : ""}
-    <p class="hint" style="margin:0">${isF ? "This slide is a frame slide: tap a window to move or crop its photo." : "A frame around this slide's photo. The words stay where they are; Edit photo, Crop and Position still work on the photo."}</p>`;
+    <p class="hint" style="margin:0">${isF ? "This slide is a frame slide: tap a window to move or crop its photo." : "A frame around this slide's photo. The words stay where they are; Edit photo, Crop and Position still work on the photo."}</p>` + guidePanelHTML(s);
+}
+/* composition guides (slide.guide = {kind, color, w, op, fx, fy}): lines over the photo, under the words. For a guide on its own (to put
+   over a video), Download → Overlay PNG: text only. */
+const GUIDE_COLORS = [["#ffc400", "Yellow"], ["#ffffff", "White"], ["#e02d12", "Red"], ["#f2ede6", "Cream"], ["#000000", "Black"]];
+const guideThumbs = new Map();
+function guideThumb(kind, ratio, color) {
+  const key = kind + "|" + ratio + "|" + color; if (guideThumbs.has(key)) return guideThumbs.get(key);
+  const [a, b] = RATIOS[ratio] || [3, 4], w = a >= b ? 92 : Math.round(92 * a / b), h = a >= b ? Math.round(92 * b / a) : 92;
+  const c = document.createElement("canvas"); c.width = w; c.height = h; const x = c.getContext("2d");
+  x.fillStyle = "#3a3432"; x.fillRect(0, 0, w, h); drawGuide(x, { kind, color, w: 1.6 }, 0, 0, w, h);
+  const u = c.toDataURL("image/png"); guideThumbs.set(key, u); return u;
+}
+function guidePanelHTML(s) {
+  const g = s.guide && GUIDES[s.guide.kind] ? s.guide : null, ratio = geoOf(focusSid).key, col = g && HEXCOL.test(g.color) ? g.color.toLowerCase() : "#ffc400";
+  const sl = (k, l, min, max, step, v, fmt) => `<label class="frowsl"><span>${l}</span><input type="range" data-fgds="${k}" min="${min}" max="${max}" step="${step}" value="${v}" data-fmt="${fmt}" aria-label="Guide ${l.toLowerCase()}"></label>`;
+  return `<h5 class="gdh">Composition guide</h5><div class="fchips frchips gdchips" role="group" aria-label="Composition guide"><button type="button" data-fgd="none" aria-pressed="${!g}"><i class="frnone">∅</i>No guide</button>${Object.entries(GUIDES).map(([k, G]) => `<button type="button" data-fgd="${k}" aria-pressed="${!!g && g.kind === k}"><img src="${guideThumb(k, RATIOS[ratio] ? ratio : "3:4", "#ffc400")}" alt="">${esc(G.label)}</button>`).join("")}</div>
+    ${g ? `<div class="fchips" role="group" aria-label="Guide color">${GUIDE_COLORS.map(([c, l]) => `<button type="button" data-fgdc="${c}" aria-pressed="${col === c}"><i class="sw" style="background:${c}"></i>${l}</button>`).join("")}<label class="ftexc" title="Any color"><input type="color" data-fgdcol value="${col}" aria-label="Guide color"><span>Any</span></label></div>
+    <div class="frowsls">${sl("w", "Thickness", 0.2, 6, 0.05, +g.w || 1, "x")}${sl("op", "Opacity", 0, 1, 0.01, g.op ?? 1, "pct")}</div>
+    <div class="frow"><button type="button" class="btn ghost sm" data-fgdm="fx" aria-pressed="${!!g.fx}">⇆ Mirror left–right</button><button type="button" class="btn ghost sm" data-fgdm="fy" aria-pressed="${!!g.fy}">⇅ Mirror top–bottom</button></div>
+    <p class="hint" style="margin:0">Over the photo, under the words. For the guide on its own over a video: Download → Overlay PNG: text only.</p>` : ""}`;
+}
+function guideSet(o, live) {   /* o: null (no guide), or the fields to change; live: a slider moving (no panel redraw) */
+  const s = S.slides[focusSid]; if (!s) return;
+  remember(focusSid, live ? "gd." + Object.keys(o || {})[0] : undefined);
+  if (!o) delete s.guide; else s.guide = { kind: "thirds", color: "#ffc400", ...(s.guide || {}), ...o };
+  if (s.guide) { if (!s.guide.fx) delete s.guide.fx; if (!s.guide.fy) delete s.guide.fy; }
+  saveSlide(focusSid); scheduleDraw(focusSid);
+  if (live) { clearTimeout(texCardT); const sid = focusSid; texCardT = setTimeout(() => renderBoard(new Set([sid])), 500); }
+  else { renderFPanel(); drawFocus(); renderBoard(new Set([focusSid])); }
 }
 function frameSet(o) {   /* o: null (no frame), or the fields to change */
   const s = S.slides[focusSid]; if (!s) return;
@@ -6458,6 +6566,9 @@ $("#fPanel").addEventListener("click", e => {
   }
   else if (b.dataset.ffr) frameSet(b.dataset.ffr === "none" ? null : { kind: b.dataset.ffr });
   else if (b.dataset.ffrc) frameSet({ color: b.dataset.ffrc });
+  else if (b.dataset.fgd) guideSet(b.dataset.fgd === "none" ? null : { kind: b.dataset.fgd });
+  else if (b.dataset.fgdc) guideSet({ color: b.dataset.fgdc });
+  else if (b.dataset.fgdm) { const s = S.slides[focusSid], k = b.dataset.fgdm; if (s && s.guide) guideSet({ [k]: !s.guide[k] }); }
   else if (b.dataset.fadj) { S.fadj = b.dataset.fadj; renderFPanel(); }
   else if (b.id === "fAdjReset") { const r = $("#fAdj"); r.value = 0; r.dispatchEvent(new Event("input", { bubbles: true })); }
 });
@@ -6477,6 +6588,8 @@ $("#fPanel").addEventListener("input", e => {
     return;
   }
   if (e.target.dataset.tsp) { setSpacing(e.target.dataset.tsp, +e.target.value); showBubble(e.target); return; }
+  if (e.target.dataset.fgds) { guideSet({ [e.target.dataset.fgds]: +e.target.value }, true); showBubble(e.target); return; }
+  if (e.target.hasAttribute("data-fgdcol")) { guideSet({ color: e.target.value.toLowerCase() }, true); return; }
   if (e.target.dataset.ffrs || e.target.hasAttribute("data-ffrcol")) {   /* Frame: rounding, thickness, gap, or any color */
     const s = S.slides[focusSid]; if (!s) return;
     const k = e.target.dataset.ffrs || "color", v = e.target.dataset.ffrs ? +e.target.value : e.target.value, key = s.type === "frame" ? "frame" : "pframe";
@@ -9666,7 +9779,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { setShadeVal, shadeVals, openPillPop, hidePillPop, selectPhoto, S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, traceSticker, cleanVec, setUploaded, openPosts, renamePost, removePost, groupSel, ungroupSel, groupOfSel, setShade, shadeState, smartSnap, copyToNext, sizeHandle, syncSizeFields, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
+window.__t = { GUIDES, guideSet, guideThumb, setShadeVal, shadeVals, openPillPop, hidePillPop, selectPhoto, S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, traceSticker, cleanVec, setUploaded, openPosts, renamePost, removePost, groupSel, ungroupSel, groupOfSel, setShade, shadeState, smartSnap, copyToNext, sizeHandle, syncSizeFields, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
