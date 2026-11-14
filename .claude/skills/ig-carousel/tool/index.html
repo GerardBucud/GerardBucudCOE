@@ -1136,7 +1136,7 @@ details.gsec[open]{padding-bottom:14px}
     <div class="pick frgrid" id="frGrid" role="group" aria-label="Frame"></div>
     <div class="two"><div><span class="lbl">Frame color</span><div class="chips" id="frColors"></div></div><div><label class="lbl" for="frRatio">Slide ratio</label><select class="ctl" id="frRatio"></select></div></div>
     <p class="hint" id="frNote" style="margin:0"></p>
-    <div class="actions"><button type="button" class="btn primary" id="frGo">Make slides</button><button type="button" class="btn ghost sm" id="frPack">Download the frame pack</button></div>
+    <div class="actions"><button type="button" class="btn primary" id="frGo">Make slides</button><button type="button" class="btn sm" id="frOne">Download this frame</button><button type="button" class="btn ghost sm" id="frPack">Download the frame pack</button></div>
     <p class="hint" style="margin:0">The frame pack: every frame in 3:4, 4:5, 9:16, 4:3 and 16:9, black and white, as PNGs with see-through windows, to lay over a video in Edits or CapCut.</p>
   </div>
 </dialog>
@@ -3863,7 +3863,7 @@ function frameCardHTML(sid, s) {
     <div class="chips">${FRAME_COLORS.map(([c, l]) => `<button type="button" data-act="frcolor" data-c="${c}"><i class="sw" style="background:${c}"></i>${l}</button>`).join("")}</div>
     <div class="two">${rng(sid, "frame.r", "Corner rounding", 0, 0.2, 0.005, f.r, "pct")}${rng(sid, "frame.m", "Frame thickness", 0, 0.2, 0.005, f.m, "pct")}</div>
     ${f.n > 1 ? rng(sid, "frame.g", "Gap between photos", 0, 0.1, 0.005, f.g, "pct") : ""}
-    <div class="actions"><button type="button" class="btn sm" data-act="frpick">Pick photos for the windows…</button><button type="button" class="btn ghost sm" data-act="frpack">Download the frame pack</button></div>
+    <div class="actions"><button type="button" class="btn sm" data-act="frpick">Pick photos for the windows…</button><button type="button" class="btn sm" data-act="frone">Download this frame</button><button type="button" class="btn ghost sm" data-act="frpack">Download the frame pack</button></div>
     <p class="hint" style="margin:0">${f.n > 1 ? `${f.n} photos: tap a window in the large view to move or crop its photo. ` : ""}For a video: Photo or video → Video behind: keep, and the windows come out see-through.</p>`;
 }
 /* the dialog: pick a frame for the chosen photos (or for an existing frame slide) */
@@ -3890,6 +3890,7 @@ $("#frDlg").addEventListener("click", e => {
   else if (c) { FRD.color = c.dataset.frc; renderFrames(); }
   else if (t.closest("#frGo")) framesGo();
   else if (t.closest("#frPack")) framePack();
+  else if (t.closest("#frOne")) downloadFrameOnly(frameOf({ frame: { kind: FRD.kind, color: FRD.color } }), ratioKey(S.post, { ratio: FRD.ratio }));
 });
 $("#frDlg").addEventListener("change", e => { if (e.target.id === "frRatio") { FRD.ratio = e.target.value; renderFrames(); } });
 function framesGo() {
@@ -3931,6 +3932,22 @@ async function framePack() {
     await offer("frame-pack.zip", await zip.generateAsync({ type: "blob" }));
   } finally { btn.textContent = "Download the frame pack"; btn.disabled = false; }
 }
+function frameOnlyCanvas(f, ratio, w, h) {   /* w, h: an exact size (else the slide size for that ratio) */
+  const g = w && h ? { w, h } : geoFor({ ratio }, null), c = document.createElement("canvas"); c.width = g.w; c.height = g.h;
+  drawFrameMatte(c.getContext("2d"), f.kind, g.w, g.h, f, f.color); return c;
+}
+const frameOnlyName = (f, ratio) => { const r = ratio.replace(":", "x"); return `frame-${f.kind}${f.kind === r ? "" : "-on-" + r}-${f.color.replace("#", "")}.png`; };
+async function downloadFrameOnly(f, ratio) {
+  const c = frameOnlyCanvas(f, ratio), blob = await new Promise(r => c.toBlob(r, "image/png"));
+  c.width = c.height = 1; return offer(frameOnlyName(f, ratio), blob);
+}
+function slideFrame(sid) {   /* the frame a slide has: a frame slide's, or the one around its photo; null when none */
+  const s = S.slides[sid]; if (!s) return null;
+  if (s.type === "frame") return frameOf(s);
+  return s.pframe && FRAMES[s.pframe.kind] ? frameOf({ frame: s.pframe }) : null;
+}
+function downloadSlideFrame(sid) { const f = slideFrame(sid); if (!f) return toast("This slide has no frame"); return downloadFrameOnly(f, geoOf(sid).key); }
+window.__frameOnly = (f, ratio, w, h) => frameOnlyCanvas(frameOf({ frame: f }), ratio, w, h).toDataURL("image/png");
 window.__framePack = async () => (await framePackFiles()).map(f => ({ path: f.path, data: f.canvas.toDataURL("image/png") }));
 function bdClearMoves(s, all) {   /* item numbers changed (or Arrange automatically): their own moves and sizes go */
   const L = s.layout || {};
@@ -4601,6 +4618,7 @@ document.addEventListener("click", e => {
   if (s && act === "frcolor") { remember(sid); s.frame = { ...(s.frame || {}), color: b.dataset.c }; saveSlide(sid); renderBoard(new Set([sid])); if (focusSid === sid) drawFocus(); return; }
   if (s && act === "frpick") { openFrames([...S.selected], sid); return; }
   if (act === "frpack") { openFrames([], null); return; }
+  if (act === "frone") { downloadSlideFrame(sid); return; }
   if (s && (bdAct(act, b, sid, s) || (/^row(add|del|move)$/.test(act) && rowAct(act, b, sid, s)))) return;
   if (act === "fold") { setFold(sid, !S.folded.has(sid)); saveFolds(); }
   else if (act === "focus") { if (Date.now() - S.suppressClick > 450) openFocus(sid); }
@@ -6486,7 +6504,8 @@ function framePanelHTML(s) {
   const sl = (k, l, max, v) => `<label class="frowsl"><span>${l}</span><input type="range" data-ffrs="${k}" min="0" max="${max}" step="0.005" value="${v}" data-fmt="pct" aria-label="${l}"></label>`;
   return `<div class="fchips frchips" role="group" aria-label="Frame">${isF ? "" : `<button type="button" data-ffr="none" aria-pressed="${!on}"><i class="frnone">∅</i>No frame</button>`}${kinds.map(([k, F]) => `<button type="button" data-ffr="${k}" aria-pressed="${!!f && f.kind === k}"><img src="${frameThumbM(k, RATIOS[ratio] ? ratio : "3:4", "#111111")}" alt="">${esc(F.label)}</button>`).join("")}</div>
     ${on ? `<div class="fchips" role="group" aria-label="Frame color">${FRAME_COLORS.map(([c, l]) => `<button type="button" data-ffrc="${c}" aria-pressed="${f.color.toLowerCase() === c}"><i class="sw" style="background:${c}"></i>${l}</button>`).join("")}<label class="ftexc" title="Any color"><input type="color" data-ffrcol value="${f.color}" aria-label="Frame color"><span>Any</span></label></div>
-    <div class="frowsls">${sl("r", "Rounding", 0.2, f.r)}${sl("m", "Thickness", 0.2, f.m)}${f.n > 1 ? sl("g", "Gap", 0.1, f.g) : ""}</div>` : ""}
+    <div class="frowsls">${sl("r", "Rounding", 0.2, f.r)}${sl("m", "Thickness", 0.2, f.m)}${f.n > 1 ? sl("g", "Gap", 0.1, f.g) : ""}</div>
+    <div class="frow"><button type="button" class="btn sm" data-ffrdl>Download this frame (PNG)</button></div>` : ""}
     <p class="hint" style="margin:0">${isF ? "This slide is a frame slide: tap a window to move or crop its photo." : "A frame around this slide's photo. The words stay where they are; Edit photo, Crop and Position still work on the photo."}</p>` + guidePanelHTML(s);
 }
 /* composition guides (slide.guide = {kind, color, w, op, fx, fy}): lines over the photo, under the words. For a guide on its own (to put
@@ -6571,6 +6590,7 @@ $("#fPanel").addEventListener("click", e => {
   }
   else if (b.dataset.ffr) frameSet(b.dataset.ffr === "none" ? null : { kind: b.dataset.ffr });
   else if (b.dataset.ffrc) frameSet({ color: b.dataset.ffrc });
+  else if (b.hasAttribute("data-ffrdl")) downloadSlideFrame(focusSid);
   else if (b.dataset.fgd) guideSet(b.dataset.fgd === "none" ? null : { kind: b.dataset.fgd });
   else if (b.dataset.fgdc) guideSet({ color: b.dataset.fgdc });
   else if (b.dataset.fgdm) { const s = S.slides[focusSid], k = b.dataset.fgdm; if (s && s.guide) guideSet({ [k]: !s.guide[k] }); }
@@ -9415,7 +9435,8 @@ function dlMenuHTML(sid = focusSid, card = false) {
     + (photo ? `<small>Photo</small><div class="fchips" role="group" aria-label="Photo">${fit("fill", "Fill the slide")}${fit("whole", "Whole photo")}</div>${cutNote(s, g)}` : "") + `</div>`
     + (hasVideo(s) ? `<button type="button" ${A.dl}="mp4">Download video (MP4)<small>The slide over its video, with sound, ${even(g.w * Math.min(1, 1080 / Math.min(g.w, g.h)))} × ${even(g.h * Math.min(1, 1080 / Math.min(g.w, g.h)))}</small></button>` : "")
     + `<button type="button" ${A.dl}="png">Download PNG<small>${hasVideo(s) ? "The video's still" : "Full quality"}, ${g.w} × ${g.h}</small></button><button type="button" ${A.dl}="jpg">Download JPG<small>Best quality, smaller file</small></button>`
-    + `<small class="mhead">For Edits, CapCut or any video editor</small><button type="button" ${A.dl}="ovkeep">Overlay PNG: ${s.type === "frame" || (s.pframe && s.pframe.kind) ? "frame and text" : "the slide"}, photo see-through<small>Put it on top of your video: it shows through the ${s.type === "frame" ? "windows" : "photo spot"}</small></button><button type="button" ${A.dl}="ovtext">Overlay PNG: text only<small>Just the words${(s.stickers || []).length ? " and stickers" : ""}, see-through everywhere else</small></button>`;
+    + `<small class="mhead">For Edits, CapCut or any video editor</small><button type="button" ${A.dl}="ovkeep">Overlay PNG: ${s.type === "frame" || (s.pframe && s.pframe.kind) ? "frame and text" : "the slide"}, photo see-through<small>Put it on top of your video: it shows through the ${s.type === "frame" ? "windows" : "photo spot"}</small></button><button type="button" ${A.dl}="ovtext">Overlay PNG: text only<small>Just the words${(s.stickers || []).length ? " and stickers" : ""}, see-through everywhere else</small></button>`
+    + (s.type === "frame" || (s.pframe && FRAMES[s.pframe.kind]) ? `<button type="button" ${A.dl}="frameonly">Frame only PNG<small>Just this frame (its color, rounding and thickness), the window${s.type === "frame" && frameOf(s).n > 1 ? "s" : ""} see-through</small></button>` : "");
 }
 function pvMenuHTML(card = false) {
   const a = card ? 'data-act="dlk" data-k' : "data-fdl";
@@ -9444,6 +9465,7 @@ function cardMenuAction(b, sid) {
     if (k === "png") exportOne(sid);
     else if (k === "mp4") exportVideo(sid);
     else if (k === "ovkeep" || k === "ovtext") exportOverlay(sid, k === "ovkeep" ? "keep" : "text");
+    else if (k === "frameonly") downloadSlideFrame(sid);
     else if (k === "jpg") { toast("Rendering JPG…"); slideBlob(sid, "image/jpeg", 1).then(bl => { if (bl) offer(fileName(sid).replace(/\.png$/, ".jpg"), bl); }); }
     else { openFocus(sid); requestAnimationFrame(() => focusDownload(k)); }
     return true;
@@ -9528,6 +9550,7 @@ function focusDownload(kind) {
   if (kind === "png") return exportOne(sid);
   if (kind === "mp4") return exportVideo(sid);
   if (kind === "ovkeep" || kind === "ovtext") return exportOverlay(sid, kind === "ovkeep" ? "keep" : "text");
+  if (kind === "frameonly") return downloadSlideFrame(sid);
   if (kind === "jpg") { toast("Rendering JPG…"); return slideBlob(sid, "image/jpeg", 1).then(b => { if (b) offer(fileName(sid).replace(/\.png$/, ".jpg"), b); }); }
   if (kind === "phone" || kind === "grid") { S.pview = kind === "grid" ? "grid" : "feed"; return openOverlay("phone"); }
   openOverlay(kind);
