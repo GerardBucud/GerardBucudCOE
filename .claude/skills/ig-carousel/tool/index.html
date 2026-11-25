@@ -3267,8 +3267,8 @@ function applyTexture(ctx, cv, tx, scale, solid) {   /* solid: a group's own pix
    img, img2 … img5 in window order. With Video behind: keep, the windows are see-through: the frame is an overlay for a video. ---------- */
 const FRAME_SLOTS = ["img", "img2", "img3", "img4", "img5"];
 const FRAMES = {
-  "1x1": { label: "1:1", n: 1, ar: 1 }, "4x5": { label: "4:5", n: 1, ar: 4 / 5 }, "3x4": { label: "3:4", n: 1, ar: 3 / 4 }, "9x16": { label: "9:16", n: 1, ar: 9 / 16 },
-  "5x4": { label: "5:4", n: 1, ar: 5 / 4 }, "4x3": { label: "4:3", n: 1, ar: 4 / 3 }, "16x9": { label: "16:9", n: 1, ar: 16 / 9 }, "239x1": { label: "2.39:1 cinema", n: 1, ar: 2.39 },
+  "1x1": { label: "1:1", n: 1, ar: 1 }, "4x5": { label: "4:5", n: 1, ar: 4 / 5 }, "3x4": { label: "3:4", n: 1, ar: 3 / 4 }, "2x3": { label: "2:3", n: 1, ar: 2 / 3 }, "9x16": { label: "9:16", n: 1, ar: 9 / 16 },
+  "5x4": { label: "5:4", n: 1, ar: 5 / 4 }, "4x3": { label: "4:3", n: 1, ar: 4 / 3 }, "3x2": { label: "3:2 (camera)", n: 1, ar: 3 / 2 }, "16x9": { label: "16:9", n: 1, ar: 16 / 9 }, "239x1": { label: "2.39:1 cinema", n: 1, ar: 2.39 },
   viewfinder: { label: "Viewfinder", n: 1 }, fisheye: { label: "Fisheye", n: 1 }, binoculars: { label: "Binoculars", n: 1 },
   stacked: { label: "Stacked (2)", n: 2 }, trio: { label: "Trio (3)", n: 3 }, grid4: { label: "Grid (4)", n: 4 }, collage: { label: "Collage (5)", n: 5 }
 };
