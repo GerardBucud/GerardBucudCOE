@@ -15,5 +15,7 @@ Fonts the user asked for that are paid or Apple-only are stood in for by free lo
 | Sloop Script look-alike | Pinyon Script | Sloop Script (Font Bureau) |
 | Caveat | Caveat | |
 | Fredoka | Fredoka | |
+| Neue Haas look-alike (Inter Tight) | Inter Tight 400, and 600 as its bold | Neue Haas Grotesk / Helvetica Now Display (paid) |
+| Syne (wide, editorial) | Syne | |
 
 Regenerate with the Google Fonts CSS2 API (a desktop Chrome user agent returns woff2), keeping the `latin` and `latin-ext` faces.
