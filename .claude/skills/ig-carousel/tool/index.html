@@ -255,6 +255,17 @@ summary .dot[hidden]{display:none}
 .menu{position:absolute;right:0;top:40px;z-index:4;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px;display:grid;min-width:170px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
 .menu button{text-align:left;background:none;border:0;padding:9px 10px;border-radius:6px;cursor:pointer;font-size:14px}
 .menu button:hover{background:var(--sunken)}
+.stageb{display:inline-flex;align-items:center;gap:7px;font-weight:600;white-space:nowrap}.stageb i,.stagem i,.stg i{width:9px;height:9px;border-radius:50%;background:var(--sc,#8f8884);flex:0 0 auto;display:inline-block}
+.stageb[data-st="draft"],.stagem [data-st="draft"],.stg[data-st="draft"]{--sc:#9a918d}.stageb[data-st="review"],.stagem [data-st="review"],.stg[data-st="review"]{--sc:#e0a21a}
+.stageb[data-st="ready"],.stagem [data-st="ready"],.stg[data-st="ready"]{--sc:#3e8ed0}.stageb[data-st="uploaded"],.stagem [data-st="uploaded"],.stg[data-st="uploaded"]{--sc:#39b36b}
+.stagem{min-width:250px;left:0;right:auto}.stagem .sth{margin:4px 10px 6px;font-size:12px;color:var(--muted,#8a817d)}
+.stagem button{display:flex;align-items:center;gap:9px}.stagem button b{font-variant-numeric:tabular-nums;color:var(--muted,#8a817d);font-weight:600;width:14px}
+.stagem button[aria-current="step"]{background:var(--sunken);font-weight:700}.stagem button.done{opacity:.6}.stagem .stnext{margin-top:6px;justify-content:center;background:var(--ink,#131111);color:var(--surface,#fff);font-weight:700}
+.stagem .stnext:hover{background:var(--ink,#131111);opacity:.9}
+.pgroup{margin:14px 0 2px;display:flex;align-items:center;justify-content:flex-start;gap:8px;font-size:13px;text-align:left}.pgroup b{font-weight:700}.pgroup em{font-style:normal;color:var(--muted,#8a817d);font-weight:500}
+.stg{display:inline-flex;align-items:center;gap:6px}.stg select{font:inherit;font-size:12.5px;padding:2px 4px;border-radius:6px}
+.pfilt{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}.pfilt button{border:1px solid var(--line);background:none;border-radius:999px;padding:5px 11px;font-size:12.5px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.pfilt button[aria-pressed="true"]{background:var(--ink,#131111);color:var(--surface,#fff);border-color:var(--ink,#131111)}
 .menu .danger{color:var(--accent)}
 
 /* sections */
@@ -1079,6 +1090,7 @@ details.gsec[open]{padding-bottom:14px}
   <span class="brand">Carousel <b>Artboard</b></span>
   <label class="sr" for="postSel">Post</label>
   <select id="postSel" class="ctl" hidden></select>
+  <div class="more"><button id="stageBtn" class="btn sm stageb" hidden aria-expanded="false" title="This post's stage: Draft, In review, Ready for upload, Uploaded"></button></div>
   <label class="ratiobox" hidden><span>Ratio</span><select id="ratioSel" class="ctl" title="The size of this post's slides. A slide can have its own in the large view's download menu."></select></label>
   <div class="more"><button id="newPost" class="btn ghost sm" hidden aria-expanded="false" title="New post, or rename and delete posts">Posts</button></div>
   <button id="refPost" class="btn ghost sm refb" title="Make a new carousel patterned after posts you like">References</button>
@@ -1284,7 +1296,7 @@ details.gsec[open]{padding-bottom:14px}
       <span class="grow"></span>
       <button class="icon" data-fnav="-1" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><button class="icon" data-fnav="1" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
       <button class="icon" data-fshut aria-label="Close phone preview"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-    <div class="pstage" id="pStage"><div class="pphone" id="pPhone"><div class="pscreen" id="pScreen"></div></div><button type="button" class="oside l" data-fnav="-1" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><button type="button" class="oside r" data-fnav="1" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button></div>
+    <div class="stg" id="pStage"><div class="pphone" id="pPhone"><div class="pscreen" id="pScreen"></div></div><button type="button" class="oside l" data-fnav="-1" aria-label="Previous slide"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button><button type="button" class="oside r" data-fnav="1" aria-label="Next slide"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button></div>
     <p class="pnote" id="pNote"></p></div>
 </dialog>
 
@@ -1324,7 +1336,7 @@ details.gsec[open]{padding-bottom:14px}
 <dialog id="postsDlg" aria-labelledby="postsTitle">
   <div class="dlg-h"><h3 id="postsTitle">Your posts</h3><span class="grow"></span>
     <button class="icon" data-close aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
-  <div class="dlg-b"><p class="hint" style="margin:0 0 6px">Type a new name to rename a post (Enter or tap away saves). Delete asks for a second tap; the photos stay in your library.</p>
+  <div class="dlg-b"><p class="hint" style="margin:0 0 6px">Posts by stage: Draft, In review, Ready for upload, Uploaded. Change a post's stage from its menu. Type a new name to rename a post (Enter or tap away saves). Delete asks for a second tap; the photos stay in your library.</p>
     <div id="postsList"></div></div>
 </dialog>
 <dialog id="keysDlg" aria-labelledby="keysTitle">
@@ -1414,6 +1426,13 @@ const FAMS = {
   goodhers: { label: "Goodhers Hooney (rounded, wide)", cat: "Cute", css: '"Goodhers Hooney","Fredoka",sans-serif', cap: 0.7, trk: 0, ws: [400] },
   fredoka: { label: "Fredoka", cat: "Cute", css: '"Fredoka",sans-serif', cap: 0.7, trk: -0.01, ws: [400, 700] }
 };
+/* post stages (see setStage) */
+const STAGES = [["draft", "Draft"], ["review", "In review"], ["ready", "Ready for upload"], ["uploaded", "Uploaded"]];
+const STAGE_KEYS = STAGES.map(x => x[0]);
+const stageOf = m => m && STAGE_KEYS.includes(m.stage) ? m.stage : m && m.posted ? "uploaded" : "draft";
+const stageName = k => (STAGES.find(x => x[0] === k) || STAGES[0])[1];
+const shortDate = t => new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short" });
+const postLabel = (m, id) => `${(m && m.title) || id}${m && stageOf(m) === "uploaded" && m.posted ? `  ✓ Uploaded ${shortDate(m.posted)}` : ""}`;
 const FAM_CATS = ["Sans", "Wide", "Tall", "Serif", "Handwritten", "Cute"];
 let FK = null;   /* the family being measured or drawn: null = Nimbus Sans */
 const inFam = (k, fn) => { const was = FK; FK = FAMS[k] ? k : null; try { return fn(); } finally { FK = was; } };
@@ -2300,7 +2319,7 @@ function drawStickers(ctx, post, s, hiliteId) {
       const wt = +st.w === 400 ? 400 : 700, lines = balance(up(fillR(st.label ?? P.text, post)).split(/\n/).map(x => x.trim())).filter(x => plainText(x).trim()), lh = size * 1.06 * (+st.lh > 0 ? clamp(+st.lh, 0.1, 10) : 1);   /* lh: its line spacing */
       const fk = FAMS[st.font] ? st.font : null, ws = Number.isFinite(+st.ws) ? clamp(+st.ws, -1, 10) : 0;   /* ws: extra word spacing (× size) */   /* a text layer's own font (Nimbus Sans unless set) */
       bh = inFam(fk, () => capH(size)) + Math.max(0, lines.length - 1) * lh;
-      ctx.shadowColor = "rgba(0,0,0,.3)"; ctx.shadowBlur = size * 0.12;
+      { const c0 = st.color || INK; if (!(/^#[0-9a-f]{6}$/i.test(c0) && inkOn(c0) === "#ffffff")) { ctx.shadowColor = "rgba(0,0,0,.3)"; ctx.shadowBlur = size * 0.12; } }   /* light text keeps its soft drop shadow; dark text (on paper) stays crisp */
       const tr = Number.isFinite(+st.tr) ? clamp(+st.tr, -0.5, 10) : -0.05, al = st.al === "left" || st.al === "right" ? st.al : "center";
       bw = Math.max(size, ...lines.map(l => inFam(fk, () => withCS(tr + 0.05, () => richW(ctx, l, size, wt, -0.05))) + (plainText(l).match(/ /g) || []).length * ws * size));   /* tr: -0.05 is the font's own spacing, the rest is extra */
       const sa = layerShade(s, st, cx - bw / 2, cy - bh / 2, cx + bw / 2, cy + bh / 2);
@@ -4461,7 +4480,9 @@ function renderMeta() {
   if (rs) rs.closest(".ratiobox").hidden = false;
   const ps = $("#postSel");
   ps.hidden = S.posts.length < 2;
-  ps.innerHTML = S.posts.map(p => `<option value="${esc(p.id)}"${p.id === S.pid ? " selected" : ""}>${esc(postLabel(p.id === S.pid ? S.post : p.data, p.id))}</option>`).join("");
+  const metaOf = p => (p.id === S.pid ? S.post : p.data) || {};
+  ps.innerHTML = STAGES.map(([k, l]) => { const g = S.posts.filter(p => stageOf(metaOf(p)) === k); return g.length ? `<optgroup label="${esc(l)} (${g.length})">` + g.map(p => `<option value="${esc(p.id)}"${p.id === S.pid ? " selected" : ""}>${esc(postLabel(metaOf(p), p.id))}</option>`).join("") + `</optgroup>` : ""; }).join("");
+  renderStageBtn();
   $("#newPost").hidden = !(S.db || S.local);
   const rn = $("#renamePost"); if (rn) rn.hidden = !!S.readOnly;
   const pk = $("#pickSlides"); if (pk) pk.hidden = !(S.db || S.local) || !!S.readOnly;
@@ -4603,12 +4624,14 @@ document.addEventListener("click", e => {
   if (sd) { const a = sd.dataset.spick; if (a === "new") return newPostFromPicks(); if (a === "clear") { S.picked = []; syncPicks(); return; } return setPicking(false); }
   const hd = t.closest(".card-h");   /* the card's header row (number, kind, thumbnail) folds and opens it too */
   if (hd && !t.closest("button,.card-tools,.more,input,select,.grip")) { const sid = hd.closest(".card").dataset.sid; setFold(sid, !S.folded.has(sid)); saveFolds(); return; }
-  const b = t.closest("[data-act],[data-close],[data-newpost],#dlAll,#applyAll,#addSlide,#copyAll,#newPost,#fPrev,#fNext,#delPost,#notesClose,#overallOk,#newFolderBtn,#folderCancel,#tagBtn,#foldAll");
+  const b = t.closest("[data-act],[data-close],[data-newpost],[data-setstage],#stageBtn,#dlAll,#applyAll,#addSlide,#copyAll,#newPost,#fPrev,#fNext,#delPost,#notesClose,#overallOk,#newFolderBtn,#folderCancel,#tagBtn,#foldAll");
   if (!b) { if (!t.closest(".more")) closeMenus(); return; }
   if (b.id === "foldAll") { const o = order(), all = o.every(id => S.folded.has(id)); o.forEach(id => setFold(id, !all)); saveFolds(); return; }
   if (b.hasAttribute("data-close")) { b.closest("dialog").close(); return; }
   if (b.id === "tagBtn") return tagPhotos([...S.photos.keys()].filter(id => !Array.isArray(S.photos.get(id).tags)), true);
-  if (b.dataset.newpost) { closeMenus(); const k = b.dataset.newpost; if (k === "manage") return openPosts(); if (k === "rename") { window.scrollTo({ top: 0 }); return startRename(); } if (k === "uploaded") return setUploaded(S.pid, !S.post.posted); return newPost(k); }
+  if (b.id === "stageBtn") return toggleStageMenu(b);
+  if (b.dataset.setstage) { closeMenus(); return setStage(S.pid, b.dataset.setstage); }
+  if (b.dataset.newpost) { closeMenus(); const k = b.dataset.newpost; if (k === "manage") return openPosts(); if (k === "rename") { window.scrollTo({ top: 0 }); return startRename(); } if (k === "uploaded") return setUploaded(S.pid, stageOf(S.post) !== "uploaded"); return newPost(k); }
   if (b.id === "dlAll") return exportAll();
   if (b.id === "applyAll") return applyAll();
   if (b.id === "addSlide") return addSlide($("#addType").value);
@@ -4688,8 +4711,9 @@ function toggleNewMenu(btn) {
   closeMenus();
   if (open) return;
   const m = document.createElement("div"); m.className = "menu"; m.style.right = "auto"; m.style.left = "0";
-  m.innerHTML = `<button data-newpost="blank">New blank post</button>${S.post ? `<button data-newpost="copy">Copy of this post</button><button data-newpost="rename">Rename this post</button><button data-newpost="uploaded">${S.post.posted ? "Mark as not uploaded" : "Mark as uploaded ✓"}</button>` : ""}<button data-newpost="manage">All posts: rename, delete…</button>`;
+  m.innerHTML = `<button data-newpost="blank">New blank post</button>${S.post ? `<button data-newpost="copy">Copy of this post</button><button data-newpost="rename">Rename this post</button><button data-newpost="uploaded">${stageOf(S.post) === "uploaded" ? "Back to Ready for upload" : "Mark as uploaded ✓"}</button>` : ""}<button data-newpost="manage">All posts: rename, delete…</button>`;
   btn.after(m); btn.setAttribute("aria-expanded", "true");
+  const r = m.getBoundingClientRect(); if (r.right > window.innerWidth - 4) { m.style.left = "auto"; m.style.right = "0"; }   /* near the right edge (a phone): it opens leftwards */
 }
 /* A slide moves together with its versions. A version moves inside its group; moving it to the front makes it the main one. */
 /* Folded cards are a list you reorder by dragging the grip (mouse or finger). A slide moves with its versions; a version moves only
@@ -9817,7 +9841,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { GUIDES, guideSet, guideThumb, setShadeVal, shadeVals, openPillPop, hidePillPop, selectPhoto, S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, traceSticker, cleanVec, setUploaded, openPosts, renamePost, removePost, groupSel, ungroupSel, groupOfSel, setShade, shadeState, smartSnap, copyToNext, sizeHandle, syncSizeFields, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
+window.__t = { setStage, stageOf, renderPosts, toggleStageMenu, GUIDES, guideSet, guideThumb, setShadeVal, shadeVals, openPillPop, hidePillPop, selectPhoto, S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, traceSticker, cleanVec, setUploaded, openPosts, renamePost, removePost, groupSel, ungroupSel, groupOfSel, setShade, shadeState, smartSnap, copyToNext, sizeHandle, syncSizeFields, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
@@ -10439,19 +10463,37 @@ function newPostFromPicks() {
 }
 /* ---------- renaming a post ---------- */
 function syncPostName() {
-  const p = S.posts.find(x => x.id === S.pid); if (p && p.data) { p.data.title = S.post.title; if (S.post.posted) p.data.posted = S.post.posted; else delete p.data.posted; }
+  const p = S.posts.find(x => x.id === S.pid); if (p && p.data) { p.data.title = S.post.title; if (S.post.posted) p.data.posted = S.post.posted; else delete p.data.posted; if (S.post.stage) p.data.stage = S.post.stage; else delete p.data.stage; }
   const o = $("#postSel") && [...$("#postSel").options].find(x => x.value === S.pid); if (o) o.textContent = postLabel(S.post, S.pid);
 }
-/* Uploaded: a post marked as posted to Instagram / TikTok (post.posted = when it was marked). The post picker and All posts say so. */
-const shortDate = t => new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short" });
-const postLabel = (m, id) => `${(m && m.title) || id}${m && m.posted ? `  ✓ Uploaded ${shortDate(m.posted)}` : ""}`;
-function setUploaded(pid, on) {
-  const cur = pid === S.pid, p = S.posts.find(x => x.id === pid), m = cur ? S.post : p && p.data; if (!m) return;
-  if (on) m.posted = Date.now(); else delete m.posted;
+/* Stages: every post moves through Draft → In review → Ready for upload → Uploaded (post.stage). post.posted is when it was
+   marked Uploaded (older posts only have that, and read as Uploaded; a post with neither is a Draft). The header's stage button
+   moves the open post on (or to any stage), the post picker groups posts by stage, and All posts has a section per stage. */
+function setStage(pid, k) {
+  if (!STAGE_KEYS.includes(k)) return;
+  const cur = pid === S.pid, p = S.posts.find(x => x.id === pid), m = cur ? S.post : p && p.data; if (!m || stageOf(m) === k && m.stage === k) return;
+  m.stage = k;
+  if (k === "uploaded") m.posted = m.posted || Date.now(); else delete m.posted;
   if (cur) { saveMeta(); syncPostName(); }
   else { p.data = { ...m }; queueSave(`posts/${pid}`, () => p.data, 200); }
   renderMeta(); if ($("#postsDlg").open) renderPosts();
-  toast(on ? `“${m.title || "Post"}” marked as uploaded` : `“${m.title || "Post"}” back to not uploaded`);
+  toast(`“${m.title || "Post"}”: ${stageName(k)}${k === "uploaded" ? " ✓" : ""}`);
+}
+function setUploaded(pid, on) { setStage(pid, on ? "uploaded" : "ready"); }   /* the old Uploaded switch */
+function renderStageBtn() {
+  const b = $("#stageBtn"); if (!b) return;
+  b.hidden = !S.post || !(S.db || S.local); if (b.hidden) return;
+  const k = stageOf(S.post), i = STAGE_KEYS.indexOf(k);
+  b.dataset.st = k; b.innerHTML = `<i aria-hidden="true"></i>${esc(stageName(k))}<span aria-hidden="true">▾</span>`;
+  b.setAttribute("aria-label", `Stage ${i + 1} of 4: ${stageName(k)}. Change the stage`);
+}
+function toggleStageMenu(btn) {
+  const open = btn.nextElementSibling; closeMenus(); if (open || !S.post) return;
+  const k = stageOf(S.post), i = STAGE_KEYS.indexOf(k), next = STAGES[i + 1];
+  const m = document.createElement("div"); m.className = "menu stagem"; m.setAttribute("role", "menu");
+  m.innerHTML = `<p class="sth">Stage of this post</p>` + STAGES.map(([key, l], j) => `<button type="button" role="menuitemradio" data-setstage="${key}" data-st="${key}" aria-checked="${key === k}"${key === k ? ' aria-current="step"' : ""}${j < i ? ' class="done"' : ""}><b>${j + 1}</b><i aria-hidden="true"></i>${esc(l)}${j < i ? " ✓" : ""}</button>`).join("")
+    + (next ? `<button type="button" class="stnext" data-setstage="${next[0]}">Next: ${esc(next[1])} →</button>` : "");
+  btn.after(m); btn.setAttribute("aria-expanded", "true");
 }
 function setPostTitle(v) {
   if (!S.post) return;
@@ -10488,14 +10530,21 @@ async function removePost(pid) {
   else renderMeta();
 }
 /* Posts → All posts: every post, newest first, with its name to rename in place, Open and Delete (two taps) */
+S.pfilter = "all";
 function renderPosts() {
-  const list = [...S.posts].sort((a, b) => ((b.id === S.pid ? S.post : b.data).updatedAt || 0) - ((a.id === S.pid ? S.post : a.data).updatedAt || 0));
-  $("#postsList").innerHTML = list.map(p => {
-    const m = (p.id === S.pid ? S.post : p.data) || {}, n = (m.order || []).length, cur = p.id === S.pid;
+  const metaOf = p => (p.id === S.pid ? S.post : p.data) || {};
+  const list = [...S.posts].sort((a, b) => (metaOf(b).updatedAt || 0) - (metaOf(a).updatedAt || 0));
+  const count = k => list.filter(p => stageOf(metaOf(p)) === k).length;
+  const row = p => {
+    const m = metaOf(p), n = (m.order || []).length, cur = p.id === S.pid, k = stageOf(m);
     return `<div class="prow${cur ? " cur" : ""}"><input class="ctl" data-pren="${esc(p.id)}" value="${esc(m.title || "")}" maxlength="80" placeholder="Untitled post" aria-label="Post name">
       <button type="button" class="btn ghost sm" data-popen="${esc(p.id)}"${cur ? " disabled" : ""}>${cur ? "Open now" : "Open"}</button><button type="button" class="btn ghost sm danger" data-pdel="${esc(p.id)}">Delete</button>
-      <p class="hint"><label class="pup"><input type="checkbox" data-pup="${esc(p.id)}"${m.posted ? " checked" : ""}> ${m.posted ? `Uploaded ${shortDate(m.posted)}` : "Uploaded"}</label> · ${n} slide${n === 1 ? "" : "s"}${m.updatedAt ? " · changed " + new Date(m.updatedAt).toLocaleDateString() : ""}</p></div>`;
-  }).join("") || `<p class="hint">No posts yet.</p>`;
+      <p class="hint"><label class="stg" data-st="${k}"><i aria-hidden="true"></i><select data-pstage="${esc(p.id)}" aria-label="Stage of ${esc(m.title || "this post")}">${STAGES.map(([key, l]) => `<option value="${key}"${key === k ? " selected" : ""}>${esc(l)}</option>`).join("")}</select></label>${k === "uploaded" && m.posted ? ` ${shortDate(m.posted)}` : ""} · ${n} slide${n === 1 ? "" : "s"}${m.updatedAt ? " · changed " + new Date(m.updatedAt).toLocaleDateString() : ""}</p></div>`;
+  };
+  const f = S.pfilter;
+  const chips = `<div class="pfilt" role="group" aria-label="Show">${[["all", "All", list.length], ...STAGES.map(([k, l]) => [k, l, count(k)])].map(([k, l, c]) => `<button type="button" data-pfilt="${k}" aria-pressed="${f === k}">${k === "all" ? "" : `<span class="stg" data-st="${k}"><i aria-hidden="true"></i></span>`}${esc(l)} ${c}</button>`).join("")}</div>`;
+  const groups = STAGES.filter(([k]) => f === "all" || f === k).map(([k, l]) => { const g = list.filter(p => stageOf(metaOf(p)) === k); return g.length ? `<p class="pgroup"><span class="stg" data-st="${k}"><i aria-hidden="true"></i></span><b>${esc(l)}</b><em>${g.length}</em></p>` + g.map(row).join("") : ""; }).join("");
+  $("#postsList").innerHTML = list.length ? chips + (groups || `<p class="hint">No posts at this stage.</p>`) : `<p class="hint">No posts yet.</p>`;
 }
 function openPosts() { renderPosts(); $("#postsDlg").showModal(); }
 function renamePost(pid, v) {
@@ -10506,10 +10555,11 @@ function renamePost(pid, v) {
   p.data = { ...p.data, title: v }; queueSave(`posts/${pid}`, () => p.data, 200); renderMeta();
   toast("Post renamed");
 }
-$("#postsDlg").addEventListener("change", e => { const el = e.target.closest("[data-pren]"), up = e.target.closest("[data-pup]"); if (el) renamePost(el.dataset.pren, el.value); else if (up) setUploaded(up.dataset.pup, up.checked); });
+$("#postsDlg").addEventListener("change", e => { const el = e.target.closest("[data-pren]"), st = e.target.closest("[data-pstage]"); if (el) renamePost(el.dataset.pren, el.value); else if (st) setStage(st.dataset.pstage, st.value); });
 $("#postsDlg").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.matches("[data-pren]")) { e.preventDefault(); e.target.blur(); } });
 $("#postsDlg").addEventListener("click", async e => {
-  const o = e.target.closest("[data-popen]"), d = e.target.closest("[data-pdel]");
+  const o = e.target.closest("[data-popen]"), d = e.target.closest("[data-pdel]"), fl = e.target.closest("[data-pfilt]");
+  if (fl) { S.pfilter = fl.dataset.pfilt; renderPosts(); return; }
   if (o) { $("#postsDlg").close(); selectPost(o.dataset.popen); window.scrollTo({ top: 0 }); return; }
   if (!d) return;
   if (d.dataset.armed !== "1") { d.dataset.armed = "1"; d.textContent = "Tap again to delete"; setTimeout(() => { if (d.isConnected) { d.dataset.armed = ""; d.textContent = "Delete"; } }, 5000); return; }
