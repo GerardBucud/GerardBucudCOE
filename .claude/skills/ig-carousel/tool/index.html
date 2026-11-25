@@ -839,6 +839,8 @@ div.ctl.rte{display:block;width:100%;min-height:40px;border:1px solid var(--line
 .ftexl button[aria-pressed="true"]{background:#f3eeeb;border-color:#f3eeeb;color:#111;font-weight:700}
 .frchips button{display:inline-flex;flex-direction:column;align-items:center;gap:4px;border-radius:12px;padding:6px 8px;font-size:11.5px}
 .frchips img{width:46px;height:auto;border-radius:3px;display:block}
+.gpresets button{display:inline-flex;align-items:center;gap:7px}.gth{display:grid;gap:2px;width:30px;height:38px}.gth b{background:currentColor;opacity:.5;border-radius:2px}
+.gsteps{gap:14px;flex-wrap:wrap}.gstep{display:inline-flex;align-items:center;gap:6px;font-size:13px}.gstep b{min-width:16px;text-align:center;font-variant-numeric:tabular-nums}.gstep .btn{min-width:36px;justify-content:center}
 .gdh{margin:14px 0 6px;font:700 13px/1.2 var(--ui);color:#f3eeeb}.gdchips img{width:52px}
 .frchips .frnone{display:grid;place-items:center;width:46px;height:46px;font-style:normal;font-size:20px;margin:0;opacity:.7}
 #focusDlg.lite .fcrop,#focusDlg.lite .psel,#focusDlg.lite .cropbar{display:none!important}
@@ -921,6 +923,10 @@ body:has(dialog[open]) .seldock{display:none}
 .tile:has(.sim) .newb{right:38px}
 .tile .vdur,#pickGrid .vdur{position:absolute;left:6px;top:6px;padding:2px 7px;border-radius:999px;background:rgba(0,0,0,.66);color:#fff;font:600 11px/1.5 system-ui,sans-serif;pointer-events:none;z-index:2}
 #pickGrid button{position:relative}
+#pickGrid button.psel img{filter:brightness(.5)}#pickGrid button.psel{outline:3px solid var(--accent);outline-offset:-3px;border-radius:8px}
+#pickGrid .pnum{position:absolute;right:8px;top:8px;z-index:3;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--accent);color:#fff;font:700 14px/1 system-ui,sans-serif;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none}
+#pickGrid .pnum.off{background:rgba(0,0,0,.3)}
+.pickbar{position:sticky;bottom:0;display:flex;align-items:center;gap:8px;padding:10px 16px;background:var(--surface);border-top:1px solid var(--line)}.pickbar span{flex:1;font-weight:700}.pickbar[hidden]{display:none}
 .tile video.tvid{position:absolute;left:0;top:0;width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;pointer-events:none;z-index:1}
 .frame[data-vid]{position:relative}
 .frame[data-vid]::after{content:attr(data-vid);position:absolute;left:8px;bottom:8px;padding:3px 9px;border-radius:999px;background:rgba(0,0,0,.66);color:#fff;font:600 12px/1.4 system-ui,sans-serif;pointer-events:none}
@@ -932,7 +938,7 @@ body:has(dialog[open]) .seldock{display:none}
 .fvid .vt{font:600 12px/1 system-ui,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}
 .fvid input[type=range]{width:min(220px,30vw);accent-color:#fff}
 .tile img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;background:var(--sunken);display:block;outline:3px solid transparent;outline-offset:-3px}
-.tile[aria-pressed="true"] img{outline-color:var(--accent)}
+.tile[aria-pressed="true"] img{outline-color:var(--accent);filter:brightness(.55)}
 .tile .tick{position:absolute;top:6px;left:6px;width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.35);display:grid;place-items:center;color:#fff;font-size:13px;font-weight:700}
 .tile[aria-pressed="true"] .tick{background:var(--accent);border-color:var(--accent)}
 .tile .nm{color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1482,7 +1488,7 @@ const TEMPLATES = {
   beforeafter: { label: "Before / after", slots: ["img", "img2"], text: { aValue: "BEFORE", aLabel: "D-LOG M", aNote: "STRAIGHT OUT OF CAMERA. FLAT ON PURPOSE", bValue: "AFTER", bLabel: "GRADED", bNote: "THE SAME CLIP AFTER THE COLOR GRADE", section: "BEFORE / AFTER", foot: "SAVE FOR LATER" } },
   save: { label: "Save for later", slots: ["img"], text: { left: "DON’T LOSE", right: "THESE", big: "**SAVE** FOR **LATER**", sub: "FOLLOW **{handle}**", section: "CAMERA SETUP", foot: "{handle}" } },
   photo: { label: "Photo", slots: ["img"], text: { label: "", note: "", section: "", foot: "SAVE FOR LATER" } },
-  frame: { label: "Frame (photos in a frame)", slots: ["img", "img2", "img3", "img4", "img5"], text: { title: "", label: "", section: "", foot: "" } },
+  frame: { label: "Frame (photos in a frame)", slots: ["img", "img2", "img3", "img4", "img5", "img6", "img7", "img8", "img9", "img10", "img11", "img12", "img13", "img14", "img15", "img16"], text: { title: "", label: "", section: "", foot: "" } },
   breakdown: { label: "Breakdown (room or setup)", slots: ["img"], text: { title: "HOTEL MINIMALIST VIBES", sub: "WHITE THEME", items: [{ group: "COLOR PALETTE", name: "WHITE", note: "", color: "#ffffff" }, { group: "COLOR PALETTE", name: "WARM BEIGE", note: "", color: "#d9cbb8" }, { group: "COLOR PALETTE", name: "BLACK", note: "", color: "#111111" }, { group: "LIGHTING", name: "WALL LAMP", note: "WARM GLOW" }, { group: "LIGHTING", name: "TABLE LAMP", note: "" }], section: "", foot: "" } },
   gear: { label: "Gear breakdown", slots: ["img"], text: { num: "01", title: "LIGHTING – __STEP ONE__", items: [{ name: "KEY LIGHT", note: "" }, { name: "SOFTBOX", note: "" }], tipK: "", tip: "", section: "GEAR", foot: "SAVE FOR LATER" } }
 };
@@ -3296,14 +3302,15 @@ function applyTexture(ctx, cv, tx, scale, solid) {   /* solid: a group's own pix
 /* ---------- frames: a matte with windows (rounded rectangles of a ratio, a circle, binoculars, or a collage), each window showing a
    photo. slide.frame = {kind, color, r (corner radius, × the short side), m (margin, ×), g (gap between windows, ×)}; the photos are
    img, img2 … img5 in window order. With Video behind: keep, the windows are see-through: the frame is an overlay for a video. ---------- */
-const FRAME_SLOTS = ["img", "img2", "img3", "img4", "img5"];
+const FRAME_SLOTS = ["img", "img2", "img3", "img4", "img5", "img6", "img7", "img8", "img9", "img10", "img11", "img12", "img13", "img14", "img15", "img16"];   /* a grid holds up to 4 x 4 */
 const FRAMES = {
   "1x1": { label: "1:1", n: 1, ar: 1 }, "4x5": { label: "4:5", n: 1, ar: 4 / 5 }, "3x4": { label: "3:4", n: 1, ar: 3 / 4 }, "2x3": { label: "2:3", n: 1, ar: 2 / 3 }, "9x16": { label: "9:16", n: 1, ar: 9 / 16 },
   "5x4": { label: "5:4", n: 1, ar: 5 / 4 }, "4x3": { label: "4:3", n: 1, ar: 4 / 3 }, "3x2": { label: "3:2 (camera)", n: 1, ar: 3 / 2 }, "16x9": { label: "16:9", n: 1, ar: 16 / 9 }, "239x1": { label: "2.39:1 cinema", n: 1, ar: 2.39 },
   viewfinder: { label: "Viewfinder", n: 1 }, fisheye: { label: "Fisheye", n: 1 }, binoculars: { label: "Binoculars", n: 1 },
-  stacked: { label: "Stacked (2)", n: 2 }, trio: { label: "Trio (3)", n: 3 }, grid4: { label: "Grid (4)", n: 4 }, collage: { label: "Collage (5)", n: 5 }
+  stacked: { label: "Stacked (2)", n: 2 }, trio: { label: "Trio (3)", n: 3 }, grid4: { label: "Grid (4)", n: 4 }, collage: { label: "Collage (5)", n: 5 }, grid: { label: "Grid (any)", n: 4, grid: true }
 };
-const frameOf = s => { const f = (s && s.frame) || {}, kind = FRAMES[f.kind] ? f.kind : "4x3"; return { kind, n: FRAMES[kind].n, color: HEXCOL.test(f.color) ? f.color : "#000000", r: f.r == null || f.r === "" ? 0.035 : clamp(+f.r, 0, 0.25), m: f.m == null || f.m === "" ? 0.045 : clamp(+f.m, 0, 0.25), g: f.g == null || f.g === "" ? 0.025 : clamp(+f.g, 0, 0.12) }; };
+const gridDim = v => Math.round(clamp(+v || 2, 1, 4));
+const frameOf = s => { const f = (s && s.frame) || {}, kind = FRAMES[f.kind] ? f.kind : "4x3", cols = gridDim(f.cols), rows = gridDim(f.rows); return { kind, ...(kind === "grid" ? { cols, rows } : {}), n: kind === "grid" ? cols * rows : FRAMES[kind].n, color: HEXCOL.test(f.color) ? f.color : "#000000", r: f.r == null || f.r === "" ? 0.035 : clamp(+f.r, 0, 0.25), m: f.m == null || f.m === "" ? 0.045 : clamp(+f.m, 0, 0.25), g: f.g == null || f.g === "" ? 0.025 : clamp(+f.g, 0, 0.12) }; };
 /* the windows for a frame inside box b (x, y, w, h): [{x, y, w, h, shape: "rect"|"circle"|"bino", r}] */
 function frameWins(kind, b, o) {
   const S0 = Math.min(b.w, b.h), m = o.m * S0, r = o.r * S0, g = o.g * S0, ix = b.x + m, iy = b.y + m, iw = b.w - 2 * m, ih = b.h - 2 * m;
@@ -3319,6 +3326,9 @@ function frameWins(kind, b, o) {
     for (let i = 0; i < n; i++) cells.push(land ? { x: ix + i * (iw - (n - 1) * g) / n + i * g, y: iy, w: (iw - (n - 1) * g) / n, h: ih } : { x: ix, y: iy + i * (ih - (n - 1) * g) / n + i * g, w: iw, h: (ih - (n - 1) * g) / n });
   } else if (kind === "grid4") {
     const w = (iw - g) / 2, h = (ih - g) / 2; for (let i = 0; i < 4; i++) cells.push({ x: ix + (i % 2) * (w + g), y: iy + Math.floor(i / 2) * (h + g), w, h });
+  } else if (kind === "grid") {   /* any columns x rows (1 to 4 each), filled left to right, then top to bottom */
+    const c = gridDim(o.cols), rw = gridDim(o.rows), w = (iw - (c - 1) * g) / c, h = (ih - (rw - 1) * g) / rw;
+    for (let i = 0; i < c * rw; i++) cells.push({ x: ix + (i % c) * (w + g), y: iy + Math.floor(i / c) * (h + g), w, h });
   } else {   /* collage: a wide strip, then a tall one beside two stacked, then another strip (turned on its side on a wide frame) */
     const u = (a, bb, c, d) => land ? { x: ix + bb * iw, y: iy + a * ih, w: d * iw, h: c * ih } : { x: ix + a * iw, y: iy + bb * ih, w: c * iw, h: d * ih };
     const gw = g / (land ? ih : iw), gh = g / (land ? iw : ih), t1 = 0.31, t2 = 0.37, lw = 0.38;
@@ -3482,7 +3492,7 @@ function renderSlide(cv, post, s0, idx, total, scale, forExport, hiliteId) {
     }
     ctx.restore();
   }
-  const empties = (TEMPLATES[s.type] ? TEMPLATES[s.type].slots : ["img"]).filter(k => !s[k]);   /* empty spots are drawn in their slots' order */
+  const empties = (s.type === "frame" ? FRAME_SLOTS.slice(0, frameOf(s).n) : TEMPLATES[s.type] ? TEMPLATES[s.type].slots : ["img"]).filter(k => !s[k]);   /* empty spots are drawn in their slots' order */
   d.photos = PH.map(p => p.slot ? { key: FRAME_SLOTS.find(k => s[k] === p.slot) || null, x: p.x, y: p.y, w: p.w, h: p.h, contain: p.contain } : { key: empties.shift() || null, empty: true, x: p.x, y: p.y, w: p.w, h: p.h }).filter(p => p.key);
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   OVERLAY = false; KEEP = false; PH = []; WHOLE = false; BG = null; HL = null; INK = "#ffffff"; DISP = null; EXPORTING = false; TXR = null; STK = false; NOTX = false; FOV = null; TST = null; LSY = null; HIDE = null; NOSH = null; SCS = 1; GUIDE = null;
@@ -4607,7 +4617,7 @@ document.addEventListener("change", e => {
   else if (el.id === "postSel") selectPost(el.value);
   else if (el.id === "ratioSel") setPostRatio(el.value);
   else if (el.id === "libUpload") { uploadFiles([...el.files], realFolder(S.libFolder)); el.value = ""; }
-  else if (el.id === "pickUpload") { const fs = [...el.files], layer = pickFor && pickFor.slot === "layer"; el.value = ""; if (fs.length) uploadFiles(fs, pickFor && pickFor.slot === "ref" ? REF_FOLDER : realFolder(S.pickFolder)).then(ids => { if (layer) addImageLayers(ids); else if (ids[0]) usePhoto(ids[0]); }); }   /* several: the first goes in the spot (as images: all of them), all go in the library */
+  else if (el.id === "pickUpload") { const fs = [...el.files], layer = pickFor && pickFor.slot === "layer"; el.value = ""; if (fs.length) uploadFiles(fs, pickFor && pickFor.slot === "ref" ? REF_FOLDER : realFolder(S.pickFolder)).then(ids => { if (layer) addImageLayers(ids); else if (pickFor && pickFor.multi && ids.length) fillGrid([...pickFor.sel, ...ids]); else if (ids[0]) usePhoto(ids[0]); }); }   /* a grid: the uploads join what's picked, in order */   /* several: the first goes in the spot (as images: all of them), all go in the library */
   else if (el.id === "refUpload") { const fs = [...el.files]; el.value = ""; uploadFiles(fs, REF_FOLDER).then(ids => { ids.forEach(id => { if (!S.refSel.includes(id) && S.refSel.length < refMax()) S.refSel.push(id); }); S.refFolder = REF_FOLDER; renderRefs(); }); }
   else if (el.id === "moveTo") {
     const v = el.value; el.value = "";
@@ -6547,14 +6557,15 @@ const thumbMemo = new Map();
 const frameThumbM = (kind, ratio, color) => { const k = kind + "|" + ratio + "|" + color; if (!thumbMemo.has(k)) thumbMemo.set(k, frameThumb(kind, 84, ratio, color)); return thumbMemo.get(k); };
 function framePanelHTML(s) {
   const isF = s.type === "frame", on = isF || !!(s.pframe && FRAMES[s.pframe.kind]), f = isF ? frameOf(s) : on ? frameOf({ frame: s.pframe }) : null;
-  if (!isF && !s.img) return `<p class="hint">Add a photo to this slide first, then pick a frame for it. For a frame with several photos, select the photos in the Library and tap Put in frames.</p>` + guidePanelHTML(s);
+  if (!isF && !s.img) return `<p class="hint">Add a photo to this slide first, then pick a frame for it. For a frame with several photos, select the photos in the Library and tap Put in frames.</p>` + gridOfferHTML() + guidePanelHTML(s);
   const ratio = geoOf(focusSid).key, kinds = Object.entries(FRAMES).filter(([, F]) => isF || F.n === 1);
   const sl = (k, l, max, v) => `<label class="frowsl"><span>${l}</span><input type="range" data-ffrs="${k}" min="0" max="${max}" step="0.005" value="${v}" data-fmt="pct" aria-label="${l}"></label>`;
   return `<div class="fchips frchips" role="group" aria-label="Frame">${isF ? "" : `<button type="button" data-ffr="none" aria-pressed="${!on}"><i class="frnone">∅</i>No frame</button>`}${kinds.map(([k, F]) => `<button type="button" data-ffr="${k}" aria-pressed="${!!f && f.kind === k}"><img src="${frameThumbM(k, RATIOS[ratio] ? ratio : "3:4", "#111111")}" alt="">${esc(F.label)}</button>`).join("")}</div>
     ${on ? `<div class="fchips" role="group" aria-label="Frame color">${FRAME_COLORS.map(([c, l]) => `<button type="button" data-ffrc="${c}" aria-pressed="${f.color.toLowerCase() === c}"><i class="sw" style="background:${c}"></i>${l}</button>`).join("")}<label class="ftexc" title="Any color"><input type="color" data-ffrcol value="${f.color}" aria-label="Frame color"><span>Any</span></label></div>
+    ${isF && f.kind === "grid" ? gridSizeHTML(f) : ""}
     <div class="frowsls">${sl("r", "Rounding", 0.2, f.r)}${sl("m", "Thickness", 0.2, f.m)}${f.n > 1 ? sl("g", "Gap", 0.1, f.g) : ""}</div>
     <div class="frow"><button type="button" class="btn sm" data-ffrdl>Download this frame (PNG)</button></div>` : ""}
-    <p class="hint" style="margin:0">${isF ? "This slide is a frame slide: tap a window to move or crop its photo." : "A frame around this slide's photo. The words stay where they are; Edit photo, Crop and Position still work on the photo."}</p>` + guidePanelHTML(s);
+    <p class="hint" style="margin:0">${isF ? (f.n > 1 ? "Tap an empty cell (ADD A PHOTO) to fill it: pick several photos and they go in the empty cells in order, left to right, top to bottom. Tap a photo to move or crop it." : "This slide is a frame slide: tap a window to move or crop its photo.") : "A frame around this slide's photo. The words stay where they are; Edit photo, Crop and Position still work on the photo."}</p>` + (isF ? "" : gridOfferHTML()) + guidePanelHTML(s);
 }
 /* composition guides (slide.guide = {kind, color, w, op, fx, fy}): lines over the photo, under the words. For a guide on its own (to put
    over a video), Download → Overlay PNG: text only. */
@@ -6587,6 +6598,41 @@ function guideSet(o, live) {   /* o: null (no guide), or the fields to change; l
     renderFPanel(); drawFocus(); renderBoard(new Set([focusSid]));
     if (o && o.kind) { const pn = $("#fPanel"), c = pn && pn.querySelector("[data-fgdm]"); if (c) pn.scrollTop += c.getBoundingClientRect().bottom - pn.getBoundingClientRect().bottom + 12; }   /* a guide just picked: its color, thickness and opacity come into view */
   }
+}
+/* a photo grid: columns x rows (1 to 4 each) on a frame slide (frame.kind "grid", frame.cols, frame.rows) */
+const GRID_PRESETS = [[1, 2], [2, 1], [2, 2], [3, 1], [1, 3], [3, 2], [2, 3], [3, 3], [4, 4]];
+const gridThumbHTML = (c, r) => `<i class="gth" style="grid-template-columns:repeat(${c},1fr)" aria-hidden="true">${"<b></b>".repeat(c * r)}</i>`;
+function gridSizeHTML(f) {
+  const step = (k, l, v) => `<div class="gstep" role="group" aria-label="${l}"><span>${l}</span><button type="button" class="btn ghost sm" data-gstep="${k}" data-d="-1" aria-label="Fewer ${l.toLowerCase()}"${v <= 1 ? " disabled" : ""}>−</button><b>${v}</b><button type="button" class="btn ghost sm" data-gstep="${k}" data-d="1" aria-label="More ${l.toLowerCase()}"${v >= 4 ? " disabled" : ""}>+</button></div>`;
+  return `<div class="fchips gpresets" role="group" aria-label="Grid layout">${GRID_PRESETS.map(([c, r]) => `<button type="button" data-gpre="${c}x${r}" aria-pressed="${f.cols === c && f.rows === r}" title="${c} across, ${r} down">${gridThumbHTML(c, r)}${c} × ${r}</button>`).join("")}</div>
+    <div class="frow gsteps">${step("cols", "Columns", f.cols)}${step("rows", "Rows", f.rows)}</div>`;
+}
+function gridOfferHTML() {
+  return `<h5 class="gdh">Photo grid</h5><div class="frow"><button type="button" class="btn sm" data-gridnew>Add a grid slide after this one</button><button type="button" class="btn ghost sm" data-gridconv>Turn this slide into a grid</button></div>
+    <p class="hint" style="margin:0">A grid of photo cells (2 × 2 to start; change it to 3 × 1, 4 × 4 and more in Frame). Turning this slide into one keeps its photo as the first cell and its stickers and extra text; its own words go (Undo brings them back).</p>`;
+}
+function gridSet(o) {
+  const s = S.slides[focusSid]; if (!s || s.type !== "frame") return;
+  remember(focusSid);
+  const f = frameOf(s); s.frame = { ...(s.frame || {}), kind: "grid", cols: f.cols || 2, rows: f.rows || 2, ...o };
+  saveSlide(focusSid); renderFPanel(); drawFocus(); renderBoard(new Set([focusSid]));
+}
+const GRID_NEW = { kind: "grid", cols: 2, rows: 2, color: "#0e0b0a", r: 0.02, m: 0.04, g: 0.02 };
+function gridNewSlide(after) {
+  const cur = S.slides[after], sid = addSlide("frame", true), s = S.slides[sid];
+  s.frame = { ...GRID_NEW }; if (cur && cur.ratio) s.ratio = cur.ratio;
+  const o = order().filter(id => id !== sid), i = o.indexOf(after); o.splice(i >= 0 ? i + 1 : o.length, 0, sid);
+  S.post.order = o; saveSlide(sid); saveMeta(); renderBoard();
+  return sid;
+}
+function gridConvert(sid) {
+  const s = S.slides[sid]; if (!s || s.type === "frame") return;
+  remember(sid);
+  const keep = s.img || null;
+  for (const k of (TEMPLATES[s.type] || {}).slots || []) if (k !== "img") delete s[k];
+  s.type = "frame"; s.frame = { ...GRID_NEW }; s.text = clone(TEMPLATES.frame.text); s.layout = {};
+  FRAME_SLOTS.forEach(k => { if (!(k in s)) s[k] = null; }); s.img = keep;
+  saveSlide(sid); renderBoard(new Set([sid]));
 }
 function frameSet(o) {   /* o: null (no frame), or the fields to change */
   const s = S.slides[focusSid]; if (!s) return;
@@ -6637,6 +6683,10 @@ $("#fPanel").addEventListener("click", e => {
     saveSlide(focusSid); scheduleDraw(focusSid); renderFPanel(); renderBoard(new Set([focusSid]));
   }
   else if (b.dataset.ffr) frameSet(b.dataset.ffr === "none" ? null : { kind: b.dataset.ffr });
+  else if (b.dataset.gpre) { const [c, r] = b.dataset.gpre.split("x").map(Number); gridSet({ cols: c, rows: r }); }
+  else if (b.dataset.gstep) { const s = S.slides[focusSid], f = s && frameOf(s); if (f && f.kind === "grid") gridSet({ [b.dataset.gstep]: gridDim(f[b.dataset.gstep] + +b.dataset.d) }); }
+  else if (b.hasAttribute("data-gridnew")) { const sid = gridNewSlide(focusSid); openFocus(sid); S.fpanel = "frame"; renderFPanel(); drawFocus(); toast("Grid slide added. Tap a cell to add photos; change its size here"); }
+  else if (b.hasAttribute("data-gridconv")) { gridConvert(focusSid); renderFPanel(); drawFocus(); toast("This slide is a grid now (Undo brings it back). Tap a cell to add photos"); }
   else if (b.dataset.ffrc) frameSet({ color: b.dataset.ffrc });
   else if (b.hasAttribute("data-ffrdl")) downloadSlideFrame(focusSid);
   else if (b.dataset.fgd) guideSet(b.dataset.fgd === "none" ? null : { kind: b.dataset.fgd });
@@ -7959,7 +8009,7 @@ function renderLibrary() {
   else if (S.folderForm && S.folderForm.mode === "rename") ft.innerHTML = `<span class="path">Rename folder</span>`;
   else ft.innerHTML = `<span class="path">${esc(S.libFolder.split("/").join(" / "))}</span><button type="button" class="btn ghost sm" data-lib="newsub">New subfolder</button><button type="button" class="btn ghost sm" data-lib="renamefolder">Rename</button><button type="button" class="btn ghost sm danger" data-lib="delfolder">Delete folder</button>`;
   const others = id => (sim.get(id) || []).map(x => (S.photos.get(x) || {}).name).filter(Boolean);
-  lib.innerHTML = items.map(([id, p]) => `<button type="button" class="tile" data-id="${esc(id)}" aria-pressed="${S.selected.has(id)}" aria-label="${esc(p.name)}${p.desc ? ": " + esc(p.desc) : ""}${sim.has(id) ? `, looks like ${others(id).length} other photo${others(id).length === 1 ? "" : "s"}` : ""}${S.selected.has(id) ? ", selected" : ""}" title="${esc([sim.has(id) ? "Looks like: " + others(id).join(", ") : "", p.desc, (p.tags || []).join(", ")].filter(Boolean).join(" · "))}"><img loading="lazy" src="${esc(srcOf(p))}" alt="">${isVid(p) ? `<span class="vdur" aria-label="video, ${fmtDur(p.dur)}">▶ ${fmtDur(p.dur)}</span>` : ""}${S.justAdded && S.justAdded.has(id) ? `<span class="newb">New</span>` : ""}<span class="tick" aria-hidden="true">${S.selected.has(id) ? "✓" : ""}</span>${sim.has(id) ? `<span class="sim">${SIMICON}</span>` : ""}<span class="nm">${esc(p.name)}</span><span class="ds">${esc(p.desc || "")}</span><span class="use">${used.has(id) ? "On slide " + used.get(id).join(", ") : (S.libFolder === "*" || S.libFolder === "~sim" || S.libFolder === "~vid" || S.libFolder === "~new" || q ? esc(p.folder ? p.folder.split("/").join(" / ") : "Unsorted") : "Not on this post")}</span></button>`).join("")
+  lib.innerHTML = items.map(([id, p]) => `<button type="button" class="tile" data-id="${esc(id)}" aria-pressed="${S.selected.has(id)}" aria-label="${esc(p.name)}${p.desc ? ": " + esc(p.desc) : ""}${sim.has(id) ? `, looks like ${others(id).length} other photo${others(id).length === 1 ? "" : "s"}` : ""}${S.selected.has(id) ? ", selected" : ""}" title="${esc([sim.has(id) ? "Looks like: " + others(id).join(", ") : "", p.desc, (p.tags || []).join(", ")].filter(Boolean).join(" · "))}"><img loading="lazy" src="${esc(srcOf(p))}" alt="">${isVid(p) ? `<span class="vdur" aria-label="video, ${fmtDur(p.dur)}">▶ ${fmtDur(p.dur)}</span>` : ""}${S.justAdded && S.justAdded.has(id) ? `<span class="newb">New</span>` : ""}<span class="tick" aria-hidden="true">${S.selected.has(id) ? [...S.selected].indexOf(id) + 1 : ""}</span>${sim.has(id) ? `<span class="sim">${SIMICON}</span>` : ""}<span class="nm">${esc(p.name)}</span><span class="ds">${esc(p.desc || "")}</span><span class="use">${used.has(id) ? "On slide " + used.get(id).join(", ") : (S.libFolder === "*" || S.libFolder === "~sim" || S.libFolder === "~vid" || S.libFolder === "~new" || q ? esc(p.folder ? p.folder.split("/").join(" / ") : "Unsorted") : "Not on this post")}</span></button>`).join("")
     || `<p class="hint">${q ? `No photos match “${esc(q)}”. Try another word, or clear the search.` : S.photos.size ? "No photos in this folder yet. Select photos in All photos and move them here." : "No photos yet. Upload photos or videos to start."}</p>`;
   $$(".tile", lib).forEach(t => { const id = t.dataset.id, p = S.photos.get(id), img = t.querySelector("img"); if (p && !p.ph && img) { if (img.complete) hashFromTile(id, img); else img.addEventListener("load", () => hashFromTile(id, img), { once: true }); } });
   renderSelTools();
@@ -8002,7 +8052,8 @@ function toggleTile(id, range) {
   } else if (S.selected.has(id)) S.selected.delete(id); else S.selected.add(id);
   S.lastTile = id;
   const el = $(`.tile[data-id="${CSS.escape(id)}"]`);
-  $$(".tile").forEach(tl => { const on = S.selected.has(tl.dataset.id); tl.setAttribute("aria-pressed", on); tl.querySelector(".tick").textContent = on ? "✓" : ""; });
+  const selOrder = [...S.selected];   /* each selected photo shows its number, in the order picked (Put in frames fills in that order) */
+  $$(".tile").forEach(tl => { const i = selOrder.indexOf(tl.dataset.id); tl.setAttribute("aria-pressed", i >= 0); tl.querySelector(".tick").textContent = i >= 0 ? i + 1 : ""; });
   renderSelTools();
   if (el) el.focus();
 }
@@ -8196,8 +8247,9 @@ function libAction(a, btn) {
 
 /* ---------- replace image ---------- */
 let pickFor = null;
+const gridPick = (sid, slot) => { const s = S.slides[sid]; return !!s && s.type === "frame" && frameOf(s).n > 1 && FRAME_SLOTS.includes(slot); };
 function openPicker(sid, slot) {
-  pickFor = { sid, slot };
+  pickFor = { sid, slot, multi: gridPick(sid, slot), sel: [] };
   const s = S.slides[sid], ref = slot === "ref";
   const layer = slot === "layer", slogo = slot.startsWith("slogo:"), glogo = slot.startsWith("glogo:") || slogo;
   $("#pickTitle").textContent = slogo ? "Link icon" : glogo ? "App logo" : layer ? "Add an image" : ref ? "Reference image" : slot.startsWith("gear:") ? "Gear picture" : slot.startsWith("bd:") ? "Item picture (cut out automatically)" : slot === "img2" && s.type === "breakdown" ? "Panel photo" : s.type === "beforeafter" ? (slot === "img" ? (s.img ? "Replace before photo" : "Add the before photo") : (s.img2 ? "Replace after photo" : "Add the after photo")) : s && FRAME_SLOTS.includes(slot) && !s[slot] ? "Add a photo" : "Replace image";
@@ -8208,6 +8260,7 @@ function openPicker(sid, slot) {
     : (S.assets || S.local) ? "Pick a photo from your library or upload a new one. The text design re-fits to the photo you choose." : "Pick a photo from your library. Only editors of this board can upload new ones.";
   if (ref && [...S.photos.values()].some(isRefPhoto)) S.pickFolder = REF_FOLDER; else if (!ref && S.pickFolder === REF_FOLDER) S.pickFolder = "*";
   S.pickQuery = ""; $("#pickSearch").value = "";
+  if (pickFor.multi) { const n = frameOf(s).n; $("#pickTitle").textContent = "Add photos to the grid"; $("#pickUploadTxt").textContent = "Upload photos"; $("#pickHint").textContent = `Tap photos in the order you want them: they fill the empty cells left to right, top to bottom, starting with the one you tapped (${n} cells). Then Add.`; }
   renderPicker();
   $("#pickDlg").showModal();
 }
@@ -8217,9 +8270,38 @@ function renderPicker() {
   $("#pickFolders").innerHTML = ["*", "", ...tree].map(f => `<button type="button" data-pf="${esc(f)}" aria-current="${S.pickFolder === f}">${esc(f === "*" || f === "" ? folderLabel(f) : f.split("/").join(" / "))}</button>`).join("");
   const q = S.pickQuery.trim(), items = (q ? photosIn("*").filter(([, p]) => matches(p, q)) : photosIn(S.pickFolder)).filter(([, p]) => !(pickFor && pickFor.slot === "layer" && isVid(p)));   /* images on top are pictures; videos go in a photo spot */
   $("#pickFolders").hidden = !!q;
-  $("#pickGrid").innerHTML = items.map(([id, p]) => `<button type="button" data-pick="${esc(id)}" title="${esc(p.desc || p.name)}"><img loading="lazy" src="${esc(srcOf(p))}" alt="">${isVid(p) ? `<b class="vdur">▶ ${fmtDur(p.dur)}</b>` : ""}<span>${esc(p.name)}</span>${p.desc ? `<span>${esc(p.desc)}</span>` : ""}</button>`).join("") || `<p>${q ? `No photos match “${esc(q)}”.` : "No photos here yet."}</p>`;
+  const sel = pickFor && pickFor.multi ? pickFor.sel : [];
+  $("#pickGrid").innerHTML = items.map(([id, p]) => `<button type="button" data-pick="${esc(id)}" title="${esc(p.desc || p.name)}"${sel.includes(id) ? ` class="psel" aria-pressed="true"` : pickFor && pickFor.multi ? ` aria-pressed="false"` : ""}>${sel.includes(id) ? `<b class="pnum">${sel.indexOf(id) + 1}</b>` : pickFor && pickFor.multi ? `<b class="pnum off"></b>` : ""}<img loading="lazy" src="${esc(srcOf(p))}" alt="">${isVid(p) ? `<b class="vdur">▶ ${fmtDur(p.dur)}</b>` : ""}<span>${esc(p.name)}</span>${p.desc ? `<span>${esc(p.desc)}</span>` : ""}</button>`).join("") || `<p>${q ? `No photos match “${esc(q)}”.` : "No photos here yet."}</p>`;
 }
-$("#pickGrid").addEventListener("click", e => { const b = e.target.closest("[data-pick]"); if (b) usePhoto(b.dataset.pick); });
+$("#pickGrid").addEventListener("click", e => {
+  const b = e.target.closest("[data-pick]"); if (!b) return;
+  if (pickFor && pickFor.multi) { const id = b.dataset.pick, i = pickFor.sel.indexOf(id); if (i >= 0) pickFor.sel.splice(i, 1); else pickFor.sel.push(id); renderPicker(); renderPickBar(); return; }
+  usePhoto(b.dataset.pick);
+});
+function renderPickBar() {
+  let bar = $("#pickBar"); const n = pickFor && pickFor.multi ? pickFor.sel.length : 0;
+  if (!bar) { bar = document.createElement("div"); bar.id = "pickBar"; bar.className = "pickbar"; $("#pickDlg").appendChild(bar); }
+  bar.hidden = !n;
+  bar.innerHTML = n ? `<span>${n} picked</span><button type="button" class="btn ghost sm" data-pickclear>Clear</button><button type="button" class="btn primary sm" data-pickadd>Add ${n} photo${n === 1 ? "" : "s"}</button>` : "";
+}
+$("#pickDlg").addEventListener("click", e => {
+  if (e.target.closest("[data-pickclear]")) { pickFor.sel = []; renderPicker(); renderPickBar(); }
+  else if (e.target.closest("[data-pickadd]")) fillGrid(pickFor.sel.slice());
+});
+$("#pickDlg").addEventListener("close", () => { const b = $("#pickBar"); if (b) b.hidden = true; });
+/* photos into a grid's cells: the tapped cell first, then the empty ones after it, then the empty ones before it (left to right,
+   top to bottom); what doesn't fit is said */
+function fillGrid(ids) {
+  if (!pickFor) return; const { sid, slot } = pickFor, s = S.slides[sid]; if (!s) return;
+  const list = ids.filter(id => S.photos.has(id)); if (!list.length) return;
+  const cells = FRAME_SLOTS.slice(0, frameOf(s).n), at = Math.max(0, cells.indexOf(slot));
+  const targets = [cells[at], ...cells.slice(at + 1).filter(k => !s[k]), ...cells.slice(0, at).filter(k => !s[k])];
+  remember(sid);
+  const used = list.slice(0, targets.length); used.forEach((id, i) => { s[targets[i]] = slotOf(S.photos.get(id)); });
+  saveSlide(sid); $("#pickDlg").close(); renderBoard(new Set([sid])); renderLibrary(); if (focusSid === sid) drawFocus();
+  const left = list.length - used.length;
+  toast(`${used.length} photo${used.length === 1 ? "" : "s"} in the grid${left ? `. ${left} didn't fit: add cells (Frame → Columns / Rows) and tap an empty one` : ""}`);
+}
 $("#pickTimeline").addEventListener("click", () => addTimelineLayer());
 function usePhoto(id) {
   if (!pickFor || !S.photos.has(id)) return;
@@ -9855,7 +9937,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { togglePostMenu, setStage, stageOf, renderPosts, toggleStageMenu, GUIDES, guideSet, guideThumb, setShadeVal, shadeVals, openPillPop, hidePillPop, selectPhoto, S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, traceSticker, cleanVec, setUploaded, openPosts, renamePost, removePost, groupSel, ungroupSel, groupOfSel, setShade, shadeState, smartSnap, copyToNext, sizeHandle, syncSizeFields, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
+window.__t = { fillGrid, gridNewSlide, gridConvert, frameOf, togglePostMenu, setStage, stageOf, renderPosts, toggleStageMenu, GUIDES, guideSet, guideThumb, setShadeVal, shadeVals, openPillPop, hidePillPop, selectPhoto, S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, traceSticker, cleanVec, setUploaded, openPosts, renamePost, removePost, groupSel, ungroupSel, groupOfSel, setShade, shadeState, smartSnap, copyToNext, sizeHandle, syncSizeFields, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
