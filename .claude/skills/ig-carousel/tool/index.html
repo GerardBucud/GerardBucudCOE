@@ -258,6 +258,17 @@ summary .dot[hidden]{display:none}
 .stageb{display:inline-flex;align-items:center;gap:7px;font-weight:600;white-space:nowrap}.stageb i,.stagem i,.stg i{width:9px;height:9px;border-radius:50%;background:var(--sc,#8f8884);flex:0 0 auto;display:inline-block}
 .stageb[data-st="draft"],.stagem [data-st="draft"],.stg[data-st="draft"]{--sc:#9a918d}.stageb[data-st="review"],.stagem [data-st="review"],.stg[data-st="review"]{--sc:#e0a21a}
 .stageb[data-st="ready"],.stagem [data-st="ready"],.stg[data-st="ready"]{--sc:#3e8ed0}.stageb[data-st="uploaded"],.stagem [data-st="uploaded"],.stg[data-st="uploaded"]{--sc:#39b36b}
+.postpk{display:inline-flex;align-items:center;gap:7px;max-width:260px;font-weight:600}.postpk b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.postpk i{width:9px;height:9px;border-radius:50%;background:var(--sc,#8f8884);flex:0 0 auto}
+.postpk[data-st="draft"]{--sc:#9a918d}.postpk[data-st="review"]{--sc:#e0a21a}.postpk[data-st="ready"]{--sc:#3e8ed0}.postpk[data-st="uploaded"]{--sc:#39b36b}
+.postm{left:0;right:auto;width:min(360px,calc(100vw - 24px));max-height:min(70vh,560px);overflow:auto;padding:4px 6px 8px}
+.postm .pmh{position:sticky;top:-4px;z-index:1;background:var(--surface);display:flex;align-items:center;gap:8px;margin:0;padding:10px 6px 6px;font-size:12px;font-weight:700;letter-spacing:.02em;text-transform:uppercase}
+.postm .pmh em{font-style:normal;font-weight:500;color:var(--muted,#8a817d)}
+.postm .pmh i{width:9px;height:9px;border-radius:50%;background:var(--sc,#8f8884)}
+.postm [data-st="draft"]{--sc:#9a918d}.postm [data-st="review"]{--sc:#e0a21a}.postm [data-st="ready"]{--sc:#3e8ed0}.postm [data-st="uploaded"]{--sc:#39b36b}
+.postm button{display:grid;grid-template-columns:18px 1fr;gap:2px 6px;width:100%;line-height:1.3}.postm button small{grid-column:2;color:var(--muted,#8a817d);font-size:12px}
+.postm button[aria-current="true"]{background:var(--sunken);font-weight:700}
+@media (max-width:560px){.postpk{max-width:170px}}
 .stagem{min-width:250px;left:0;right:auto}.stagem .sth{margin:4px 10px 6px;font-size:12px;color:var(--muted,#8a817d)}
 .stagem button{display:flex;align-items:center;gap:9px}.stagem button b{font-variant-numeric:tabular-nums;color:var(--muted,#8a817d);font-weight:600;width:14px}
 .stagem button[aria-current="step"]{background:var(--sunken);font-weight:700}.stagem button.done{opacity:.6}.stagem .stnext{margin-top:6px;justify-content:center;background:var(--ink,#131111);color:var(--surface,#fff);font-weight:700}
@@ -1090,6 +1101,7 @@ details.gsec[open]{padding-bottom:14px}
   <span class="brand">Carousel <b>Artboard</b></span>
   <label class="sr" for="postSel">Post</label>
   <select id="postSel" class="ctl" hidden></select>
+  <div class="more"><button id="postPick" class="btn sm postpk" hidden aria-expanded="false" aria-haspopup="menu" title="Your posts, by stage"></button></div>
   <div class="more"><button id="stageBtn" class="btn sm stageb" hidden aria-expanded="false" title="This post's stage: Draft, In review, Ready for upload, Uploaded"></button></div>
   <label class="ratiobox" hidden><span>Ratio</span><select id="ratioSel" class="ctl" title="The size of this post's slides. A slide can have its own in the large view's download menu."></select></label>
   <div class="more"><button id="newPost" class="btn ghost sm" hidden aria-expanded="false" title="New post, or rename and delete posts">Posts</button></div>
@@ -4479,10 +4491,10 @@ function renderMeta() {
   if (rs && document.activeElement !== rs) { rs.innerHTML = Object.entries(RATIOS).map(([k, r]) => `<option value="${k}"${ratioKey(S.post) === k ? " selected" : ""}>${r[2]}</option>`).join(""); }
   if (rs) rs.closest(".ratiobox").hidden = false;
   const ps = $("#postSel");
-  ps.hidden = S.posts.length < 2;
+  ps.hidden = true;   /* the board's own picker (#postPick) shows the posts, grouped by stage, the same on every phone */
   const metaOf = p => (p.id === S.pid ? S.post : p.data) || {};
   ps.innerHTML = STAGES.map(([k, l]) => { const g = S.posts.filter(p => stageOf(metaOf(p)) === k); return g.length ? `<optgroup label="${esc(l)} (${g.length})">` + g.map(p => `<option value="${esc(p.id)}"${p.id === S.pid ? " selected" : ""}>${esc(postLabel(metaOf(p), p.id))}</option>`).join("") + `</optgroup>` : ""; }).join("");
-  renderStageBtn();
+  renderStageBtn(); renderPostPick();
   $("#newPost").hidden = !(S.db || S.local);
   const rn = $("#renamePost"); if (rn) rn.hidden = !!S.readOnly;
   const pk = $("#pickSlides"); if (pk) pk.hidden = !(S.db || S.local) || !!S.readOnly;
@@ -4624,12 +4636,14 @@ document.addEventListener("click", e => {
   if (sd) { const a = sd.dataset.spick; if (a === "new") return newPostFromPicks(); if (a === "clear") { S.picked = []; syncPicks(); return; } return setPicking(false); }
   const hd = t.closest(".card-h");   /* the card's header row (number, kind, thumbnail) folds and opens it too */
   if (hd && !t.closest("button,.card-tools,.more,input,select,.grip")) { const sid = hd.closest(".card").dataset.sid; setFold(sid, !S.folded.has(sid)); saveFolds(); return; }
-  const b = t.closest("[data-act],[data-close],[data-newpost],[data-setstage],#stageBtn,#dlAll,#applyAll,#addSlide,#copyAll,#newPost,#fPrev,#fNext,#delPost,#notesClose,#overallOk,#newFolderBtn,#folderCancel,#tagBtn,#foldAll");
+  const b = t.closest("[data-act],[data-close],[data-newpost],[data-setstage],[data-pickpost],#stageBtn,#postPick,#dlAll,#applyAll,#addSlide,#copyAll,#newPost,#fPrev,#fNext,#delPost,#notesClose,#overallOk,#newFolderBtn,#folderCancel,#tagBtn,#foldAll");
   if (!b) { if (!t.closest(".more")) closeMenus(); return; }
   if (b.id === "foldAll") { const o = order(), all = o.every(id => S.folded.has(id)); o.forEach(id => setFold(id, !all)); saveFolds(); return; }
   if (b.hasAttribute("data-close")) { b.closest("dialog").close(); return; }
   if (b.id === "tagBtn") return tagPhotos([...S.photos.keys()].filter(id => !Array.isArray(S.photos.get(id).tags)), true);
   if (b.id === "stageBtn") return toggleStageMenu(b);
+  if (b.id === "postPick") return togglePostMenu(b);
+  if (b.dataset.pickpost) { closeMenus(); if (b.dataset.pickpost !== S.pid) { selectPost(b.dataset.pickpost); window.scrollTo({ top: 0 }); } return; }
   if (b.dataset.setstage) { closeMenus(); return setStage(S.pid, b.dataset.setstage); }
   if (b.dataset.newpost) { closeMenus(); const k = b.dataset.newpost; if (k === "manage") return openPosts(); if (k === "rename") { window.scrollTo({ top: 0 }); return startRename(); } if (k === "uploaded") return setUploaded(S.pid, stageOf(S.post) !== "uploaded"); return newPost(k); }
   if (b.id === "dlAll") return exportAll();
@@ -9841,7 +9855,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { setStage, stageOf, renderPosts, toggleStageMenu, GUIDES, guideSet, guideThumb, setShadeVal, shadeVals, openPillPop, hidePillPop, selectPhoto, S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, traceSticker, cleanVec, setUploaded, openPosts, renamePost, removePost, groupSel, ungroupSel, groupOfSel, setShade, shadeState, smartSnap, copyToNext, sizeHandle, syncSizeFields, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
+window.__t = { togglePostMenu, setStage, stageOf, renderPosts, toggleStageMenu, GUIDES, guideSet, guideThumb, setShadeVal, shadeVals, openPillPop, hidePillPop, selectPhoto, S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, traceSticker, cleanVec, setUploaded, openPosts, renamePost, removePost, groupSel, ungroupSel, groupOfSel, setShade, shadeState, smartSnap, copyToNext, sizeHandle, syncSizeFields, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
@@ -10465,6 +10479,7 @@ function newPostFromPicks() {
 function syncPostName() {
   const p = S.posts.find(x => x.id === S.pid); if (p && p.data) { p.data.title = S.post.title; if (S.post.posted) p.data.posted = S.post.posted; else delete p.data.posted; if (S.post.stage) p.data.stage = S.post.stage; else delete p.data.stage; }
   const o = $("#postSel") && [...$("#postSel").options].find(x => x.value === S.pid); if (o) o.textContent = postLabel(S.post, S.pid);
+  renderPostPick();
 }
 /* Stages: every post moves through Draft → In review → Ready for upload → Uploaded (post.stage). post.posted is when it was
    marked Uploaded (older posts only have that, and read as Uploaded; a post with neither is a Draft). The header's stage button
@@ -10486,6 +10501,30 @@ function renderStageBtn() {
   const k = stageOf(S.post), i = STAGE_KEYS.indexOf(k);
   b.dataset.st = k; b.innerHTML = `<i aria-hidden="true"></i>${esc(stageName(k))}<span aria-hidden="true">▾</span>`;
   b.setAttribute("aria-label", `Stage ${i + 1} of 4: ${stageName(k)}. Change the stage`);
+}
+function renderPostPick() {
+  const b = $("#postPick"); if (!b) return;
+  b.hidden = !S.post || S.posts.length < 2; if (b.hidden) return;
+  const k = stageOf(S.post);
+  b.dataset.st = k; b.innerHTML = `<i aria-hidden="true"></i><b>${esc(S.post.title || "Untitled post")}</b><span aria-hidden="true">▾</span>`;
+  b.setAttribute("aria-label", `Post: ${S.post.title || "Untitled post"} (${stageName(k)}). Choose another post`);
+}
+function togglePostMenu(btn) {
+  const open = btn.nextElementSibling; closeMenus(); if (open) return;
+  const metaOf = p => (p.id === S.pid ? S.post : p.data) || {};
+  const byTime = (a, b) => (metaOf(b).updatedAt || 0) - (metaOf(a).updatedAt || 0);
+  const m = document.createElement("div"); m.className = "menu postm"; m.setAttribute("role", "menu"); m.setAttribute("aria-label", "Your posts");
+  m.innerHTML = STAGES.map(([k, l]) => {
+    const g = S.posts.filter(p => stageOf(metaOf(p)) === k).sort(byTime); if (!g.length) return "";
+    return `<p class="pmh" data-st="${k}"><i aria-hidden="true"></i>${esc(l)} <em>${g.length}</em></p>` + g.map(p => { const mm = metaOf(p), cur = p.id === S.pid, n = (mm.order || []).length;
+      return `<button type="button" role="menuitemradio" data-pickpost="${esc(p.id)}" aria-checked="${cur}"${cur ? ' aria-current="true"' : ""}><span aria-hidden="true">${cur ? "✓" : ""}</span><span>${esc(mm.title || "Untitled post")}</span><small>${n} slide${n === 1 ? "" : "s"}${k === "uploaded" && mm.posted ? ` · uploaded ${shortDate(mm.posted)}` : mm.updatedAt ? ` · changed ${shortDate(mm.updatedAt)}` : ""}</small></button>`; }).join("");
+  }).join("") + `<button type="button" data-newpost="manage" style="display:block;margin-top:6px;text-align:center;border:1px solid var(--line)">All posts: stages, rename, delete…</button>`;
+  btn.after(m); btn.setAttribute("aria-expanded", "true");
+  const r = m.getBoundingClientRect();
+  if (r.right > window.innerWidth - 4 || r.left < 4) {   /* a narrow screen: the menu spans the screen, just under the button */
+    const br = btn.getBoundingClientRect(); Object.assign(m.style, { position: "fixed", left: "12px", right: "12px", width: "auto", top: Math.round(br.bottom + 6) + "px", maxHeight: `calc(100vh - ${Math.round(br.bottom + 18)}px)` });
+  }
+  const c = m.querySelector('[aria-current="true"]'); if (c) c.scrollIntoView({ block: "nearest" });
 }
 function toggleStageMenu(btn) {
   const open = btn.nextElementSibling; closeMenus(); if (open || !S.post) return;
