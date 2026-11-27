@@ -3308,16 +3308,31 @@ const FRAMES = {
   "1x1": { label: "1:1", n: 1, ar: 1 }, "4x5": { label: "4:5", n: 1, ar: 4 / 5 }, "3x4": { label: "3:4", n: 1, ar: 3 / 4 }, "2x3": { label: "2:3", n: 1, ar: 2 / 3 }, "9x16": { label: "9:16", n: 1, ar: 9 / 16 },
   "5x4": { label: "5:4", n: 1, ar: 5 / 4 }, "4x3": { label: "4:3", n: 1, ar: 4 / 3 }, "3x2": { label: "3:2 (camera)", n: 1, ar: 3 / 2 }, "16x9": { label: "16:9", n: 1, ar: 16 / 9 }, "239x1": { label: "2.39:1 cinema", n: 1, ar: 2.39 },
   viewfinder: { label: "Viewfinder", n: 1 }, fisheye: { label: "Fisheye", n: 1 }, binoculars: { label: "Binoculars", n: 1 },
-  stacked: { label: "Stacked (2)", n: 2 }, trio: { label: "Trio (3)", n: 3 }, grid4: { label: "Grid (4)", n: 4 }, collage: { label: "Collage (5)", n: 5 }, grid: { label: "Grid (any)", n: 4, grid: true }
+  stacked: { label: "Stacked (2)", n: 2 }, trio: { label: "Trio (3)", n: 3 }, grid4: { label: "Grid (4)", n: 4 }, collage: { label: "Collage (5)", n: 5 }, grid: { label: "Grid (any)", n: 4, grid: true }, bento: { label: "Bento (tiles)", n: 3, bento: true }
 };
+/* a bento: tiles of any size, frame.cells = [{x, y, w, h, fill?}] as fractions of the frame's inside (0 to 1, the gap is taken off
+   where tiles meet); a tile with a fill is a solid panel (for words and stickers laid on it), the others are photo windows, in order */
+const BENTO = [{ x: 0, y: 0, w: 0.6, h: 0.5 }, { x: 0.6, y: 0, w: 0.4, h: 0.25, fill: "#1d1b1a" }, { x: 0.6, y: 0.25, w: 0.4, h: 0.25, fill: "#1d1b1a" },
+  { x: 0, y: 0.5, w: 0.4, h: 0.5, fill: "#1d1b1a" }, { x: 0.4, y: 0.5, w: 0.6, h: 0.25 }, { x: 0.4, y: 0.75, w: 0.6, h: 0.25 }];
+const bentoCells = v => { const c = (Array.isArray(v) ? v : []).slice(0, 32).map(o => o && typeof o === "object" ? { x: clamp(+o.x || 0, 0, 1), y: clamp(+o.y || 0, 0, 1), w: clamp(+o.w || 0, 0, 1), h: clamp(+o.h || 0, 0, 1), ...(HEXCOL.test(o.fill) ? { fill: o.fill } : {}) } : null).filter(o => o && o.w > 0 && o.h > 0);
+  const photos = c.filter(o => !o.fill).length; return c.length && photos <= FRAME_SLOTS.length ? c : BENTO; };
+function bentoRects(b, o, solid) {   /* the bento's photo windows (solid false) or its solid tiles (solid true), inside box b */
+  const S0 = Math.min(b.w, b.h), m = o.m * S0, g = o.g * S0, ix = b.x + m, iy = b.y + m, iw = b.w - 2 * m, ih = b.h - 2 * m;
+  return bentoCells(o.cells).filter(c => !!c.fill === !!solid).map(c => {
+    let x0 = ix + c.x * iw, x1 = ix + Math.min(1, c.x + c.w) * iw, y0 = iy + c.y * ih, y1 = iy + Math.min(1, c.y + c.h) * ih;
+    if (c.x > 0.001) x0 += g / 2; if (c.x + c.w < 0.999) x1 -= g / 2; if (c.y > 0.001) y0 += g / 2; if (c.y + c.h < 0.999) y1 -= g / 2;
+    return { x: x0, y: y0, w: Math.max(1, x1 - x0), h: Math.max(1, y1 - y0), shape: "rect", r: o.r * S0, ...(c.fill ? { fill: c.fill } : {}) };
+  });
+}
 const gridDim = v => Math.round(clamp(+v || 2, 1, 4));
-const frameOf = s => { const f = (s && s.frame) || {}, kind = FRAMES[f.kind] ? f.kind : "4x3", cols = gridDim(f.cols), rows = gridDim(f.rows); return { kind, ...(kind === "grid" ? { cols, rows } : {}), n: kind === "grid" ? cols * rows : FRAMES[kind].n, color: HEXCOL.test(f.color) ? f.color : "#000000", r: f.r == null || f.r === "" ? 0.035 : clamp(+f.r, 0, 0.25), m: f.m == null || f.m === "" ? 0.045 : clamp(+f.m, 0, 0.25), g: f.g == null || f.g === "" ? 0.025 : clamp(+f.g, 0, 0.12) }; };
+const frameOf = s => { const f = (s && s.frame) || {}, kind = FRAMES[f.kind] ? f.kind : "4x3", cols = gridDim(f.cols), rows = gridDim(f.rows), cells = kind === "bento" ? bentoCells(f.cells) : null; return { kind, ...(kind === "grid" ? { cols, rows } : {}), ...(cells ? { cells } : {}), n: kind === "grid" ? cols * rows : cells ? cells.filter(c => !c.fill).length : FRAMES[kind].n, color: HEXCOL.test(f.color) ? f.color : "#000000", r: f.r == null || f.r === "" ? 0.035 : clamp(+f.r, 0, 0.25), m: f.m == null || f.m === "" ? 0.045 : clamp(+f.m, 0, 0.25), g: f.g == null || f.g === "" ? 0.025 : clamp(+f.g, 0, 0.12) }; };
 /* the windows for a frame inside box b (x, y, w, h): [{x, y, w, h, shape: "rect"|"circle"|"bino", r}] */
 function frameWins(kind, b, o) {
   const S0 = Math.min(b.w, b.h), m = o.m * S0, r = o.r * S0, g = o.g * S0, ix = b.x + m, iy = b.y + m, iw = b.w - 2 * m, ih = b.h - 2 * m;
   const fit = ar => { const w = Math.min(iw, ih * ar), h = w / ar; return { x: ix + (iw - w) / 2, y: iy + (ih - h) / 2, w, h, shape: "rect", r }; };
   const F = FRAMES[kind];
   if (F.ar) return [fit(F.ar)];
+  if (F.bento) return bentoRects(b, o, false);
   if (kind === "viewfinder") { const k = 0.11 * S0, w = iw - 2 * k, h = ih - 2 * k; return [{ x: ix + k, y: iy + k, w, h, shape: "rect", r: r * 1.6, vf: true }]; }
   if (kind === "fisheye") { const d = Math.min(iw, ih); return [{ x: ix + (iw - d) / 2, y: iy + (ih - d) / 2, w: d, h: d, shape: "circle" }]; }
   if (kind === "binoculars") { const R = Math.min(ih / 2, iw / 3.5); return [{ x: b.x + b.w / 2 - 2.75 * R, y: b.y + b.h / 2 - R, w: 5.5 * R, h: 2 * R, shape: "bino", R }]; }
@@ -3351,6 +3366,7 @@ function winPath(ctx, w, more) {   /* the window's shape, as a path (more: added
 /* a frame on its own: the matte with see-through windows (for the frame pack and the overlays) */
 function drawFrameMatte(ctx, kind, W0, H0, o, color) {
   ctx.save(); ctx.fillStyle = color; ctx.fillRect(0, 0, W0, H0);
+  if (kind === "bento") for (const w of bentoRects({ x: 0, y: 0, w: W0, h: H0 }, o, true)) { ctx.fillStyle = w.fill; winPath(ctx, w); ctx.fill(); }
   ctx.globalCompositeOperation = "destination-out";
   for (const w of frameWins(kind, { x: 0, y: 0, w: W0, h: H0 }, o)) { winPath(ctx, w); ctx.fill("nonzero"); }
   ctx.restore();
@@ -3364,6 +3380,7 @@ function designFrame(ctx, post, s) {
 function renderFrame(ctx, post, s, idx, total, d) {
   const t = s.text || {}, f = d.f, ink0 = INK;
   if (!OVERLAY || KEEP) { ctx.fillStyle = f.color; ctx.fillRect(0, 0, W, H); }
+  if (f.kind === "bento" && (!OVERLAY || KEEP)) for (const w of bentoRects(d.box, f, true)) { ctx.fillStyle = w.fill; winPath(ctx, w); ctx.fill(); }   /* the solid tiles, under the words */
   d.wins.forEach((w, i) => {
     const slot = s[FRAME_SLOTS[i]];
     ctx.save(); winPath(ctx, w); ctx.clip("nonzero");
@@ -9941,7 +9958,7 @@ window.__state = () => ({ post: S.post, slides: S.slides, photos: [...S.photos.e
 window.__focusText = () => clone(S.ftboxes);   /* the large view's text boxes and selection, for tests */
 window.__focusSel = () => ({ sticker: S.fsel, text: S.ftsel, editor: S.ftfield, panel: S.fpanel });
 window.__busy = () => [...S.busy];
-window.__t = { fillGrid, gridNewSlide, gridConvert, frameOf, togglePostMenu, setStage, stageOf, renderPosts, toggleStageMenu, GUIDES, guideSet, guideThumb, setShadeVal, shadeVals, openPillPop, hidePillPop, selectPhoto, S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, traceSticker, cleanVec, setUploaded, openPosts, renamePost, removePost, groupSel, ungroupSel, groupOfSel, setShade, shadeState, smartSnap, copyToNext, sizeHandle, syncSizeFields, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
+window.__t = { bentoRects, fillGrid, gridNewSlide, gridConvert, frameOf, togglePostMenu, setStage, stageOf, renderPosts, toggleStageMenu, GUIDES, guideSet, guideThumb, setShadeVal, shadeVals, openPillPop, hidePillPop, selectPhoto, S, order, renderSlide, TEMPLATES, renderBoard, geoOf, timelineFigure, fillPending, cleanStickers, VIDS, VP, addVideo, shrinkVideo, slideVideo, mainVid, hasVideo, loadMuxer, MK, applyWithClaude, drawFocus, updateFocusUI, enterCrop, traceSticker, cleanVec, setUploaded, openPosts, renamePost, removePost, groupSel, ungroupSel, groupOfSel, setShade, shadeState, smartSnap, copyToNext, sizeHandle, syncSizeFields, multiItems, alignMulti, pasteClip, copySel, readClip, deleteTextRef, fieldSz, setPicking, togglePick, newPostFromPicks, startRename, setPostTitle, renderGuide, cleanGuide, selSticker, cleanStickers, xfBox, gesturing, layerList, photoGeo, photoAt, fgMode: () => fg && fg.mode, smartCut, bdSections, BDA, MK, FRD, openFrames, shapeFx, texOf, FAMS };   /* sticker tools, for tests */
 
 /* ---------- PDF guide: the long version of the carousel, exported as a PDF with real (highlightable) text ---------- */
 const guidePath = () => `posts/${S.pid}/guide/main`;
